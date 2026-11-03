@@ -79,6 +79,10 @@ Desde 31/10/2026, o site usa o design **ORGATEC Trilha**. Ele vem do projeto Tri
   - o botão de WhatsApp continua verde;
   - o manual do logotipo (`marca.html`) mantém as cores fixas da marca.
 
+## Desenvolvimento e publicação
+
+O trabalho acontece em branches, nunca na pasta principal: veja [docs/fluxo-de-desenvolvimento.md](docs/fluxo-de-desenvolvimento.md). Prévia com `python tools/previa.py`; publicação com `python tools/publicar.py`, só da `main`.
+
 ## Ordem de geração
 
 O design system é a fonte única da identidade visual:

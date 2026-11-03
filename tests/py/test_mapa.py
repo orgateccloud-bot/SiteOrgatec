@@ -22,7 +22,8 @@ def test_mapa_tem_as_paginas_indexaveis_e_nenhuma_interna():
     assert all(re.fullmatch(r"\d{4}-\d{2}-\d{2}", d) for _, d in lista)
 
 
-def test_sitemap_xml_valido():
-    gerar_mapa.main()
-    doc = xml.dom.minidom.parse(str(RAIZ / "site" / "sitemap.xml"))
+def test_sitemap_xml_valido(tmp_path):
+    destino = tmp_path / "sitemap.xml"  # testes não regravam o site: a pasta principal precisa continuar limpa
+    gerar_mapa.main(destino)
+    doc = xml.dom.minidom.parse(str(destino))
     assert len(doc.getElementsByTagName("url")) == len(gerar_mapa.paginas())
