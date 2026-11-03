@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -70,7 +70,7 @@ class SimulacaoResumo(BaseModel):
     perfil: Literal["b2b", "b2c"]
     uf: UF
     faturamento_anual: float | None = Field(default=None, ge=0, le=1e12)
-    alertas: list[str] = Field(default_factory=list, max_length=60)
+    alertas: list[Annotated[str, Field(max_length=80)]] = Field(default_factory=list, max_length=60)
 
 
 class LeadIn(_ComContato):

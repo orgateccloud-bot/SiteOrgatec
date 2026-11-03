@@ -21,12 +21,15 @@ Variáveis de ambiente (nunca versionar valores reais):
                           não documenta em que posição o IP do visitante chega ao Cloud Run). Desligue depois.
     ORGATEC_INDEXAR       "1" libera buscadores; enquanto não for "1", toda resposta leva
                           X-Robots-Tag: noindex (homologação fora do Google)            (padrão: 0)
+    ORGATEC_RETENCAO_LEAD_DIAS, ORGATEC_RETENCAO_CONTATO_DIAS, ORGATEC_RETENCAO_OPTIN_PENDENTE_DIAS
+                          prazos de guarda (backend/retencao.py); a eliminação roda em tools/lgpd.py
 """
 
 from __future__ import annotations
 
 import logging
 import os
+import re
 import secrets
 import time
 from collections import defaultdict, deque
@@ -34,10 +37,11 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .repositorio import Repositorio
+from .retencao import prazos_do_ambiente
 from .schemas import ContatoIn, LeadIn, OptInIn, Recibo
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -65,10 +69,12 @@ def _criar_repo():
     banco = os.environ.get("ORGATEC_BANCO", "sqlite").strip().lower()
     if banco == "firestore":
         from .repositorio_firestore import RepositorioFirestore
-        return RepositorioFirestore(_segredo(), projeto=os.environ.get("ORGATEC_FIRESTORE_PROJETO") or None)
+        return RepositorioFirestore(_segredo(), projeto=os.environ.get("ORGATEC_FIRESTORE_PROJETO") or None,
+                                    prazos=prazos_do_ambiente())
     if banco != "sqlite":
         raise RuntimeError(f"ORGATEC_BANCO inválido: {banco!r} (use sqlite ou firestore)")
-    return Repositorio(Path(os.environ.get("ORGATEC_DB", RAIZ / "backend" / "dados" / "orgatec.db")), _segredo())
+    return Repositorio(Path(os.environ.get("ORGATEC_DB", RAIZ / "backend" / "dados" / "orgatec.db")), _segredo(),
+                       prazos_do_ambiente())
 
 
 repo = _criar_repo()
@@ -108,9 +114,22 @@ CSP_WIDGET = "; ".join([
 ])
 
 
+# O maior formulário válido (contato com 2.000 caracteres, ou lead com 60 alertas) cabe com folga. O corte vale para
+# quem declara o tamanho; os limites de cada campo em schemas.py continuam valendo para o resto.
+_MAX_CORPO = 16 * 1024
+
+
+def _corpo_grande(request: Request) -> bool:
+    tamanho = request.headers.get("content-length", "")
+    return request.url.path.startswith("/api/") and tamanho.isdigit() and int(tamanho) > _MAX_CORPO
+
+
 @app.middleware("http")
 async def cabecalhos_seguranca(request: Request, call_next):
-    resposta = await call_next(request)
+    if _corpo_grande(request):
+        resposta = JSONResponse({"detail": "envio grande demais"}, status_code=413)
+    else:
+        resposta = await call_next(request)
     h = resposta.headers
     if request.url.path.startswith("/cotacoes/"):
         h["Content-Security-Policy"] = CSP_WIDGET
@@ -126,6 +145,8 @@ async def cabecalhos_seguranca(request: Request, call_next):
         h.setdefault("X-Robots-Tag", "noindex, nofollow")
     if request.url.path.startswith("/api/"):
         h["Cache-Control"] = "no-store"  # o Firebase Hosting não guarda respostas da API (protocolos, dados pessoais)
+    if request.url.path.startswith("/api/optin/"):
+        h["Referrer-Policy"] = "no-referrer"  # o endereço traz o token do link
     return resposta
 
 
@@ -146,7 +167,15 @@ def mascarar_ip(ip: str) -> str:
         return ip.rsplit(":", 1)[0] + ":x"
     return "?" if ip else ""
 _JANELA = 600
+_MAX_IPS = 50_000  # teto da memória do limite por IP: ao chegar nele, sai quem já passou da janela
 _hits: dict[str, deque] = defaultdict(deque)
+
+
+def _podar_hits(agora: float) -> None:
+    for ip in [ip for ip, fila in _hits.items() if not fila or agora - fila[-1] > _JANELA]:
+        del _hits[ip]
+    if len(_hits) >= _MAX_IPS:  # todos dentro da janela: só uma enxurrada de endereços chega aqui
+        _hits.clear()
 
 
 def limitar(request: Request) -> str:
@@ -164,6 +193,8 @@ def limitar(request: Request) -> str:
         log.warning("diagnostico-ip conexao=%s cabecalhos=%s escolhido=%s",
                     mascarar_ip(request.client.host if request.client else ""), cab, mascarar_ip(ip))
     agora = time.monotonic()
+    if len(_hits) >= _MAX_IPS:
+        _podar_hits(agora)
     fila = _hits[ip]
     while fila and agora - fila[0] > _JANELA:
         fila.popleft()
@@ -175,7 +206,9 @@ def limitar(request: Request) -> str:
 
 @app.get("/api/saude")
 def saude() -> dict:
-    return {"ok": True, "cadeia_integra": repo.verificar_cadeia()}
+    # Pública e sem limite: não toca no banco. A conferência da trilha lê todos os registros (no Firestore, cada
+    # leitura é cobrada) e roda em tools/lgpd.py trilha.
+    return {"ok": True}
 
 
 @app.post("/api/leads", response_model=Recibo, status_code=201)
@@ -188,17 +221,53 @@ def criar_lead(dados: LeadIn, ip: str = Depends(limitar)) -> dict:
 def criar_optin(dados: OptInIn, ip: str = Depends(limitar)) -> dict:
     # Double opt-in: o registro só vale após confirmação pelo link enviado ao contato.
     # O envio da mensagem depende da ativação de contato@orgatec.io (pendência do Plano Diretor),
-    # por isso aqui apenas registramos o token; o disparo fica a cargo do serviço de e-mail/WhatsApp.
+    # por isso aqui apenas registramos os tokens; o disparo fica a cargo do serviço de e-mail/WhatsApp, que deve
+    # mandar /api/optin/confirmar?token=<token> e, em toda mensagem, /api/optin/sair?token=<token_saida>.
     r = repo.inserir("optin", "pendente_confirmacao", dados.model_dump(exclude={"website"}), ip, com_token=True)
     log.info("optin %s registrado (aguardando confirmação)", r["protocolo"])
     return r
 
 
-@app.get("/api/optin/confirmar", response_class=HTMLResponse)
-def confirmar_optin(token: str) -> str:
-    if not (8 <= len(token) <= 64) or not repo.confirmar_optin(token):
+_TOKEN = re.compile(r"[A-Za-z0-9_-]{8,64}")
+
+
+def _pagina(titulo: str, corpo: str) -> str:
+    return (f'<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" '
+            f'content="width=device-width, initial-scale=1"><title>{titulo} | ORGATEC</title></head>'
+            f'<body style="font-family:system-ui,sans-serif;max-width:32rem;margin:3rem auto;padding:0 1rem">'
+            f'<h1 style="font-size:1.4rem">{titulo}</h1>{corpo}</body></html>')
+
+
+def _pedir_clique(token: str, rota: str, titulo: str, botao: str) -> str:
+    """O GET só mostra o botão: robôs de e-mail abrem os links das mensagens e não podem confirmar nem cancelar."""
+    if not _TOKEN.fullmatch(token):
         raise HTTPException(status_code=404, detail="link inválido ou já utilizado")
-    return "<p>Inscrição no Calendário Fiscal ORGATEC confirmada. Você pode cancelar a qualquer momento.</p>"
+    return _pagina(titulo, f'<form method="post" action="/api/optin/{rota}?token={token}"><button type="submit" '
+                           f'style="font:inherit;padding:.6rem 1rem">{botao}</button></form>')
+
+
+@app.get("/api/optin/confirmar", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+def pedir_confirmacao(token: str) -> str:
+    return _pedir_clique(token, "confirmar", "Confirmar inscrição no Calendário Fiscal", "Confirmar inscrição")
+
+
+@app.post("/api/optin/confirmar", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+def confirmar_optin(token: str) -> str:
+    if not _TOKEN.fullmatch(token) or not repo.confirmar_optin(token):
+        raise HTTPException(status_code=404, detail="link inválido, vencido ou já utilizado")
+    return _pagina("Inscrição confirmada", "<p>Todo alerta traz um link para cancelar quando quiser.</p>")
+
+
+@app.get("/api/optin/sair", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+def pedir_descadastro(token: str) -> str:
+    return _pedir_clique(token, "sair", "Cancelar os alertas do Calendário Fiscal", "Cancelar e apagar meus dados")
+
+
+@app.post("/api/optin/sair", response_class=HTMLResponse, dependencies=[Depends(limitar)])
+def descadastrar(token: str) -> str:
+    if not _TOKEN.fullmatch(token) or not repo.revogar_optin(token):
+        raise HTTPException(status_code=404, detail="link inválido ou já utilizado")
+    return _pagina("Inscrição cancelada", "<p>Seu contato foi apagado e você não receberá mais alertas.</p>")
 
 
 @app.post("/api/contato", response_model=Recibo, status_code=201)

@@ -11,7 +11,7 @@ Um único serviço, montado pelo `Dockerfile`:
 ## Testado localmente com Docker em 31/10/2026
 
 - **Sem segredo:** a imagem se recusa a iniciar sem `ORGATEC_SEGREDO_IP`.
-- **Saúde:** `/api/saude` responde `ok` com a trilha `audit_hash` íntegra.
+- **Saúde:** `/api/saude` responde `ok` sem tocar no banco. A trilha `audit_hash` se confere com `python tools/lgpd.py trilha`.
 - **Cabeçalhos:** todas as respostas levam CSP, `X-Frame-Options: DENY`, `nosniff`, HSTS e `X-Robots-Tag: noindex`, este último por ser homologação.
 - **Política de segurança:** as 10 páginas principais carregam sem nenhum bloqueio. O único aviso no navegador é o do Tailwind via CDN.
 - **Código:** `tools/` e `backend/app.py` não ficam acessíveis pela web (404).
@@ -29,6 +29,7 @@ Um único serviço, montado pelo `Dockerfile`:
 - **Mesmo endereço:** o Hosting encaminha `/api/**` para o Cloud Run (rewrite no `firebase.json`), então site e API ficam no mesmo endereço. Não há CORS, e a CSP fica só com `'self'`. No `config.js`, `api.publica: ''`.
 - **Acesso ao banco:** o navegador não acessa o Firestore (`firestore.rules` nega tudo). Só a API grava, com a conta de serviço do Cloud Run.
 - **Trilha de auditoria:** a trilha `audit_hash` é a mesma do SQLite. Cada envio entra numa transação, e dentro da instância os envios formam fila.
+- **Retenção:** não ligue a política de TTL do Firestore, porque ela apaga o documento inteiro e quebra a trilha. A eliminação roda em `tools/lgpd.py`, que apaga só os dados pessoais. Agende `python tools/lgpd.py retencao --confirmar` uma vez por dia, com as mesmas variáveis da API (`ORGATEC_BANCO`, `ORGATEC_SEGREDO_IP`).
 - **Testes:**
   - os testes de contrato passam no SQLite e no emulador do Firestore, incluindo 12 envios simultâneos;
   - a imagem Docker, apontada para o emulador, gravou lead e opt-in;

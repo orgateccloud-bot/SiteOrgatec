@@ -52,11 +52,14 @@ def test_lead_uf_inexistente_422(cliente):
 
 def test_optin_double_optin(cliente):
     c, mod, db = cliente
+    tokens = []
+    inserir = mod.repo.inserir
+    mod.repo.inserir = lambda *a, **k: tokens.append(inserir(*a, **k)) or tokens[-1]
     r = c.post("/api/optin", json={"email": "a@b.com.br", "ufs": ["GO", "TO", "PA"], "esferas": ["federal", "estadual"], "consentimento": CONSENT})
     assert r.status_code == 201 and r.json()["status"] == "pendente_confirmacao"
-    token = sqlite3.connect(db).execute("SELECT token FROM registros WHERE tipo='optin'").fetchone()[0]
-    assert c.get("/api/optin/confirmar", params={"token": token}).status_code == 200
-    assert c.get("/api/optin/confirmar", params={"token": token}).status_code == 404  # uso único
+    token = tokens[0]["token"]
+    assert c.post("/api/optin/confirmar", params={"token": token}).status_code == 200
+    assert c.post("/api/optin/confirmar", params={"token": token}).status_code == 404  # uso único
     assert sqlite3.connect(db).execute("SELECT status FROM registros WHERE tipo='optin'").fetchone()[0] == "confirmado"
 
 
@@ -78,7 +81,7 @@ def test_cadeia_de_auditoria_detecta_adulteracao(cliente):
     c, mod, db = cliente
     for i in range(3):
         c.post("/api/contato", json={"nome": f"P{i}", "email": f"p{i}@ex.com", "assunto": "outro", "mensagem": "mensagem de teste", "consentimento": CONSENT})
-    assert c.get("/api/saude").json()["cadeia_integra"] is True
+    assert mod.repo.verificar_cadeia() is True
     con = sqlite3.connect(db)
     con.execute("UPDATE registros SET payload = replace(payload, 'P1', 'PX') WHERE id = 2")
     con.commit()

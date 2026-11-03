@@ -42,6 +42,7 @@ site/                         ← publicar esta pasta (estático)
   assets/js/validadores.js    CNPJ, chave de acesso NF-e/CT-e, contato
   assets/js/demo-dados.js     gerado de orgatec_io_modelos_testes.xlsx (IPs mascarados)
 backend/                      API FastAPI + Pydantic V2 + SQLite (leads, opt-in, contato)
+tools/lgpd.py                 LGPD no banco dos formulários: retenção, atendimento do titular (localizar, exportar, eliminar) e conferência da trilha
 tools/gerar_demo.py           xlsx → demo-dados.js
 tools/gerar_hub.py            gera site/reforma/*.html
 tools/gerar_logo.py           gera site/assets/marca/* (python tools/gerar_logo.py --png para os PNGs)

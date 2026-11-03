@@ -87,7 +87,7 @@ Conclusão: o site não guarda conta de ninguém, e isso é uma vantagem de segu
 |---|---|---|
 | Regras que negam o navegador | ✅ | `firestore.rules`. |
 | Trilha `audit_hash` encadeada | ✅ | Mostra se algum registro foi alterado ou apagado. |
-| **Política de TTL** (apagar leads e contatos após o prazo definido) | ➕ | Resolve a pendência V6, que hoje não tem retenção nenhuma, e cumpre a minimização da LGPD (art. 15 e 16). O prazo é decisão da ORGATEC. |
+| Eliminação por prazo com `tools/lgpd.py retencao`, agendada (**não** a política de TTL do Firestore) | ➕ | Atende a V6 e os arts. 15 e 16 da LGPD. O TTL apagaria o documento inteiro e quebraria a trilha; a rotina apaga só os dados pessoais. O prazo é decisão da ORGATEC. |
 | Backups agendados ou recuperação a um ponto no tempo (PITR) | 💳 | Permitem voltar o banco depois de um erro ou ataque. |
 | Cópia diária da trilha num bucket com retenção travada (*Bucket Lock*) | 💳 | Ninguém, nem um administrador, consegue apagar a trilha antes do prazo: é a cadeia de custódia. |
 
@@ -121,7 +121,7 @@ Conclusão: o site não guarda conta de ninguém, e isso é uma vantagem de segu
 | Medida | Situação | Por quê |
 |---|---|---|
 | Política de privacidade cobrindo o login do painel (dados tratados, base legal, prazo dos registros) | ➕ | O registro de login também é dado pessoal. |
-| Prazo de retenção definido (V6) e canal do encarregado ativo (`dpo@`, C3) | ➕ | Já são pendências. O painel e o TTL dependem delas. |
+| Prazo de retenção definido (V6) e canal do encarregado ativo (`dpo@`, C4) | ➕ | Já são pendências. O painel e a retenção dependem delas. |
 
 ## 5. Ordem sugerida
 
@@ -134,7 +134,7 @@ Conclusão: o site não guarda conta de ninguém, e isso é uma vantagem de segu
 2. **Com o Blaze (T1):**
    - API no Cloud Run com Secret Manager e conta de serviço mínima;
    - App Check nos formulários;
-   - TTL;
+   - agendamento da retenção;
    - backups;
    - alertas de orçamento e de logs.
 3. **Painel interno com login Google:**
