@@ -1,7 +1,7 @@
 # LGPD no backend (Fase 1 de segurança e privacidade)
 
-- **Situação:** em desenvolvimento
-- **Branch:** `ideia/lgpd-fase1`
+- **Situação:** aprovada (na branch `desenvolvimento`; falta lançar)
+- **Branch:** `ideia/lgpd-fase1` (já integrada e removida)
 - **Prévia:** sem prévia. Só muda a API, que ainda não está publicada (T1). No site, só o texto das pendências V6 e T2.
 
 ## Problema
