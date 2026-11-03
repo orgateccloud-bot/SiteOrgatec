@@ -19,44 +19,102 @@
     <header class="bg-white border-b border-slate-200">
         <div class="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
             <a href="inicio.html" class="flex items-center gap-2 text-lg font-extrabold tracking-wide text-dark"><img src="assets/marca/orgatec-original.png" alt="" width="29" height="32" class="h-8 w-auto">ORGATEC</a>
-            <span class="flex items-center gap-3"><button id="btnCores" type="button" class="tema-btn" aria-label="Escolher cores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="hidden md:inline">Cores</span></button><a href="index.html#contato" class="text-sm text-brandBlue underline">Contato</a></span>
+            <span class="flex items-center gap-3"><button id="btnCores" type="button" class="tema-btn" aria-label="Escolher cores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="hidden md:inline">Cores</span></button><a href="contato/index.html" class="text-sm text-brandBlue underline">Contato</a></span>
         </div>
     </header>
     <main class="max-w-3xl mx-auto px-4 py-12 prosa">
         <h1 class="text-3xl font-bold text-dark mb-2">Política de Privacidade</h1>
-        <p class="text-xs text-slate-500 font-mono">Versão 2026-10 · Lei nº 13.709/2018 (LGPD)</p>
+        <p class="text-xs text-slate-500 font-mono">Versão 2026-11 · Atualizada em 03/11/2026 · Lei nº 13.709/2018 (LGPD)</p>
+
+        <h2>Em resumo</h2>
+        <ul>
+            <li>Não vendemos dados. O site não usa cookies, publicidade nem ferramentas de análise de visitantes.</li>
+            <li>O simulador, as calculadoras e o termômetro de conformidade funcionam no seu navegador. Nada sai dali, a menos que você envie um formulário.</li>
+            <li>Você pode pedir acesso, correção ou eliminação dos seus dados a qualquer momento, sem custo.</li>
+        </ul>
+        <p><a href="contato/index.html?assunto=lgpd" class="og-btn og-btn-primario og-btn-md" data-exercer-direitos>Exercer meus direitos</a></p>
 
         <h2>1. Controlador</h2>
         <p>ORGATEC, CNPJ 13.155.211/0001-45, Av. Ministro Alfredo Nasser, nº 727, Centro, Formoso-GO. Responsável técnico: Robson Alain Veloso, CRC-TO 002032/O-5 T-GO.</p>
 
         <h2>2. Quais dados coletamos e para quê</h2>
         <ul>
-            <li><strong>Simulador:</strong> setor, regime, perfil de clientes, UF e faturamento informado. Ficam no seu navegador; só são enviados se você pedir a análise completa, junto com nome, e-mail e/ou WhatsApp. Finalidade: retorno sobre o diagnóstico. Base legal: consentimento (art. 7º, I) e procedimentos preliminares a contrato a seu pedido (art. 7º, V).</li>
-            <li><strong>Calendário Fiscal (opt-in):</strong> e-mail e/ou WhatsApp, UFs e esferas escolhidas. Finalidade: envio dos alertas de vencimento. Base legal: consentimento (art. 7º, I), confirmado por link (double opt-in).</li>
-            <li><strong>Contato:</strong> nome, canal de retorno e mensagem. Finalidade: responder à solicitação. Base legal: art. 7º, V, ou art. 7º, II, quando se tratar do exercício de direitos do titular.</li>
-            <li><strong>Registro técnico:</strong> o endereço IP é guardado apenas como código irreversível (HMAC), para segurança e prevenção de abuso (art. 7º, IX). Cada registro recebe um código de integridade (trilha de auditoria).</li>
+            <li><strong>Simulador:</strong> setor, regime, perfil de clientes, UF e faturamento informado. Ficam no seu navegador; só são enviados se você pedir a análise completa, junto com nome, empresa (opcional), e-mail e/ou WhatsApp. Finalidade: retorno sobre o diagnóstico. Base legal: consentimento (art. 7º, I) e procedimentos preliminares a contrato a seu pedido (art. 7º, V).</li>
+            <li><strong>Calendário Fiscal (alertas):</strong> e-mail e/ou WhatsApp, UFs e esferas escolhidas. Finalidade: envio dos alertas de vencimento. Base legal: consentimento (art. 7º, I), confirmado por link (double opt-in).</li>
+            <li><strong>Contato:</strong> nome, canal de retorno, assunto e mensagem. Finalidade: responder à solicitação. Base legal: art. 7º, V, ou art. 7º, II, quando se tratar do exercício de direitos do titular.</li>
+            <li><strong>Registro técnico dos formulários:</strong> o endereço IP não é guardado em claro. Fica só um código feito com chave secreta (HMAC), para segurança e prevenção de abuso (art. 7º, IX). Esse código é um dado pseudonimizado. O e-mail e o WhatsApp também recebem um código assim, usado para localizar seus registros quando você exerce um direito. Cada registro recebe ainda um código de integridade (trilha de auditoria).</li>
+            <li><strong>Consentimento:</strong> guardamos a versão desta política e a finalidade que você aceitou.</li>
         </ul>
+        <p>O simulador e o termômetro fazem cálculos orientativos no seu navegador. Eles não tomam nenhuma decisão sobre você, e o resultado não é enviado à ORGATEC sem o seu pedido.</p>
 
-        <h2>3. Portal do cliente</h2>
-        <p>O portal do cliente, no sistema Athenas Online, exige autenticação multifator e registra cada acesso (data, hora, IP e ação) para a trilha de auditoria. Guias, balancetes e dados de folha de pagamento ficam acessíveis só aos perfis autorizados de cada empresa cliente. O tratamento segue o contrato de prestação de serviços contábeis (art. 7º, V) e as obrigações legais do escritório (art. 7º, II).</p>
+        <h2>3. Cookies e armazenamento no navegador</h2>
+        <p>O site não grava cookies. Para funcionar, ele guarda poucas preferências no próprio navegador, que não são enviadas a ninguém:</p>
+        <ul>
+            <li><span class="font-mono">orgatec.tema</span>: as cores escolhidas no botão "Cores".</li>
+            <li><span class="font-mono">orgatec.abertura.movimento</span>: se você reduziu a animação da tela de abertura.</li>
+            <li><span class="font-mono">orgatec.campo</span>: a região, a atividade e o polo escolhidos na Janela de Campo.</li>
+            <li><span class="font-mono">orgatec.abertura.vista</span>: até fechar a aba, marca que a abertura já foi vista.</li>
+            <li><span class="font-mono">orgatec.simulacaoRapida</span>: leva os dados da simulação rápida até o simulador e é apagado assim que ele abre.</li>
+            <li><span class="font-mono">orgatec.termometro.respostas</span>: até fechar a aba, guarda as respostas do termômetro.</li>
+        </ul>
+        <p>Você pode apagar tudo isso nas configurações do navegador, em "dados do site".</p>
 
-        <h2>4. Compartilhamento</h2>
-        <p>Não vendemos dados. Compartilhamos apenas com operadores necessários ao serviço (hospedagem, ferramenta de captura de documentos fiscais e ERP contábil do portal), sob contrato, e com autoridades quando a lei exigir. As fontes e os estilos deste site são servidos pelo próprio domínio, sem contato com servidores de terceiros. Na Janela de Campo, as imagens de satélite vêm diretamente dos servidores da NASA (gibs.earthdata.nasa.gov), que também recebem o IP do seu navegador. Nos cards por atividade da Janela de Campo, as cotações vêm do widget oficial do CEPEA/Esalq (cepea.org.br), carregado pelo seu navegador num quadro isolado; o CEPEA recebe o IP do seu navegador. As notícias desses cards são coletadas pelo escritório e publicadas aqui. A previsão do tempo da Janela de Campo é buscada pelo próprio escritório no serviço do MET Norway e publicada aqui; nenhum dado seu é enviado a esse serviço.</p>
+        <h2>4. Portal do cliente</h2>
+        <p>O portal do cliente funciona no sistema Athenas Online, fora deste site, com login individual. Guias, balancetes e dados de folha de pagamento ficam nesse sistema. O tratamento segue o contrato de prestação de serviços contábeis (art. 7º, V) e as obrigações legais do escritório (art. 7º, II).</p>
+        <p>Autenticação multifator, registro de acessos e local de guarda dos dados no portal: em confirmação com o fornecedor. <span class="og-selo og-selo-pendente">pendente de validação</span></p>
 
-        <h2>5. Prazo de guarda</h2>
-        <p>Leads e mensagens: até 24 meses sem relacionamento, ou até a revogação do consentimento. Opt-in não confirmado: excluído em 30 dias. Documentos fiscais e contábeis de clientes: pelo prazo exigido pela legislação tributária e societária.</p>
+        <h2>5. Compartilhamento</h2>
+        <p>Compartilhamos dados apenas com quem é necessário ao serviço, e com autoridades quando a lei exigir:</p>
+        <ul>
+            <li><strong>Operadores:</strong> Google (hospedagem do site, da API e do banco, pelo Firebase e pelo Google Cloud), Athenas Online (portal do cliente) e a ferramenta de captura de documentos fiscais, quando contratada.</li>
+            <li><strong>WhatsApp (Meta):</strong> só se você clicar em um botão de WhatsApp. A conversa acontece no aplicativo, sob os termos do WhatsApp. A mensagem pronta do site não leva nome, contato nem faturamento; depois de uma simulação, ela cita o setor, o regime e a UF.</li>
+            <li><strong>NASA:</strong> na Janela de Campo, as imagens de satélite vêm diretamente de gibs.earthdata.nasa.gov, que recebe o IP do seu navegador.</li>
+            <li><strong>CEPEA/Esalq:</strong> nos cards por atividade da Janela de Campo, as cotações vêm do widget oficial de cepea.org.br, carregado num quadro isolado. O CEPEA recebe o IP do seu navegador.</li>
+        </ul>
+        <p>As fontes e os estilos do site vêm do próprio domínio. As notícias dos cards e a previsão do tempo (MET Norway) são coletadas pelo escritório e publicadas aqui; nenhum dado seu é enviado a esses serviços.</p>
 
-        <h2>6. Seus direitos (art. 18)</h2>
-        <p>Confirmação e acesso, correção, anonimização ou eliminação, portabilidade, informação sobre compartilhamento e revogação do consentimento. Peça pelo <a href="index.html#contato" class="text-brandBlue underline">formulário de contato</a> (assunto "Meus dados pessoais") ou pelo canal do encarregado abaixo.</p>
+        <h2>6. Transferência internacional</h2>
+        <p>O banco dos formulários e a API ficam em São Paulo (Google Cloud, região southamerica-east1). As páginas do site são entregues pela rede global do Firebase Hosting, então o IP do seu acesso pode ser tratado fora do Brasil. O mesmo vale para as imagens da NASA, nos Estados Unidos, e para o WhatsApp, se você usar.</p>
+        <p>Enquadramento dessas transferências no art. 33 da LGPD: em análise. <span class="og-selo og-selo-pendente">pendente de validação</span></p>
 
-        <h2>7. Encarregado (DPO)</h2>
+        <h2>7. Prazo de guarda</h2>
+        <ul>
+            <li><strong>Leads e mensagens:</strong> até 24 meses, ou até você pedir a eliminação. <span class="og-selo og-selo-pendente">pendente de validação</span></li>
+            <li><strong>Alertas não confirmados:</strong> eliminados em 30 dias, quando o link de confirmação perde a validade. <span class="og-selo og-selo-pendente">pendente de validação</span></li>
+            <li><strong>Alertas confirmados:</strong> até você cancelar. Toda mensagem traz um link para cancelar, e seu contato é apagado na hora.</li>
+            <li><strong>Documentos fiscais e contábeis de clientes:</strong> pelo prazo exigido pela legislação tributária e societária.</li>
+        </ul>
+        <p>Depois da eliminação, fica apenas o esqueleto do registro (protocolo, tipo, datas e código de integridade), sem dado pessoal, para manter a trilha de auditoria íntegra. A lei permite guardar dados por mais tempo quando houver obrigação legal (art. 16).</p>
+
+        <h2 id="direitos">8. Seus direitos (art. 18)</h2>
+        <p>Você pode pedir, sem custo:</p>
+        <ul>
+            <li>confirmação de que tratamos seus dados, e acesso a eles;</li>
+            <li>correção de dados incompletos, inexatos ou desatualizados;</li>
+            <li>anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade com a lei;</li>
+            <li>portabilidade;</li>
+            <li>eliminação dos dados tratados com o seu consentimento;</li>
+            <li>informação sobre com quem compartilhamos seus dados e sobre a possibilidade de não dar consentimento, com as consequências disso;</li>
+            <li>revogação do consentimento, a qualquer momento.</li>
+        </ul>
+        <p>Use o <a href="contato/index.html?assunto=lgpd" class="text-brandBlue underline">formulário de contato</a>, com o assunto "Meus dados pessoais (LGPD)". Podemos pedir uma confirmação de que você é o titular. A confirmação ou o acesso saem de imediato em formato simplificado, ou em até 15 dias em declaração completa (art. 19).</p>
+        <p>Se o pedido não for resolvido, você pode peticionar à <a href="https://www.gov.br/anpd" class="text-brandBlue underline" rel="noopener">Autoridade Nacional de Proteção de Dados (ANPD)</a> (art. 18, § 1º).</p>
+
+        <h2>9. Encarregado (DPO)</h2>
         <p id="dpoLinha">Canal do encarregado em ativação. Enquanto isso, use o formulário de contato com o assunto "Meus dados pessoais (LGPD)".</p>
 
-        <h2>8. Segurança</h2>
-        <p>Conexões cifradas (HTTPS/TLS), MFA no portal, segregação de perfis, registros com trilha de integridade e minimização dos dados coletados (art. 46).</p>
+        <h2>10. Segurança</h2>
+        <p>Conexões cifradas (HTTPS/TLS), banco de dados fechado ao navegador, IP e contatos pseudonimizados, links de confirmação guardados só como código, registros com trilha de integridade e minimização dos dados coletados (art. 46).</p>
 
-        <h2>9. Ética profissional</h2>
+        <h2>11. Ética profissional</h2>
         <p>O sigilo das informações dos clientes segue o Código de Ética Profissional do Contador (NBC PG 01).</p>
+
+        <h2>12. Alterações desta política</h2>
+        <p>Cada envio de formulário registra a versão aceita. Quando esta página mudar, a versão e a data no topo mudam junto.</p>
+        <ul>
+            <li><strong>2026-11:</strong> inclui cookies e armazenamento no navegador, transferência internacional, WhatsApp e os terceiros de cada serviço; detalha prazos, eliminação e direitos; retira afirmações sobre o portal ainda não confirmadas.</li>
+            <li><strong>2026-10:</strong> primeira versão.</li>
+        </ul>
     </main>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/privacidade.js"></script>

@@ -702,7 +702,7 @@ def cliente() -> None:
                         <h3 class="og-cartao-titulo">2. Portal do cliente — atendimento com SLA e trilha de auditoria</h3>
                         <span id="portalErp" class="text-xs px-2 py-1 rounded-full"></span>
                     </div>
-                    <p class="og-cartao-texto mb-4">Guias, balancetes e solicitações no <a href="{layout.PORTAL_URL}" data-link="portal" target="_blank" rel="noopener" class="og-link">portal do cliente (Athenas Online)</a>, com autenticação multifator (MFA), perfis de acesso separados e registro de cada ação. IPs aparecem mascarados (LGPD).</p>
+                    <p class="og-cartao-texto mb-4">Guias, balancetes e solicitações no <a href="{layout.PORTAL_URL}" data-link="portal" target="_blank" rel="noopener" class="og-link">portal do cliente (Athenas Online)</a>. O exemplo abaixo usa dados fictícios, com IPs mascarados (LGPD).</p>
 {tabela("portalTabela", ["Protocolo", "UF", "Departamento", "Solicitação", "Competência", "Status", "SLA", "Auditoria"])}
                     <p class="mt-6"><a href="{{p}}contato/index.html" class="og-link">Problemas de acesso? Fale conosco →</a></p>
                 </div>"""
@@ -768,7 +768,7 @@ def escritorio() -> None:
                         <p class="mt-3"><a href="{p}compliance/prevencao-lavagem.html#item-pld-profissionais-contabilidade" class="og-link text-sm">Ver a regra →</a></p></div>
                     <div class="og-cartao"><span class="og-cartao-ref">Lei nº 13.709/2018</span><h3 class="og-cartao-titulo">Proteção de dados</h3>
                         <p class="og-cartao-texto">O escritório trata dados pessoais de clientes, dos empregados deles (folha e eSocial) e de fornecedores conforme a LGPD. Como esses dados são usados e protegidos está na <a href="{p}privacidade.html" class="og-link">Política de Privacidade</a>.</p>
-                        <p class="og-cartao-texto mt-3" data-dpo>Encarregado de dados (DPO): canal em ativação. Enquanto isso, use o <a href="{p}contato/index.html" class="og-link">formulário de contato</a> com o assunto "Meus dados pessoais (LGPD)".</p></div>
+                        <p class="og-cartao-texto mt-3" data-dpo>Encarregado de dados (DPO): canal em ativação. Enquanto isso, use o <a href="{p}contato/index.html?assunto=lgpd" class="og-link">formulário de contato</a> com o assunto "Meus dados pessoais (LGPD)".</p></div>
                     <div class="og-cartao"><span class="og-cartao-ref">NBC PG 01</span><h3 class="og-cartao-titulo">Ética profissional</h3>
                         <p class="og-cartao-texto">Atuação conforme o Código de Ética Profissional do Contador. O escritório faz o diagnóstico e organiza documentos e rotinas; não emite parecer jurídico.</p></div>
                 </div>"""),

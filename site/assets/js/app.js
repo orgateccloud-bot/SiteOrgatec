@@ -379,6 +379,9 @@
 
   /* ---------- Contato ---------- */
   function initContato() {
+    // ?assunto=lgpd (link "Exercer meus direitos"): só escolhe uma opção que já existe no formulário
+    var pedido = new URLSearchParams(location.search).get('assunto'), assunto = $('ctAssunto');
+    if (Array.prototype.some.call(assunto.options, function (o) { return o.value === pedido; })) assunto.value = pedido;
     $('contatoForm').addEventListener('submit', function (ev) {
       ev.preventDefault();
       var f = ev.target, alvo = $('ctMsg');

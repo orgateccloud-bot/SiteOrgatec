@@ -1514,3 +1514,33 @@ def test_reforma_perguntas_frequentes_com_cashback(navegador, servidor):
     assert pg.locator("#item-cashback").count() == 1  # "ver o ponto completo" leva ao item na mesma página
     assert pg.evaluate("document.documentElement.scrollWidth") <= 375
     assert not erros, erros
+
+
+# ---------- Política de privacidade: o texto acompanha o que o site faz
+
+def test_politica_declara_o_que_o_site_guarda_e_quem_recebe_dados():
+    politica = (RAIZ / "site" / "privacidade.html").read_text(encoding="utf-8")
+    versao = re.search(r"versaoPolitica: '([\d-]+)'", (RAIZ / "site" / "assets" / "js" / "config.js").read_text(encoding="utf-8")).group(1)
+    assert f"Versão {versao}" in politica  # os consentimentos registram esta versão
+    chaves, cookies = set(), []
+    for arq in (RAIZ / "site" / "assets" / "js").glob("*.js"):
+        if arq.name.startswith("ds-"):
+            continue
+        texto = arq.read_text(encoding="utf-8")
+        chaves |= set(re.findall(r"Storage\.\w+Item\('(orgatec\.[\w.]+)'", texto)) | set(re.findall(r"CHAVE = '(orgatec\.[\w.]+)'", texto))
+        cookies += ["document.cookie"] if "document.cookie" in texto else []
+    assert len(chaves) >= 6 and not cookies  # a política diz que o site não grava cookies
+    assert not [c for c in chaves if c not in politica], "chave do navegador fora da política"
+    for host in ("gibs.earthdata.nasa.gov", "cepea.org.br"):  # terceiros liberados na CSP
+        assert host in politica
+    assert "multifator" not in re.sub(r"<p>Autenticação multifator.*?</p>", "", politica, flags=re.S)  # só como pendente
+
+
+def test_caminho_do_titular_ate_o_formulario(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "privacidade.html")
+    pg.click("[data-exercer-direitos]")
+    pg.wait_for_url("**/contato/index.html?assunto=lgpd")
+    expect(pg.locator("#ctAssunto")).to_have_value("lgpd")
+    pg.goto(f"{servidor}/contato/index.html?assunto=%22inventado")  # assunto que não existe é ignorado
+    expect(pg.locator("#ctAssunto")).to_have_value("diagnostico")
+    assert not erros, erros
