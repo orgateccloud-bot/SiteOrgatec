@@ -711,6 +711,10 @@ def test_carrossel_de_ferramentas(navegador, servidor):
     pg.locator("[data-carrossel]").scroll_into_view_if_needed()
     pg.click("[data-carrossel-prox]")
     expect(pg.locator("[data-carrossel-ant]")).to_be_enabled()  # habilita quando o trilho já andou
+    for _ in range(50):  # a rolagem é suave: o botão habilita antes de ela terminar
+        if trilho.evaluate("t => t.scrollLeft") > 100:
+            break
+        pg.wait_for_timeout(100)
     assert trilho.evaluate("t => t.scrollLeft") > 100
     assert trilho.evaluate("t => t.scrollWidth > t.clientWidth")
     assert pg.evaluate("document.documentElement.scrollWidth") <= 375
@@ -1345,8 +1349,15 @@ CEPEA_EXEMPLO = {"https://www.cepea.org.br/**": lambda rota: rota.fulfill(status
 CEPEA_FORA = {"https://www.cepea.org.br/**": lambda rota: rota.abort()}
 
 
+# site/dados fica fora do git (regravado pelo agendador): os testes usam esta amostra, em vez do arquivo gerado.
+NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "fontes": [{"id": "senado", "nome": "Agência Senado", "ok": True}],
+                    "atividades": {}, "tributacao": [], "itens": []}
+
+
 def _cards(navegador, servidor, vp="desktop", rotas=None):
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas={**_rotas_campo(_boletim_automatico()), **(rotas or {})})
+    import json
+    noticias = {"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=200, content_type="application/json", body=json.dumps(NOTICIAS_EXEMPLO))}
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas={**_rotas_campo(_boletim_automatico()), **noticias, **(rotas or {})})
     pg.locator("[data-agro]").scroll_into_view_if_needed()
     return pg, erros
 

@@ -22,7 +22,7 @@ import argparse
 import json
 import logging
 import shutil
-import subprocess  # nosec B404 — só executa node, firebase e schtasks com argumentos fixos
+import subprocess  # nosec B404 — só executa node e schtasks com argumentos fixos
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -150,13 +150,12 @@ def gravar(boletim: dict, destino: Path) -> None:
 
 
 def publicar() -> None:
-    firebase = shutil.which("firebase")
-    if not firebase:
-        raise RuntimeError("Firebase CLI não encontrado no PATH")
-    cmd = [firebase, "deploy", "--only", "hosting", "--project", "orgatec-site", "--account", "orgatec.cloud@gmail.com"]
-    r = subprocess.run(cmd, cwd=RAIZ, capture_output=True, text=True, check=False)  # nosec B603 — argumentos fixos
-    if r.returncode != 0:
-        raise RuntimeError(f"publicação falhou: {r.stderr.strip() or r.stdout.strip()}")
+    """Mesma trava da publicação manual: só da main e sem alterações pendentes, para não levar trabalho pela metade."""
+    import publicar as P
+    motivo = P.motivo_para_nao_publicar()
+    if motivo:
+        raise RuntimeError(f"publicação bloqueada: {motivo}")
+    P.implantar()
     log.info("publicado no Firebase Hosting")
 
 

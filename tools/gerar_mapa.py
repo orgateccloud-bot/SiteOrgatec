@@ -12,6 +12,8 @@ Uso:  python tools/gerar_mapa.py
 from __future__ import annotations
 
 import re
+import shutil
+import subprocess  # nosec B404 — só executa git com argumentos fixos
 from datetime import datetime, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape  # nosec B406 - só escapa texto ao escrever o sitemap; não lê XML
@@ -20,6 +22,16 @@ RAIZ = Path(__file__).resolve().parent.parent
 SITE = RAIZ / "site"
 CANONICAL = re.compile(r'<link rel="canonical" href="([^"]+)"')
 NOINDEX = re.compile(r'<meta name="robots" content="noindex', re.I)
+
+
+def data_da_pagina(arquivo: Path) -> str:
+    """Data do último commit da página: regerar o site muda a data do arquivo, mesmo com o conteúdo igual."""
+    git = shutil.which("git")
+    if git:
+        r = subprocess.run([git, "log", "-1", "--format=%cs", "--", str(arquivo)], cwd=RAIZ, capture_output=True, text=True, check=False)  # nosec B603
+        if r.stdout.strip():
+            return r.stdout.strip()
+    return datetime.fromtimestamp(arquivo.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%d")
 
 
 def paginas() -> list[tuple[str, str]]:
@@ -32,13 +44,12 @@ def paginas() -> list[tuple[str, str]]:
         canonico = CANONICAL.search(html)
         if not canonico or NOINDEX.search(html):
             continue
-        data = datetime.fromtimestamp(arquivo.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%d")
-        saida.append((canonico.group(1), data))
+        saida.append((canonico.group(1), data_da_pagina(arquivo)))
     saida.sort(key=lambda p: (p[0].split("://", 1)[1].rstrip("/").count("/"), p[0]))  # raiz, páginas da raiz, depois seções
     return saida
 
 
-def main() -> None:
+def main(destino: Path = SITE / "sitemap.xml") -> None:
     lista = paginas()
     urls = "\n".join(f"  <url><loc>{escape(u)}</loc><lastmod>{d}</lastmod></url>" for u, d in lista)
     xml = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -47,8 +58,8 @@ def main() -> None:
 {urls}
 </urlset>
 """
-    (SITE / "sitemap.xml").write_text(xml, encoding="utf-8", newline="\n")
-    print(f"gerado: site/sitemap.xml ({len(lista)} páginas)")
+    destino.write_text(xml, encoding="utf-8", newline="\n")
+    print(f"gerado: {destino.name} ({len(lista)} páginas)")
 
 
 if __name__ == "__main__":
