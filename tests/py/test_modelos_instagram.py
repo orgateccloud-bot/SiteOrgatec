@@ -56,10 +56,20 @@ def test_calendario_e_rascunhos_lidos_do_marketing(dados):
 
 def test_perfil_do_kit_cabe_no_instagram():
     perf = I.perfil()
-    assert perf["nome"].startswith("ORGATEC")
+    assert perf["nome"] == "ORGATEC" and len(perf["nome"]) <= 30  # o nome da conta vale sobre o do kit
     assert len("\n".join(perf["bio"])) <= 150  # limite da bio
     assert perf["link"].startswith("https://wa.me/") and "Instagram" in perf["link"]
     assert "Quem somos" in perf["destaques"] and len(perf["destaques"]) == 6
+
+
+def test_simulacao_mostra_a_conta_real():
+    perf, cfg = I.perfil(), I.config_site()
+    html = I.simulacao_html(perf, [], [], cfg)
+    assert "@orgatec.io" in html and "a definir" not in html
+    assert '<p class="nome">ORGATEC</p>' in html and f'<p class="cat">{perf["categoria"]}</p>' in html
+    assert 'class="end"' not in html and 'class="zap"' not in html  # sem contato público, por decisão da ORGATEC
+    com_contato = I.simulacao_html({**perf, "contato": True}, [], [], cfg)
+    assert 'class="end"' in com_contato and 'class="zap"' in com_contato
 
 
 def test_regras_das_pecas(dados):

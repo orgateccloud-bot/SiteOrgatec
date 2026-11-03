@@ -202,7 +202,8 @@ Ficam na Janela de Campo, depois do boletim. A configuração única está em `t
 
 `python tools/modelos_instagram.py` desenha as peças do Instagram com a identidade do site: tokens, fontes do site e logotipo original, pela mesma base do cartão (`tools/imagem_marca.py`).
 
-- **Fonte do texto:** a ferramenta só lê a pasta do marketing (`D:\01_Projetos_Ativos\Marketing`): o calendário do mês, os rascunhos das peças (`## Conteúdo`), o kit do Instagram (nome, bio, endereço, destaques) e o link "Vim pelo Instagram" do kit do WhatsApp. Quando o marketing muda um rascunho, basta rodar de novo.
+- **Fonte do texto:** a ferramenta só lê a pasta do marketing (`D:\01_Projetos_Ativos\Marketing`): o calendário do mês, os rascunhos das peças (`## Conteúdo`), o kit do Instagram (bio, endereço, destaques) e o link "Vim pelo Instagram" do kit do WhatsApp. Quando o marketing muda um rascunho, basta rodar de novo.
+- **Dados da conta:** @, nome, categoria e se o contato é público ficam em `CONTA`, em `tools/modelos_instagram.py`, com o que está em `https://www.instagram.com/orgatec.io/`.
 - **Saída** em `modelos-redes/instagram/`, fora de `site/`, então não é publicada:
   - `perfil/foto-perfil.png` (1080 × 1080);
   - `destaques/*.png` (capas, 1080 × 1920);

@@ -4,7 +4,7 @@
 O texto das peças continua no marketing (fonte única; esta ferramenta só LÊ a pasta):
     Marketing/conteudo/calendario/<mês>.md      peças P01…, datas, pilar, público e stories de prazo
     Marketing/conteudo/rascunhos/*.md           lâminas de cada carrossel (## Conteúdo) e status da peça
-    Marketing/canais/instagram/kit.md           nome, bio, endereço e destaques do perfil
+    Marketing/canais/instagram/kit.md           bio, endereço e destaques do perfil
     Marketing/canais/whatsapp/kit.md            link "Vim pelo Instagram"
 e desenha com a identidade do site (tools/imagem_marca.py: Azul flutuante escuro, fontes do site, logotipo original):
 
@@ -40,6 +40,9 @@ RAIZ = M.RAIZ
 MARKETING = RAIZ.parent / "Marketing"
 SAIDA = RAIZ / "modelos-redes" / "instagram"
 RT = ("Robson Alain Veloso", "CRC-TO 002032/O-5 T-GO")  # responsável técnico, como no rodapé do site
+# O que está na conta https://www.instagram.com/orgatec.io/ (aplicado em 03/11/2026). O nome vale sobre o do kit do
+# marketing; contato False = sem telefone nem endereço públicos no perfil, por decisão da ORGATEC.
+CONTA = {"usuario": "orgatec.io", "nome": "ORGATEC", "categoria": "Serviço de contabilidade", "contato": False}
 FEED, STORY, PERFIL = (1080, 1350), (1080, 1920), (1080, 1080)
 STORY_MARGENS = (140, 210)  # faixas cobertas no alto (nome, progresso) e embaixo (resposta), como no cartão do status
 PILARES = {"bastidores": "Bastidores", "agenda": "Agenda", "reforma": "Reforma", "campo": "Campo",
@@ -132,13 +135,13 @@ def laminas(peca: dict) -> tuple[dict, list[dict]]:
 
 def perfil() -> dict:
     kit = (MARKETING / "canais" / "instagram" / "kit.md").read_text(encoding="utf-8")
-    linha = lambda campo: re.search(rf"^\| {campo} \| (.+?) \|$", kit, re.M).group(1).replace("\\|", "|")  # noqa: E731
+    endereco = re.search(r"^\| Endereço \| (.+?) \|$", kit, re.M).group(1)
     bio = [b[2:].strip() for b in re.findall(r"^> .+$", _secao(kit, "2. Perfil"), re.M)]
     destaques = [d.strip() for d in re.findall(r"^\| ([^|]+?) \| [^|]+ \|$", _secao(kit, "3. Destaques"), re.M)
                  if d.strip() not in ("Destaque", "---")]
     whats = (MARKETING / "canais" / "whatsapp" / "kit.md").read_text(encoding="utf-8")
     link = re.search(r"^\| Instagram[^|]*\| `([^`]+)` \|", whats, re.M).group(1)
-    return {"nome": linha("Nome"), "endereco": linha("Endereço"), "bio": bio, "destaques": destaques, "link": link}
+    return {**CONTA, "endereco": endereco, "bio": bio, "destaques": destaques, "link": link}
 
 
 def config_site() -> dict:
@@ -295,6 +298,8 @@ def simulacao_html(perf: dict, pecas: list[dict], stories: list[dict], cfg: dict
                           for s in stories)
     bio = "<br>".join(escape(b) for b in perf["bio"])
     link = perf["link"].split("?")[0].removeprefix("https://")
+    endereco = f'<p class="end">{escape(perf["endereco"])}</p>' if perf["contato"] else ""
+    botoes = '<span class="zap">WhatsApp</span><span>Endereço</span>' if perf["contato"] else ""
     return f"""<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Simulação do perfil · ORGATEC</title>
@@ -309,14 +314,13 @@ body{{background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--f-body);pad
 .celular{{width:390px;flex:none;background:#000;border:10px solid #1b1f27;border-radius:46px;overflow:hidden;color:#f5f5f5;position:sticky;top:24px}}
 .celular .tela{{height:780px;overflow-y:auto;padding:14px 0 0}}
 .barra-topo{{display:flex;justify-content:space-between;align-items:center;padding:6px 16px 12px;font-weight:600;font-size:17px}}
-.barra-topo small{{font:400 11px var(--f-mono);color:#9aa}}
 .cab{{display:flex;align-items:center;gap:22px;padding:0 16px}}
 .cab img{{width:86px;height:86px;border-radius:50%;border:1px solid #333}}
 .nums{{display:flex;gap:18px;text-align:center;font-size:13px}}.nums b{{display:block;font-size:16px}}
 .bio{{padding:12px 16px 0;font-size:13.5px;line-height:1.4}}
 .bio .nome{{font-weight:600}}.bio .cat{{color:#a8a8a8}}.bio a{{color:#e0f1ff;text-decoration:none;font-weight:600}}
 .bio .end{{color:#a8a8a8;margin-top:4px}}
-.botoes{{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 16px}}
+.botoes{{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;padding:12px 16px}}
 .botoes span{{background:#262626;border-radius:8px;text-align:center;padding:7px 0;font-size:12.5px;font-weight:600}}
 .botoes span.seguir{{background:var(--brand);color:var(--brand-ink)}}.botoes span.zap{{background:{CONTATO["contato"]};color:#fff}}
 .dest{{display:flex;gap:14px;overflow-x:auto;padding:6px 16px 14px}}
@@ -339,15 +343,15 @@ body{{background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--f-body);pad
 .stories img{{width:200px;aspect-ratio:9/16;border-radius:12px;border:1px solid var(--line);display:block;margin-bottom:6px}}
 </style></head><body>
 <p class="aviso"><strong>Simulação local do perfil, para revisar antes de montar.</strong> Não é a interface do Instagram e nada foi publicado.
-As peças marcadas RASCUNHO aguardam aprovação (M3) e, quando têm afirmação legal, a revisão do responsável técnico. O endereço @ é provisório (pendência M2).
+As peças marcadas RASCUNHO aguardam aprovação (M3) e, quando têm afirmação legal, a revisão do responsável técnico. O link da bio é o planejado: ele ainda precisa ser colocado no app.
 Os textos vêm dos rascunhos do marketing; para atualizar, rode <code>python tools/modelos_instagram.py</code>.</p>
 <div class="grade-geral">
 <div class="celular"><div class="tela">
-<div class="barra-topo"><span>@orgatec <small>(endereço a definir)</small></span><span>☰</span></div>
+<div class="barra-topo"><span>@{escape(perf["usuario"])}</span><span>☰</span></div>
 <div class="cab"><img src="perfil/foto-perfil.png" alt="Foto do perfil"><div class="nums"><span><b>{len(pecas)}</b>publicações</span><span><b>0</b>seguidores</span><span><b>0</b>seguindo</span></div></div>
-<div class="bio"><p class="nome">{escape(perf["nome"])}</p><p class="cat">Contador</p><p>{bio}</p>
-<p><a>{escape(link)}</a></p><p class="end">{escape(perf["endereco"])}</p></div>
-<div class="botoes"><span class="seguir">Seguir</span><span>Mensagem</span><span class="zap">WhatsApp</span><span>Endereço</span></div>
+<div class="bio"><p class="nome">{escape(perf["nome"])}</p><p class="cat">{escape(perf["categoria"])}</p><p>{bio}</p>
+<p><a>{escape(link)}</a></p>{endereco}</div>
+<div class="botoes"><span class="seguir">Seguir</span><span>Mensagem</span>{botoes}</div>
 <div class="dest">{destaques}</div>
 <div class="grade">{"".join(grade)}</div>
 </div></div>
