@@ -14,11 +14,11 @@ O histórico fica no git e no GitHub (`orgateccloud-bot/SiteOrgatec`, privado).
 
 ## Uma ideia, do começo ao fim
 
-1. Copie `docs/ideias/_modelo.md` para `docs/ideias/<nome>.md` e preencha.
-2. Crie a branch e a pasta, a partir da pasta `SiteOrgatec-dev`:
+1. Crie a branch e a pasta, a partir da pasta `SiteOrgatec-dev`:
    ```bash
    git worktree add -b ideia/<nome> ../SiteOrgatec-<nome> desenvolvimento
    ```
+2. Na pasta nova, copie `docs/ideias/_modelo.md` para `docs/ideias/<nome>.md` e preencha.
 3. Desenvolva e faça commits em português.
 4. Gere o link de prévia:
    ```bash
