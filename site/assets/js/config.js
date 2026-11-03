@@ -137,7 +137,7 @@
     },
 
     /* Versão da política de privacidade registrada junto de cada consentimento. */
-    lgpd: { versaoPolitica: '2026-10' }
+    lgpd: { versaoPolitica: '2026-11' }
   };
 
   /* Hospedagens só estáticas (sem a API na mesma origem): Firebase Hosting e o domínio final. */
