@@ -1,0 +1,33 @@
+{
+  "_comentario": "Polos da Janela de Campo: municípios agrícolas que representam cada região. Edite à vontade (nome, uf, lat, lon); a região usa o estado de pelo menos metade dos seus polos. Coordenadas aproximadas do centro do município.",
+  "regioes": [
+    { "id": "co", "nome": "Centro-Oeste", "uf": "MT · GO · DF · MS", "polos": ["sorriso", "rio-verde", "formoso", "dourados"] },
+    { "id": "norte", "nome": "Norte e Tocantins", "uf": "TO · PA · RO", "polos": ["palmas", "gurupi", "paragominas", "porto-velho"] },
+    { "id": "sei", "nome": "Sudeste interior", "uf": "Triângulo e noroeste de MG · norte de SP", "polos": ["uberaba", "unai", "ribeirao-preto"] },
+    { "id": "sel", "nome": "Sudeste leste", "uf": "RJ · ES · centro-sul de SP", "polos": ["campos", "linhares", "campinas"] },
+    { "id": "sul", "nome": "Sul", "uf": "PR · SC · RS", "polos": ["cascavel", "chapeco", "passo-fundo"] },
+    { "id": "ne", "nome": "Nordeste e Matopiba", "uf": "BA · MA · PE", "polos": ["lem", "balsas", "petrolina"] }
+  ],
+  "polos": [
+    { "id": "sorriso", "nome": "Sorriso", "uf": "MT", "lat": -12.545, "lon": -55.711 },
+    { "id": "rio-verde", "nome": "Rio Verde", "uf": "GO", "lat": -17.792, "lon": -50.919 },
+    { "id": "formoso", "nome": "Formoso", "uf": "GO", "lat": -13.650, "lon": -48.878 },
+    { "id": "dourados", "nome": "Dourados", "uf": "MS", "lat": -22.221, "lon": -54.806 },
+    { "id": "palmas", "nome": "Palmas", "uf": "TO", "lat": -10.184, "lon": -48.334 },
+    { "id": "gurupi", "nome": "Gurupi", "uf": "TO", "lat": -11.730, "lon": -49.069 },
+    { "id": "paragominas", "nome": "Paragominas", "uf": "PA", "lat": -2.997, "lon": -47.353 },
+    { "id": "porto-velho", "nome": "Porto Velho", "uf": "RO", "lat": -8.762, "lon": -63.904 },
+    { "id": "uberaba", "nome": "Uberaba", "uf": "MG", "lat": -19.747, "lon": -47.938 },
+    { "id": "unai", "nome": "Unaí", "uf": "MG", "lat": -16.358, "lon": -46.906 },
+    { "id": "ribeirao-preto", "nome": "Ribeirão Preto", "uf": "SP", "lat": -21.178, "lon": -47.810 },
+    { "id": "campos", "nome": "Campos dos Goytacazes", "uf": "RJ", "lat": -21.755, "lon": -41.324 },
+    { "id": "linhares", "nome": "Linhares", "uf": "ES", "lat": -19.391, "lon": -40.072 },
+    { "id": "campinas", "nome": "Campinas", "uf": "SP", "lat": -22.906, "lon": -47.061 },
+    { "id": "cascavel", "nome": "Cascavel", "uf": "PR", "lat": -24.956, "lon": -53.455 },
+    { "id": "chapeco", "nome": "Chapecó", "uf": "SC", "lat": -27.100, "lon": -52.615 },
+    { "id": "passo-fundo", "nome": "Passo Fundo", "uf": "RS", "lat": -28.262, "lon": -52.406 },
+    { "id": "lem", "nome": "Luís Eduardo Magalhães", "uf": "BA", "lat": -12.096, "lon": -45.787 },
+    { "id": "balsas", "nome": "Balsas", "uf": "MA", "lat": -7.533, "lon": -46.036 },
+    { "id": "petrolina", "nome": "Petrolina", "uf": "PE", "lat": -9.389, "lon": -40.503 }
+  ]
+}

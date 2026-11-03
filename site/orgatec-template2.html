@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>orgatec-template2 | Design system ORGATEC</title>
+    <meta name="description" content="Design system ORGATEC (orgatec-template2): cores, tipografia, medidas, logotipos e componentes do site.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="assets/marca/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/marca/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="assets/marca/apple-touch-icon.png">
+    <meta name="theme-color" content="#072563">
+    <link href="assets/fontes/fontes.css" rel="stylesheet">
+    <!-- Gerado por tools/gerar_design_system.py a partir de design-system/orgatec-template2/. Não edite à mão. -->
+    <style>
+/* orgatec-template2 — generated from tokens.json */
+:root, [data-theme="claro"] {
+  --fundo: #f8fafc;
+  --superficie: #ffffff;
+  --linha: #e2e8f0;
+  --linha-campo: #cbd5e1;
+  --tinta: #0f172a;
+  --tinta-texto: #1e293b;
+  --tinta-suave: #475569;
+  --tinta-fraca: #64748b;
+  --acao: #2563eb;
+  --acao-hover: #1d4ed8;
+  --sobre-acao: #ffffff;
+  --link: #2563eb;
+  --contato: #10b981;
+  --contato-hover: #059669;
+  --sobre-contato: #ffffff;
+  --marca-navy: #072563;
+  --marca-azul: #214c90;
+  --marca-azul-medio: #0970b5;
+  --marca-ciano: #03aee4;
+  --marca-ciano-luz: #03defa;
+  --marca-tinta: #0f172a;
+  --marca-branco: #ffffff;
+  --faixa-1: var(--marca-navy);
+  --faixa-2: var(--marca-azul);
+  --faixa-3: var(--marca-azul-medio);
+  --faixa-4: var(--marca-ciano);
+  --descritor: #0970b5;
+  --palco: #0f172a;
+  --palco-texto: #cbd5e1;
+  --palco-ponto: #38bdf8;
+  --pendente-fundo: #fef3c7;
+  --pendente-texto: #92400e;
+  --pendente-borda: #fcd34d;
+  --definido-fundo: #d1fae5;
+  --definido-texto: #065f46;
+  --aviso-fundo: #fffbeb;
+  --aviso-texto: #78350f;
+  --aviso-borda: #fde68a;
+  --sombra-sm: 0 1px 2px 0 #0000000d;
+  --sombra-lg: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
+  --foco: 0 0 0 2px #2563eb;
+}
+[data-theme="escuro"] {
+  --fundo: #0f172a;
+  --superficie: rgba(255,255,255,0.06);
+  --linha: rgba(255,255,255,0.12);
+  --linha-campo: rgba(255,255,255,0.24);
+  --tinta: #ffffff;
+  --tinta-texto: #e2e8f0;
+  --tinta-suave: #cbd5e1;
+  --tinta-fraca: #94a3b8;
+  --acao: #2563eb;
+  --acao-hover: #1d4ed8;
+  --sobre-acao: #ffffff;
+  --link: #0ea5e9;
+  --contato: #10b981;
+  --contato-hover: #059669;
+  --sobre-contato: #ffffff;
+  --faixa-1: var(--marca-azul);
+  --faixa-2: var(--marca-azul-medio);
+  --faixa-3: var(--marca-ciano);
+  --faixa-4: var(--marca-ciano-luz);
+  --descritor: #03defa;
+  --palco: #0f172a;
+  --palco-texto: #cbd5e1;
+  --palco-ponto: #38bdf8;
+  --foco: 0 0 0 2px #0ea5e9;
+}
+:root {
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-5: 20px;
+  --espaco-6: 24px;
+  --espaco-8: 32px;
+  --espaco-10: 40px;
+  --espaco-20: 80px;
+  --raio-lg: 8px;
+  --raio-xl: 12px;
+  --raio-2xl: 16px;
+  --raio-icone: 24px;
+  --raio-pilula: 9999px;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+.nome-marca { font-family: var(--font-sans); font-size: 48px; line-height: 1; font-weight: 800; letter-spacing: 0.04em; }
+.descritor { font-family: var(--font-sans); font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: 0.32em; }
+.titulo-hero { font-family: var(--font-sans); font-size: 60px; line-height: 1.25; font-weight: 800; letter-spacing: -0.025em; }
+.titulo-secao { font-family: var(--font-sans); font-size: 30px; line-height: 36px; font-weight: 700; }
+.titulo-cartao { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 700; }
+.lead { font-family: var(--font-sans); font-size: 20px; line-height: 28px; font-weight: 400; }
+.corpo { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; }
+.pequeno { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; }
+.rotulo { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 600; }
+.sobretitulo { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.1em; }
+.selo { font-family: var(--font-sans); font-size: 10px; line-height: 15px; font-weight: 600; }
+.referencia { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 400; }
+.dado { font-family: var(--font-mono); font-size: 14px; line-height: 20px; font-weight: 600; }
+
+@media (prefers-color-scheme: dark) { :root:not([data-theme="claro"]) { --fundo: #0f172a; --superficie: rgba(255,255,255,0.06); --linha: rgba(255,255,255,0.12); --linha-campo: rgba(255,255,255,0.24); --tinta: #ffffff; --tinta-texto: #e2e8f0; --tinta-suave: #cbd5e1; --tinta-fraca: #94a3b8; --acao: #2563eb; --acao-hover: #1d4ed8; --sobre-acao: #ffffff; --link: #0ea5e9; --contato: #10b981; --contato-hover: #059669; --sobre-contato: #ffffff; --faixa-1: var(--marca-azul); --faixa-2: var(--marca-azul-medio); --faixa-3: var(--marca-ciano); --faixa-4: var(--marca-ciano-luz); --descritor: #03defa; --palco: #0f172a; --palco-texto: #cbd5e1; --palco-ponto: #38bdf8; --foco: 0 0 0 2px #0ea5e9; color-scheme: dark; } }
+[data-theme="escuro"] { color-scheme: dark; }
+/* OrgatecUI — componentes do site ORGATEC. Valores vêm de tokens.css. */
+.ds-body-og { margin: 0; font-family: var(--font-sans); background: var(--fundo); color: var(--tinta-texto); -webkit-font-smoothing: antialiased; }
+.og-linha { display: flex; flex-wrap: wrap; gap: var(--espaco-3); align-items: center; padding: var(--espaco-4); }
+.og-pilha { display: grid; gap: var(--espaco-4); padding: var(--espaco-4); }
+.og-palco { background: var(--palco); color: var(--marca-branco); border-radius: var(--raio-2xl); padding: var(--espaco-6); }
+.og-painel-branco { background: var(--marca-branco); border-radius: var(--raio-2xl); padding: var(--espaco-6); }
+
+.og-simbolo { display: inline-block; flex-shrink: 0; }
+.og-simbolo svg { display: block; width: 100%; height: 100%; }
+.og-assinatura { display: inline-flex; align-items: center; gap: var(--espaco-4); }
+.og-assinatura-reduzida { gap: var(--espaco-3); }
+.og-assinatura-vertical { flex-direction: column; text-align: center; gap: var(--espaco-4); }
+.og-assinatura-texto { display: flex; flex-direction: column; }
+.og-nome { font-family: var(--font-sans); font-weight: 800; letter-spacing: .04em; line-height: 1; font-size: 48px; }
+.og-assinatura-reduzida .og-nome { font-size: 24px; }
+.og-assinatura-vertical .og-nome { font-size: 36px; }
+.og-descritor { font-weight: 600; letter-spacing: .32em; text-transform: uppercase; font-size: 11px; line-height: 16px; margin-top: var(--espaco-2); }
+.og-tom-claro .og-nome { color: var(--marca-tinta); }
+.og-tom-claro .og-descritor { color: var(--marca-azul-medio); }
+.og-tom-escuro .og-nome { color: var(--marca-branco); }
+.og-tom-escuro .og-descritor { color: var(--marca-ciano-luz); }
+
+.og-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--espaco-2); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: background-color .15s, border-color .15s, color .15s; }
+.og-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--foco); }
+.og-btn-md { font-size: 14px; line-height: 20px; padding: 10px var(--espaco-5); border-radius: var(--raio-lg); }
+.og-btn-lg { font-size: 16px; line-height: 24px; padding: var(--espaco-4) var(--espaco-8); border-radius: var(--raio-xl); }
+.og-btn-primario { background: var(--acao); color: var(--sobre-acao); }
+.og-btn-primario:hover { background: var(--acao-hover); }
+.og-btn-lg.og-btn-primario { box-shadow: var(--sombra-lg); }
+.og-btn-contato { background: var(--contato); color: var(--sobre-contato); box-shadow: var(--sombra-sm); }
+.og-btn-contato:hover { background: var(--contato-hover); }
+.og-btn-contorno { background: transparent; color: var(--tinta-texto); border-color: var(--linha-campo); font-weight: 500; }
+.og-btn-contorno:hover { color: var(--link); border-color: var(--acao); }
+.og-btn-sobre-palco { background: rgba(255,255,255,0.1); color: var(--marca-branco); border-color: rgba(255,255,255,0.2); }
+.og-btn-sobre-palco:hover { background: rgba(255,255,255,0.2); }
+
+.og-selo { display: inline-flex; align-items: center; font-size: 10px; line-height: 15px; font-weight: 600; padding: 2px var(--espaco-2); border-radius: var(--raio-pilula); border: 1px solid transparent; white-space: nowrap; vertical-align: middle; }
+.og-selo-pendente { background: var(--pendente-fundo); color: var(--pendente-texto); border-color: var(--pendente-borda); }
+.og-selo-definido { background: var(--definido-fundo); color: var(--definido-texto); }
+.og-selo-futuro { background: var(--superficie); color: var(--link); border-color: var(--acao); }
+.og-selo-norma { font-size: 12px; line-height: 16px; letter-spacing: .05em; text-transform: uppercase; padding: var(--espaco-1) var(--espaco-3); background: rgba(37,99,235,0.2); color: #67e8f9; border-color: rgba(37,99,235,0.3); }
+
+.og-citacao { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--espaco-2); font-size: 14px; line-height: 20px; }
+.og-link { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+.og-link:focus-visible { outline: none; box-shadow: var(--foco); border-radius: 2px; }
+
+.og-cartao { display: block; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio-2xl); padding: var(--espaco-5); text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; }
+a.og-cartao:hover { border-color: var(--acao); box-shadow: var(--sombra-lg); }
+a.og-cartao:focus-visible { outline: none; box-shadow: var(--foco); }
+.og-cartao-ref { font-family: var(--font-mono); font-size: 12px; line-height: 16px; color: var(--link); }
+.og-cartao-titulo { font-size: 16px; line-height: 24px; font-weight: 700; color: var(--tinta); margin: var(--espaco-2) 0; display: flex; flex-wrap: wrap; gap: var(--espaco-2); align-items: center; }
+a.og-cartao:hover .og-cartao-titulo { color: var(--link); }
+.og-cartao-texto { font-size: 14px; line-height: 20px; color: var(--tinta-suave); margin: 0; }
+.og-item { display: grid; gap: var(--espaco-3); align-content: start; }
+.og-item .og-cartao-titulo { margin: 0; }
+.og-item-orientacao { border-top: 1px solid var(--linha); padding-top: var(--espaco-3); font-size: 14px; line-height: 20px; color: var(--tinta-texto); }
+.og-item-orientacao p { margin: var(--espaco-1) 0 0; }
+.og-item-rotulo { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-fraca); }
+.og-item-fontes { display: grid; gap: var(--espaco-1); font-size: 12px; }
+.og-item-fontes .og-citacao { font-size: 12px; line-height: 16px; }
+.og-item-meta { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 16px; color: var(--tinta-fraca); }
+
+.og-campo { display: grid; gap: var(--espaco-2); }
+.og-campo-rotulo { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--tinta-texto); }
+.og-campo-controle { font: inherit; color: var(--tinta-texto); background: var(--superficie); border: 1px solid var(--linha-campo); width: 100%; box-sizing: border-box; }
+.og-campo-controle:focus { outline: none; box-shadow: var(--foco); }
+.og-campo-md { font-size: 14px; padding: var(--espaco-2) var(--espaco-3); border-radius: var(--raio-lg); }
+.og-campo-lg { font-size: 16px; padding: var(--espaco-3) var(--espaco-4); border-radius: var(--raio-xl); }
+.og-campo-invalido { border-color: var(--pendente-texto); }
+.og-campo-ajuda { margin: 0; font-size: 12px; line-height: 16px; color: var(--tinta-fraca); }
+.og-campo-erro { margin: 0; font-size: 14px; line-height: 20px; color: var(--pendente-texto); }
+
+.og-consentimento { display: flex; align-items: flex-start; gap: var(--espaco-2); font-size: 12px; line-height: 16px; color: var(--tinta-suave); }
+.og-consentimento input { margin-top: 2px; accent-color: var(--acao); }
+.og-consentimento a { color: var(--link); }
+
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: var(--font-sans); background: var(--fundo); color: var(--tinta-texto); -webkit-font-smoothing: antialiased; }
+.ds-topo { position: sticky; top: 0; z-index: 20; background: var(--fundo); border-bottom: 1px solid var(--linha); }
+.ds-topo-in { max-width: 1200px; margin: 0 auto; padding: 0 var(--espaco-4); height: 64px; display: flex; align-items: center; justify-content: space-between; gap: var(--espaco-4); }
+.ds-marca { display: flex; align-items: center; gap: var(--espaco-2); text-decoration: none; color: var(--tinta); font-weight: 800; letter-spacing: .04em; font-size: 18px; white-space: nowrap; }
+.ds-marca small { font-family: var(--font-mono); font-weight: 400; letter-spacing: 0; font-size: 12px; color: var(--tinta-fraca); }
+.ds-nav { display: none; gap: var(--espaco-5); font-size: 14px; }
+.ds-nav a { color: var(--tinta-suave); text-decoration: none; }
+.ds-nav a:hover { color: var(--link); }
+@media (min-width: 1024px) { .ds-nav { display: flex; } }
+.ds-tema { font: inherit; font-size: 13px; padding: 6px var(--espaco-3); border-radius: var(--raio-lg); border: 1px solid var(--linha-campo); background: transparent; color: var(--tinta-texto); cursor: pointer; white-space: nowrap; }
+.ds-tema:focus-visible { outline: none; box-shadow: var(--foco); }
+main { max-width: 1200px; margin: 0 auto; padding: var(--espaco-10) var(--espaco-4) var(--espaco-20); display: grid; gap: var(--espaco-20); }
+section { scroll-margin-top: 80px; min-width: 0; }
+.ds-sobre { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--link); margin: 0 0 var(--espaco-2); }
+.ds-h2 { font-size: 30px; line-height: 36px; font-weight: 700; color: var(--tinta); margin: 0 0 var(--espaco-6); text-wrap: balance; }
+.ds-h3 { font-size: 16px; line-height: 24px; font-weight: 700; color: var(--tinta); margin: var(--espaco-6) 0 var(--espaco-3); }
+.ds-mono { font-family: var(--font-mono); font-size: 12px; color: var(--tinta-suave); }
+.ds-capa { position: relative; height: 288px; border-radius: var(--raio-2xl); overflow: hidden; background: var(--superficie); border: 1px solid var(--linha); }
+.ds-capa svg { position: absolute; right: 0; top: 0; height: 288px; width: 480px; }
+.ds-capa .navy { fill: var(--faixa-1); } .ds-capa .azul { fill: var(--faixa-2); } .ds-capa .medio { fill: var(--faixa-3); } .ds-capa .ciano { fill: var(--faixa-4); } .ds-capa .ponto { fill: var(--marca-ciano-luz); }
+.ds-capa-txt { position: absolute; left: var(--espaco-8); bottom: var(--espaco-8); }
+.ds-capa-txt h1 { margin: 0; font-size: 84px; line-height: .92; font-weight: 800; letter-spacing: .04em; color: var(--tinta); }
+.ds-capa-txt p { margin: var(--espaco-3) 0 0 4px; font-size: 13px; font-weight: 600; letter-spacing: .32em; text-transform: uppercase; color: var(--tinta-suave); }
+@media (max-width: 760px) {
+  .ds-capa { height: 320px; }
+  .ds-capa svg { width: 100%; height: 160px; }
+  .ds-capa-txt { left: var(--espaco-5); bottom: var(--espaco-5); }
+  .ds-capa-txt h1 { font-size: 52px; }
+  .ds-capa-txt p { font-size: 11px; letter-spacing: .24em; }
+}
+.ds-manual { max-width: 72ch; font-size: 16px; line-height: 26px; color: var(--tinta-texto); }
+.ds-manual h3 { font-size: 20px; line-height: 28px; color: var(--tinta); margin: var(--espaco-8) 0 var(--espaco-2); }
+.ds-manual ul { padding-left: 1.2em; margin: 0; display: grid; gap: var(--espaco-2); }
+.ds-manual code, .ds-cor-info small code { font-family: var(--font-mono); font-size: .85em; background: var(--linha); padding: 1px 5px; border-radius: 4px; }
+.ds-grade-cores { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--espaco-3); }
+.ds-cor { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio-xl); overflow: hidden; display: flex; flex-direction: column; }
+.ds-cor-bloco { height: 64px; border-bottom: 1px solid var(--linha); }
+.ds-cor-info { padding: var(--espaco-3); display: grid; gap: 2px; min-width: 0; }
+.ds-cor-info b { color: var(--tinta); font-size: 14px; }
+.ds-cor-info small, .ds-tipo small, .ds-medida small, .ds-raio small { color: var(--tinta-suave); font-size: 12px; line-height: 17px; }
+.ds-tipo { display: grid; grid-template-columns: 240px 1fr; gap: var(--espaco-6); padding: var(--espaco-4) 0; border-top: 1px solid var(--linha); align-items: baseline; }
+.ds-tipo-meta { display: grid; gap: 2px; }
+.ds-tipo-meta b { color: var(--tinta); font-size: 14px; }
+.ds-tipo-amostra { color: var(--tinta); min-width: 0; overflow-wrap: anywhere; }
+.titulo-hero.ds-tipo-amostra { font-size: clamp(32px, 5vw, 60px); }
+@media (max-width: 760px) { .ds-tipo { grid-template-columns: 1fr; gap: var(--espaco-2); } }
+.ds-medidas { display: grid; gap: var(--espaco-2); }
+.ds-medida { display: grid; grid-template-columns: 96px 110px 56px 1fr; gap: var(--espaco-3); align-items: center; }
+.ds-barra { height: 12px; background: var(--acao); border-radius: 2px; max-width: 96px; }
+.ds-medida b, .ds-raio b { color: var(--tinta); font-size: 14px; }
+@media (max-width: 760px) { .ds-medida { grid-template-columns: 96px 1fr; } .ds-medida small { grid-column: 1 / -1; } }
+.ds-grade-raios { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--espaco-4); }
+.ds-raio { display: grid; gap: 4px; }
+.ds-raio-caixa { height: 72px; background: var(--superficie); border: 2px solid var(--acao); margin-bottom: var(--espaco-2); }
+.ds-sombra { border-color: var(--linha); border-radius: var(--raio-xl); }
+.ds-grade-arquivos { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--espaco-3); }
+.ds-arquivo { margin: 0; background: #ffffff; border: 1px solid var(--linha); border-radius: var(--raio-xl); padding: var(--espaco-4); display: grid; gap: var(--espaco-3); justify-items: center; }
+.ds-arquivo-escuro { background: var(--palco); }
+.ds-arquivo img { height: 88px; width: 100%; object-fit: contain; }
+.ds-arquivo figcaption { font-size: 12px; overflow-wrap: anywhere; text-align: center; }
+.ds-arquivo-escuro .og-link { color: #0ea5e9; }
+.ds-comps { display: grid; gap: var(--espaco-6); }
+.ds-comp { background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio-2xl); padding: var(--espaco-6); min-width: 0; }
+.ds-comp header p { margin: 0 0 var(--espaco-4); color: var(--tinta-suave); font-size: 14px; }
+.ds-comp .ds-h3 { margin-top: 0; font-family: var(--font-mono); }
+.ds-comp-palco { display: grid; gap: var(--espaco-4); }
+.ds-comp-palco > * { min-width: 0; }
+.ds-sem-pad { padding: 0; }
+.ds-linha-solta { display: flex; flex-wrap: wrap; gap: var(--espaco-10); align-items: center; }
+.ds-grade-cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--espaco-4); }
+.ds-codigo { margin: var(--espaco-4) 0 0; padding: var(--espaco-3) var(--espaco-4); background: var(--palco); color: var(--palco-texto); border-radius: var(--raio-lg); font-family: var(--font-mono); font-size: 12px; line-height: 18px; overflow-x: auto; }
+.og-palco .og-assinatura, .og-painel-branco .og-assinatura { max-width: 100%; }
+@media (max-width: 480px) { .ds-marca small { display: none; } .og-selo-norma { white-space: normal; } .ds-comp { padding: var(--espaco-4); } .og-palco { padding: var(--espaco-4); } }
+@media (max-width: 480px) { .og-assinatura-horizontal .og-nome { font-size: 34px; } .og-assinatura-horizontal .og-simbolo { height: 48px !important; width: 43px !important; } .og-descritor { letter-spacing: .2em; } .og-btn { white-space: normal; text-align: center; } }
+footer { background: var(--palco); color: var(--palco-texto); font-size: 14px; }
+footer div { max-width: 1200px; margin: 0 auto; padding: var(--espaco-8) var(--espaco-4); display: flex; flex-wrap: wrap; gap: var(--espaco-3) var(--espaco-8); justify-content: space-between; align-items: center; }
+footer .ds-mono { color: #0ea5e9; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+    </style>
+</head>
+<body>
+    <header class="ds-topo">
+        <div class="ds-topo-in">
+            <a href="index.html" class="ds-marca"><img src="assets/marca/orgatec-original.png" alt="" width="29" height="32">ORGATEC <small>orgatec-template2</small></a>
+            <nav class="ds-nav" aria-label="Seções"><a href="#manual">Manual</a><a href="#cores">Cores</a><a href="#tipografia">Tipografia</a><a href="#medidas">Medidas</a><a href="#logotipos">Logotipos</a><a href="#componentes">Componentes</a></nav>
+            <button type="button" class="ds-tema" id="btnTema" aria-label="Alternar tema claro e escuro">Tema: automático</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="capa" aria-label="Capa">
+            <div class="ds-capa">
+                <svg viewBox="0 0 480 288" aria-hidden="true">
+                    <rect class="navy" x="40" y="-24" width="144" height="288" rx="16"/>
+                    <rect class="azul" x="192" y="32" width="112" height="232" rx="16"/>
+                    <rect class="medio" x="312" y="72" width="88" height="192" rx="16"/>
+                    <rect class="ciano" x="408" y="112" width="64" height="152" rx="16"/>
+                    <circle class="ponto" cx="80" cy="120" r="1.5"/><circle class="ponto" cx="80" cy="136" r="1.5"/><circle class="ponto" cx="80" cy="152" r="1.5"/><circle class="ponto" cx="80" cy="168" r="1.5"/><circle class="ponto" cx="80" cy="184" r="1.5"/><circle class="ponto" cx="80" cy="200" r="1.5"/><circle class="ponto" cx="80" cy="216" r="1.5"/><circle class="ponto" cx="80" cy="232" r="1.5"/><circle class="ponto" cx="96" cy="120" r="1.5"/><circle class="ponto" cx="96" cy="136" r="1.5"/><circle class="ponto" cx="96" cy="152" r="1.5"/><circle class="ponto" cx="96" cy="168" r="1.5"/><circle class="ponto" cx="96" cy="184" r="1.5"/><circle class="ponto" cx="96" cy="200" r="1.5"/><circle class="ponto" cx="96" cy="216" r="1.5"/><circle class="ponto" cx="96" cy="232" r="1.5"/><circle class="ponto" cx="112" cy="120" r="1.5"/><circle class="ponto" cx="112" cy="136" r="1.5"/><circle class="ponto" cx="112" cy="152" r="1.5"/><circle class="ponto" cx="112" cy="168" r="1.5"/><circle class="ponto" cx="112" cy="184" r="1.5"/><circle class="ponto" cx="112" cy="200" r="1.5"/><circle class="ponto" cx="112" cy="216" r="1.5"/><circle class="ponto" cx="112" cy="232" r="1.5"/><circle class="ponto" cx="128" cy="120" r="1.5"/><circle class="ponto" cx="128" cy="136" r="1.5"/><circle class="ponto" cx="128" cy="152" r="1.5"/><circle class="ponto" cx="128" cy="168" r="1.5"/><circle class="ponto" cx="128" cy="184" r="1.5"/><circle class="ponto" cx="128" cy="200" r="1.5"/><circle class="ponto" cx="128" cy="216" r="1.5"/><circle class="ponto" cx="128" cy="232" r="1.5"/><circle class="ponto" cx="144" cy="120" r="1.5"/><circle class="ponto" cx="144" cy="136" r="1.5"/><circle class="ponto" cx="144" cy="152" r="1.5"/><circle class="ponto" cx="144" cy="168" r="1.5"/><circle class="ponto" cx="144" cy="184" r="1.5"/><circle class="ponto" cx="144" cy="200" r="1.5"/><circle class="ponto" cx="144" cy="216" r="1.5"/><circle class="ponto" cx="144" cy="232" r="1.5"/>
+                </svg>
+                <div class="ds-capa-txt"><h1>ORGATEC</h1><p>Inteligência Tributária</p></div>
+            </div>
+        </section>
+
+        <section id="manual">
+            <p class="ds-sobre">Design system · orgatec-template2</p>
+            <h2 class="ds-h2">Manual</h2>
+            <div class="ds-manual">
+<p>ORGATEC é um escritório de contabilidade consultiva e inteligência tributária, com responsável técnico com CRC ativo e atuação no eixo GO, TO e PA. O site vende diagnóstico tributário da Reforma (EC 132/2023, LC 214/2025). Cada número exibido carrega a fonte legal.</p>
+<h3>Voz e conteúdo</h3>
+<ul>
+<li>Escreva em português do Brasil, direto e técnico, falando com o empresário por &quot;você&quot; e &quot;sua empresa&quot;. A ORGATEC fala de si como &quot;nós&quot; (&quot;Preparamos sua empresa...&quot;).</li>
+<li>O nome é sempre <strong>ORGATEC</strong>, em maiúsculas. Nunca &quot;Orgatec.IO&quot; nem &quot;Orgatec&quot;. Os domínios continuam <code>orgatec.io</code> e <code>portal.orgatec.io</code>.</li>
+<li>Toda regra, alíquota, percentual de incentivo ou prazo cita a norma e o dispositivo (&quot;LC 214/2025, art. 41, §§ 3º e 4º&quot;) com <code>CitacaoFonte</code>. O que não foi confirmado leva o <code>Selo</code> &quot;pendente de validação&quot;. Nunca apresente suposição como fato.</li>
+<li>Use normas como sobretítulo, no formato &quot;EC 132/2023 • LC 214/2025 • Split Payment&quot;.</li>
+<li>Os CTAs são fixos: &quot;Testar Simulador Tributário&quot;, &quot;Agendar Diagnóstico com Especialista&quot;, &quot;Falar no WhatsApp&quot; (&quot;WhatsApp&quot; no celular).</li>
+<li>Todo resultado de simulação traz o aviso: &quot;Simulação orientativa baseada na EC nº 132/2023 e LC nº 214/2025. Não substitui parecer técnico emitido pelo contador responsável.&quot;</li>
+<li>Emoji: nenhum, salvo o 🔒 de &quot;Portal do Cliente&quot; e o ⚠️ do aviso legal, que já existem no site.</li>
+</ul>
+<h3>Cor</h3>
+<ul>
+<li>Página em <code>fundo</code> e blocos em <code>superficie</code>, com borda <code>linha</code>. Títulos em <code>tinta</code>, texto em <code>tinta-texto</code>, apoio em <code>tinta-suave</code> e metadados em <code>tinta-fraca</code>.</li>
+<li>O hero e o rodapé são <code>palco</code> nos dois temas, com texto <code>marca-branco</code> e parágrafo <code>palco-texto</code>. A grade de pontos do hero usa <code>palco-ponto</code> a 16 px de passo (<code>espaco-4</code>) e 10% de opacidade.</li>
+<li><code>acao</code> preenche o botão primário e a aba ativa e desenha o foco. Texto clicável, sobretítulos e referências legais usam <code>link</code>, que no escuro vira ciano.</li>
+<li><code>contato</code> (verde) é exclusivo dos botões de WhatsApp e telefone.</li>
+<li>As cinco cores <code>marca-*</code> são as faixas do símbolo, do navy ao ciano. Use-as em peças de marca e capas, não em texto corrido. <code>marca-ciano</code> nunca vai como texto sobre claro.</li>
+<li>Estados: <code>pendente-*</code> para o que falta validar ou definir, <code>definido-*</code> para o que foi confirmado, <code>aviso-*</code> para a faixa de homologação.</li>
+</ul>
+<h3>Tipografia</h3>
+<ul>
+<li>Inter para tudo, JetBrains Mono para normas, registros, protocolos e valores (<code>referencia</code>, <code>dado</code>).</li>
+<li>O nome usa <code>nome-marca</code> (ExtraBold, +4%) e o descritor <code>descritor</code> (SemiBold, caixa-alta, +32%).</li>
+<li>Hierarquia: <code>titulo-hero</code> só no H1 do hero; <code>titulo-secao</code> em cada H2, com <code>sobretitulo</code> acima em <code>link</code>; <code>titulo-cartao</code> em cartões; <code>lead</code>, <code>corpo</code>, <code>pequeno</code> para texto; <code>rotulo</code> em campos; <code>selo</code> nos selos.</li>
+<li>Carregue as duas famílias do Google Fonts (pesos 400, 600, 700, 800 e 400, 600). Em produção, sirva os arquivos localmente.</li>
+</ul>
+<h3>Espaço, forma e sombra</h3>
+<ul>
+<li>Escala de 4 px: <code>espaco-4</code> entre cartões, <code>espaco-5</code> dentro do cartão do Hub, <code>espaco-20</code> no padding vertical de cada seção. Margem lateral: <code>espaco-4</code> no celular, <code>espaco-6</code> no tablet, <code>espaco-8</code> no desktop. Largura máxima de 1280 px.</li>
+<li>Cantos: <code>raio-lg</code> em campos pequenos e botões do cabeçalho, <code>raio-xl</code> em CTAs e campos do simulador, <code>raio-2xl</code> em cartões, <code>raio-pilula</code> só em selos.</li>
+<li>Sombra só em hover de cartão e no CTA do hero (<code>sombra-lg</code>) e no botão de contato (<code>sombra-sm</code>). O foco de teclado é <code>foco</code>, anel sólido de 2 px.</li>
+<li>O cabeçalho é fixo, branco a 90% com desfoque e borda <code>linha</code>. A navegação completa aparece a partir de 1280 px; abaixo, menu ☰.</li>
+</ul>
+<h3>Marca</h3>
+<ul>
+<li>Use <code>Assinatura</code> ou os arquivos dos grupos Símbolo, Assinaturas e Ícones. Não redesenhe o símbolo.</li>
+<li>Use o símbolo sempre com as cores originais, em fundo claro ou escuro (decisão da ORGATEC de 31/10/2026). A versão branca fica só para usos em uma cor, como carimbo ou gravação.</li>
+<li>Respiro: metade da altura do símbolo. Mínimo: 16 px ou 6 mm de símbolo, 160 px ou 40 mm de assinatura com descritor.</li>
+<li>Não distorça, não gire, não troque as cores, não aplique sombra ou efeito.</li>
+</ul>
+<h3>Iconografia</h3>
+<p>O site não tem biblioteca de ícones: usa texto e dois glifos (🔒 no Portal do Cliente, ☰ no menu móvel). Ao precisar de ícones, escolha um conjunto de traço simples e registre aqui antes de usar.</p>
+<h3>Acessibilidade</h3>
+<ul>
+<li>Texto em <code>tinta</code>, <code>tinta-texto</code>, <code>tinta-suave</code> e <code>tinta-fraca</code> passa de 4,5:1 sobre <code>fundo</code> e <code>superficie</code> nos dois temas.</li>
+<li>Dois pares vêm do site e ficam abaixo do mínimo, mantidos por serem a identidade atual: branco sobre <code>contato</code> (2,5:1) e a borda <code>linha-campo</code> sobre branco (1,5:1). Se quiser corrigir, troque <code>contato</code> por #047857 (5,5:1) e <code>linha-campo</code> por #64748b (4,8:1).</li>
+<li>Todo campo tem rótulo visível; erros saem com <code>role=&quot;alert&quot;</code>; o resultado do simulador é anunciado com <code>aria-live</code>.</li>
+</ul>
+<h3>Rodapé obrigatório</h3>
+<p>Toda página termina com: CNPJ 13.155.211/0001-45; responsável técnico Robson Alain Veloso, <code>CRC-TO 002032/O-5 T-GO</code> em <code>dado</code> e <code>link</code>; sede na Av. Ministro Alfredo Nasser, nº 727, Centro, Formoso-GO; links para a Política de Privacidade (LGPD), as Fontes legais e a Marca; e a linha &quot;Em conformidade com a LGPD e o Código de Ética do CFC (NBC PG 01).&quot;</p>
+            </div>
+        </section>
+
+        <section id="cores">
+            <p class="ds-sobre">38 tokens · temas claro e escuro</p>
+            <h2 class="ds-h2">Cores</h2>
+            <div class="ds-grade-cores"><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--fundo)"></div><div class="ds-cor-info"><b>fundo</b><span class="ds-mono">#f8fafc · #0f172a</span><small>Fundo da página (lightBg). No escuro, a Tinta do hero e do rodapé.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--superficie)"></div><div class="ds-cor-info"><b>superficie</b><span class="ds-mono">#ffffff · rgba(255,255,255,0.06)</span><small>Cartões, formulários, cabeçalho.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--linha)"></div><div class="ds-cor-info"><b>linha</b><span class="ds-mono">#e2e8f0 · rgba(255,255,255,0.12)</span><small>Bordas de cartões e divisórias (slate-200).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--linha-campo)"></div><div class="ds-cor-info"><b>linha-campo</b><span class="ds-mono">#cbd5e1 · rgba(255,255,255,0.24)</span><small>Borda de campos e do botão contorno (slate-300). Fica em 1,5:1 sobre branco, abaixo do 3:1 para bordas de controle: valor do site mantido, ver Acessibilidade.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--tinta)"></div><div class="ds-cor-info"><b>tinta</b><span class="ds-mono">#0f172a · #ffffff</span><small>Títulos e o nome ORGATEC, sobre fundo e superficie.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--tinta-texto)"></div><div class="ds-cor-info"><b>tinta-texto</b><span class="ds-mono">#1e293b · #e2e8f0</span><small>Texto corrido (slate-800), sobre fundo e superficie.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--tinta-suave)"></div><div class="ds-cor-info"><b>tinta-suave</b><span class="ds-mono">#475569 · #cbd5e1</span><small>Parágrafos de apoio e legendas (slate-600; slate-300 no hero), sobre fundo e superficie.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--tinta-fraca)"></div><div class="ds-cor-info"><b>tinta-fraca</b><span class="ds-mono">#64748b · #94a3b8</span><small>Metadados, CNPJ, notas de rodapé (slate-500 / slate-400), sobre fundo e superficie.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--acao)"></div><div class="ds-cor-info"><b>acao</b><span class="ds-mono">#2563eb</span><small>Preenchimento do botão primário e da aba ativa; anel de foco (brandBlue). Como texto, use link.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--acao-hover)"></div><div class="ds-cor-info"><b>acao-hover</b><span class="ds-mono">#1d4ed8</span><small>Hover do botão primário (blue-700).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--sobre-acao)"></div><div class="ds-cor-info"><b>sobre-acao</b><span class="ds-mono">#ffffff</span><small>Texto sobre acao: 5,2:1.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--link)"></div><div class="ds-cor-info"><b>link</b><span class="ds-mono">#2563eb · #0ea5e9</span><small>Links. Claro: brandBlue sobre fundo/superficie. Escuro: brandCyan, como no rodapé (6,4:1 sobre Tinta).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--contato)"></div><div class="ds-cor-info"><b>contato</b><span class="ds-mono">#10b981</span><small>Exclusivo dos botões de contato (WhatsApp). Nunca em outro elemento.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--contato-hover)"></div><div class="ds-cor-info"><b>contato-hover</b><span class="ds-mono">#059669</span><small>Hover do botão de contato (emerald-600).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--sobre-contato)"></div><div class="ds-cor-info"><b>sobre-contato</b><span class="ds-mono">#ffffff</span><small>Texto do botão de contato. Branco sobre contato dá 2,5:1, abaixo de 4,5:1: valor do site mantido, ver Acessibilidade.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-navy)"></div><div class="ds-cor-info"><b>marca-navy</b><span class="ds-mono">#072563</span><small>Faixa 1 do símbolo. Não usar como texto ou preenchimento sobre fundo escuro.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-azul)"></div><div class="ds-cor-info"><b>marca-azul</b><span class="ds-mono">#214c90</span><small>Faixa 2 do símbolo.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-azul-medio)"></div><div class="ds-cor-info"><b>marca-azul-medio</b><span class="ds-mono">#0970b5</span><small>Faixa 3 do símbolo; descritor Inteligência Tributária sobre branco (5,3:1).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-ciano)"></div><div class="ds-cor-info"><b>marca-ciano</b><span class="ds-mono">#03aee4</span><small>Faixa 4 do símbolo. Não usar como texto sobre claro (2,6:1).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-ciano-luz)"></div><div class="ds-cor-info"><b>marca-ciano-luz</b><span class="ds-mono">#03defa</span><small>Brilho da faixa ciano; descritor sobre fundo escuro.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-tinta)"></div><div class="ds-cor-info"><b>marca-tinta</b><span class="ds-mono">#0f172a</span><small>Tinta fixa da marca: nome ORGATEC sobre branco e fundo do hero/rodapé em qualquer tema.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--marca-branco)"></div><div class="ds-cor-info"><b>marca-branco</b><span class="ds-mono">#ffffff</span><small>Nome e símbolo negativos sobre marca-tinta ou marca-navy.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--faixa-1)"></div><div class="ds-cor-info"><b>faixa-1</b><span class="ds-mono">#072563 · #214c90</span><small>Primeira faixa em peças gráficas (capa, divisórias). No escuro sobe um tom para não sumir no fundo.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--faixa-2)"></div><div class="ds-cor-info"><b>faixa-2</b><span class="ds-mono">#214c90 · #0970b5</span><small>Segunda faixa em peças gráficas.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--faixa-3)"></div><div class="ds-cor-info"><b>faixa-3</b><span class="ds-mono">#0970b5 · #03aee4</span><small>Terceira faixa em peças gráficas.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--faixa-4)"></div><div class="ds-cor-info"><b>faixa-4</b><span class="ds-mono">#03aee4 · #03defa</span><small>Quarta faixa em peças gráficas.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--descritor)"></div><div class="ds-cor-info"><b>descritor</b><span class="ds-mono">#0970b5 · #03defa</span><small>Linha Inteligência Tributária sob o nome: azul médio no claro, ciano luz no escuro.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--palco)"></div><div class="ds-cor-info"><b>palco</b><span class="ds-mono">#0f172a</span><small>Hero e rodapé (bg-dark), escuros nos dois temas.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--palco-texto)"></div><div class="ds-cor-info"><b>palco-texto</b><span class="ds-mono">#cbd5e1</span><small>Parágrafo sobre palco (slate-300, 12:1).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--palco-ponto)"></div><div class="ds-cor-info"><b>palco-ponto</b><span class="ds-mono">#38bdf8</span><small>Grade de pontos do hero, a 16 px de passo e 10% de opacidade.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--pendente-fundo)"></div><div class="ds-cor-info"><b>pendente-fundo</b><span class="ds-mono">#fef3c7</span><small>Fundo do selo pendente de validação (amber-100).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--pendente-texto)"></div><div class="ds-cor-info"><b>pendente-texto</b><span class="ds-mono">#92400e</span><small>Texto do selo pendente, sobre pendente-fundo (6,4:1).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--pendente-borda)"></div><div class="ds-cor-info"><b>pendente-borda</b><span class="ds-mono">#fcd34d</span><small>Borda do selo pendente.</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--definido-fundo)"></div><div class="ds-cor-info"><b>definido-fundo</b><span class="ds-mono">#d1fae5</span><small>Fundo do selo de item definido ou validado (emerald-100).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--definido-texto)"></div><div class="ds-cor-info"><b>definido-texto</b><span class="ds-mono">#065f46</span><small>Texto do selo definido, sobre definido-fundo (6,8:1).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--aviso-fundo)"></div><div class="ds-cor-info"><b>aviso-fundo</b><span class="ds-mono">#fffbeb</span><small>Faixa de homologação no topo (amber-50).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--aviso-texto)"></div><div class="ds-cor-info"><b>aviso-texto</b><span class="ds-mono">#78350f</span><small>Texto da faixa de homologação, sobre aviso-fundo (8,7:1).</small></div></div><div class="ds-cor"><div class="ds-cor-bloco" style="background:var(--aviso-borda)"></div><div class="ds-cor-info"><b>aviso-borda</b><span class="ds-mono">#fde68a</span><small>Borda inferior da faixa de homologação.</small></div></div></div>
+        </section>
+
+        <section id="tipografia">
+            <p class="ds-sobre">Inter · JetBrains Mono</p>
+            <h2 class="ds-h2">Tipografia</h2>
+            <h3 class="ds-h3">Marca</h3><div class="ds-tipo"><div class="ds-tipo-meta"><b>nome-marca</b><span class="ds-mono">48px / 1 · 800 · 0.04em</span><small>O nome, sempre em maiúsculas.</small></div><div class="nome-marca ds-tipo-amostra">ORGATEC</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>descritor</b><span class="ds-mono">11px / 16px · 600 · 0.32em</span><small>Linha sob o nome, em caixa-alta, cor descritor.</small></div><div class="descritor ds-tipo-amostra">INTELIGÊNCIA TRIBUTÁRIA</div></div><h3 class="ds-h3">Títulos</h3><div class="ds-tipo"><div class="ds-tipo-meta"><b>titulo-hero</b><span class="ds-mono">60px / 1.25 · 800 · -0.025em</span><small>Só o H1 do hero, sobre palco (36px no celular, 48px no tablet).</small></div><div class="titulo-hero ds-tipo-amostra">Contabilidade Estratégica e Inteligência Tributária para a Nova Era Fiscal.</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>titulo-secao</b><span class="ds-mono">30px / 36px · 700</span><small>H2 de cada seção.</small></div><div class="titulo-secao ds-tipo-amostra">Hub da Reforma Tributária</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>titulo-cartao</b><span class="ds-mono">16px / 24px · 700</span><small>Título de cartão e de bloco de formulário.</small></div><div class="titulo-cartao ds-tipo-amostra">A lei do IBS, da CBS e do IS</div></div><h3 class="ds-h3">Texto</h3><div class="ds-tipo"><div class="ds-tipo-meta"><b>lead</b><span class="ds-mono">20px / 28px · 400</span><small>Parágrafo de abertura do hero.</small></div><div class="lead ds-tipo-amostra">Preparamos sua empresa para a transição do IBS e da CBS.</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>corpo</b><span class="ds-mono">16px / 24px · 400</span><small>Texto corrido.</small></div><div class="corpo ds-tipo-amostra">Conteúdo técnico com a base legal citada em cada ponto.</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>pequeno</b><span class="ds-mono">14px / 20px · 400</span><small>Texto de cartão, legendas, rodapé.</small></div><div class="pequeno ds-tipo-amostra">Estrutura da lei, cronograma de transição e o que já vale em 2026.</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>rotulo</b><span class="ds-mono">14px / 20px · 600</span><small>Rótulo de campo.</small></div><div class="rotulo ds-tipo-amostra">Faturamento anual (R$)</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>sobretitulo</b><span class="ds-mono">12px / 16px · 600 · 0.1em</span><small>Acima do H2, em caixa-alta, cor link.</small></div><div class="sobretitulo ds-tipo-amostra">REFORMA TRIBUTÁRIA</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>selo</b><span class="ds-mono">10px / 15px · 600</span><small>Texto dos selos, em minúsculas.</small></div><div class="selo ds-tipo-amostra">pendente de validação</div></div><h3 class="ds-h3">Dados</h3><div class="ds-tipo"><div class="ds-tipo-meta"><b>referencia</b><span class="ds-mono">12px / 16px · 400</span><small>Referência legal em cartões e listas, cor link.</small></div><div class="referencia ds-tipo-amostra">LC 214/2025 · art. 41</div></div><div class="ds-tipo"><div class="ds-tipo-meta"><b>dado</b><span class="ds-mono">14px / 20px · 600</span><small>Registros, protocolos e valores.</small></div><div class="dado ds-tipo-amostra">CRC-TO 002032/O-5 T-GO</div></div>
+        </section>
+
+        <section id="medidas">
+            <p class="ds-sobre">Base de 4 px</p>
+            <h2 class="ds-h2">Espaço, cantos e sombras</h2>
+            <h3 class="ds-h3">Espaçamento</h3>
+            <div class="ds-medidas"><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-1)"></span><b>espaco-1</b><span class="ds-mono">4px</span><small>Selo: respiro vertical; ícone e rótulo.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-2)"></span><b>espaco-2</b><span class="ds-mono">8px</span><small>Rótulo e campo; selo: respiro horizontal.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-3)"></span><b>espaco-3</b><span class="ds-mono">12px</span><small>Símbolo e nome na assinatura; campo pequeno.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-4)"></span><b>espaco-4</b><span class="ds-mono">16px</span><small>Grade entre cartões; margem lateral no celular; passo da grade de pontos.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-5)"></span><b>espaco-5</b><span class="ds-mono">20px</span><small>Padding do cartão do Hub.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-6)"></span><b>espaco-6</b><span class="ds-mono">24px</span><small>Padding de blocos; margem lateral no tablet.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-8)"></span><b>espaco-8</b><span class="ds-mono">32px</span><small>Padding lateral do CTA grande; margem lateral no desktop.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-10)"></span><b>espaco-10</b><span class="ds-mono">40px</span><small>Entre o lead e os CTAs do hero.</small></div><div class="ds-medida"><span class="ds-barra" style="width:var(--espaco-20)"></span><b>espaco-20</b><span class="ds-mono">80px</span><small>Padding vertical de cada seção.</small></div></div>
+            <h3 class="ds-h3">Cantos</h3>
+            <div class="ds-grade-raios"><div class="ds-raio"><div class="ds-raio-caixa" style="border-radius:var(--raio-lg)"></div><b>raio-lg</b><span class="ds-mono">8px</span><small>Campos pequenos e botões do cabeçalho.</small></div><div class="ds-raio"><div class="ds-raio-caixa" style="border-radius:var(--raio-xl)"></div><b>raio-xl</b><span class="ds-mono">12px</span><small>CTAs e campos do simulador.</small></div><div class="ds-raio"><div class="ds-raio-caixa" style="border-radius:var(--raio-2xl)"></div><b>raio-2xl</b><span class="ds-mono">16px</span><small>Cartões e painéis.</small></div><div class="ds-raio"><div class="ds-raio-caixa" style="border-radius:var(--raio-icone)"></div><b>raio-icone</b><span class="ds-mono">24px</span><small>Ícone de app de 112 px (proporção iOS).</small></div><div class="ds-raio"><div class="ds-raio-caixa" style="border-radius:var(--raio-pilula)"></div><b>raio-pilula</b><span class="ds-mono">9999px</span><small>Selos e o chip de normas do hero.</small></div></div>
+            <h3 class="ds-h3">Sombras e foco</h3>
+            <div class="ds-grade-raios"><div class="ds-raio"><div class="ds-raio-caixa ds-sombra" style="box-shadow:var(--sombra-sm)"></div><b>sombra-sm</b><small>Botão de contato em repouso.</small></div><div class="ds-raio"><div class="ds-raio-caixa ds-sombra" style="box-shadow:var(--sombra-lg)"></div><b>sombra-lg</b><small>Cartão em hover, CTA do hero.</small></div><div class="ds-raio"><div class="ds-raio-caixa ds-sombra" style="box-shadow:var(--foco)"></div><b>foco</b><small>Anel de foco de teclado em campos e botões (focus:ring-2 brandBlue).</small></div></div>
+        </section>
+
+        <section id="logotipos">
+            <p class="ds-sobre">assets/marca</p>
+            <h2 class="ds-h2">Logotipos</h2>
+            <h3 class="ds-h3">Símbolo</h3><div class="ds-grade-arquivos"><figure class="ds-arquivo"><img src="assets/marca/orgatec-simbolo.svg" alt="orgatec-simbolo.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-simbolo.svg" download>orgatec-simbolo.svg</a></figcaption></figure><figure class="ds-arquivo"><img src="assets/marca/orgatec-simbolo-mono.svg" alt="orgatec-simbolo-mono.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-simbolo-mono.svg" download>orgatec-simbolo-mono.svg</a></figcaption></figure><figure class="ds-arquivo ds-arquivo-escuro"><img src="assets/marca/orgatec-simbolo-branco.svg" alt="orgatec-simbolo-branco.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-simbolo-branco.svg" download>orgatec-simbolo-branco.svg</a></figcaption></figure></div><h3 class="ds-h3">Assinaturas</h3><div class="ds-grade-arquivos"><figure class="ds-arquivo"><img src="assets/marca/orgatec-horizontal.svg" alt="orgatec-horizontal.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-horizontal.svg" download>orgatec-horizontal.svg</a></figcaption></figure><figure class="ds-arquivo ds-arquivo-escuro"><img src="assets/marca/orgatec-horizontal-negativo.svg" alt="orgatec-horizontal-negativo.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-horizontal-negativo.svg" download>orgatec-horizontal-negativo.svg</a></figcaption></figure><figure class="ds-arquivo"><img src="assets/marca/orgatec-horizontal-mono.svg" alt="orgatec-horizontal-mono.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-horizontal-mono.svg" download>orgatec-horizontal-mono.svg</a></figcaption></figure><figure class="ds-arquivo"><img src="assets/marca/orgatec-vertical.svg" alt="orgatec-vertical.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-vertical.svg" download>orgatec-vertical.svg</a></figcaption></figure></div><h3 class="ds-h3">Ícones</h3><div class="ds-grade-arquivos"><figure class="ds-arquivo"><img src="assets/marca/orgatec-app.svg" alt="orgatec-app.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-app.svg" download>orgatec-app.svg</a></figcaption></figure><figure class="ds-arquivo"><img src="assets/marca/orgatec-app-escuro.svg" alt="orgatec-app-escuro.svg"><figcaption><a class="og-link" href="assets/marca/orgatec-app-escuro.svg" download>orgatec-app-escuro.svg</a></figcaption></figure><figure class="ds-arquivo"><img src="assets/marca/favicon.svg" alt="favicon.svg"><figcaption><a class="og-link" href="assets/marca/favicon.svg" download>favicon.svg</a></figcaption></figure><figure class="ds-arquivo"><img src="assets/marca/og-image.png" alt="og-image.png"><figcaption><a class="og-link" href="assets/marca/og-image.png" download>og-image.png</a></figcaption></figure></div>
+        </section>
+
+        <section id="componentes">
+            <p class="ds-sobre">OrgatecUI · 7 componentes</p>
+            <h2 class="ds-h2">Componentes</h2>
+            <div class="ds-comps"><article class="ds-comp" id="comp-Assinatura"><header><h3 class="ds-h3">Assinatura</h3><p>Logotipo: símbolo de quatro faixas + nome. Fundo claro: tom claro; fundo escuro: tom escuro.</p></header><div class="ds-comp-palco"><div class="og-painel-branco"><span class="og-assinatura og-assinatura-horizontal og-tom-claro" role="img" aria-label="ORGATEC"><img class="og-simbolo" src="assets/marca/orgatec-simbolo.svg" alt="" style="height:64px;width:58px"><span class="og-assinatura-texto"><span class="og-nome">ORGATEC</span><span class="og-descritor">Inteligência Tributária</span></span></span></div><div class="og-palco"><span class="og-assinatura og-assinatura-horizontal og-tom-escuro" role="img" aria-label="ORGATEC"><img class="og-simbolo" src="assets/marca/orgatec-simbolo-branco.svg" alt="" style="height:64px;width:58px"><span class="og-assinatura-texto"><span class="og-nome">ORGATEC</span><span class="og-descritor">Inteligência Tributária</span></span></span></div><div class="og-painel-branco ds-linha-solta"><span class="og-assinatura og-assinatura-vertical og-tom-claro" role="img" aria-label="ORGATEC"><img class="og-simbolo" src="assets/marca/orgatec-simbolo.svg" alt="" style="height:80px;width:72px"><span class="og-assinatura-texto"><span class="og-nome">ORGATEC</span><span class="og-descritor">Inteligência Tributária</span></span></span><span class="og-assinatura og-assinatura-reduzida og-tom-claro" role="img" aria-label="ORGATEC"><img class="og-simbolo" src="assets/marca/orgatec-simbolo.svg" alt="" style="height:32px;width:29px"><span class="og-assinatura-texto"><span class="og-nome">ORGATEC</span></span></span></div></div><pre class="ds-codigo"><code>h(OrgatecUI.Assinatura, { variante: &quot;horizontal&quot;, tom: &quot;claro&quot; })</code></pre></article><article class="ds-comp" id="comp-Botao"><header><h3 class="ds-h3">Botao</h3><p>Ação ou link. Verde só no WhatsApp; translúcido só sobre o hero.</p></header><div class="ds-comp-palco"><div class="og-linha ds-sem-pad"><button type="button" class="og-btn og-btn-primario og-btn-lg">Testar Simulador Tributário</button><a class="og-btn og-btn-contato og-btn-md" href="https://wa.me/5562992949161" target="_blank" rel="noopener">Falar no WhatsApp</a><a class="og-btn og-btn-contorno og-btn-md" href="https://portal.orgatec.io" target="_blank" rel="noopener">Portal do Cliente</a></div><div class="og-palco og-linha"><button type="button" class="og-btn og-btn-primario og-btn-lg">Testar Simulador Tributário</button><button type="button" class="og-btn og-btn-sobre-palco og-btn-lg">Agendar Diagnóstico com Especialista</button></div></div><pre class="ds-codigo"><code>h(OrgatecUI.Botao, { variante: &quot;contato&quot;, href: &quot;https://wa.me/5562992949161&quot; }, &quot;Falar no WhatsApp&quot;)</code></pre></article><article class="ds-comp" id="comp-Selo"><header><h3 class="ds-h3">Selo</h3><p>Estado da informação. &quot;pendente de validação&quot; em toda regra ainda não confirmada.</p></header><div class="ds-comp-palco"><div class="og-linha ds-sem-pad"><span class="og-selo og-selo-pendente">pendente de validação</span><span class="og-selo og-selo-definido">Integração: Sieg</span><span class="og-selo og-selo-pendente">ERP do portal: pendente de definição</span></div><div class="og-palco"><span class="og-selo og-selo-norma">EC 132/2023 • LC 214/2025 • Split Payment</span></div></div><pre class="ds-codigo"><code>h(OrgatecUI.Selo, { tom: &quot;pendente&quot; })</code></pre></article><article class="ds-comp" id="comp-CitacaoFonte"><header><h3 class="ds-h3">CitacaoFonte</h3><p>Norma e dispositivo com link oficial; sem confirmação, ganha o selo pendente.</p></header><div class="ds-comp-palco"><div class="og-pilha ds-sem-pad"><span class="og-citacao"><a class="og-link" href="https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp214.htm" target="_blank" rel="noopener">LC 214/2025, art. 41, §§ 3º e 4º</a></span><span class="og-citacao"><span>Lei 6.489/2002 (PA)</span><span class="og-selo og-selo-pendente">pendente de validação</span></span></div></div><pre class="ds-codigo"><code>h(OrgatecUI.CitacaoFonte, { rotulo: &quot;LC 214/2025, art. 41&quot;, url: &quot;https://www.planalto.gov.br/...&quot;, validado: true })</code></pre></article><article class="ds-comp" id="comp-CartaoHub"><header><h3 class="ds-h3">CartaoHub</h3><p>Cartão do Hub da Reforma: referência legal em mono, título e resumo.</p></header><div class="ds-comp-palco"><div class="ds-grade-cartoes"><a class="og-cartao" href="#"><span class="og-cartao-ref">LC 214/2025</span><h3 class="og-cartao-titulo">A lei do IBS, da CBS e do IS</h3><p class="og-cartao-texto">Estrutura da lei, cronograma de transição e o que já vale em 2026.</p></a><a class="og-cartao" href="#"><span class="og-cartao-ref">LC 214/2025 · art. 41</span><h3 class="og-cartao-titulo">Simples Híbrido</h3><p class="og-cartao-texto">Quando vale recolher IBS e CBS fora do DAS e a janela de opção.</p></a><div class="og-cartao"><span class="og-cartao-ref">Calendário estadual</span><h3 class="og-cartao-titulo">ICMS no Pará<span class="og-selo og-selo-pendente">pendente de validação</span></h3><p class="og-cartao-texto">Dia de vencimento a confirmar na SEFAZ-PA.</p></div></div></div><pre class="ds-codigo"><code>h(OrgatecUI.CartaoHub, { referencia: &quot;LC 214/2025&quot;, titulo: &quot;A lei do IBS, da CBS e do IS&quot;, href: &quot;reforma/lc-214-2025.html&quot; }, &quot;Resumo&quot;)</code></pre></article><article class="ds-comp" id="comp-Campo"><header><h3 class="ds-h3">Campo</h3><p>Rótulo + campo + ajuda ou erro. id obrigatório; opcoes vira select.</p></header><div class="ds-comp-palco"><div class="ds-grade-cartoes"><div class="og-campo"><label for="dsFat" class="og-campo-rotulo">Faturamento anual (R$)</label><input id="dsFat" type="text" class="og-campo-controle og-campo-lg" placeholder="ex.: 2.400.000" value=""></div><div class="og-campo"><label for="dsUf" class="og-campo-rotulo">UF</label><select id="dsUf" class="og-campo-controle og-campo-lg"><option value="GO">Goiás</option><option value="TO">Tocantins</option><option value="PA">Pará</option></select></div><div class="og-campo"><label for="dsEmail" class="og-campo-rotulo">E-mail</label><input id="dsEmail" type="email" class="og-campo-controle og-campo-md og-campo-invalido" placeholder="" value="email-invalido" aria-describedby="dsEmail-desc" aria-invalid="true"><p id="dsEmail-desc" class="og-campo-erro" role="alert">E-mail inválido.</p></div><div class="og-campo"><label for="dsWhats" class="og-campo-rotulo">WhatsApp</label><input id="dsWhats" type="text" class="og-campo-controle og-campo-md" placeholder="(62) 99999-0000" value="" aria-describedby="dsWhats-desc"><p id="dsWhats-desc" class="og-campo-ajuda">Só para retorno do diagnóstico.</p></div></div></div><pre class="ds-codigo"><code>h(OrgatecUI.Campo, { id: &quot;faturamento&quot;, rotulo: &quot;Faturamento anual (R$)&quot;, tamanho: &quot;lg&quot;, inputMode: &quot;decimal&quot; })</code></pre></article><article class="ds-comp" id="comp-Consentimento"><header><h3 class="ds-h3">Consentimento</h3><p>Caixa LGPD, nunca pré-marcada; sem ela o envio é bloqueado.</p></header><div class="ds-comp-palco"><label class="og-consentimento"><input id="dsConsent" type="checkbox"><span>Autorizo a ORGATEC a usar estes dados e o resultado da simulação para entrar em contato sobre o diagnóstico tributário, conforme a <a href="privacidade.html">Política de Privacidade</a> (LGPD, Lei nº 13.709/2018). Posso revogar a qualquer momento.</span></label></div><pre class="ds-codigo"><code>h(OrgatecUI.Consentimento, { id: &quot;consent&quot; }, &quot;Autorizo a ORGATEC ...&quot;)</code></pre></article></div>
+        </section>
+    </main>
+
+    <footer>
+        <div>
+            <span>ORGATEC · CNPJ 13.155.211/0001-45 · Resp. técnico: Robson Alain Veloso · <span class="ds-mono">CRC-TO 002032/O-5 T-GO</span></span>
+            <span><a class="og-link" href="marca.html">Marca</a> · <a class="og-link" href="privacidade.html">Política de Privacidade (LGPD)</a> · NBC PG 01</span>
+        </div>
+    </footer>
+
+    <script src="assets/js/ds-template2.js"></script>
+</body>
+</html>

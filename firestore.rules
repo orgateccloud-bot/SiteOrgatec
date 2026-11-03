@@ -1,0 +1,11 @@
+rules_version = '2';
+// Banco dos formulários do site ORGATEC (leads, opt-in, contato): dados pessoais.
+// Nenhum acesso pelo navegador. Só a API no Cloud Run grava e lê, com a conta de serviço
+// (o SDK de servidor não passa por estas regras).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}

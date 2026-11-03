@@ -1,0 +1,16 @@
+# Só backend/ e site/ entram na imagem
+.git
+.claude
+.env
+**/__pycache__
+backend/dados
+*.db
+tests
+tools
+docs
+dist
+design-system
+fontes-marca
+*.pdf
+*.xlsx
+gemini-code-*.html

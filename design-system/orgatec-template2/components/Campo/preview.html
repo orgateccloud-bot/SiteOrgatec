@@ -1,0 +1,12 @@
+<!-- @dsCard group="Formulários" height=260 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Campo — prévia</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"></head>
+<body>
+<div id="root" class="og-pilha"></div>
+<script>
+  var O = window.OrgatecUI, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 } }, h(O.Campo, { id: 'faturamento', rotulo: 'Faturamento anual (R$)', tamanho: 'lg', placeholder: 'ex.: 2.400.000', inputMode: 'decimal' }), h(O.Campo, { id: 'uf', rotulo: 'UF', tamanho: 'lg', opcoes: [{ valor: 'GO', rotulo: 'Goiás' }, { valor: 'TO', rotulo: 'Tocantins' }, { valor: 'PA', rotulo: 'Pará' }] }), h(O.Campo, { id: 'email', rotulo: 'E-mail', type: 'email', defaultValue: 'email-invalido', erro: 'E-mail inválido.' }), h(O.Campo, { id: 'whats', rotulo: 'WhatsApp', placeholder: '(62) 99999-0000', ajuda: 'Só para retorno do diagnóstico.' })));
+</script>
+</body>
+</html>

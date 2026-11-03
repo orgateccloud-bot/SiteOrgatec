@@ -1,0 +1,158 @@
+/* Tela de abertura (site/index.html), no modelo do trilhum.io: texto à esquerda, sem caixa, e a projeção à direita.
+   Cores: só variáveis. O <body> usa .folha-escura (orgatec.css), que aplica a paleta escura do design ORGATEC Trilha;
+   o bloco --holo-* abaixo deriva dessas cores. Para trocar a paleta da tela, edite só este bloco
+   (ou as paletas em design-system/orgatec-trilha/tokens.json, que valem para o site inteiro). */
+body.abertura {
+  --holo-1: var(--hl);        /* brilho principal: pontos acesos, varredura, destaques */
+  --holo-2: var(--brand);     /* linhas da esfera, botão de entrada */
+  --holo-3: var(--focus);     /* reflexo secundário da iridescência */
+  --holo-texto: var(--ink);
+  --holo-suave: var(--muted);
+  --holo-borda: color-mix(in srgb, var(--hl) 38%, transparent);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  overflow-x: hidden;
+  color: var(--holo-texto);
+}
+:root[data-tema] body.abertura {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(900px 620px at 76% 38%, color-mix(in srgb, var(--holo-2) 24%, transparent), transparent 65%),
+    radial-gradient(700px 520px at 6% 104%, color-mix(in srgb, var(--holo-3) 18%, transparent), transparent 60%);
+  background-attachment: fixed;
+}
+/* linhas de varredura bem leves sobre tudo (efeito de projeção) */
+body.abertura::after {
+  content: ""; position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0 4px, color-mix(in srgb, var(--holo-1) 3%, transparent) 4px 5px);
+}
+
+.holo-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.holo-grade {
+  position: fixed; left: -50%; right: -50%; bottom: -12vh; height: 52vh; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(var(--holo-borda) 1px, transparent 1px), linear-gradient(90deg, var(--holo-borda) 1px, transparent 1px);
+  background-size: 56px 56px;
+  transform: perspective(480px) rotateX(62deg); transform-origin: 50% 100%; opacity: .32;
+  -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 85%); mask-image: linear-gradient(to top, #000 8%, transparent 85%);
+  animation: holo-chao 6s linear infinite;
+}
+@keyframes holo-chao { to { background-position: 0 56px, 0 0; } }
+
+/* ---------- Palco */
+.abertura-palco {
+  position: relative; z-index: 2; box-sizing: border-box;
+  min-height: 100vh; min-height: 100dvh; max-width: 1240px; margin: 0 auto; padding: 24px 32px 96px;
+  display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); grid-template-areas: "texto ancora"; gap: 24px 56px; align-items: center;
+  transition: transform .42s ease-in, opacity .42s ease-in;
+}
+:root.saindo .abertura-palco { transform: scale(1.05); opacity: 0; }
+:root.saindo .holo-canvas { transition: opacity .42s ease-in; opacity: .2; }
+
+/* ---------- Texto (direto no fundo, sem caixa) */
+.abertura-texto { grid-area: texto; position: relative; }
+.holo-marca { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+.holo-marca img { width: 46px; height: auto; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--holo-1) 55%, transparent)); }
+/* nome próprio da abertura: .holo-nome é o nome holográfico da vitrine (orgatec.css) */
+.holo-marca-nome { display: block; font: 800 22px/1 var(--f-display); letter-spacing: -.02em; }
+.holo-sub { display: block; margin-top: 6px; font: 500 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--holo-suave); }
+.holo-eyebrow { margin: 0; font: 500 12px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--holo-1); }
+body.abertura h1 { margin: 14px 0 16px; font: 800 clamp(32px, 5vw, 56px)/1.04 var(--f-display); letter-spacing: -.035em; text-wrap: balance; }
+.holo-destaque { background: linear-gradient(90deg, var(--holo-1), var(--holo-3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.holo-lead { max-width: 46ch; margin: 0 0 18px; font-size: 17px; line-height: 1.6; color: var(--holo-suave); }
+.holo-publicos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 24px; padding: 0; list-style: none; }
+.holo-publicos li { padding: 5px 11px; border: 1px solid var(--holo-borda); border-radius: 999px; background: color-mix(in srgb, var(--holo-1) 8%, transparent); font: 500 12px var(--f-mono); }
+.holo-trajetoria { margin: -8px 0 20px; font: 700 15px var(--f-display); color: var(--holo-1); }
+
+/* Botão de entrada: o elemento mais forte da tela */
+.holo-entrar {
+  position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+  min-height: 58px; padding: 0 28px; border-radius: 16px; text-decoration: none;
+  background: var(--holo-2); color: var(--brand-ink); font: 700 17px var(--f-body);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--holo-1) 50%, transparent), 0 14px 40px -12px color-mix(in srgb, var(--holo-2) 75%, transparent), inset 0 1px 0 rgba(255, 255, 255, .28);
+  transition: transform .15s, box-shadow .15s;
+}
+.holo-entrar::after {  /* reflexo que atravessa o botão */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, .3) 50%, transparent 65%);
+  transform: translateX(-120%); animation: holo-reflexo 3.6s ease-in-out infinite;
+}
+@keyframes holo-reflexo { 55%, 100% { transform: translateX(120%); } }
+.holo-entrar svg { width: 22px; height: 22px; flex: none; transition: transform .2s; }
+.holo-entrar:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--holo-1), 0 18px 46px -12px color-mix(in srgb, var(--holo-2) 85%, transparent), inset 0 1px 0 rgba(255, 255, 255, .28); }
+.holo-entrar:hover svg { transform: translateX(4px); }
+.holo-entrar:focus-visible { outline: 3px solid var(--holo-1); outline-offset: 4px; }
+.holo-entrar-fixo {
+  position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 5; width: min(420px, calc(100vw - 32px));
+  transform: translate(-50%, 140%); opacity: 0; pointer-events: none; transition: transform .25s, opacity .25s;
+}
+.holo-entrar-fixo.visivel { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.holo-entrar-fixo.visivel:hover { transform: translate(-50%, -2px); }
+
+.holo-rt { margin: 16px 0 0; font-size: 13px; color: var(--holo-suave); }
+.holo-rt b { color: var(--holo-texto); }
+.holo-atalhos { display: flex; flex-wrap: wrap; gap: 4px 20px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--holo-borda); }
+.holo-atalhos a { display: inline-flex; align-items: center; min-height: 36px; font-size: 14px; color: var(--holo-suave); text-decoration: none; }
+.holo-atalhos a:hover, .holo-atalhos a:focus-visible { color: var(--holo-texto); text-decoration: underline; text-underline-offset: 4px; }
+
+/* ---------- Projeção */
+.holo-ancora { grid-area: ancora; align-self: center; height: min(860px, calc(100dvh - 132px)); min-height: 420px; }
+/* Moldura da projeção: cantoneiras (8 traços em degradê) e legendas; o logotipo atual vem de abertura.js */
+.holo-ancora {
+  position: relative; --canto: color-mix(in srgb, var(--holo-1) 55%, transparent);
+  background:
+    linear-gradient(var(--canto), var(--canto)) top left / 18px 1.5px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) top left / 1.5px 18px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) top right / 18px 1.5px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) top right / 1.5px 18px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) bottom left / 18px 1.5px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) bottom left / 1.5px 18px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) bottom right / 18px 1.5px no-repeat,
+    linear-gradient(var(--canto), var(--canto)) bottom right / 1.5px 18px no-repeat;
+}
+.holo-legenda { position: absolute; font: 500 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: color-mix(in srgb, var(--holo-1) 70%, var(--holo-suave)); white-space: nowrap; }
+.holo-legenda-topo { top: 14px; left: 26px; }
+.holo-legenda-base { right: 26px; bottom: 12px; transition: opacity .3s; }
+
+/* ---------- Rodapé */
+.abertura-rodape {
+  position: relative; z-index: 2; box-sizing: border-box; max-width: 1240px; margin: -80px auto 0; padding: 0 32px 24px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; font-size: 12px; color: var(--holo-suave);
+}
+.abertura-rodape p { margin: 0; }
+.abertura-rodape a { color: inherit; }
+.abertura-rodape a:hover { color: var(--holo-texto); }
+.holo-movimento { min-height: 36px; padding: 0 14px; border: 1px solid var(--holo-borda); border-radius: 999px; background: transparent; color: var(--holo-texto); font: 600 13px var(--f-body); cursor: pointer; }
+.holo-movimento:hover { border-color: var(--holo-1); }
+
+/* ---------- Celular e tablet: projeção no topo, texto embaixo */
+@media (max-width: 899px) {
+  .abertura-palco { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "ancora" "texto";
+    gap: 12px; align-items: start; padding: 0 16px 40px; }
+  .holo-ancora { min-height: 0; height: clamp(250px, 36vh, 310px); margin: 6px 0 0; }
+  /* tela estreita: só a legenda do logotipo, no alto, longe dos anéis do projetor */
+  .holo-legenda { font-size: 10px; }
+  .holo-legenda-topo { display: none; }
+  .holo-legenda-base { top: 12px; left: 22px; right: auto; bottom: auto; }
+  .holo-marca { margin-bottom: 20px; }
+  .holo-lead { font-size: 16px; }
+  .holo-entrar { width: 100%; box-sizing: border-box; }
+  .abertura-rodape { margin-top: 0; padding: 0 16px 96px; }
+}
+
+/* ---------- Sem animação (preferência do sistema ou botão "Reduzir animação") */
+.movimento-reduzido .holo-grade, .movimento-reduzido .holo-entrar::after { animation: none; }
+.movimento-reduzido body.abertura::after { display: none; }
+
+/* ---------- Sequência de entrada (html.abertura-intro: primeira visita da aba, com animação). O holograma se forma
+   (abertura.js) e o texto surge em seguida, em cascata. Sem a classe (sem JavaScript, movimento reduzido, visita
+   repetida ou sequência pulada), tudo aparece pronto. */
+:root.abertura-intro { --intro: 1.2s; }
+:root.abertura-intro.aparelho-fraco { --intro: .55s; }
+@keyframes holo-entra { from { opacity: 0; transform: translateY(10px); filter: blur(6px); } }
+.abertura-intro .abertura-texto > *, .abertura-intro .abertura-rodape { animation: holo-entra .55s ease-out calc(var(--intro) + var(--passo, 0s)) both; }
+.abertura-intro .abertura-texto > :nth-child(2), .abertura-intro .abertura-texto > :nth-child(3) { --passo: .12s; }
+.abertura-intro .abertura-texto > :nth-child(4), .abertura-intro .abertura-texto > :nth-child(5), .abertura-intro .abertura-texto > :nth-child(6) { --passo: .26s; }
+.abertura-intro .abertura-texto > :nth-child(7), .abertura-intro .abertura-texto > :nth-child(8) { --passo: .4s; }
+.abertura-intro .abertura-texto > :nth-child(9) { --passo: .55s; }
+.abertura-intro .abertura-rodape { --passo: .7s; }

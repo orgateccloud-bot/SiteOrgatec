@@ -1,0 +1,28 @@
+backend/dados/
+*.db
+.env
+__pycache__/
+tests/e2e/screenshot-*.png
+# Cartão da Janela de Campo para o status do WhatsApp (tools/cartao_campo.py), regravado a cada boletim
+cartoes-status/
+
+# Saída gerada para download (tools/gerar_design_system.py)
+dist/
+
+# Dados regravados pelo agendador (boletim, notícias, cartões): ficam na pasta principal e vão ao ar por ela.
+# tools/previa.py copia site/dados para as prévias feitas em outras pastas.
+site/dados/
+
+# Saída regenerável (tools/modelos_instagram.py)
+modelos-redes/
+
+# Locais de cada máquina
+.firebase/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+*.log
+tools/logs/
+tools/cache/
+.claude/settings.local.json
+.claude/worktrees/

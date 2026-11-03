@@ -1,0 +1,12 @@
+<!-- @dsCard group="Ações" height=200 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Botao — prévia</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"></head>
+<body>
+<div id="root" class="og-pilha"></div>
+<script>
+  var O = window.OrgatecUI, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null, h('div', { className: 'og-linha', style: { padding: 0 } }, h(O.Botao, { tamanho: 'lg' }, 'Testar Simulador Tributário'), h(O.Botao, { variante: 'contato', href: 'https://wa.me/5562992949161' }, 'Falar no WhatsApp'), h(O.Botao, { variante: 'contorno', href: 'https://portal.orgatec.io' }, 'Portal do Cliente')), h('div', { className: 'og-palco og-linha' }, h(O.Botao, { tamanho: 'lg' }, 'Testar Simulador Tributário'), h(O.Botao, { variante: 'sobre-palco', tamanho: 'lg' }, 'Agendar Diagnóstico com Especialista'))));
+</script>
+</body>
+</html>

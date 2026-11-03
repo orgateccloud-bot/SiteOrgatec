@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ORGATEC | Contabilidade Consultiva e Inteligência Tributária</title>
+    <meta name="description" content="Contabilidade estratégica e transição para a Reforma Tributária (IBS, CBS e Split Payment) em todo o Brasil, com força no eixo GO, TO e PA. Resp. Técnico: Robson Veloso - CRC-TO 002032/O-5 T-GO.">
+    <link rel="canonical" href="https://orgatec.io/">
+    <meta property="og:title" content="ORGATEC | Inteligência Tributária para a Reforma (IBS/CBS)">
+    <meta property="og:description" content="Simulador de impacto da Reforma Tributária para as 27 UFs, calendário fiscal multiestado e portal do cliente.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://orgatec.io/">
+    <link rel="icon" href="assets/marca/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="assets/marca/apple-touch-icon.png">
+    <meta name="theme-color" content="#072563">
+    <meta property="og:image" content="https://orgatec.io/assets/marca/og-image.png">
+    <!-- Design ORGATEC Trilha: fontes, CSS, paleta (tema.js antes da pintura) e Tailwind ligado às variáveis.
+         Gerado por tools/gerar_design_system.py e tools/compilar_css.py. -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600;700&family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="assets/css/orgatec.css">
+    <script src="assets/js/tema.js"></script>
+    <link rel="stylesheet" href="assets/css/tailwind.css">
+    <style>
+        html { scroll-behavior: smooth; }
+        [hidden] { display: none !important; }
+        .badge-pendente { background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn); }
+        .tab-ativa { background:var(--brand); color:var(--brand-ink); border-color:var(--brand); }
+        .hp { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
+    </style>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AccountingService",
+        "name": "ORGATEC",
+        "logo": "https://orgatec.io/assets/marca/orgatec-app-512.png",
+        "url": "https://orgatec.io",
+        "taxID": "13.155.211/0001-45",
+        "address": { "@type": "PostalAddress", "streetAddress": "Av. Ministro Alfredo Nasser, 727, Centro", "addressLocality": "Formoso", "addressRegion": "GO", "addressCountry": "BR" },
+        "areaServed": "BR",
+        "telephone": "+55-62-99294-9161"
+    }
+    </script>
+</head>
+<body class="text-ink font-sans antialiased">
+
+    <!-- FAIXA DE HOMOLOGAÇÃO (só aparece com config.ambiente = 'homologacao') -->
+    <div id="faixaHomologacao" hidden class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <strong>Ambiente de homologação.</strong> Pendências do Plano Diretor: <span id="listaPendencias"></span> · <a href="testes/index.html" class="underline font-semibold">Painel de testes e pendências →</a>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO / NAVBAR -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
+            <a href="#" class="flex items-center gap-3 min-w-0" aria-label="ORGATEC — início">
+                <!-- Logotipo: símbolo oficial (assets/marca) + nome em texto -->
+                <img src="assets/marca/orgatec-original.png" alt="" width="40" height="44" class="h-9 w-8 sm:h-11 sm:w-10 shrink-0">
+                <div class="min-w-0">
+                    <span class="block text-lg sm:text-xl font-display font-extrabold tracking-tight text-dark leading-none whitespace-nowrap">ORGATEC</span>
+                    <span class="hidden sm:block text-[10px] text-brandBlue uppercase tracking-widest mt-1 whitespace-nowrap">Inteligência Tributária</span>
+                </div>
+            </a>
+            <nav class="hidden xl:flex items-center space-x-6 text-sm font-medium text-slate-600 whitespace-nowrap" aria-label="Principal">
+                <a href="tributario/index.html" class="hover:text-brandBlue transition">Tributário</a>
+                <a href="reforma/index.html" class="hover:text-brandBlue transition">Reforma</a>
+                <a href="setores/agro.html" class="hover:text-brandBlue transition">Setores</a>
+                <a href="ferramentas/index.html" class="hover:text-brandBlue transition">Ferramentas</a>
+                <a href="escritorio/index.html" class="hover:text-brandBlue transition">Escritório</a>
+            </nav>
+            <div class="flex items-center gap-2 sm:gap-4">
+                <a href="cliente/index.html" class="hidden sm:inline-flex items-center whitespace-nowrap text-sm font-medium text-slate-700 hover:text-brandBlue px-4 py-2 rounded-lg border border-slate-300 hover:border-brandBlue transition">
+                    🔒 Área do cliente
+                </a>
+                <button id="btnCores" type="button" class="tema-btn hidden min-[375px]:inline-flex" aria-label="Escolher cores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="hidden md:inline">Cores</span></button>
+                <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="bg-accentGreen hover:bg-emerald-600 text-white text-sm font-semibold px-4 sm:px-5 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2 whitespace-nowrap">
+                    <span class="sm:hidden">WhatsApp</span><span class="hidden sm:inline">Falar no WhatsApp</span>
+                </a>
+                <button id="btnMenu" type="button" class="xl:hidden p-2 rounded-lg border border-slate-300 text-slate-700" aria-controls="menuMobile" aria-expanded="false" aria-label="Abrir menu">☰</button>
+            </div>
+        </div>
+        <nav id="menuMobile" hidden class="xl:hidden border-t border-slate-200 bg-white" aria-label="Menu móvel">
+            <div class="px-4 py-3 grid gap-1 text-sm font-medium text-slate-700">
+                <a href="tributario/index.html" class="py-2">Tributário</a>
+                <a href="reforma/index.html" class="py-2">Reforma</a>
+                <a href="setores/agro.html" class="py-2">Setores</a>
+                <a href="ferramentas/index.html" class="py-2">Ferramentas</a>
+                <a href="escritorio/index.html" class="py-2">Escritório</a>
+                <a href="#simulador" class="py-2">Simulador</a>
+                <a href="#calendario" class="py-2">Calendário Fiscal</a>
+                <a href="cliente/index.html" class="py-2">🔒 Área do cliente</a>
+                <button type="button" class="py-2 text-left min-[375px]:hidden" data-abrir-cores>Cores</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+    <!-- HERO SECTION (design ORGATEC Trilha: fundo da página com brilho; objetivo: captação) -->
+    <section class="py-20 lg:py-28">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-12 items-center">
+            <div class="min-w-0">
+                <p class="eyebrow">EC 132/2023 • LC 214/2025 • Split Payment</p>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] text-ink my-6">
+                    Contabilidade Estratégica e <mark class="marca-texto">Inteligência Tributária</mark> para a Nova Era Fiscal.
+                </h1>
+                <p class="text-lg sm:text-xl text-muted mb-10 leading-relaxed">
+                    Preparamos sua empresa em Goiás, no Tocantins, no Pará e em todo o Brasil para a transição do IBS e da CBS, protegendo seu fluxo de caixa com rigor técnico e tecnologia.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="#simulador" class="og-btn og-btn-primario og-btn-lg">Testar Simulador Tributário</a>
+                    <a href="https://wa.me/5562992949161" data-link="whatsapp-diagnostico" target="_blank" rel="noopener" class="og-btn og-btn-contorno og-btn-lg">Agendar Diagnóstico com Especialista</a>
+                </div>
+            </div>
+            <!-- PAINEL DA TRANSIÇÃO (exemplo interativo; dados do ADCT, arts. 125 a 129, via regras.js/calculadoras.js) -->
+            <aside class="og-cartao painel-transicao mt-8 lg:mt-0" aria-labelledby="ptTitulo" data-painel-transicao>
+                <img class="painel-logo" src="assets/marca/orgatec-original.png" alt="ORGATEC" width="88" height="97">
+                <div class="pr-24">
+                    <p class="eyebrow">Exemplo interativo · EC 132/2023</p>
+                    <h2 id="ptTitulo" class="text-xl font-bold text-ink mt-1">Onde estamos na transição</h2>
+                </div>
+                <div class="anel-wrap">
+                    <svg class="anel-progresso" viewBox="0 0 100 100" role="img" aria-labelledby="ptAnelRotulo">
+                        <circle class="trilho" cx="50" cy="50" r="42"/>
+                        <circle class="valor" cx="50" cy="50" r="42" transform="rotate(-90 50 50)" stroke-dasharray="263.9" stroke-dashoffset="263.9" data-anel/>
+                    </svg>
+                    <div class="min-w-0">
+                        <p class="anel-num" id="ptAnelRotulo"><span data-progresso>0%</span><span class="sr-only"> da transição de 2026 a 2033 já passou</span></p>
+                        <p class="text-sm text-muted">da transição 2026–2033 já passou</p>
+                        <p class="text-sm text-ink mt-2" data-contagem-cbs></p>
+                    </div>
+                </div>
+                <div>
+                    <p class="eyebrow mb-2">Escolha o ano</p>
+                    <div class="chips" role="group" aria-label="Ano da transição" data-anos></div>
+                </div>
+                <dl class="linha-ano" aria-live="polite" data-linha-ano></dl>
+                <p class="text-xs text-muted">Fonte: <a class="og-link" href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener">ADCT, arts. 125 a 129 (EC nº 132/2023)</a>. A barra mostra quanto resta das alíquotas atuais de ICMS e ISS.</p>
+            </aside>
+        </div>
+    </section>
+
+    <!-- EM NÚMEROS (objetivo: autoridade). Valores calculados dos dados do site; animam ao entrar na tela -->
+    <section class="pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 numeros" data-numeros>
+            <div class="numero"><b data-contador="itens">0</b><span>pontos da reforma acompanhados, cada um com fonte oficial</span></div>
+            <div class="numero"><b data-contador="fontes">0</b><span>dispositivos legais conferidos na fonte primária</span></div>
+            <div class="numero"><b data-contador="ufs">27</b><span>UFs no simulador e no calendário fiscal</span></div>
+            <div class="numero"><b data-contador="dias">0</b><span>dias para a CBS substituir PIS e Cofins (01/01/2027)</span></div>
+        </div>
+    </section>
+
+    <!-- PROVA DE CONFIANÇA (objetivo: autoridade). Anos de atuação só aparecem com comprovação em config.institucional -->
+    <section class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-wrap gap-x-8 gap-y-2 text-sm text-slate-600 items-center">
+            <strong class="text-dark" data-prova-anos hidden></strong>
+            <span>Responsável técnico: <strong class="text-dark">Robson Alain Veloso</strong>, <span class="font-mono text-brandBlue">CRC-TO 002032/O-5 T-GO</span></span>
+            <span>Atuação em agro, transporte, lucro real e produtor rural</span>
+            <span>Base legal citada em cada orientação</span>
+        </div>
+    </section>
+
+    <!-- HUB DA REFORMA TRIBUTÁRIA -->
+    <section id="reforma" class="py-20 bg-lightBg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mb-12">
+                <span class="text-xs font-semibold uppercase tracking-widest text-brandBlue">Hub da Reforma Tributária</span>
+                <h2 class="text-3xl font-bold text-dark mt-2 mb-4">O que muda com a LC nº 214/2025</h2>
+                <p class="text-slate-600">Conteúdo técnico com a base legal citada em cada ponto. Itens ainda não confirmados aparecem marcados como <span class="badge-pendente text-[11px] px-2 py-0.5 rounded-full">pendente de validação</span>.</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="hubCards">
+                <a href="reforma/lc-214-2025.html" class="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-brandBlue hover:shadow-lg transition">
+                    <span class="font-mono text-xs text-brandBlue">LC 214/2025</span>
+                    <h3 class="font-bold text-dark mt-2 mb-2 group-hover:text-brandBlue">A lei do IBS, da CBS e do IS</h3>
+                    <p class="text-sm text-slate-600">Estrutura da lei, cronograma de transição e o que já vale em 2026.</p>
+                </a>
+                <a href="reforma/ibs.html" class="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-brandBlue hover:shadow-lg transition">
+                    <span class="font-mono text-xs text-brandBlue">IBS</span>
+                    <h3 class="font-bold text-dark mt-2 mb-2 group-hover:text-brandBlue">Imposto sobre Bens e Serviços</h3>
+                    <p class="text-sm text-slate-600">Substitui ICMS e ISS, com cobrança no destino e Comitê Gestor.</p>
+                </a>
+                <a href="reforma/cbs.html" class="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-brandBlue hover:shadow-lg transition">
+                    <span class="font-mono text-xs text-brandBlue">CBS</span>
+                    <h3 class="font-bold text-dark mt-2 mb-2 group-hover:text-brandBlue">Contribuição sobre Bens e Serviços</h3>
+                    <p class="text-sm text-slate-600">Substitui PIS e Cofins a partir de 2027, com não cumulatividade ampla.</p>
+                </a>
+                <a href="reforma/split-payment.html" class="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-brandBlue hover:shadow-lg transition">
+                    <span class="font-mono text-xs text-brandBlue">Split Payment</span>
+                    <h3 class="font-bold text-dark mt-2 mb-2 group-hover:text-brandBlue">Recolhimento na liquidação</h3>
+                    <p class="text-sm text-slate-600">O tributo separado no pagamento e o efeito no fluxo de caixa.</p>
+                </a>
+                <a href="reforma/simples-hibrido.html" class="group bg-white border border-slate-200 rounded-2xl p-5 hover:border-brandBlue hover:shadow-lg transition">
+                    <span class="font-mono text-xs text-brandBlue">Art. 41</span>
+                    <h3 class="font-bold text-dark mt-2 mb-2 group-hover:text-brandBlue">Simples Híbrido</h3>
+                    <p class="text-sm text-slate-600">Quando vale apurar IBS/CBS fora do DAS para gerar crédito ao cliente.</p>
+                </a>
+            </div>
+
+            <div class="mt-12 bg-white border border-slate-200 rounded-2xl p-6">
+                <h3 class="font-bold text-dark mb-1">Cronograma de transição</h3>
+                <p class="text-xs text-slate-500 mb-4">Fonte: <span data-fonte="adct_125_133"></span></p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left min-w-[640px]" id="tabelaTransicao">
+                        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200">
+                            <tr><th class="py-2 pr-4">Ano</th><th class="py-2 pr-4">CBS</th><th class="py-2 pr-4">IBS</th><th class="py-2 pr-4">PIS/Cofins</th><th class="py-2 pr-4">IPI</th><th class="py-2">ICMS / ISS</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ÚLTIMAS DA REFORMA (objetivo: autoridade + retenção). Itens renderizados de assets/js/reforma-itens.js -->
+    <section id="ultimas" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-widest text-brandBlue">Central da Reforma</span>
+                    <h2 class="text-3xl font-bold text-dark mt-2">Últimas da reforma</h2>
+                </div>
+                <a href="reforma/index.html" class="og-link">Ver todos os itens →</a>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2" data-itens data-destino="home" data-limite="4"><div class="lista-itens grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
+                <ul class="grid gap-4 content-start" data-noticias="4"></ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- SETORES (objetivo: captação) -->
+    <section id="setores" class="py-20 bg-lightBg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <span class="text-xs font-semibold uppercase tracking-widest text-brandBlue">Setores</span>
+            <h2 class="text-3xl font-bold text-dark mt-2 mb-8">A reforma no seu setor</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="setores/agro.html" class="og-cartao"><span class="og-cartao-ref">LC 214/2025, arts. 137, 138 e 164 a 168</span><h3 class="og-cartao-titulo">Agro e produtor rural</h3><p class="og-cartao-texto">Redução de 60%, produtor não contribuinte, crédito presumido de quem compra e LCDPR.</p></a>
+                <a href="setores/transporte.html" class="og-cartao"><span class="og-cartao-ref">LC 214/2025, arts. 169, 172 a 180 e 284 a 287</span><h3 class="og-cartao-titulo">Transporte</h3><p class="og-cartao-texto">CT-e com IBS e CBS, crédito do diesel, frete de autônomo e passageiros.</p></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMO FUNCIONA (objetivo: captação). Marcos acendem ao rolar; o conteúdo fica visível sempre -->
+    <section id="como-funciona" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="eyebrow">Como funciona</p>
+            <h2 class="text-3xl font-bold text-dark mt-2 mb-10">Do diagnóstico à transição</h2>
+            <ol class="marcos" data-marcos>
+                <li class="marco"><span class="bola" aria-hidden="true">1</span><h3>Diagnóstico</h3><p>Regime, setor, fornecedores e cadastro de produtos (NCM/NBS).</p></li>
+                <li class="marco"><span class="bola" aria-hidden="true">2</span><h3>Simulação</h3><p>Cenários de 2027, da convivência de 2029 a 2032 e de 2033.</p></li>
+                <li class="marco"><span class="bola" aria-hidden="true">3</span><h3>Decisão com fonte</h3><p>Recomendação por escrito, com o dispositivo legal de cada ponto.</p></li>
+                <li class="marco"><span class="bola" aria-hidden="true">4</span><h3>Acompanhamento</h3><p>Calendário, documentos fiscais e programa de conformidade.</p></li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- SIMULADOR HÍBRIDO NACIONAL -->
+    <section id="simulador" class="py-20 bg-white">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold text-dark mb-4">Simulador de Impacto da Reforma Tributária</h2>
+                <p class="text-slate-600">Simule em segundos os reflexos da transição do IBS, da CBS e do Split Payment no seu modelo de negócio, em qualquer uma das 27 UFs.</p>
+            </div>
+
+            <div class="bg-lightBg border border-slate-200 rounded-2xl shadow-xl p-4 sm:p-10">
+                <form id="taxSimulatorForm" class="space-y-8" novalidate>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="simSector" class="block text-sm font-semibold text-slate-700 mb-2">1. Setor de Atuação Principal</label>
+                            <select id="simSector" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none"></select>
+                        </div>
+                        <div>
+                            <label for="simRegime" class="block text-sm font-semibold text-slate-700 mb-2">2. Regime Tributário Atual</label>
+                            <select id="simRegime" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                                <option value="simples">Simples Nacional</option>
+                                <option value="presumido">Lucro Presumido</option>
+                                <option value="real">Lucro Real</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="simClient" class="block text-sm font-semibold text-slate-700 mb-2">3. Perfil Predominante de Clientes</label>
+                            <select id="simClient" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                                <option value="b2b">Mais de 50% Empresas (B2B)</option>
+                                <option value="b2c">Mais de 50% Consumidor Final (B2C)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="simUf" class="block text-sm font-semibold text-slate-700 mb-2">4. UF Principal de Operação</label>
+                            <select id="simUf" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none"></select>
+                        </div>
+                        <div>
+                            <label for="simFaturamento" class="block text-sm font-semibold text-slate-700 mb-2">5. Faturamento anual (R$)</label>
+                            <input id="simFaturamento" type="text" inputmode="decimal" placeholder="ex.: 2.400.000" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                            <p class="text-xs text-slate-500 mt-1">Receita bruta dos últimos 12 meses.</p>
+                        </div>
+                        <div>
+                            <label for="simCompras" class="block text-sm font-semibold text-slate-700 mb-2">6. Compras com direito a crédito (% do faturamento)</label>
+                            <input id="simCompras" type="number" min="0" max="100" step="1" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                            <p class="text-xs text-slate-500 mt-1">Mercadorias, insumos e serviços de fornecedores do regime regular. Preenchido com uma premissa do setor; ajuste se souber o seu.</p>
+                        </div>
+                    </div>
+                    <p id="simErro" class="text-sm text-red-700" role="alert" hidden></p>
+                    <div class="text-center pt-4">
+                        <button id="btnSimular" type="submit" class="bg-brandBlue hover:bg-blue-700 text-white font-semibold px-10 py-4 rounded-xl shadow-md transition w-full sm:w-auto">
+                            Gerar Diagnóstico Tributário Imediato
+                        </button>
+                    </div>
+                </form>
+
+                <!-- RESULTADO DO SIMULADOR (OCULTO ATÉ CLICAR) -->
+                <div id="simResult" class="hidden mt-10 pt-10 border-t border-slate-300 space-y-6" aria-live="polite">
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-6">
+                        <h3 class="text-xl font-bold text-dark mb-2 flex items-center">
+                            <span class="w-3 h-3 bg-brandBlue rounded-full inline-block mr-2"></span>
+                            Relatório Preliminar de Impacto Fiscal
+                        </h3>
+                        <p id="resultText" class="text-slate-700 text-sm leading-relaxed mb-4"></p>
+                        <div id="resultEstimativa" class="mb-4"></div>
+                        <ul id="resultAlertas" class="space-y-3 mb-4"></ul>
+                        <div class="bg-white p-4 rounded-lg border border-blue-100 text-xs text-slate-500 font-mono">
+                            ⚠️ Aviso Legal: Simulação orientativa baseada na EC nº 132/2023 e LC nº 214/2025. Não substitui parecer técnico emitido pelo contador responsável.
+                        </div>
+                    </div>
+
+                    <!-- Captação do lead -->
+                    <form id="leadForm" class="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 space-y-4" novalidate>
+                        <h4 class="font-bold text-dark">Receba a análise completa do seu CNPJ</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label for="leadNome" class="block text-sm font-medium text-slate-700 mb-1">Nome</label>
+                                <input id="leadNome" name="nome" autocomplete="name" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                            <div><label for="leadEmpresa" class="block text-sm font-medium text-slate-700 mb-1">Empresa (opcional)</label>
+                                <input id="leadEmpresa" name="empresa" autocomplete="organization" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                            <div><label for="leadWhats" class="block text-sm font-medium text-slate-700 mb-1">WhatsApp</label>
+                                <input id="leadWhats" name="whatsapp" type="tel" autocomplete="tel" placeholder="(62) 9 0000-0000" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                            <div><label for="leadEmail" class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+                                <input id="leadEmail" name="email" type="email" autocomplete="email" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                        </div>
+                        <div class="hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+                        <label class="flex items-start gap-2 text-xs text-slate-600">
+                            <input id="leadConsent" type="checkbox" class="mt-0.5">
+                            <span>Autorizo a ORGATEC a usar estes dados e o resultado da simulação para entrar em contato sobre o diagnóstico tributário, conforme a <a href="privacidade.html" class="text-brandBlue underline">Política de Privacidade</a> (LGPD, Lei nº 13.709/2018). Posso revogar a qualquer momento.</span>
+                        </label>
+                        <p id="leadMsg" class="text-sm" role="status"></p>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button type="submit" class="bg-brandBlue hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition">Enviar para análise</button>
+                            <a id="ctaWhatsSim" href="https://wa.me/5562992949161" target="_blank" rel="noopener" class="inline-flex items-center justify-center bg-accentGreen hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-xl shadow transition">
+                                <span>Solicitar Análise Detalhada com os Especialistas</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALENDÁRIO FISCAL MULTIESTADO -->
+    <section id="calendario" class="py-20 bg-lightBg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mb-10">
+                <span class="text-xs font-semibold uppercase tracking-widest text-brandBlue">Calendário Fiscal Multiestado</span>
+                <h2 class="text-3xl font-bold text-dark mt-2 mb-4">Vencimentos federais, trabalhistas e estaduais</h2>
+                <p class="text-slate-600">Escolha o mês, a UF e o regime. As datas já consideram fins de semana e feriados nacionais; feriados estaduais e municipais não estão incluídos.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <div><label for="calMes" class="block text-xs font-semibold text-slate-600 mb-1">Mês</label>
+                            <input id="calMes" type="month" class="w-full border border-slate-300 rounded-lg px-2 py-2 text-sm"></div>
+                        <div><label for="calUf" class="block text-xs font-semibold text-slate-600 mb-1">UF</label>
+                            <select id="calUf" class="w-full border border-slate-300 rounded-lg px-2 py-2 text-sm"></select></div>
+                        <div><label for="calRegime" class="block text-xs font-semibold text-slate-600 mb-1">Regime</label>
+                            <select id="calRegime" class="w-full border border-slate-300 rounded-lg px-2 py-2 text-sm">
+                                <option value="simples">Simples Nacional</option>
+                                <option value="presumido">Lucro Presumido</option>
+                                <option value="real">Lucro Real</option>
+                            </select></div>
+                        <fieldset class="col-span-2 md:col-span-1"><legend class="block text-xs font-semibold text-slate-600 mb-1">Esferas</legend>
+                            <div class="flex flex-wrap gap-x-3 text-sm">
+                                <label><input type="checkbox" name="calEsfera" value="federal" checked> Federal</label>
+                                <label><input type="checkbox" name="calEsfera" value="trabalhista" checked> Trabalhista</label>
+                                <label><input type="checkbox" name="calEsfera" value="estadual" checked> Estadual</label>
+                            </div></fieldset>
+                    </div>
+                    <ul id="calLista" class="divide-y divide-slate-100 text-sm"></ul>
+                    <div class="mt-4 flex flex-wrap gap-3 items-center">
+                        <button id="btnIcs" type="button" class="text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 hover:border-brandBlue hover:text-brandBlue transition">Baixar mês (.ics)</button>
+                        <span id="calGuia" class="text-xs text-slate-500"></span>
+                    </div>
+                </div>
+                <form id="optinForm" class="bg-dark text-slate-200 rounded-2xl p-6 space-y-4" novalidate>
+                    <h3 class="text-white font-bold text-lg">Receba os alertas de vencimento</h3>
+                    <p class="text-sm text-slate-400">Avisos mensais das obrigações das UFs escolhidas. Você confirma a inscrição pelo link que enviaremos e pode cancelar quando quiser.</p>
+                    <div><label for="optEmail" class="block text-xs font-semibold mb-1">E-mail</label>
+                        <input id="optEmail" type="email" autocomplete="email" class="w-full rounded-lg px-3 py-2 text-slate-800"></div>
+                    <div><label for="optWhats" class="block text-xs font-semibold mb-1">WhatsApp</label>
+                        <input id="optWhats" type="tel" autocomplete="tel" placeholder="(62) 9 0000-0000" class="w-full rounded-lg px-3 py-2 text-slate-800"></div>
+                    <div><label for="optUfs" class="block text-xs font-semibold mb-1">UFs (segure Ctrl/⌘ para várias)</label>
+                        <select id="optUfs" multiple size="4" class="w-full rounded-lg px-2 py-1 text-slate-800 text-sm"></select></div>
+                    <fieldset><legend class="text-xs font-semibold mb-1">Esferas</legend>
+                        <div class="flex flex-wrap gap-x-3 text-sm">
+                            <label><input type="checkbox" name="optEsfera" value="federal" checked> Federal</label>
+                            <label><input type="checkbox" name="optEsfera" value="trabalhista" checked> Trabalhista</label>
+                            <label><input type="checkbox" name="optEsfera" value="estadual" checked> Estadual</label>
+                        </div></fieldset>
+                    <div class="hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+                    <label class="flex items-start gap-2 text-xs text-slate-400">
+                        <input id="optConsent" type="checkbox" class="mt-0.5">
+                        <span>Aceito receber os alertas do Calendário Fiscal, conforme a <a href="privacidade.html" class="text-brandCyan underline">Política de Privacidade</a>.</span>
+                    </label>
+                    <p id="optMsg" class="text-sm" role="status"></p>
+                    <button type="submit" class="w-full bg-accentGreen hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-xl transition">Quero receber</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOLUÇÕES: CAPTURA DE DOCUMENTOS + PORTAL DO CLIENTE -->
+    <section id="servicos" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mb-10">
+                <span class="text-xs font-semibold uppercase tracking-widest text-brandBlue">Soluções</span>
+                <h2 class="text-3xl font-bold text-dark mt-2 mb-4">Captura automática de documentos e portal do cliente</h2>
+                <p class="text-slate-600">Demonstração com os modelos de homologação do Plano Diretor (dados fictícios).</p>
+            </div>
+
+            <div class="bg-lightBg border border-slate-200 rounded-2xl p-6 mb-8">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-bold text-dark">1. Captura de NF-e, NFS-e e CT-e (multiestado)</h3>
+                    <span id="xmlFerramenta" class="text-xs px-2 py-1 rounded-full"></span>
+                </div>
+                <p class="text-sm text-slate-600 mb-4">Varredura diária, com certificado digital A1/A3, dos documentos emitidos contra o CNPJ do cliente em qualquer SEFAZ. Cada documento passa por validação estrutural antes de entrar na apuração.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm min-w-[760px]">
+                        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200 text-left">
+                            <tr><th class="py-2 pr-3">ID</th><th class="py-2 pr-3">Emitente</th><th class="py-2 pr-3">UF</th><th class="py-2 pr-3">Tipo</th><th class="py-2 pr-3 text-right">Valor</th><th class="py-2 pr-3">Emissão</th><th class="py-2 pr-3">Status captura</th><th class="py-2">Validação</th></tr>
+                        </thead>
+                        <tbody id="xmlTabela" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-lightBg border border-slate-200 rounded-2xl p-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                    <h3 class="font-bold text-dark">2. Portal do cliente — atendimento com SLA e trilha de auditoria</h3>
+                    <span id="portalErp" class="text-xs px-2 py-1 rounded-full"></span>
+                </div>
+                <p class="text-sm text-slate-600 mb-4">Guias, balancetes e solicitações em <a href="https://portal.orgatec.io" data-link="portal" target="_blank" rel="noopener" class="text-brandBlue underline font-mono">portal.orgatec.io</a>, com autenticação multifator (MFA), perfis de acesso separados e registro de cada ação. IPs aparecem mascarados (LGPD).</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm min-w-[760px]">
+                        <thead class="text-xs uppercase text-slate-500 border-b border-slate-200 text-left">
+                            <tr><th class="py-2 pr-3">Protocolo</th><th class="py-2 pr-3">UF</th><th class="py-2 pr-3">Departamento</th><th class="py-2 pr-3">Solicitação</th><th class="py-2 pr-3">Competência</th><th class="py-2 pr-3">Status</th><th class="py-2 pr-3">SLA</th><th class="py-2">Auditoria</th></tr>
+                        </thead>
+                        <tbody id="portalTabela" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+                <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                    <a href="https://portal.orgatec.io" data-link="portal" target="_blank" rel="noopener" class="inline-flex justify-center items-center bg-dark text-white font-semibold px-6 py-3 rounded-xl hover:bg-slate-800 transition">🔒 Acessar o Portal do Cliente</a>
+                    <a href="#contato" class="inline-flex justify-center items-center border border-slate-300 font-semibold px-6 py-3 rounded-xl hover:border-brandBlue hover:text-brandBlue transition">Problemas de acesso? Fale conosco</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ALERTAS REGIONAIS GO-TO-PA -->
+    <section id="regional" class="py-20 bg-lightBg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl mb-8">
+                <span class="text-xs font-semibold uppercase tracking-widest text-brandBlue">Eixo GO-TO-PA &amp; Brasil</span>
+                <h2 class="text-3xl font-bold text-dark mt-2 mb-4">Alertas regionais por setor</h2>
+                <p class="text-slate-600">Pontos de atenção para agronegócio, comércio atacadista e indústria em Goiás, no Tocantins e no Pará. Para as demais UFs, use o simulador.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-3" role="tablist" aria-label="UF" id="tabsUf"></div>
+            <div class="flex flex-wrap gap-2 mb-6" role="tablist" aria-label="Setor" id="tabsSetor"></div>
+            <ul id="listaRegional" class="grid grid-cols-1 md:grid-cols-2 gap-4"></ul>
+        </div>
+    </section>
+
+    <!-- PERGUNTAS FREQUENTES (objetivo: autoridade). Respostas saem dos itens da reforma, com fonte e status -->
+    <section id="perguntas" class="py-20">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6">
+            <p class="eyebrow">Perguntas frequentes</p>
+            <h2 class="text-3xl font-bold text-dark mt-2 mb-8">O que os clientes mais perguntam sobre a reforma</h2>
+            <div class="faq" data-faq></div>
+            <p class="text-sm text-muted mt-6">As respostas trazem só o que está na norma citada. Para o efeito na sua empresa, <a href="#contato" class="og-link">fale com a equipe</a>.</p>
+        </div>
+    </section>
+
+    <!-- CONTATO -->
+    <section id="contato" class="py-20 bg-white">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+                <h2 class="text-3xl font-bold text-dark mb-4">Fale com um especialista</h2>
+                <p class="text-slate-600 mb-6">Diagnóstico tributário, dúvidas sobre o portal ou solicitações sobre seus dados pessoais.</p>
+                <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="inline-flex items-center bg-accentGreen hover:bg-emerald-600 text-white font-semibold px-6 py-3 rounded-xl shadow transition">Falar no WhatsApp</a>
+                <p class="mt-4 text-sm text-slate-600" id="contatoEmailLinha"></p>
+            </div>
+            <form id="contatoForm" class="space-y-4" novalidate>
+                <div><label for="ctNome" class="block text-sm font-medium text-slate-700 mb-1">Nome</label>
+                    <input id="ctNome" autocomplete="name" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div><label for="ctWhats" class="block text-sm font-medium text-slate-700 mb-1">WhatsApp</label>
+                        <input id="ctWhats" type="tel" autocomplete="tel" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                    <div><label for="ctEmail" class="block text-sm font-medium text-slate-700 mb-1">E-mail</label>
+                        <input id="ctEmail" type="email" autocomplete="email" class="w-full border border-slate-300 rounded-lg px-3 py-2"></div>
+                </div>
+                <div><label for="ctAssunto" class="block text-sm font-medium text-slate-700 mb-1">Assunto</label>
+                    <select id="ctAssunto" class="w-full border border-slate-300 rounded-lg px-3 py-2">
+                        <option value="diagnostico">Diagnóstico tributário</option>
+                        <option value="portal">Acesso ao portal</option>
+                        <option value="lgpd">Meus dados pessoais (LGPD)</option>
+                        <option value="outro">Outro</option>
+                    </select></div>
+                <div><label for="ctMensagem" class="block text-sm font-medium text-slate-700 mb-1">Mensagem</label>
+                    <textarea id="ctMensagem" rows="4" class="w-full border border-slate-300 rounded-lg px-3 py-2"></textarea></div>
+                <div class="hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+                <label class="flex items-start gap-2 text-xs text-slate-600">
+                    <input id="ctConsent" type="checkbox" class="mt-0.5">
+                    <span>Autorizo o uso destes dados para responder a esta mensagem, conforme a <a href="privacidade.html" class="text-brandBlue underline">Política de Privacidade</a>.</span>
+                </label>
+                <p id="ctMsg" class="text-sm" role="status"></p>
+                <button type="submit" class="w-full sm:w-auto bg-brandBlue hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition">Enviar mensagem</button>
+            </form>
+        </div>
+    </section>
+    </main>
+
+    <!-- RODAPÉ TÉCNICO E REGULATÓRIO -->
+    <footer class="bg-surface2 text-muted py-12 border-t border-line">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+                <span class="flex items-center gap-2 mb-3"><img src="assets/marca/orgatec-original.png" alt="" width="26" height="29" class="h-7 w-auto"><span class="text-ink font-extrabold text-lg tracking-wide">ORGATEC</span></span>
+                <p class="mb-4">Contabilidade Consultiva e Inteligência Tributária. Atendimento digital em todo o Brasil com forte atuação no eixo GO, TO e PA.</p>
+                <p class="text-xs text-muted">CNPJ: 13.155.211/0001-45</p>
+            </div>
+            <div>
+                <span class="text-ink font-bold text-base block mb-2">Responsabilidade Técnica</span>
+                <p>Robson Alain Veloso</p>
+                <p class="text-brand font-mono">CRC-TO 002032/O-5 T-GO</p>
+                <p class="text-xs text-muted mt-2">Sede: Av. Ministro Alfredo Nasser, nº 727, Centro, Formoso-GO</p>
+            </div>
+            <div>
+                <span class="text-ink font-bold text-base block mb-2">Canais Oficiais</span>
+                <p>WhatsApp / Telefone: <span data-texto="whatsapp">+55 (62) 99294-9161</span></p>
+                <p class="mt-2"><a href="https://portal.orgatec.io" data-link="portal" class="text-brand hover:underline">portal.orgatec.io</a></p>
+                <p class="mt-2 text-xs" id="rodapeEmails"></p>
+                <p class="mt-2 text-xs"><a href="privacidade.html" class="hover:underline">Política de Privacidade (LGPD)</a> · <a href="reforma/fontes.html" class="hover:underline">Fontes legais</a> · <a href="marca.html" class="hover:underline">Marca</a></p>
+                <p class="text-xs text-muted mt-4">© 2026 ORGATEC. Todos os direitos reservados. Em conformidade com a LGPD e o Código de Ética do CFC (NBC PG 01).</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/fontes.js"></script>
+    <script src="assets/js/ufs.js"></script>
+    <script src="assets/js/regras.js"></script>
+    <script src="assets/js/calendario.js"></script>
+    <script src="assets/js/validadores.js"></script>
+    <script src="assets/js/demo-dados.js"></script>
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/conteudo.js"></script>
+    <script src="assets/js/reforma-itens.js"></script>
+    <script src="assets/js/calculadoras.js"></script>
+    <script src="assets/js/paginas.js"></script>
+    <script src="assets/js/inicio.js"></script>
+</body>
+</html>

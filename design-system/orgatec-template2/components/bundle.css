@@ -1,0 +1,75 @@
+/* OrgatecUI — componentes do site ORGATEC. Valores vêm de tokens.css. */
+body { margin: 0; font-family: var(--font-sans); background: var(--fundo); color: var(--tinta-texto); -webkit-font-smoothing: antialiased; }
+.og-linha { display: flex; flex-wrap: wrap; gap: var(--espaco-3); align-items: center; padding: var(--espaco-4); }
+.og-pilha { display: grid; gap: var(--espaco-4); padding: var(--espaco-4); }
+.og-palco { background: var(--palco); color: var(--marca-branco); border-radius: var(--raio-2xl); padding: var(--espaco-6); }
+.og-painel-branco { background: var(--marca-branco); border-radius: var(--raio-2xl); padding: var(--espaco-6); }
+
+.og-simbolo { display: inline-block; flex-shrink: 0; }
+.og-simbolo svg { display: block; width: 100%; height: 100%; }
+.og-assinatura { display: inline-flex; align-items: center; gap: var(--espaco-4); }
+.og-assinatura-reduzida { gap: var(--espaco-3); }
+.og-assinatura-vertical { flex-direction: column; text-align: center; gap: var(--espaco-4); }
+.og-assinatura-texto { display: flex; flex-direction: column; }
+.og-nome { font-family: var(--font-sans); font-weight: 800; letter-spacing: .04em; line-height: 1; font-size: 48px; }
+.og-assinatura-reduzida .og-nome { font-size: 24px; }
+.og-assinatura-vertical .og-nome { font-size: 36px; }
+.og-descritor { font-weight: 600; letter-spacing: .32em; text-transform: uppercase; font-size: 11px; line-height: 16px; margin-top: var(--espaco-2); }
+.og-tom-claro .og-nome { color: var(--marca-tinta); }
+.og-tom-claro .og-descritor { color: var(--marca-azul-medio); }
+.og-tom-escuro .og-nome { color: var(--marca-branco); }
+.og-tom-escuro .og-descritor { color: var(--marca-ciano-luz); }
+
+.og-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--espaco-2); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; border: 1px solid transparent; white-space: nowrap; transition: background-color .15s, border-color .15s, color .15s; }
+.og-btn:focus-visible { outline: 2px solid transparent; box-shadow: var(--foco); }
+.og-btn-md { font-size: 14px; line-height: 20px; padding: 10px var(--espaco-5); border-radius: var(--raio-lg); }
+.og-btn-lg { font-size: 16px; line-height: 24px; padding: var(--espaco-4) var(--espaco-8); border-radius: var(--raio-xl); }
+.og-btn-primario { background: var(--acao); color: var(--sobre-acao); }
+.og-btn-primario:hover { background: var(--acao-hover); }
+.og-btn-lg.og-btn-primario { box-shadow: var(--sombra-lg); }
+.og-btn-contato { background: var(--contato); color: var(--sobre-contato); box-shadow: var(--sombra-sm); }
+.og-btn-contato:hover { background: var(--contato-hover); }
+.og-btn-contorno { background: transparent; color: var(--tinta-texto); border-color: var(--linha-campo); font-weight: 500; }
+.og-btn-contorno:hover { color: var(--link); border-color: var(--acao); }
+.og-btn-sobre-palco { background: rgba(255,255,255,0.1); color: var(--marca-branco); border-color: rgba(255,255,255,0.2); }
+.og-btn-sobre-palco:hover { background: rgba(255,255,255,0.2); }
+
+.og-selo { display: inline-flex; align-items: center; font-size: 10px; line-height: 15px; font-weight: 600; padding: 2px var(--espaco-2); border-radius: var(--raio-pilula); border: 1px solid transparent; white-space: nowrap; vertical-align: middle; }
+.og-selo-pendente { background: var(--pendente-fundo); color: var(--pendente-texto); border-color: var(--pendente-borda); }
+.og-selo-definido { background: var(--definido-fundo); color: var(--definido-texto); }
+.og-selo-futuro { background: var(--superficie); color: var(--link); border-color: var(--acao); }
+.og-selo-norma { font-size: 12px; line-height: 16px; letter-spacing: .05em; text-transform: uppercase; padding: var(--espaco-1) var(--espaco-3); background: rgba(37,99,235,0.2); color: #67e8f9; border-color: rgba(37,99,235,0.3); }
+
+.og-citacao { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--espaco-2); font-size: 14px; line-height: 20px; }
+.og-link { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+.og-link:focus-visible { outline: none; box-shadow: var(--foco); border-radius: 2px; }
+
+.og-cartao { display: block; background: var(--superficie); border: 1px solid var(--linha); border-radius: var(--raio-2xl); padding: var(--espaco-5); text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; }
+a.og-cartao:hover { border-color: var(--acao); box-shadow: var(--sombra-lg); }
+a.og-cartao:focus-visible { outline: none; box-shadow: var(--foco); }
+.og-cartao-ref { font-family: var(--font-mono); font-size: 12px; line-height: 16px; color: var(--link); }
+.og-cartao-titulo { font-size: 16px; line-height: 24px; font-weight: 700; color: var(--tinta); margin: var(--espaco-2) 0; display: flex; flex-wrap: wrap; gap: var(--espaco-2); align-items: center; }
+a.og-cartao:hover .og-cartao-titulo { color: var(--link); }
+.og-cartao-texto { font-size: 14px; line-height: 20px; color: var(--tinta-suave); margin: 0; }
+.og-item { display: grid; gap: var(--espaco-3); align-content: start; }
+.og-item .og-cartao-titulo { margin: 0; }
+.og-item-orientacao { border-top: 1px solid var(--linha); padding-top: var(--espaco-3); font-size: 14px; line-height: 20px; color: var(--tinta-texto); }
+.og-item-orientacao p { margin: var(--espaco-1) 0 0; }
+.og-item-rotulo { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-fraca); }
+.og-item-fontes { display: grid; gap: var(--espaco-1); font-size: 12px; }
+.og-item-fontes .og-citacao { font-size: 12px; line-height: 16px; }
+.og-item-meta { margin: 0; font-family: var(--font-mono); font-size: 12px; line-height: 16px; color: var(--tinta-fraca); }
+
+.og-campo { display: grid; gap: var(--espaco-2); }
+.og-campo-rotulo { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--tinta-texto); }
+.og-campo-controle { font: inherit; color: var(--tinta-texto); background: var(--superficie); border: 1px solid var(--linha-campo); width: 100%; box-sizing: border-box; }
+.og-campo-controle:focus { outline: none; box-shadow: var(--foco); }
+.og-campo-md { font-size: 14px; padding: var(--espaco-2) var(--espaco-3); border-radius: var(--raio-lg); }
+.og-campo-lg { font-size: 16px; padding: var(--espaco-3) var(--espaco-4); border-radius: var(--raio-xl); }
+.og-campo-invalido { border-color: var(--pendente-texto); }
+.og-campo-ajuda { margin: 0; font-size: 12px; line-height: 16px; color: var(--tinta-fraca); }
+.og-campo-erro { margin: 0; font-size: 14px; line-height: 20px; color: var(--pendente-texto); }
+
+.og-consentimento { display: flex; align-items: flex-start; gap: var(--espaco-2); font-size: 12px; line-height: 16px; color: var(--tinta-suave); }
+.og-consentimento input { margin-top: 2px; accent-color: var(--acao); }
+.og-consentimento a { color: var(--link); }

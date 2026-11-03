@@ -1,0 +1,12 @@
+<!-- @dsCard group="Estado" height=120 -->
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Selo — prévia</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap"></head>
+<body>
+<div id="root" class="og-pilha"></div>
+<script>
+  var O = window.OrgatecUI, h = React.createElement;
+  ReactDOM.createRoot(document.getElementById('root')).render(h(React.Fragment, null, h('div', { className: 'og-linha', style: { padding: 0 } }, h(O.Selo), h(O.Selo, { tom: 'definido' }, 'Integração: Sieg'), h(O.Selo, { tom: 'pendente' }, 'ERP do portal: pendente de definição'), h(O.Selo, { tom: 'futuro' })), h('div', { className: 'og-palco' }, h(O.Selo, { tom: 'norma' }, 'EC 132/2023 • LC 214/2025 • Split Payment'))));
+</script>
+</body>
+</html>

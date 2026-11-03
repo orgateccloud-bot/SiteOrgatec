@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orgatec.IO | Contabilidade Consultiva e Inteligência Tributária</title>
+    <meta name="description" content="Contabilidade estratégica e transição para a Reforma Tributária (IBS, CBS e Split Payment) em todo o Brasil, com força no eixo GO, TO e PA. Resp. Técnico: Robson Veloso - CRC-TO 002032/O-5 T-GO.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: '#0F172A',
+                        brandBlue: '#2563EB',
+                        brandCyan: '#0EA5E9',
+                        accentGreen: '#10B981',
+                        lightBg: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-lightBg text-slate-800 font-sans antialiased">
+
+    <!-- CABEÇALHO / NAVBAR -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <!-- Logótipo / Símbolo Circular Azul -->
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-900 via-blue-600 to-cyan-400 flex items-center justify-center shadow-md">
+                    <div class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center text-white font-bold text-xs">IO</div>
+                </div>
+                <div>
+                    <span class="text-xl font-bold tracking-tight text-dark">ORGATEC<span class="text-brandBlue">.IO</span></span>
+                    <span class="block text-[10px] text-slate-500 uppercase tracking-widest">Inteligência Tributária</span>
+                </div>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
+                <a href="#reforma" class="hover:text-brandBlue transition">Reforma Tributária</a>
+                <a href="#simulador" class="hover:text-brandBlue transition">Simulador Híbrido</a>
+                <a href="#servicos" class="hover:text-brandBlue transition">Soluções</a>
+                <a href="#regional" class="hover:text-brandBlue transition">Eixo GO-TO-PA & Brasil</a>
+            </nav>
+            <div class="flex items-center space-x-4">
+                <a href="https://portal.orgatec.io" target="_blank" class="hidden sm:inline-flex items-center text-sm font-medium text-slate-700 hover:text-brandBlue px-4 py-2 rounded-lg border border-slate-300 hover:border-brandBlue transition">
+                    🔒 Portal do Cliente
+                </a>
+                <a href="https://wa.me/5562992949161" target="_blank" class="bg-accentGreen hover:bg-emerald-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2">
+                    <span>Falar no WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="relative bg-dark text-white py-24 lg:py-32 overflow-hidden">
+        <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="max-w-3xl">
+                <span class="inline-block bg-brandBlue/20 text-cyan-300 border border-brandBlue/30 px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase mb-6">
+                    EC 132/2023 • LC 214/2025 • Split Payment
+                </span>
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-6">
+                    Contabilidade Estratégica e Inteligência Tributária para a Nova Era Fiscal.
+                </h1>
+                <p class="text-lg sm:text-xl text-slate-300 mb-10 leading-relaxed">
+                    Preparamos a sua empresa em Goiás, no Tocantins, no Pará e em todo o Brasil para a transição do IBS e da CBS, protegendo o seu fluxo de caixa com rigor técnico e tecnologia.
+                </p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="#simulador" class="bg-brandBlue hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-xl text-center shadow-lg transition">
+                        Testar Simulador Tributário
+                    </a>
+                    <a href="https://wa.me/5562992949161" target="_blank" class="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-8 py-4 rounded-xl text-center backdrop-blur-sm transition">
+                        Agendar Diagnóstico com Especialista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SIMULADOR HÍBRIDO INTERATIVO -->
+    <section id="simulador" class="py-20 bg-white">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold text-dark mb-4">Simulador de Impacto da Reforma Tributária</h2>
+                <p class="text-slate-600">Simule em segundos os reflexos da transição do IBS, CBS e do Split Payment no seu modelo de negócio.</p>
+            </div>
+
+            <div class="bg-lightBg border border-slate-200 rounded-2xl shadow-xl p-6 sm:p-10">
+                <form id="taxSimulatorForm" class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Pergunta 1 -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">1. Setor de Atuação Principal</label>
+                            <select id="simSector" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                                <option value="comercio">Comércio Atacadista ou Varejista</option>
+                                <option value="servicos">Prestação de Serviços / Saúde</option>
+                                <option value="industria">Indústria e Transformação</option>
+                                <option value="agro">Agronegócio e Produtor Rural</option>
+                            </select>
+                        </div>
+                        <!-- Pergunta 2 -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">2. Regime Tributário Atual</label>
+                            <select id="simRegime" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                                <option value="simples">Simples Nacional</option>
+                                <option value="presumido">Lucro Presumido</option>
+                                <option value="real">Lucro Real</option>
+                            </select>
+                        </div>
+                        <!-- Pergunta 3 -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">3. Perfil Predominante de Clientes</label>
+                            <select id="simClient" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                                <option value="b2b">Mais de 50% Empresas (B2B)</option>
+                                <option value="b2c">Mais de 50% Consumidor Final (B2C)</option>
+                            </select>
+                        </div>
+                        <!-- Pergunta 4 -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">4. UF Principal de Operação</label>
+                            <select id="simUf" class="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-700 focus:ring-2 focus:ring-brandBlue focus:outline-none">
+                                <option value="GO">Goiás (GO)</option>
+                                <option value="TO">Tocantins (TO)</option>
+                                <option value="PA">Pará (PA)</option>
+                                <option value="OUTRAS">Demais Estados / Nacional (27 UFs)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="text-center pt-4">
+                        <button type="button" onclick="runSimulation()" class="bg-brandBlue hover:bg-blue-700 text-white font-semibold px-10 py-4 rounded-xl shadow-md transition w-full sm:w-auto">
+                            Gerar Diagnóstico Tributário Imediato
+                        </button>
+                    </div>
+                </form>
+
+                <!-- RESULTADO DO SIMULADOR (OCULTO ATÉ CLICAR) -->
+                <div id="simResult" class="hidden mt-10 pt-10 border-t border-slate-300 space-y-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                        <h3 class="text-xl font-bold text-dark mb-2 flex items-center">
+                            <span class="w-3 h-3 bg-brandBlue rounded-full inline-block mr-2"></span>
+                            Relatório Preliminar de Impacto Fiscal
+                        </h3>
+                        <p id="resultText" class="text-slate-700 text-sm leading-relaxed mb-4"></p>
+                        <div class="bg-white p-4 rounded-lg border border-blue-100 text-xs text-slate-500 font-mono">
+                            ⚠️ Aviso Legal: Simulação orientativa baseada na EC nº 132/2023 e LC nº 214/2025. Não substitui parecer técnico emitido pelo contador responsável.
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <a href="https://wa.me/5562992949161?text=Olá,%20fiz%20a%20simulação%20no%20site%20da%20Orgatec.IO%20e%20gostaria%20de%20uma%20análise%20completa%20do%20meu%20CNPJ." target="_blank" class="inline-flex items-center justify-center bg-accentGreen hover:bg-emerald-600 text-white font-semibold px-8 py-3 rounded-xl shadow transition space-x-2">
+                            <span>Solicitar Análise Detalhada com os Especialistas</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RODAPÉ TÉCNICO E REGULATÓRIO -->
+    <footer class="bg-dark text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+            <div>
+                <span class="text-white font-bold text-base block mb-2">ORGATEC.IO</span>
+                <p class="mb-4">Contabilidade Consultiva e Inteligência Tributária. Atendimento digital em todo o Brasil com forte atuação no eixo GO, TO e PA.</p>
+                <p class="text-xs text-slate-500">CNPJ: 13.155.211/0001-45</p>
+            </div>
+            <div>
+                <span class="text-white font-bold text-base block mb-2">Responsabilidade Técnica</span>
+                <p>Robson Alain Veloso</p>
+                <p class="text-brandCyan font-mono">CRC-TO 002032/O-5 T-GO</p>
+                <p class="text-xs text-slate-500 mt-2">Sede: Av. Ministro Alfredo Nasser, nº 727, Centro, Formoso-GO</p>
+            </div>
+            <div>
+                <span class="text-white font-bold text-base block mb-2">Canais Oficiais</span>
+                <p>WhatsApp / Telefone: +55 (62) 99294-9161</p>
+                <p class="mt-2"><a href="https://portal.orgatec.io" class="text-brandCyan hover:underline">portal.orgatec.io</a></p>
+                <p class="text-xs text-slate-500 mt-4">© 2026 Orgatec.IO. Todos os direitos reservados. Em conformidade com a LGPD e o Código de Ética do CFC (NBC PG 01).</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT DO SIMULADOR -->
+    <script>
+        function runSimulation() {
+            const sector = document.getElementById('simSector').value;
+            const regime = document.getElementById('simRegime').value;
+            const client = document.getElementById('simClient').value;
+            const uf = document.getElementById('simUf').value;
+
+            let text = "";
+
+            if (regime === 'simples' && client === 'b2b') {
+                text = `Como sua empresa está no **Simples Nacional** e vende predominantemente para PJ (B2B), o Art. 41 da LC nº 214/2025 exige atenção imediata: permanecer no recolhimento unificado via DAS pode reduzir o crédito de IBS e CBS transferido aos seus clientes, gerando perda de competitividade frente ao Lucro Real/Presumido. Recomendamos avaliar o "Simples Híbrido".`;
+            } else if (regime === 'presumido' && sector === 'servicos') {
+                text = `No **Lucro Presumido (Serviços)**, a transição para o IBS e a CBS substitui o PIS/Cofins cumulativo pela nova alíquota padrão unificada. Como o setor de serviços possui baixa tomada de créditos, a modelagem de precificação precisará ser revista para evitar erosão na margem de lucro operacional.`;
+            } else if (sector === 'agro' && (uf === 'TO' || uf === 'PA')) {
+                text = `No **Agronegócio na região da SUDAM (Tocantins ou Pará)**, além das regras de IBS/CBS e créditos presumidos da Reforma, há potencial para associar o planejamento tributário aos incentivos federais de redução de 75% do IRPJ e às novas regras de subvenções da Lei nº 14.789/2023.`;
+            } else {
+                text = `Para operações no estado de **${uf}** sob o regime **${regime.toUpperCase()}**, o impacto principal centrará no modelo de apuração não cumulativa plena do IBS/CBS e na adaptação ao *Split Payment* (retenção tributária automática na liquidação financeira). Uma auditoria preventiva de NCMs e cadastros fiscais é altamente recomendada para mitigar riscos no fluxo de caixa.`;
+            }
+
+            document.getElementById('resultText').innerHTML = text;
+            document.getElementById('simResult').classList.remove('hidden');
+            document.getElementById('simResult').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

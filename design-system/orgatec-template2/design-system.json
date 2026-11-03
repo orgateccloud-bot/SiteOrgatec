@@ -1,0 +1,189 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-02T15:19:10Z"
+  },
+  "title": "orgatec-template2",
+  "namespace": "OrgatecUI",
+  "libraries": [
+    {
+      "name": "react",
+      "version": "18"
+    },
+    {
+      "name": "react-dom",
+      "version": "18"
+    }
+  ],
+  "sections": {},
+  "groups": [
+    "Simbolo",
+    "Assinaturas",
+    "Icones"
+  ],
+  "assetGroups": {
+    "Simbolo": {
+      "name": "Simbolo",
+      "tile": "m",
+      "order": [
+        "orgatec-simbolo.svg",
+        "orgatec-simbolo-mono.svg",
+        "orgatec-simbolo-branco.svg"
+      ],
+      "files": {
+        "orgatec-simbolo.svg": {
+          "name": "orgatec-simbolo.svg",
+          "blob": "f5d49cdbb2b2d5d984107bfd6adc1cb1",
+          "size": 2213,
+          "type": "image/svg+xml"
+        },
+        "orgatec-simbolo-mono.svg": {
+          "name": "orgatec-simbolo-mono.svg",
+          "blob": "d21f8f51926a41a782c75dd2bcadf421",
+          "size": 737,
+          "type": "image/svg+xml"
+        },
+        "orgatec-simbolo-branco.svg": {
+          "name": "orgatec-simbolo-branco.svg",
+          "blob": "f9ef51cb15fcca2471163c2cc6ab2464",
+          "size": 737,
+          "type": "image/svg+xml"
+        }
+      }
+    },
+    "Assinaturas": {
+      "name": "Assinaturas",
+      "tile": "l",
+      "order": [
+        "orgatec-horizontal.svg",
+        "orgatec-horizontal.png",
+        "orgatec-horizontal-negativo.svg",
+        "orgatec-horizontal-negativo.png",
+        "orgatec-horizontal-mono.svg",
+        "orgatec-vertical.svg",
+        "orgatec-vertical.png"
+      ],
+      "files": {
+        "orgatec-horizontal.svg": {
+          "name": "orgatec-horizontal.svg",
+          "blob": "6ace5ccc1f54f284116ea2a4a7e2701f",
+          "size": 2652,
+          "type": "image/svg+xml"
+        },
+        "orgatec-horizontal.png": {
+          "name": "orgatec-horizontal.png",
+          "blob": "331103ebeb64f9c60166a08146a36c4c",
+          "size": 51801,
+          "type": "image/png"
+        },
+        "orgatec-horizontal-negativo.svg": {
+          "name": "orgatec-horizontal-negativo.svg",
+          "blob": "002005400b4cc8d76e5293ed9b45859a",
+          "size": 2652,
+          "type": "image/svg+xml"
+        },
+        "orgatec-horizontal-negativo.png": {
+          "name": "orgatec-horizontal-negativo.png",
+          "blob": "53739955ac9491e4ebf02f1b06d08b13",
+          "size": 45377,
+          "type": "image/png"
+        },
+        "orgatec-horizontal-mono.svg": {
+          "name": "orgatec-horizontal-mono.svg",
+          "blob": "23476d126a8d689a04553b4e49465f6e",
+          "size": 1178,
+          "type": "image/svg+xml"
+        },
+        "orgatec-vertical.svg": {
+          "name": "orgatec-vertical.svg",
+          "blob": "bdce24d36e82a0e4dbe9a1c86e624d7c",
+          "size": 2729,
+          "type": "image/svg+xml"
+        },
+        "orgatec-vertical.png": {
+          "name": "orgatec-vertical.png",
+          "blob": "a42e2c15140f113f772a06205c35a9ba",
+          "size": 45244,
+          "type": "image/png"
+        }
+      }
+    },
+    "Icones": {
+      "name": "Icones",
+      "tile": "s",
+      "order": [
+        "orgatec-app.svg",
+        "orgatec-app-512.png",
+        "orgatec-app-escuro.svg",
+        "orgatec-app-escuro-512.png",
+        "favicon.svg",
+        "favicon-32.png",
+        "apple-touch-icon.png",
+        "og-image.png"
+      ],
+      "files": {
+        "orgatec-app.svg": {
+          "name": "orgatec-app.svg",
+          "blob": "b218dc8a4a1c4795d7b08be0a27b6f98",
+          "size": 2332,
+          "type": "image/svg+xml"
+        },
+        "orgatec-app-512.png": {
+          "name": "orgatec-app-512.png",
+          "blob": "ba46f87b22f9dc495840125b4ca15d89",
+          "size": 26311,
+          "type": "image/png"
+        },
+        "orgatec-app-escuro.svg": {
+          "name": "orgatec-app-escuro.svg",
+          "blob": "17223995f5ae3ca77d2c54f92d1ee96e",
+          "size": 1037,
+          "type": "image/svg+xml"
+        },
+        "orgatec-app-escuro-512.png": {
+          "name": "orgatec-app-escuro-512.png",
+          "blob": "892be8db52b03747145ecfa197a75f2f",
+          "size": 103230,
+          "type": "image/png"
+        },
+        "favicon.svg": {
+          "name": "favicon.svg",
+          "blob": "6c6e375f5b1870dea3ec935fdfe46c96",
+          "size": 2265,
+          "type": "image/svg+xml"
+        },
+        "favicon-32.png": {
+          "name": "favicon-32.png",
+          "blob": "3ccb93e46c4fc2d5b0ea2b845610132f",
+          "size": 1633,
+          "type": "image/png"
+        },
+        "apple-touch-icon.png": {
+          "name": "apple-touch-icon.png",
+          "blob": "c75e11c871522bf032804559037783c0",
+          "size": 7120,
+          "type": "image/png"
+        },
+        "og-image.png": {
+          "name": "og-image.png",
+          "blob": "99805a29cc6878707b1e45bbe3392eca",
+          "size": 255875,
+          "type": "image/png"
+        }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "lastChange": {
+    "by": "Claude",
+    "via": "Claude Code",
+    "at": "2026-11-02T15:19:10Z",
+    "note": "Criado a partir de site/marca.html e do site ORGATEC."
+  }
+}

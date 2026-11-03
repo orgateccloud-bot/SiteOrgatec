@@ -1,0 +1,4 @@
+/* Entrada do Tailwind compilado (tools/compilar_css.py → site/assets/css/tailwind.css). */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

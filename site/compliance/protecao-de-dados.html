@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proteção de dados (LGPD) | ORGATEC</title>
+    <meta name="description" content="LGPD com a ORGATEC: registro das operações, segurança, encarregado, incidentes e as regras para microempresas e empresas de pequeno porte, com a fonte oficial.">
+    <link rel="canonical" href="https://orgatec.io/compliance/protecao-de-dados.html">
+    <meta property="og:title" content="Proteção de dados (LGPD)">
+    <meta property="og:description" content="LGPD com a ORGATEC: registro das operações, segurança, encarregado, incidentes e as regras para microempresas e empresas de pequeno porte, com a fonte oficial.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://orgatec.io/assets/marca/og-image.png">
+    <link rel="icon" href="../assets/marca/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="../assets/marca/apple-touch-icon.png">
+    <meta name="theme-color" content="#072563">
+    <link rel="stylesheet" href="../assets/fontes/fontes.css">
+    <link rel="stylesheet" href="../assets/css/orgatec.css">
+    <script src="../assets/js/tema.js"></script>
+    <link rel="stylesheet" href="../assets/css/tailwind.css">
+</head>
+<body class="text-ink font-sans antialiased com-barra-movel" data-layout="paginas">
+    <div id="faixaHomologacao" hidden class="bg-aviso-fundo border-b border-aviso-borda text-aviso-texto text-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2"><strong>Ambiente de homologação.</strong> Itens da reforma marcados "em revisão técnica" ainda não foram aprovados pelo responsável técnico e não aparecem em produção. <a href="../testes/index.html" class="underline font-semibold">Painel de testes e pendências →</a></div>
+    </div>
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-linha">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
+            <a href="../inicio.html" class="flex items-center gap-3 min-w-0" aria-label="ORGATEC — início">
+                <img src="../assets/marca/orgatec-original.png" alt="" width="40" height="44" class="h-9 w-8 sm:h-11 sm:w-10 shrink-0">
+                <div class="min-w-0">
+                    <span class="block text-lg sm:text-xl font-display font-extrabold tracking-tight text-tinta leading-none whitespace-nowrap">ORGATEC</span>
+                    <span class="hidden sm:block text-[10px] text-descritor uppercase tracking-widest mt-1 whitespace-nowrap">Inteligência Tributária</span>
+                </div>
+            </a>
+            <nav class="hidden xl:flex items-center gap-6 text-sm font-medium text-tinta-suave whitespace-nowrap" aria-label="Principal">
+                <a href="../inicio.html" class="hover:text-acao transition inline-flex items-center gap-1.5" title="Início"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg><span class="sr-only 2xl:not-sr-only">Início</span></a>
+                <a href="../tributario/index.html" class="hover:text-acao transition">Consultoria</a>
+                <a href="../reforma/index.html" class="hover:text-acao transition">Reforma</a>
+                <details class="nav-grupo" data-nav-grupo><summary class="hover:text-acao transition">Setores</summary><div class="nav-sub"><a href="../setores/agro.html" class="">Agro e produtor rural</a><a href="../setores/transporte.html" class="">Transporte</a><a href="../setores/regional.html" class="">Alertas regionais GO, TO e PA</a><a href="../setores/janela-de-campo.html" class="">Janela de Campo (tempo no agro)</a></div></details>
+                <details class="nav-grupo" data-nav-grupo><summary class="hover:text-acao transition">Ferramentas</summary><div class="nav-sub"><a href="../ferramentas/simulador.html" class="">Simulador tributário</a><a href="../ferramentas/calendario.html" class="">Calendário fiscal</a><a href="../ferramentas/index.html" class="">Calculadoras da transição</a></div></details>
+                <details class="nav-grupo" data-nav-grupo><summary class="hover:text-acao transition">Soluções</summary><div class="nav-sub"><a href="../solucoes/index.html" class="">Todas as soluções</a><a href="../solucoes/conciliacao.html" class="">Conciliação bancária</a><a href="../solucoes/auditoria-rural.html" class="">Auditoria forense rural (NFA-e)</a></div></details>
+                <details class="nav-grupo" data-nav-grupo><summary class="hover:text-acao transition text-acao font-semibold">Compliance</summary><div class="nav-sub"><a href="../compliance/index.html" class="">Visão geral</a><a href="../compliance/termometro.html" class="">Termômetro de conformidade</a><a href="../compliance/publicos.html" class="">Por público</a><a href="../compliance/conformidade-tributaria.html" class="">Conformidade tributária</a><a href="../compliance/prevencao-lavagem.html" class="">Prevenção à lavagem de dinheiro</a><a href="../compliance/protecao-de-dados.html" class="" aria-current="page">Proteção de dados (LGPD)</a><a href="../compliance/integridade.html" class="">Integridade e anticorrupção</a></div></details>
+            </nav>
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="../cliente/index.html" class="hidden sm:inline-flex items-center whitespace-nowrap text-sm font-medium text-tinta-texto hover:text-acao px-4 py-2 rounded-lg border border-linha-campo hover:border-acao transition">Área do cliente</a>
+                <button id="btnCores" type="button" class="tema-btn hidden min-[375px]:inline-flex" aria-label="Escolher cores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1"/><circle cx="12" cy="7" r="1"/><circle cx="16" cy="10" r="1"/></svg><span class="hidden md:inline">Cores</span></button>
+                <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-md"><span class="sm:hidden">WhatsApp</span><span class="hidden sm:inline">Falar no WhatsApp</span></a>
+                <button id="btnMenu" type="button" class="xl:hidden p-2 rounded-lg border border-linha-campo text-tinta-texto" aria-controls="menuMobile" aria-expanded="false" aria-label="Abrir menu">☰</button>
+            </div>
+        </div>
+        <nav id="menuMobile" hidden class="xl:hidden border-t border-linha bg-white" aria-label="Menu móvel">
+            <div class="px-4 py-3 grid gap-1 text-sm font-medium text-tinta-texto">
+                <a href="../inicio.html" class="py-2">Início</a>
+                <a href="../tributario/index.html" class="py-2">Consultoria</a>
+                <a href="../reforma/index.html" class="py-2">Reforma</a>
+                <p class="nav-titulo">Setores</p><a href="../setores/agro.html" class="py-2 pl-3">Agro e produtor rural</a><a href="../setores/transporte.html" class="py-2 pl-3">Transporte</a><a href="../setores/regional.html" class="py-2 pl-3">Alertas regionais GO, TO e PA</a><a href="../setores/janela-de-campo.html" class="py-2 pl-3">Janela de Campo (tempo no agro)</a>
+                <p class="nav-titulo">Ferramentas</p><a href="../ferramentas/simulador.html" class="py-2 pl-3">Simulador tributário</a><a href="../ferramentas/calendario.html" class="py-2 pl-3">Calendário fiscal</a><a href="../ferramentas/index.html" class="py-2 pl-3">Calculadoras da transição</a>
+                <p class="nav-titulo">Soluções</p><a href="../solucoes/index.html" class="py-2 pl-3">Todas as soluções</a><a href="../solucoes/conciliacao.html" class="py-2 pl-3">Conciliação bancária</a><a href="../solucoes/auditoria-rural.html" class="py-2 pl-3">Auditoria forense rural (NFA-e)</a>
+                <p class="nav-titulo">Compliance</p><a href="../compliance/index.html" class="py-2 pl-3">Visão geral</a><a href="../compliance/termometro.html" class="py-2 pl-3">Termômetro de conformidade</a><a href="../compliance/publicos.html" class="py-2 pl-3">Por público</a><a href="../compliance/conformidade-tributaria.html" class="py-2 pl-3">Conformidade tributária</a><a href="../compliance/prevencao-lavagem.html" class="py-2 pl-3">Prevenção à lavagem de dinheiro</a><a href="../compliance/protecao-de-dados.html" class="py-2 pl-3" aria-current="page">Proteção de dados (LGPD)</a><a href="../compliance/integridade.html" class="py-2 pl-3">Integridade e anticorrupção</a>
+                <p class="nav-titulo">Atendimento</p>
+                <a href="../escritorio/index.html" class="py-2 pl-3">O escritório</a>
+                <a href="../cliente/index.html" class="py-2 pl-3">Área do cliente</a>
+                <a href="../contato/index.html" class="py-2 pl-3">Contato</a>
+                <button type="button" class="py-2 text-left min-[375px]:hidden" data-abrir-cores>Cores</button>
+            </div>
+        </nav>
+    </header>
+    <!-- Objetivo: captação + autoridade -->
+    <main data-objetivo="captação + autoridade">
+        <nav class="trilha max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6" aria-label="Trilha de navegação"><ol><li><a href="../inicio.html">Início</a></li><li><a href="../compliance/index.html">Compliance</a></li><li aria-current="page">Proteção de dados (LGPD)</li></ol></nav>
+        <section class="py-16 lg:py-24" data-hero>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl">
+                    <p class="eyebrow">Compliance · Proteção de dados</p>
+                    <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.05] text-ink my-6">Dados pessoais <mark class="marca-texto">organizados</mark> e protegidos.</h1>
+                    <p class="text-lg text-muted mb-8 leading-relaxed">Registro das operações, medidas de segurança, encarregado e comunicação de incidentes: o que a LGPD exige e o que muda para microempresas e empresas de pequeno porte, com a fonte.</p>
+                    <div class="flex flex-col sm:flex-row gap-3"><a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" data-msg="Olá! Quero falar com a ORGATEC sobre proteção de dados na minha empresa." class="og-btn og-btn-contato og-btn-lg">Falar com o escritório</a><a href="../compliance/index.html" class="og-btn og-btn-sobre-palco og-btn-lg">Ver todas as frentes</a></div>
+                </div>
+            </div>
+        </section>
+        <section class="py-16 bg-fundo">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="eyebrow">Para quem</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Quem mais precisa olhar</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="og-cartao"><h3 class="og-cartao-titulo">Microempresas e EPP</h3><p class="og-cartao-texto">Têm regras próprias na Resolução CD/ANPD nº 2/2022, sem dispensa do restante da LGPD.</p></div>
+                    <div class="og-cartao"><h3 class="og-cartao-titulo">Quem tem empregados</h3><p class="og-cartao-texto">Folha e eSocial tratam dados pessoais de todos os empregados.</p></div>
+                    <div class="og-cartao"><h3 class="og-cartao-titulo">Comércio e serviços</h3><p class="og-cartao-texto">Cadastros de clientes, notas fiscais e cobranças.</p></div>
+                    <div class="og-cartao"><h3 class="og-cartao-titulo">Dados sensíveis</h3><p class="og-cartao-texto">Dados de saúde, de crianças, de adolescentes e de idosos podem tornar o tratamento de alto risco.</p></div>
+                </div>
+            </div>
+        </section>
+        <section id="prazos" class="py-16 bg-superficie">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="eyebrow">Prazos</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Datas que pedem atenção</h2>
+                <ul class="grid grid-cols-1 md:grid-cols-2 gap-4" data-prazos="compliance-lgpd"></ul>
+            </div>
+        </section>
+        <section id="itens" class="py-16 bg-fundo">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="eyebrow">O que a regra exige</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Pontos acompanhados, com a fonte</h2>
+                <div data-itens data-destino="compliance-lgpd">
+                    <div class="lista-itens grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+        </section>
+        <section id="como-funciona" class="py-16 bg-superficie">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="eyebrow">Como a ORGATEC ajuda</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Do levantamento à rotina</h2>
+                <ol class="marcos" data-marcos>
+                    <li class="marco"><span class="bola" aria-hidden="true">1</span><h3>Mapeamento</h3><p>Onde a empresa trata dados pessoais: clientes, empregados e fornecedores.</p></li>
+                    <li class="marco"><span class="bola" aria-hidden="true">2</span><h3>Registro</h3><p>Registro das operações de tratamento, simplificado quando a empresa se enquadra como pequeno porte.</p></li>
+                    <li class="marco"><span class="bola" aria-hidden="true">3</span><h3>Rotinas</h3><p>Medidas de segurança, canal com os titulares e resposta a incidentes.</p></li>
+                    <li class="marco"><span class="bola" aria-hidden="true">4</span><h3>Sem parecer jurídico</h3><p>O escritório faz o diagnóstico e organiza documentos e rotinas. Quando a situação exigir análise jurídica, aponta o ponto e a necessidade de um advogado.</p></li>
+                </ol>
+            </div>
+        </section>
+        <section id="termometro" class="py-16 bg-superficie">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="eyebrow">Ferramenta</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Como está a sua empresa nesta frente?</h2>
+                <p class="text-tinta-suave max-w-3xl mb-6">Responda às perguntas de proteção de dados no termômetro de conformidade. Cada pergunta traz a fonte legal, e as respostas ficam só no seu navegador.</p>
+                <a href="../compliance/termometro.html#lgpd" class="og-btn og-btn-primario og-btn-lg">Abrir o termômetro desta frente</a>
+            </div>
+        </section>
+        <section id="perguntas" class="py-16 bg-fundo">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="eyebrow">Perguntas frequentes</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">O que as empresas mais perguntam</h2>
+                <div class="faq max-w-3xl" data-faq-itens="compliance-lgpd"></div>
+            </div>
+        </section>
+        <section class="py-16 bg-superficie border-t border-linha">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+                <h2 class="text-2xl font-bold text-tinta mb-3">Quer revisar esta frente na sua empresa?</h2>
+                <p class="text-tinta-suave mb-6">Em uma conversa, o escritório levanta o que falta e a prioridade de cada ponto.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center"><a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" data-msg="Olá! Quero falar com a ORGATEC sobre proteção de dados na minha empresa." class="og-btn og-btn-contato og-btn-lg">Falar com o escritório</a></div>
+                <p class="text-xs text-tinta-fraca mt-6">Este site não recebe extratos, notas nem documentos: o envio acontece só dentro do sistema, com login, ou diretamente com a equipe.</p>
+            </div>
+        </section>
+    </main>
+    <footer class="bg-surface2 text-muted py-12 border-t border-line">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+            <div>
+                <span class="flex items-center gap-2 mb-3"><img src="../assets/marca/orgatec-original.png" alt="" width="26" height="29" class="h-7 w-auto"><span class="text-ink font-display font-extrabold text-lg tracking-tight">ORGATEC</span></span>
+                <p class="mb-4">Contabilidade Consultiva e Inteligência Tributária. Atendimento digital em todo o Brasil com forte atuação no eixo GO, TO e PA.</p>
+                <p class="text-xs text-muted">CNPJ: 13.155.211/0001-45</p>
+                <p class="text-xs text-muted mt-2">Sede: Av. Ministro Alfredo Nasser, nº 727, Centro, Formoso-GO</p>
+            </div>
+            <nav aria-label="Consultoria"><span class="text-ink font-bold text-base block mb-2">Consultoria</span><ul class="grid gap-1.5"><li><a href="../tributario/index.html" class="hover:text-brand hover:underline">Consultoria tributária</a></li><li><a href="../ferramentas/simulador.html" class="hover:text-brand hover:underline">Simulador tributário</a></li><li><a href="../ferramentas/calendario.html" class="hover:text-brand hover:underline">Calendário fiscal</a></li><li><a href="../setores/agro.html" class="hover:text-brand hover:underline">Agro e produtor rural</a></li><li><a href="../setores/transporte.html" class="hover:text-brand hover:underline">Transporte</a></li><li><a href="../solucoes/index.html" class="hover:text-brand hover:underline">Soluções do escritório</a></li><li><a href="../escritorio/index.html" class="hover:text-brand hover:underline">O escritório</a></li></ul></nav>
+            <nav aria-label="Reforma"><span class="text-ink font-bold text-base block mb-2">Reforma</span><ul class="grid gap-1.5"><li><a href="../reforma/index.html" class="hover:text-brand hover:underline">Central da Reforma</a></li><li><a href="../reforma/lc-214-2025.html" class="hover:text-brand hover:underline">LC nº 214/2025</a></li><li><a href="../reforma/ibs.html" class="hover:text-brand hover:underline">IBS</a></li><li><a href="../reforma/cbs.html" class="hover:text-brand hover:underline">CBS</a></li><li><a href="../reforma/split-payment.html" class="hover:text-brand hover:underline">Split payment</a></li><li><a href="../reforma/fontes.html" class="hover:text-brand hover:underline">Fontes legais</a></li></ul></nav>
+            <div>
+                <span class="text-ink font-bold text-base block mb-2">Responsabilidade Técnica</span>
+                <p>Robson Alain Veloso</p>
+                <p class="text-brand font-mono">CRC-TO 002032/O-5 T-GO</p>
+                <span class="text-ink font-bold text-base block mt-4 mb-2">Canais Oficiais</span>
+                <p>WhatsApp / Telefone: <span data-texto="whatsapp">+55 (62) 99294-9161</span></p>
+                <p class="mt-2"><a href="https://orgatec.athenas.online/Usuarios/login" data-link="portal" target="_blank" rel="noopener" class="text-brand hover:underline">Portal do cliente</a></p>
+                <p class="mt-2 text-xs" id="rodapeEmails" data-contato="../contato/index.html"></p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-6 border-t border-line text-xs flex flex-wrap gap-x-4 gap-y-2 justify-between">
+            <p><a href="../inicio.html" class="hover:underline">Início</a> · <a href="../privacidade.html" class="hover:underline">Política de Privacidade (LGPD)</a> · <a href="../marca.html" class="hover:underline">Marca</a> · <a href="../contato/index.html" class="hover:underline">Contato</a></p>
+            <p>© 2026 ORGATEC. Todos os direitos reservados. Em conformidade com a LGPD e o Código de Ética do CFC (NBC PG 01).</p>
+        </div>
+    </footer>
+    <div class="barra-movel" data-barra-movel>
+        <a href="../ferramentas/simulador.html" class="og-btn og-btn-primario og-btn-md">Simular impacto</a>
+        <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-md">WhatsApp</a>
+    </div>
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/fontes.js"></script>
+    <script src="../assets/js/ufs.js"></script>
+    <script src="../assets/js/regras.js"></script>
+    <script src="../assets/js/conteudo.js"></script>
+    <script src="../assets/js/reforma-itens.js"></script>
+    <script src="../assets/js/calculadoras.js"></script>
+    <script src="../assets/js/compliance-itens.js"></script>
+    <script src="../assets/js/inicio.js"></script>
+    <script src="../assets/js/paginas.js"></script>
+</body>
+</html>

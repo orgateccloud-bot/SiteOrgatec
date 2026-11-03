@@ -1,0 +1,7 @@
+# Dependências do servidor publicado (versões testadas em 31/10/2026). As de teste ficam em requirements.txt.
+fastapi==0.136.3
+# Firestore: banco no Cloud Run (ORGATEC_BANCO=firestore)
+google-cloud-firestore==2.34.1
+uvicorn==0.51.0
+pydantic==2.13.4
+starlette==0.52.1

@@ -1,0 +1,10 @@
+# Os geradores gravam com LF; o repositório fica igual em qualquer sistema.
+* text=auto eol=lf
+*.pdf binary
+*.xlsx binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff2 binary

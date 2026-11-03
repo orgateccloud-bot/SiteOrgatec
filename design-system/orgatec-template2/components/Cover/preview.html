@@ -1,0 +1,87 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>ORGATEC</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--fundo); color:var(--tinta); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:480px; width:480px; height:288px; overflow:hidden; }
+  .art svg { display:block; width:480px; height:288px; }
+  .navy { fill:var(--faixa-1); }
+  .azul { fill:var(--faixa-2); }
+  .medio { fill:var(--faixa-3); }
+  .ciano { fill:var(--faixa-4); }
+  .ponto { fill:var(--marca-ciano-luz); }
+  .faixa { rx:var(--raio-2xl); }
+  .words { position:absolute; left:var(--espaco-8); bottom:var(--espaco-8); max-width:440px; }
+  .name { margin:0; font-size:84px; line-height:.92; font-weight:800; letter-spacing:.04em; color:var(--tinta); }
+  .tag { margin:var(--espaco-3) 0 0 4px; font-size:13px; line-height:20px; font-weight:600; letter-spacing:.32em; text-transform:uppercase; color:var(--tinta-suave); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocos      faixa-1 (marca-navy) 144x288, sangra no topo, o maior · faixa-2 (marca-azul) 112x232 · faixa-3 (marca-azul-medio) 88x192 · faixa-4 (marca-ciano) 64x152; no escuro sobem um tom, nesta ordem, como as faixas do símbolo; cerca de 34% de 960x288
+  arranjo     faixa de blocos desiguais, da esquerda para a direita, base comum espaco-6 acima da borda, vãos espaco-2 no fundo (os vãos brancos do símbolo), topos em degrau
+  padrão      grade de pontos, da linha "grade de pontos do hero a 16 px": 5x8 pontos marca-ciano-luz a passo espaco-4 sobre o bloco navy, como o hero do site
+  escalas     larguras em múltiplos de espaco-2; vãos espaco-2; passo espaco-4; cantos raio-2xl; ponto de raio 1.5
+-->
+<rect class="navy faixa" x="40" y="-24" width="144" height="288" rx="16"/>
+<rect class="azul faixa" x="192" y="32" width="112" height="232" rx="16"/>
+<rect class="medio faixa" x="312" y="72" width="88" height="192" rx="16"/>
+<rect class="ciano faixa" x="408" y="112" width="64" height="152" rx="16"/>
+<circle class="ponto" cx="80" cy="120" r="1.5"/>
+<circle class="ponto" cx="80" cy="136" r="1.5"/>
+<circle class="ponto" cx="80" cy="152" r="1.5"/>
+<circle class="ponto" cx="80" cy="168" r="1.5"/>
+<circle class="ponto" cx="80" cy="184" r="1.5"/>
+<circle class="ponto" cx="80" cy="200" r="1.5"/>
+<circle class="ponto" cx="80" cy="216" r="1.5"/>
+<circle class="ponto" cx="80" cy="232" r="1.5"/>
+<circle class="ponto" cx="96" cy="120" r="1.5"/>
+<circle class="ponto" cx="96" cy="136" r="1.5"/>
+<circle class="ponto" cx="96" cy="152" r="1.5"/>
+<circle class="ponto" cx="96" cy="168" r="1.5"/>
+<circle class="ponto" cx="96" cy="184" r="1.5"/>
+<circle class="ponto" cx="96" cy="200" r="1.5"/>
+<circle class="ponto" cx="96" cy="216" r="1.5"/>
+<circle class="ponto" cx="96" cy="232" r="1.5"/>
+<circle class="ponto" cx="112" cy="120" r="1.5"/>
+<circle class="ponto" cx="112" cy="136" r="1.5"/>
+<circle class="ponto" cx="112" cy="152" r="1.5"/>
+<circle class="ponto" cx="112" cy="168" r="1.5"/>
+<circle class="ponto" cx="112" cy="184" r="1.5"/>
+<circle class="ponto" cx="112" cy="200" r="1.5"/>
+<circle class="ponto" cx="112" cy="216" r="1.5"/>
+<circle class="ponto" cx="112" cy="232" r="1.5"/>
+<circle class="ponto" cx="128" cy="120" r="1.5"/>
+<circle class="ponto" cx="128" cy="136" r="1.5"/>
+<circle class="ponto" cx="128" cy="152" r="1.5"/>
+<circle class="ponto" cx="128" cy="168" r="1.5"/>
+<circle class="ponto" cx="128" cy="184" r="1.5"/>
+<circle class="ponto" cx="128" cy="200" r="1.5"/>
+<circle class="ponto" cx="128" cy="216" r="1.5"/>
+<circle class="ponto" cx="128" cy="232" r="1.5"/>
+<circle class="ponto" cx="144" cy="120" r="1.5"/>
+<circle class="ponto" cx="144" cy="136" r="1.5"/>
+<circle class="ponto" cx="144" cy="152" r="1.5"/>
+<circle class="ponto" cx="144" cy="168" r="1.5"/>
+<circle class="ponto" cx="144" cy="184" r="1.5"/>
+<circle class="ponto" cx="144" cy="200" r="1.5"/>
+<circle class="ponto" cx="144" cy="216" r="1.5"/>
+<circle class="ponto" cx="144" cy="232" r="1.5"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">ORGATEC</h1>
+<p class="tag">Inteligência Tributária</p>
+</div>
+</div>
+</body>
+</html>
