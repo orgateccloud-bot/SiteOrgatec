@@ -711,6 +711,10 @@ def test_carrossel_de_ferramentas(navegador, servidor):
     pg.locator("[data-carrossel]").scroll_into_view_if_needed()
     pg.click("[data-carrossel-prox]")
     expect(pg.locator("[data-carrossel-ant]")).to_be_enabled()  # habilita quando o trilho já andou
+    for _ in range(50):  # a rolagem é suave: o botão habilita antes de ela terminar
+        if trilho.evaluate("t => t.scrollLeft") > 100:
+            break
+        pg.wait_for_timeout(100)
     assert trilho.evaluate("t => t.scrollLeft") > 100
     assert trilho.evaluate("t => t.scrollWidth > t.clientWidth")
     assert pg.evaluate("document.documentElement.scrollWidth") <= 375
