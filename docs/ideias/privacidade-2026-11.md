@@ -2,7 +2,7 @@
 
 - **Situação:** em prévia
 - **Branch:** `ideia/privacidade-2026-11`
-- **Prévia:**
+- **Prévia:** https://orgatec-site--ideia-privacidade-2026-11-ycuzv3a7.web.app/privacidade.html (expira em 03/12/2026)
 
 ## Problema
 
