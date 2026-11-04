@@ -18,7 +18,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 PROJETO = "orgatec-site"
-CONTA = "orgatec.cloud@gmail.com"
+CONTA = "orgatec@orgatec.io"  # conta do Workspace; a Gmail fica como proprietária de reserva do projeto
 BRANCH = "main"
 
 
