@@ -192,3 +192,16 @@ def test_trilha_quebrada_sai_com_erro(tmp_path):
     con.close()
     r = _lgpd(db, "trilha")
     assert r.returncode == 1 and "QUEBRADA" in r.stderr
+
+
+def test_imagem_do_servidor_leva_a_rotina_de_retencao():
+    docker = (RAIZ / "Dockerfile").read_text(encoding="utf-8")
+    ignorar = (RAIZ / ".dockerignore").read_text(encoding="utf-8").splitlines()
+    assert "COPY tools/lgpd.py tools/lgpd.py" in docker
+    assert ignorar.index("!tools/lgpd.py") > ignorar.index("tools")  # a exceção precisa vir depois da regra
+
+
+def test_site_usa_o_nome_atual_da_anpd():
+    """Lei nº 15.352/2026: a ANPD passou de Autoridade para Agência Nacional de Proteção de Dados."""
+    for arq in (RAIZ / "site").rglob("*.html"):
+        assert "Autoridade Nacional de Proteção" not in arq.read_text(encoding="utf-8"), arq.name

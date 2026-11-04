@@ -27,4 +27,6 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: node --test tests/js/*.test.js
       - run: python -m bandit -q -r backend tools
+      - name: Falhas conhecidas nas dependências da API
+        run: pip install pip-audit && pip-audit -r backend/requirements-prod.txt --no-deps --disable-pip
       - run: python -m pytest tests/py tests/e2e -q -p no:cacheprovider
