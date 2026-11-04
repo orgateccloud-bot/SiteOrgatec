@@ -29,7 +29,7 @@ Um único serviço, montado pelo `Dockerfile`:
 - **Mesmo endereço:** o Hosting encaminha `/api/**` para o Cloud Run (rewrite no `firebase.json`), então site e API ficam no mesmo endereço. Não há CORS, e a CSP fica só com `'self'`. No `config.js`, `api.publica: ''`.
 - **Acesso ao banco:** o navegador não acessa o Firestore (`firestore.rules` nega tudo). Só a API grava, com a conta de serviço do Cloud Run.
 - **Trilha de auditoria:** a trilha `audit_hash` é a mesma do SQLite. Cada envio entra numa transação, e dentro da instância os envios formam fila.
-- **Retenção:** não ligue a política de TTL do Firestore, porque ela apaga o documento inteiro e quebra a trilha. A eliminação roda em `tools/lgpd.py`, que apaga só os dados pessoais. Agende `python tools/lgpd.py retencao --confirmar` uma vez por dia, com as mesmas variáveis da API (`ORGATEC_BANCO`, `ORGATEC_SEGREDO_IP`).
+- **Retenção:** não ligue a política de TTL do Firestore, porque ela apaga o documento inteiro e quebra a trilha. A eliminação roda em `tools/lgpd.py`, que apaga só os dados pessoais. Ela vai na imagem da API: crie uma tarefa do Cloud Run com o comando `python tools/lgpd.py retencao --confirmar`, as mesmas variáveis e o mesmo segredo da API (`ORGATEC_BANCO`, `ORGATEC_SEGREDO_IP`), e dispare uma vez por dia pelo Cloud Scheduler. Sem isso, os prazos da política não se cumprem.
 - **Testes:**
   - os testes de contrato passam no SQLite e no emulador do Firestore, incluindo 12 envios simultâneos;
   - a imagem Docker, apontada para o emulador, gravou lead e opt-in;

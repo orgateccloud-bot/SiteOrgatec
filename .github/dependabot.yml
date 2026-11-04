@@ -1,0 +1,11 @@
+# Avisa quando uma dependência tiver versão nova ou falha conhecida (relatório de riscos, SI-10).
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

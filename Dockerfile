@@ -17,6 +17,8 @@ RUN pip install -r backend/requirements-prod.txt
 
 COPY backend/ backend/
 COPY site/ site/
+# Rotinas de LGPD: a retenção roda como tarefa agendada com esta mesma imagem (docs/publicacao.md)
+COPY tools/lgpd.py tools/lgpd.py
 
 # Usuário sem privilégios; /dados é o único diretório gravável
 RUN useradd --create-home --uid 10001 orgatec \
