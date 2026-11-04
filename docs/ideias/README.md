@@ -4,4 +4,4 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Módulo LOCAR](modulo-locar.md) | em prévia | `ideia/modulo-locar` | [link](https://orgatec-site--ideia-modulo-locar-jelxw25c.web.app/cliente/locar.html) |
+| [Módulo LOCAR](modulo-locar.md) | aprovada; falta lançar | removida | [link](https://orgatec-site--ideia-modulo-locar-jelxw25c.web.app/cliente/locar.html) |

@@ -1,7 +1,7 @@
 # Módulo LOCAR
 
-- **Situação:** em prévia
-- **Branch:** `ideia/modulo-locar`
+- **Situação:** aprovada (na branch `desenvolvimento`; falta a autorização do nome e o lançamento)
+- **Branch:** `ideia/modulo-locar` (já integrada e removida)
 - **Prévia:** https://orgatec-site--ideia-modulo-locar-jelxw25c.web.app/cliente/locar.html (expira em 03/12/2026)
 
 ## Problema
