@@ -1,8 +1,8 @@
 # Holograma só com ORGATEC e LOCAR
 
-- **Situação:** em desenvolvimento
+- **Situação:** em prévia
 - **Branch:** `ideia/holograma-locar`
-- **Prévia:**
+- **Prévia:** https://orgatec-site--ideia-holograma-locar-prxpwqtv.web.app
 
 ## Problema
 
