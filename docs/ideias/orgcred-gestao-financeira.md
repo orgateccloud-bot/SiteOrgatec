@@ -1,6 +1,6 @@
 # OrgCred em Gestão financeira
 
-- **Situação:** em prévia
+- **Situação:** aprovada
 - **Branch:** `ideia/orgcred-gestao-financeira`
 - **Prévia:**
 
