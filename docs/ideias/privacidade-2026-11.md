@@ -1,6 +1,6 @@
 # Política de privacidade versão 2026-11 (Fase 2 de segurança e privacidade)
 
-- **Situação:** aprovada (na branch `desenvolvimento`; falta a validação do responsável técnico, V14, e o lançamento)
+- **Situação:** no ar com a `main`; falta a validação do responsável técnico (V14)
 - **Branch:** `ideia/privacidade-2026-11` (já integrada e removida)
 - **Prévia:** https://orgatec-site--ideia-privacidade-2026-11-ycuzv3a7.web.app/privacidade.html (expira em 03/12/2026)
 

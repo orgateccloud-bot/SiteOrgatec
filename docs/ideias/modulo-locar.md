@@ -1,6 +1,6 @@
 # Módulo LOCAR
 
-- **Situação:** aprovada (na branch `desenvolvimento`; falta a autorização do nome e o lançamento)
+- **Situação:** lançada em 03/11/2026; o usuário confirmou em 04/11/2026 que o nome está autorizado (falta anexar a autorização escrita)
 - **Branch:** `ideia/modulo-locar` (já integrada e removida)
 - **Prévia:** https://orgatec-site--ideia-modulo-locar-jelxw25c.web.app/cliente/locar.html (expira em 03/12/2026)
 
@@ -20,7 +20,7 @@ O portal real será uma aplicação separada, com login individual, permissão p
 
 ## Fontes e validação
 
-A página não afirma regra, alíquota nem prazo. Antes de lançar: autorização do grupo para citar o nome (NBC PG 01, item 5, "d"; item 4, vedações, "o"). Nomes, valores e honorários não entram nesta pasta.
+A página não afirma regra, alíquota nem prazo. Exigência: autorização do grupo para citar o nome, confirmada pelo usuário em 04/11/2026 (NBC PG 01, item 5, "d"; item 4, vedações, "o"). Nomes, valores e honorários não entram nesta pasta.
 
 ## Pronto quando
 

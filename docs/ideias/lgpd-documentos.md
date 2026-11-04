@@ -1,6 +1,6 @@
 # Documentos internos de proteção de dados (Fase 3 de segurança e privacidade)
 
-- **Situação:** aprovada (na branch `desenvolvimento`; falta preencher e a aprovação do responsável técnico, V15)
+- **Situação:** na `main`, fora do site; falta preencher e a aprovação do responsável técnico (V15)
 - **Branch:** `ideia/lgpd-documentos` (já integrada e removida)
 - **Prévia:** sem prévia. Os documentos ficam em `docs/lgpd/`, fora do site. No site, só muda o painel de pendências (V15).
 
