@@ -21,10 +21,10 @@ Um incidente no escritório atinge vários clientes ao mesmo tempo. Esse efeito 
 
 | # | Achado | Risco | Fonte da verificação |
 |---|---|---|---|
-| 1 | A conta Gmail `orgatec.cloud@gmail.com` é **a única proprietária de 12 projetos**, inclusive `orgatec-site`, que fica fora da organização existente | Perda dessa conta significa perda do site e de todos os projetos | IAM e metadados dos projetos |
-| 2 | A tarefa `ORGATEC_Backup_Diario` **falha todo dia**: roda às 02h e o script `C:\meu-agente\scripts\backup_postgres.py` não existe | Uma cópia que se presume feita pode não existir. Não identifiquei qual banco ela deveria copiar | Agendador do Windows e sistema de arquivos |
+| 1 | Em 04/11/2026, o IAM mostra `orgatec@orgatec.io` (Workspace) como **única proprietária humana** de `orgatec-site`, `orgatec`, `orgatec-prod`, `orgconc-orgatec` e `orgatec-contabilidade` (os demais não foram relidos). `orgatec-site` segue fora da organização | Perda dessa conta significa perda do site e dos projetos. A Gmail não aparece como reserva | IAM e metadados dos projetos |
+| 2 | **Resolvido em 04/11/2026.** O projeto `meu-agente` foi aposentado: as 6 tarefas órfãs foram desativadas e o PostgreSQL 18 do PC, que parecia sem uso, foi parado e passou a início manual | Ainda vale a lição: backup falhou em silêncio. Falta alerta para tarefa com falha | Agendador e serviços do Windows | Agendador do Windows, serviços e sistema de arquivos |
 | 3 | Firestore com backup agendado e PITR **desligados** (proteção contra exclusão ligada em 04/11/2026) | Sem efeito hoje (banco vazio). Vira risco alto no dia em que a API entrar no ar | Firebase CLI e `gcloud` |
-| 4 | `orgatec.io` **sem SPF, DMARC, MX, DNSSEC e CAA** | Qualquer um consegue enviar e-mail com o domínio da ORGATEC, e isso alimenta fraude contra clientes | DNS público |
+| 4 | `orgatec.io` ganhou e-mail do Google (visto em 04/11/2026: MX, SPF `~all`, DKIM), mas o DMARC está em `p=none`, sem relatórios | E-mail falso com o domínio ainda não é rejeitado: o DMARC só observa | DNS público |
 | 5 | `OrgAudi/docs/SUPABASE_MIGRATION_STATUS.md` continua no disco, e a pendência T12 aponta senha em texto claro nele | Credencial exposta em arquivo. Li só a contagem de ocorrências, não o valor | Sistema de arquivos e documento interno |
 | 6 | Logs ficam em localização `global`, retenção de 30 dias, e não há log de leitura de dados nem log de acesso do Hosting | Pouca capacidade de investigar um incidente; possível conflito com os 6 meses do Marco Civil | API de Logging e IAM |
 | 7 | O Firebase Hosting segue termos próprios **sem menção a Brasil, LGPD ou ANPD**, diferente do Firestore e do Cloud Run | Possível lacuna contratual para IPs tratados pelo Hosting. Exige validação jurídica | Termos oficiais lidos em 03/11/2026 |
@@ -34,10 +34,10 @@ Um incidente no escritório atinge vários clientes ao mesmo tempo. Esse efeito 
 **Dez primeiras ações (detalhe na seção 12):**
 
 1. Confirmar segunda etapa forte e códigos de recuperação em `orgatec.cloud@gmail.com`.
-2. Adicionar Warley e Robson como proprietários individuais do projeto.
+2. Proteger a recuperação da única conta proprietária: decisão da direção de 04/11/2026 é manter `orgatec@orgatec.io` como proprietária única.
 3. Trocar a senha citada na T12 e confirmar as demais credenciais expostas.
-4. Descobrir o que o backup diário deveria copiar e corrigir. Fazer um teste real de restauração.
-5. Publicar SPF e DMARC restritivos em `orgatec.io`.
+4. Fazer um backup real dos dados do escritório e testar a restauração. O backup antigo, do projeto aposentado, foi desativado.
+5. Endurecer o DMARC de `orgatec.io`, hoje em `p=none`.
 6. Fazer inventário de certificados digitais e procurações eletrônicas de clientes. Trocar uso compartilhado de certificado por procuração eletrônica onde couber.
 7. Definir, por contrato com cada cliente, quem é controlador e quem é operador, e o prazo para avisar incidente.
 8. Pedir à Athenas os dados de continuidade: SLA, backup, MFA, registro de acesso e notificação de incidente.
@@ -98,7 +98,7 @@ O texto do pedido previa que a configuração do Firebase seria desconhecida. Co
 
 | Item | Estado | Marca |
 |---|---|---|
-| Proprietário (`roles/owner`) | Só `orgatec.cloud@gmail.com` | [V] |
+| Proprietário (`roles/owner`) | Em 03/11/2026, só `orgatec.cloud@gmail.com`. Em 04/11/2026, só `orgatec@orgatec.io`, sem `SetIamPolicy` correspondente no log. Causa não esclarecida [NC] | [V] |
 | Organização no Google Cloud | Existe `orgatec-cloud-org`, mas **`orgatec-site` está fora dela** (`parent: null`) | [V] |
 | Faturamento | **Desligado**, sem conta vinculada; plano gratuito (Spark) | [V] |
 | Firestore | `southamerica-east1`, Native, **0 coleções** | [V] |
@@ -121,16 +121,16 @@ O texto do pedido previa que a configuração do Firebase seria desconhecida. Co
 
 | Item | Estado | Marca |
 |---|---|---|
-| DNS | Hostinger; só TXT `hosting-site`; sem MX, SPF, DMARC, CAA e DNSSEC | [V] |
+| DNS | Hostinger. Em 04/11/2026: MX `smtp.google.com`, SPF `~all`, DKIM `google`, DMARC `p=none`. CAA e DNSSEC ausentes na leitura de 03/11/2026 | [V] |
 | Código | GitHub privado `orgateccloud-bot/SiteOrgatec`; proteção de branch indisponível no plano atual | [V] |
 | Dependências Python | `pip-audit` sem vulnerabilidade conhecida em `backend/requirements.txt`; dependências npm não auditadas | [V] |
-| Automação | Tarefas `ORGATEC\JanelaCampo*`, `OrgatecIA*`, `ORGATEC_Backup_Diario` no mesmo PC | [V] |
+| Automação | Tarefas `ORGATEC\JanelaCampo*`, `OrgatecIA*`, `ORGATEC_Backup_Diario` no mesmo PC. As `OrgatecIA*` e o backup apontam para `C:\meu-agente`, onde `scripts/` e `docker-compose.yml` não existem mais | [V] |
 | Painel público de pendências | Sem detalhes de senhas ou caminhos nos termos que busquei | [V] |
 | `gcloud` no PC | Corrigido pelo usuário: a conta ORGATEC está ativa desde 04/11/2026. A conta pessoal segue registrada no PC | [V] |
 
 ### 3.3 Conta Google: visão completa (leitura com `gcloud`)
 
-A conta enxerga 13 projetos: é proprietária de 12 e não tem acesso à política do 13º (`future-subject-83hq8`, em pasta, com faturamento ligado em outra conta, que parece gerenciado pelo Google [NC]).
+Leitura de 03/11/2026, quando a conta Gmail aparecia como proprietária. Ela enxerga 13 projetos: era proprietária de 12 e não tem acesso à política do 13º (`future-subject-83hq8`, em pasta, com faturamento ligado em outra conta, que parece gerenciado pelo Google [NC]).
 
 | Item | Estado | Marca |
 |---|---|---|
@@ -492,8 +492,8 @@ As respostas citam a **Trilha A** (incidente com dado pessoal) da seção 11. O 
 
 - **Cenário.** Criminoso troca dados de pagamento, envia guia, boleto ou Pix falso em nome do escritório, ou clona o WhatsApp. O CFC já alertou sobre [nome de escritórios reais usado em golpe](https://cfc.org.br/noticias/golpe-envolvendo-a-decore-tem-prejudicado-mei-e-profissionais-da-contabilidade/).
 - **Riscos.** O cliente paga ao golpista. O MED recuperou, em média, só 9,3% do valor contestado em 2025. A ORGATEC é a fonte confiável que o golpe imita.
-- **Firebase/Google.** Sem SPF e DMARC, o domínio pode ser falsificado. Sem `www`, um visitante pode cair em erro e buscar links falsos.
-- **Prevenção.** SPF `-all` e DMARC `p=reject` enquanto não houver e-mail; depois SPF, DKIM e DMARC reais (8.20). WhatsApp Business verificado (C5). Regra escrita: **a ORGATEC nunca muda dados bancários por mensagem**. Dupla aprovação para pagamentos.
+- **Firebase/Google.** Com DMARC em `p=none`, mensagem falsa não é rejeitada. Sem `www`, um visitante pode cair em erro e buscar links falsos.
+- **Prevenção.** Com o e-mail do Google ativo, levar o DMARC de `p=none` a `quarantine` e depois `reject`, com endereço de relatórios, conferindo antes todo remetente legítimo (8.20). WhatsApp Business verificado (C5). Regra escrita: **a ORGATEC nunca muda dados bancários por mensagem**. Dupla aprovação para pagamentos.
 - **Resposta.** Cliente aciona o banco de imediato para o MED; a ORGATEC registra e avisa a carteira se o golpe for amplo, pede remoção do domínio falso e faz boletim de ocorrência.
 - **Recuperação.** Comunicado aos clientes e monitoramento de domínios parecidos.
 - **Normas.** CP, art. 171, § 2º-A; CDC se aplicável; LGPD, arts. 42 a 45 quando houver dado vazado.
@@ -574,7 +574,7 @@ As respostas citam a **Trilha A** (incidente com dado pessoal) da seção 11. O 
 
 **Criticidade 15 (alta).** RTO 24 h · RPO 24 h · teste de restauração trimestral.
 
-- **Cenário.** O backup falha e ninguém percebe. Esse é o estado de `ORGATEC_Backup_Diario`. [V]
+- **Cenário.** O backup falha e ninguém percebe. Foi o caso de `ORGATEC_Backup_Diario`, que falhou em silêncio até ser desativada em 04/11/2026, depois que o projeto foi aposentado. [V]
 - **Riscos.** Perda de escrita e documentos que a ORGATEC deve guardar, e impossibilidade de cumprir devolução de arquivos eletrônicos (Res. CFC 1.590/2020, art. 9º). Na amostra da Sophos no Brasil, 85% das empresas com dados criptografados usaram backup: mesmo em empresas maiores, não é universal.
 - **Firebase/Google.** PITR e backup agendado exigem faturamento. Hoje não há nada a proteger no Firestore, mas a ordem deve ser: proteção primeiro, dados depois.
 - **Prevenção.** Regra 3-2-1 com cópia isolada (8.13), inventário do que é copiado, alerta de falha, teste de restauração registrado.
@@ -743,10 +743,10 @@ Quem faz: **Direção** = Warley ou Robson; **RT** = Robson; **Sessão** = esta 
 | # | Ação | Risco | Quem |
 |---|---|---|---|
 | 1 | Confirmar segunda etapa com chave de acesso e códigos de recuperação na conta Google | SI-03 | Direção |
-| 2 | Adicionar Warley e Robson como proprietários individuais | SI-03, CN-06 | Direção; Sessão orienta |
+| 2 | **Risco aceito pela direção em 04/11/2026:** proprietário único `orgatec@orgatec.io`. Compensar com segunda etapa forte, códigos de recuperação guardados offline e um segundo superadministrador no Workspace | SI-03, CN-06 | Direção |
 | 3 | Trocar senha e chaves da T12; verificar uso indevido | SI-12 | Direção |
-| 4 | Investigar `ORGATEC_Backup_Diario`: o que copiava, desde quando falha | CN-02 | Direção; Sessão apoia |
-| 5 | Publicar SPF `v=spf1 -all` e DMARC `p=reject`, enquanto não houver e-mail no domínio | SI-08 | Sessão prepara; Direção aplica ou autoriza |
+| 4 | ~~Desativar tarefas órfãs e parar o PostgreSQL 18~~ **Feito em 04/11/2026.** Desinstalar o PostgreSQL só depois de algumas semanas sem falta | CN-02 | Direção |
+| 5 | Adicionar relatórios ao DMARC e subir para `quarantine` após conferir os remetentes; `reject` depois | SI-08 | Sessão prepara; Direção aplica ou autoriza |
 | 6 | Conta da Hostinger: segunda etapa, bloqueio de transferência, renovação automática | SI-11 | Direção |
 | 7 | Cadastrar `www.orgatec.io` no Firebase | SI-08 | Direção |
 | 8 | ~~Ligar proteção contra exclusão do Firestore~~ **Feito em 04/11/2026** | SI-05 | Sessão |
@@ -771,7 +771,7 @@ Quem faz: **Direção** = Warley ou Robson; **RT** = Robson; **Sessão** = esta 
 |---|---|---|---|
 | 18 | Blaze com orçamento e alertas. Antes do primeiro dado real: PITR, backup diário, log regional, Data Access, conta de serviço mínima, Secret Manager, `max-instances` | SI-05, SI-07, CN-02 | Direção ativa; Sessão executa |
 | 19 | Parecer sobre Hosting, cláusulas-padrão, Marco Civil e política de privacidade | Seção 4 | Jurídico |
-| 20 | Mover `orgatec-site` para `orgatec-cloud-org`, encerrar projetos sem uso e definir conta de emergência. Avaliar Workspace para o e-mail do domínio | SI-03, CN-08 | Direção; Sessão migra |
+| 20 | Mover `orgatec-site` para `orgatec-cloud-org`, encerrar projetos sem uso e definir conta de emergência, aproveitando o Workspace já assinado | SI-03, CN-08 | Direção; Sessão migra |
 | 21 | Boletim na nuvem e alerta de tarefa falha | CN-01 | Sessão |
 | 22 | Projeto separado para prévias | SI-05 | Sessão |
 | 23 | BIA real e exercício de mesa de ransomware | Todos | Direção |
@@ -786,7 +786,7 @@ Quem faz: **Direção** = Warley ou Robson; **RT** = Robson; **Sessão** = esta 
 | Indicador | Meta proposta | Periodicidade |
 |---|---|---|
 | Contas de administração com chave de acesso ou token | 100% | Mensal |
-| Proprietários do projeto Google | Pelo menos 2 | Trimestral |
+| Recuperação da conta proprietária testada | 1 vez por semestre (proprietário único é risco aceito) | Semestral |
 | Testes de restauração bem-sucedidos | 1 por trimestre | Trimestral |
 | Tarefas automatizadas com falha sem alerta | 0 | Semanal |
 | Clique em simulação de phishing | Abaixo de 5% | Trimestral |
