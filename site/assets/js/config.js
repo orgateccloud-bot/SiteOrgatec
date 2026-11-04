@@ -109,6 +109,7 @@
       tributario: 'tributario/index.html',
       solucoes: 'solucoes/index.html',
       areaCliente: 'cliente/index.html',
+      locar: 'cliente/locar.html',
       simuladores: 'ferramentas/index.html',
       noticias: 'reforma/index.html#noticias'
     },

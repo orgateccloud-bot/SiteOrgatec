@@ -265,7 +265,7 @@ PAGINAS_NOVAS = ["compliance/index.html", "compliance/conformidade-tributaria.ht
                  "compliance/protecao-de-dados.html", "compliance/integridade.html", "compliance/termometro.html",
                  "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "tributario/index.html", "reforma/index.html", "setores/agro.html", "setores/transporte.html", "setores/regional.html",
                  "setores/janela-de-campo.html",
-                 "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "escritorio/index.html", CONTATO]
+                 "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "cliente/locar.html", "escritorio/index.html", CONTATO]
 
 
 def _abrir(navegador, servidor, caminho, vp="desktop", rotas=None):
@@ -407,7 +407,7 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg.select_option("#pdStatus", "")
     pg.uncheck("#pdBloqueia")
     assert pg.locator("[data-pendencias] article").count() > abertas  # inclui as resolvidas (V8)
-    assert pg.locator("tbody a.og-link").count() == 37  # mapa de páginas
+    assert pg.locator("tbody a.og-link").count() == 38  # mapa de páginas
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
 
@@ -751,7 +751,7 @@ def test_abertura_entrada_atalhos_e_fontes(navegador, servidor, vp):
     else:
         pg.keyboard.press("Tab")
     assert pg.evaluate("document.activeElement.hasAttribute('data-entrar')")
-    for destino in ("tributario", "areaCliente", "simuladores", "noticias"):
+    for destino in ("tributario", "areaCliente", "locar", "simuladores", "noticias"):
         assert pg.get_attribute(f".holo-atalhos [data-destino={destino}]", "href") == pg.evaluate(f"window.Orgatec.config.abertura.{destino}")
     assert pg.get_attribute(".holo-atalhos [data-link=whatsapp]", "href").startswith("https://wa.me/5562992949161?text=")
     # marca: o nome fica ao lado do símbolo, sem sobrepor (classe própria; .holo-nome é o nome holográfico da vitrine)
@@ -1544,3 +1544,19 @@ def test_caminho_do_titular_ate_o_formulario(navegador, servidor):
     pg.goto(f"{servidor}/contato/index.html?assunto=%22inventado")  # assunto que não existe é ignorado
     expect(pg.locator("#ctAssunto")).to_have_value("diagnostico")
     assert not erros, erros
+
+
+def test_modulo_locar_na_area_do_cliente(navegador, servidor):
+    """Módulo exclusivo: acesso pela Área do cliente e pela tela inicial, fora do Google e sem dados do grupo."""
+    pg, erros = _abrir(navegador, servidor, CLIENTE)
+    pg.click("text=Abrir módulo")
+    expect(pg).to_have_url(f"{servidor}/cliente/locar.html")
+    assert pg.locator("meta[name=robots][content=noindex]").count() == 1
+    texto = pg.inner_text("main").lower()
+    assert "em implantação" in texto
+    for sensivel in ("r$", "cnpj", "honorário", "incorpora", "parcelamento", "faturamento"):
+        assert sensivel not in texto, sensivel
+    assert pg.locator("main a[data-link=portal]").get_attribute("href").startswith("https://orgatec.athenas.online/")
+    assert not erros, erros
+    pg2, _ = _abrir(navegador, servidor, "index.html")
+    assert pg2.locator(".holo-atalhos [data-destino=locar]").inner_text().strip() == "Módulo LOCAR"

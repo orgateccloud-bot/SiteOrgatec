@@ -725,13 +725,16 @@ def cliente() -> None:
                     </div>
                 </div>"""
     acessos = grade([
+        '<div class="og-cartao"><span class="og-cartao-ref">Exclusivo</span><h3 class="og-cartao-titulo">Módulo LOCAR</h3>'
+        '<p class="og-cartao-texto mb-3">Espaço do Grupo LOCAR, com agenda, obrigações e reforma por empresa.</p><p class="flex flex-wrap items-center gap-3">'
+        '<a href="{p}cliente/locar.html" class="og-btn og-btn-primario og-btn-md">Abrir módulo</a><span class="og-selo og-selo-pendente">em implantação</span></p></div>',
         f'<div class="og-cartao"><span class="og-cartao-ref">Sistema próprio</span><h3 class="og-cartao-titulo">Conciliação bancária</h3>'
         f'<p class="og-cartao-texto mb-3">Extratos conferidos com a contabilidade e laudo das divergências.</p><p class="flex flex-wrap items-center gap-3">{acesso("conciliacao", "og-btn og-btn-primario og-btn-md")}'
         f'<a href="{{p}}solucoes/conciliacao.html" class="og-link text-sm">Saiba mais</a></p></div>',
         f'<div class="og-cartao"><span class="og-cartao-ref">Para empresas</span><h3 class="og-cartao-titulo">Gestão financeira</h3>'
         f'<p class="og-cartao-texto mb-3">Lançamentos, extratos, notas e projeção de CBS e IBS por empresa.</p><p class="flex flex-wrap items-center gap-3">{acesso("gestaoFinanceira", "og-btn og-btn-primario og-btn-md")}'
         f'<a href="{{p}}solucoes/index.html" class="og-link text-sm">Saiba mais</a></p></div>',
-    ], "md:grid-cols-2")
+    ], "md:grid-cols-2 lg:grid-cols-3")
     corpo = "\n".join([
         intro("Área do cliente", "Documentos, guias e relatórios no portal", "", portal),
         secao("Acessos", "Outros sistemas da ORGATEC", acessos + '\n                <p class="text-sm text-tinta-suave mt-4">Cada sistema tem endereço e login próprios. O botão “Entrar” aparece quando o acesso estiver liberado para clientes.</p>', id_="acessos"),
@@ -817,6 +820,36 @@ def contato() -> None:
 # Só páginas no site. O acesso ao sistema é um link para o subdomínio dele, criado por paginas.js quando
 # config.solucoes.<id>.situacao = 'disponivel' (e com url https). Nada de embed, bundle ou chamada à API do sistema.
 # Os textos descrevem só o que existe e foi conferido nos repositórios; nenhum dado de cliente.
+
+def modulo_locar() -> None:
+    """Módulo exclusivo do Grupo LOCAR. Em implantação: página sem dados do grupo e fora do mapa do site.
+    O portal com login será uma aplicação separada; aqui só entram textos gerais (docs/ideias/modulo-locar.md)."""
+    item = lambda ref, titulo, texto: f'<div class="og-cartao"><span class="og-cartao-ref">{ref}</span><h3 class="og-cartao-titulo">{titulo}</h3><p class="og-cartao-texto">{texto}</p></div>'
+    acoes = f"""                <div class="flex flex-wrap gap-3 items-center mt-6">
+                    <a href="{layout.PORTAL_URL}" data-link="portal" target="_blank" rel="noopener" class="og-btn og-btn-primario og-btn-lg">Entrar no portal</a>
+                    <a {WHATS} data-msg="Olá! Sou do Grupo LOCAR e preciso de atendimento." class="og-btn og-btn-contato og-btn-lg">Falar com o atendimento</a>
+                    <span class="og-selo og-selo-pendente">em implantação</span>
+                </div>"""
+    conteudo = grade([
+        item("Prazos", "Agenda da transição", "Prazos da reforma e das obrigações, por empresa, com responsável e evidência."),
+        item("Empresas", "Obrigações por empresa", "Situação de cada entrega fiscal, contábil e trabalhista do grupo."),
+        item("Transporte", "Operação de transporte", "CT-e e MDF-e, frete, créditos de IBS e CBS e transportadores."),
+        item("Agro", "Operação rural", "Fazendas, produtores rurais, livro caixa, LCDPR, Funrural e rebanho."),
+        item("Documentos", "Guias e relatórios", "Continuam no portal do cliente; o módulo aponta para eles."),
+        item("Compliance", "Evidências de conformidade", "Pacote datado para compartilhar, com autorização do grupo."),
+    ], "md:grid-cols-2 lg:grid-cols-3")
+    acesso_txt = """                <div class="max-w-3xl space-y-3 text-tinta-suave">
+                    <p>O acesso será individual, com permissão por empresa e por pessoa. Os dados de cada produtor rural pessoa física ficarão separados dos dados das empresas.</p>
+                    <p>Até a liberação, nenhum dado do grupo fica nesta página. Documentos e guias seguem no portal do cliente.</p>
+                </div>"""
+    corpo = "\n".join([
+        intro("Área do cliente · Exclusivo", "Módulo LOCAR", "Espaço exclusivo do Grupo LOCAR na ORGATEC, em implantação.", acoes),
+        secao("O que o módulo vai reunir", "Do prazo à evidência, por empresa", conteudo),
+        secao("Acesso", "Dados separados por empresa e por pessoa", acesso_txt, "bg-superficie"),
+    ])
+    pagina("cliente/locar.html", "Módulo LOCAR", "Espaço exclusivo do Grupo LOCAR na ORGATEC, em implantação.", None, "retenção", corpo,
+           indexar=False, trilha=[("Área do cliente", "cliente/index.html"), ("Módulo LOCAR", None)])
+
 
 def acesso(id_: str, classe: str = "og-btn og-btn-contorno og-btn-lg") -> str:
     """Selo de situação + lugar do botão "Entrar" (preenchidos por paginas.js a partir de config.solucoes)."""
@@ -1008,6 +1041,7 @@ def abertura() -> None:
             <nav class="holo-atalhos" aria-label="Atalhos">
                 <a href="tributario/index.html" data-destino="tributario">Área tributária</a>
                 <a href="cliente/index.html" data-destino="areaCliente">Área do cliente</a>
+                <a href="cliente/locar.html" data-destino="locar">Módulo LOCAR</a>
                 <a href="ferramentas/index.html" data-destino="simuladores">Simuladores</a>
                 <a href="solucoes/index.html" data-destino="solucoes">Soluções</a>
                 <a href="reforma/index.html#noticias" data-destino="noticias">Central da Reforma</a>
@@ -1047,7 +1081,7 @@ MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("compliance/publico/autonomo.html", "captação + autoridade"), ("compliance/publico/simples.html", "captação + autoridade"),
     ("compliance/publico/comercio-industria.html", "captação + autoridade"), ("compliance/publico/servicos.html", "captação + autoridade"),
     ("compliance/publico/imoveis.html", "captação + autoridade"),
-    ("cliente/index.html", "retenção"), ("escritorio/index.html", "autoridade"),
+    ("cliente/index.html", "retenção"), ("cliente/locar.html", "retenção"), ("escritorio/index.html", "autoridade"),
     ("contato/index.html", "captação"), ("reforma/fontes.html", "autoridade"), ("privacidade.html", "conformidade (LGPD)"),
     ("marca.html", "interno: marca"), ("orgatec-template2.html", "interno: design system atual"),
     ("orgatec-trilha.html", "interno: design ORGATEC Trilha (demonstração)"),
@@ -1116,6 +1150,7 @@ def main() -> None:
     solucao_conciliacao()
     solucao_auditoria_rural()
     cliente()
+    modulo_locar()
     escritorio()
     contato()
     import paginas_compliance  # área de Compliance, gerada à parte (docs/plano-area-compliance.md)
