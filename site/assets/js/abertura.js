@@ -1,8 +1,8 @@
 /* Tela de abertura (site/index.html), no modelo do trilhum.io: texto à esquerda, direto no fundo, e a projeção
-   holográfica à direita em canvas 2D — projetor, feixe e os logotipos ORGATEC e LOCAR em pontos, com volume (camadas
-   em profundidade) e giro em Y, alternando entre si. Máscaras em assets/marca/holo/ (holo-logos.js, gerado por
-   tools/gerar_holo_logos.py); destinos editáveis em config.abertura. Sem bibliotecas: a CSP só aceita scripts
-   próprios. Movimento reduzido (preferência do sistema ou botão): quadro estático da ORGATEC, sem rodízio.
+   holográfica à direita em canvas 2D — projetor, feixe e os logotipos da ORGATEC em pontos, com volume (camadas em
+   profundidade) e giro em Y, em rodízio, terminando em "By Warley Veloso". Máscaras em assets/marca/holo/ (holo-logos.js,
+   gerado por tools/gerar_holo_logos.py); destinos editáveis em config.abertura. Sem bibliotecas: a CSP só aceita
+   scripts próprios. Movimento reduzido (preferência do sistema ou botão): quadro estático do símbolo, sem rodízio.
    Primeira visita da aba (html.abertura-intro, posta por abertura-intro.js): a projeção acende e o texto surge depois
    (abertura.css); clique, toque, tecla, rolagem ou foco pulam direto para a tela pronta. */
 (function () {
@@ -74,16 +74,32 @@
   var ponteiro = { x: 0.5, y: 0.5 }, desvio = 0, t0 = performance.now(), ultimo = 0, quadroId = 0;
   var PERMANENCIA = 5000, TROCA = 900;
   var legenda = $('[data-holo-legenda]');
-  var logos = O.holoLogos || [];
+  // "50 anos" só com os anos de atuação comprovados em config.institucional (mesma regra de [data-prova-anos]);
+  // a assinatura fecha o rodízio e é escrita com a fonte do site, não é imagem
+  var logos = (O.holoLogos || []).filter(function (lg) { return lg.exige !== 'anos50' || (anos && anos >= 50); })
+    .concat([{ id: 'assinatura', nome: 'By Warley Veloso', texto: ['By', 'Warley Veloso'] }]);
   var sprites = [], atual = 0, proximo = 0, trocaDesde = -1, proximaTroca = 0;
   if (legenda) legenda.setAttribute('data-rodizio', logos.map(function (lg) { return lg.id; }).join(' '));
 
-  // fonte de cada quadro: a máscara PNG (mesma origem, liberada pela CSP img-src 'self')
+  // fonte de cada quadro: a máscara PNG (mesma origem, liberada pela CSP img-src 'self') ou a assinatura desenhada
   logos.forEach(function (lg, i) {
+    if (lg.texto) return;
     var im = new Image();
     im.onload = function () { lg.fonte = im; lg.fw = im.naturalWidth; lg.fh = im.naturalHeight; sprites[i] = null; iniciar(); };
     im.src = lg.arquivo;
   });
+  function montarAssinatura(lg) {
+    var familia = (getComputedStyle(document.body).getPropertyValue('--f-display') || 'sans-serif').trim();
+    var c = document.createElement('canvas'), g = c.getContext('2d');
+    c.width = 900; c.height = 380;
+    g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.font = '600 92px ' + familia; g.fillText(lg.texto[0], 450, 120);
+    g.font = '800 132px ' + familia; g.fillText(lg.texto[1], 450, 290, 880);
+    lg.fonte = c; lg.fw = c.width; lg.fh = c.height;
+  }
+  var assinatura = logos[logos.length - 1];
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { montarAssinatura(assinatura); sprites[logos.length - 1] = null; });
+  else montarAssinatura(assinatura);
 
   // pontilhar: a máscara vira pontos em linhas (varredura), já na cor do tema; uma versão clara (frente) e uma
   // escura (camadas de trás). Feito uma vez por quadro do rodízio e refeito ao mudar o tamanho ou o tema.
@@ -92,7 +108,7 @@
     var escala = 2 * S / Math.max(lg.fw, lg.fh), w = Math.max(2, Math.round(lg.fw * escala * dpr)), h = Math.max(2, Math.round(lg.fh * escala * dpr));
     var tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
     var tg = tmp.getContext('2d'); tg.drawImage(lg.fonte, 0, 0, w, h);
-    var src = tg.getImageData(0, 0, w, h).data, passo = Math.max(2, Math.round(2 * dpr)), ponto = Math.max(1, Math.round(1.25 * dpr));
+    var src = tg.getImageData(0, 0, w, h).data, passo = Math.max(2, Math.round(2.4 * dpr)), ponto = Math.max(1, Math.round(1.25 * dpr));
     function camada(c, forca) {
       var out = document.createElement('canvas'); out.width = w; out.height = h;
       var og = out.getContext('2d'), img = og.createImageData(w, h), d = img.data;
@@ -105,7 +121,7 @@
           var borda = x < passo || y < passo || x + passo >= w || y + passo >= h ||
             src[(y * w + x - passo) * 4 + 3] < 28 || src[(y * w + x + passo) * 4 + 3] < 28 ||
             src[((y - passo) * w + x) * 4 + 3] < 28 || src[((y + passo) * w + x) * 4 + 3] < 28;
-          var alfa = Math.min(255, a * linha * forca * (borda ? 1.4 : 0.85));
+          var alfa = Math.min(255, a * linha * forca * (borda ? 1.35 : 0.62));
           for (var dy = 0; dy < ponto && y + dy < h; dy++) for (var dx = 0; dx < ponto && x + dx < w; dx++) {
             var k = ((y + dy) * w + x + dx) * 4;
             d[k] = c[0]; d[k + 1] = c[1]; d[k + 2] = c[2]; d[k + 3] = alfa;
@@ -140,9 +156,7 @@
     rx = Math.min(r.width * 0.34, (r.width / 2 - 14) / 1.65, r.height * 0.42);
     baseY = limite - rx * 0.4;
     var inicio = r.top + 28, livre = Math.max(40, baseY - rx * 0.35 - inicio);
-    // S é meio lado maior; a altura limita pela proporção do logotipo mais alto (os dois atuais são largos)
-    var razao = logos.reduce(function (m, lg) { return Math.max(m, lg.altura / lg.largura); }, 0.1);
-    S = Math.min(r.width * 0.44, livre * 0.47 / Math.min(1, razao));
+    S = Math.min(r.width * 0.36, livre * 0.47);
     logoY = inicio + livre / 2;
     sprites = [];
   }
@@ -185,9 +199,9 @@
     // entrada (0 → 1): o projetor acende, o feixe sobe e a varredura revela o logotipo de baixo para cima
     var f = intro && !reduzido ? Math.min(1, (agora - t0) / FORMACAO) : 1, forma = suave(f);
     var giro = rodizio(agora);
-    desvio = reduzido ? 0 : desvio + ((ponteiro.x - 0.5) * 0.3 - desvio) * 0.05;
+    desvio = reduzido ? 0 : desvio + ((ponteiro.x - 0.5) * 0.5 - desvio) * 0.05;
     var lado = Math.sin(t * 0.55) >= 0 ? 1 : -1;
-    var ang = reduzido ? 0.2 : Math.sin(t * 0.55) * 0.3 + desvio + lado * giro * (Math.PI / 2 - 0.1);
+    var ang = reduzido ? 0.32 : Math.sin(t * 0.55) * 0.5 + desvio + lado * giro * (Math.PI / 2 - 0.2);
     var ly = logoY + (reduzido ? 0 : Math.sin(t * 1.1) * S * 0.04);
     ctx.clearRect(0, 0, W, H);
 
@@ -228,13 +242,13 @@
     // se desloca sin(giro) × profundidade, o que mostra a lateral quando ele gira
     var sp = sprite(atual);
     if (sp) {
-      var camadas = fraco ? 3 : 5, prof = S * 0.075, ca = Math.cos(ang), sa = Math.sin(ang);  // pouca profundidade: letras finas borram
+      var camadas = fraco ? 4 : 8, prof = S * 0.3, ca = Math.cos(ang), sa = Math.sin(ang);
       var pisca = giro > 0 ? 0.75 + 0.25 * Math.abs(Math.sin(t * 47)) : 1;
       ctx.save();
       if (forma < 1) { ctx.beginPath(); ctx.rect(0, ly + sp.h / 2 - sp.h * forma, W, sp.h * forma + 2); ctx.clip(); }
       for (var j = camadas - 1; j >= 0; j--) {
         var z = (j / (camadas - 1) - 0.5) * prof, frenteCamada = j === 0;
-        ctx.globalAlpha = forma * pisca * (frenteCamada ? 1 : 0.18 + 0.3 * (1 - j / (camadas - 1)));
+        ctx.globalAlpha = forma * pisca * (frenteCamada ? 1 : 0.28 + 0.4 * (1 - j / (camadas - 1)));
         ctx.globalCompositeOperation = frenteCamada ? 'lighter' : 'source-over';
         ctx.setTransform(dpr * ca, 0, 0, dpr, dpr * (cx + sa * z), dpr * ly);
         ctx.drawImage(frenteCamada ? sp.frente : sp.tras, -sp.w / 2, -sp.h / 2, sp.w, sp.h);
