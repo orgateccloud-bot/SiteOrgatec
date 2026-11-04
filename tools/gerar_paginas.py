@@ -973,8 +973,8 @@ def solucao_auditoria_rural() -> None:
 
 def abertura() -> None:
     """Tela de abertura, na raiz do site (index.html), no modelo do trilhum.io: texto direto no fundo, à esquerda, e a
-    projeção holográfica à direita (canvas: projetor, feixe e os logotipos da ORGATEC em camadas, em rodízio, terminando
-    em "By Warley Veloso"; máscaras de tools/gerar_holo_logos.py). Sem caixa de vidro nem cards de marcos (02/11/2026).
+    projeção holográfica à direita (canvas: projetor, feixe e os logotipos ORGATEC e LOCAR em camadas, alternando entre
+    si; máscaras de tools/gerar_holo_logos.py). Sem caixa de vidro nem cards de marcos.
     Sem menu nem rodapé do layout comum, de propósito: o holograma se forma, o texto surge em cascata e o botão
     "Entrar no site" leva à vitrine (inicio.html); os atalhos levam direto às áreas. A sequência roda uma vez por aba
     (abertura-intro.js marca a primeira visita antes da pintura) e some com movimento reduzido.
