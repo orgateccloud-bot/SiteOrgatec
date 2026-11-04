@@ -1,7 +1,7 @@
 # Holograma só com ORGATEC e LOCAR
 
-- **Situação:** em prévia
-- **Branch:** `ideia/holograma-locar`
+- **Situação:** lançada em 03/11/2026
+- **Branch:** `ideia/holograma-locar` (removida)
 - **Prévia:** https://orgatec-site--ideia-holograma-locar-prxpwqtv.web.app
 
 ## Problema
