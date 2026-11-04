@@ -21,7 +21,7 @@ SETORES = [("Agro e produtor rural", "setores/agro.html"), ("Transporte", "setor
 FERRAMENTAS = [("Simulador tributário", "ferramentas/simulador.html"), ("Calendário fiscal", "ferramentas/calendario.html"),
                ("Calculadoras da transição", "ferramentas/index.html")]
 # Sistemas da ORGATEC (docs/plano-incorporacao-produtos.md): só páginas no site; o acesso a cada sistema é link
-# para o subdomínio dele, controlado por config.solucoes. Crédito (decisão D5) e gestão financeira (Fase 3) ainda fora.
+# para o subdomínio dele, controlado por config.solucoes. Gestão financeira (Mini e crédito do OrgCred, Fases 3 e 4) ainda fora.
 SOLUCOES = [("Todas as soluções", "solucoes/index.html"), ("Conciliação bancária", "solucoes/conciliacao.html"),
             ("Auditoria forense rural (NFA-e)", "solucoes/auditoria-rural.html")]
 # Área de Compliance (docs/plano-area-compliance.md; páginas em tools/paginas_compliance.py): visão geral, termômetro e as quatro frentes.

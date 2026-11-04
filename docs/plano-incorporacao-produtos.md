@@ -15,7 +15,7 @@ O site é **institucional e estático**: Firebase Hosting, CSP `script-src 'self
 |---|---|---|---|---|
 | **OrgConc** | Conciliação bancária e auditoria fiscal forense; multiempresa, RLS por `org_id` | Beta em produção (Railway), nota 8,0 e 1.262 testes | Página de produto + pedido de demonstração; depois, botão "Entrar" em subdomínio | Fase 1 (página) / Fase 2 (link) |
 | **OrgAudi** | Auditoria forense rural NFA-e (SEFAZ-GO), laudo PDF, Funrural/IRPF rural | Uso interno, sem produção confirmada, nota 7,6 | **Página de serviço** do escritório, com laudo de exemplo fictício. O sistema continua interno | Fase 1 |
-| **Mini (MiniSaaS)** | Lançamentos, importação OFX/PDF/NFe, forense e projeção IBS/CBS para PJ | Protótipo local, sem git nem CI | Página de produto "em breve"; depois, área logada do cliente PJ | Fase 3 |
+| **Mini (MiniSaaS)** | Lançamentos, importação OFX/PDF/NFe, forense e projeção IBS/CBS para PJ | Protótipo local, sem git nem CI | Página de produto "em breve", junto com o crédito do OrgCred (D5); depois, área logada do cliente PJ | Fase 3 |
 | **OrgCred** | Microcrédito da ORGATEC como ESC (LC 167/2019) | O próprio projeto diz que não opera com dinheiro real; capital R$ 0 e registradora pendente | Página institucional só depois das decisões regulatórias; depois, "Área do tomador" | Fase 4 |
 | **OrgAgentDoc** | Gerador dos 21 modelos Word + agente Claude com fila de aprovação | Protótipo local (localhost) | Não entra como sistema. Fornece os dados de marca (`manifest.json`) e o catálogo de documentos para os textos de serviço | Fase 1 (dados) / Fase 4 (pedido de documento) |
 | **FinancePreditiva** | Finanças pessoais com previsão (XGBoost + Claude) | Pausado ("Geladeira"), sem infraestrutura, dados planejados nos EUA | **Não entra** | — |
@@ -47,8 +47,7 @@ Soluções ▾
 ├── Todas as soluções                       solucoes/index.html          (vitrine)
 ├── Conciliação e auditoria bancária        solucoes/conciliacao.html    (OrgConc)
 ├── Auditoria forense rural (NFA-e)         solucoes/auditoria-rural.html (OrgAudi, serviço)
-├── Gestão financeira para empresas         solucoes/gestao-financeira.html (Mini, "em breve")
-└── Crédito para empresas (ESC)             solucoes/credito.html        (OrgCred; só depois da decisão D5)
+└── Gestão financeira para empresas         solucoes/gestao-financeira.html (Mini e crédito do OrgCred, "em breve")
 ```
 
 **Área do cliente** (`cliente/index.html`) vira o ponto único de acesso, com um cartão por sistema e o selo "disponível" ou "em breve":
@@ -57,8 +56,7 @@ Soluções ▾
 |---|---|---|
 | Portal contábil (documentos, guias, relatórios) | `portal.orgatec.io` | ERP decidido (pendência C2) |
 | Conciliação (para escritórios e clientes do OrgConc) | subdomínio do OrgConc | Fase 2 |
-| Gestão financeira (cliente PJ) | subdomínio do Mini | Fase 3 |
-| Área do tomador (crédito) | subdomínio do OrgCred | Fase 4 |
+| Gestão financeira (cliente PJ, com o crédito do OrgCred) | subdomínio do Mini; o crédito, no subdomínio do OrgCred, a partir do mesmo cartão | Fases 3 e 4 |
 
 **Outras ligações:**
 - **Vitrine (`inicio.html`):** o carrossel "Ferramentas" ganha um irmão, o carrossel "Soluções", e o painel de fontes oficiais continua.
@@ -138,7 +136,7 @@ Itens 1 a 4 da seção 2.
 2. Publicar o Mini em subdomínio e ligar a página e a área do cliente.
 
 ### Fase 4: Crédito ESC e documentos
-1. **Página de crédito:** só depois das decisões regulatórias do OrgCred (capital, entidade registradora, IOF e parecer COAF) e de rever a publicidade de crédito com o responsável técnico.
+1. **Crédito em Gestão financeira:** o cartão já avisa que o crédito entra ali e que não há oferta. Detalhes, condições e o botão "Entrar" só depois das decisões regulatórias do OrgCred (capital, entidade registradora, IOF e parecer COAF) e de rever a publicidade de crédito com o responsável técnico.
 2. **Pedido de documento:** um endpoint restrito na API do site põe o pedido na fila de aprovação humana do OrgAgentDoc, sem chamar o LLM direto do site.
 
 ### Fora do plano
@@ -152,7 +150,7 @@ FinancePreditiva. Se for retomado, vira no máximo uma página "Labs" com link p
 | D2 | **Nomes públicos:** OrgConc, OrgAudi, Mini e OrgCred, ou nomes descritivos ("Conciliação ORGATEC")? | Marca e SEO. |
 | D3 | **Domínio:** `orgatec.io`, `orgatec.cloud` ou `orgatec.com.br`, e quais subdomínios? | Passkeys, cookies e certificados. |
 | D4 | **Preços do Mini** (a landing do Mini tem planos Gratuito, Pro a R$ 97 e Enterprise): publicar ou não? | Compromisso comercial público. |
-| D5 | **Crédito ESC no site:** quando e com que texto? | Atividade regulada (LC 167/2019). Anunciar antes de operar é risco. |
+| D5 | **Crédito ESC no site:** decidido em 04/11/2026: entra em **Gestão financeira**, não em página própria. Falta definir quando e com que texto de oferta. | Atividade regulada (LC 167/2019). Anunciar antes de operar é risco; por isso o cartão diz que ainda não há oferta. |
 | D6 | **Quem aprova** os textos de cada página de solução (responsável técnico e responsável pelo produto)? | Mesma regra da reforma: nada vai a público sem revisão. |
 
 ## 8. Coordenação com a outra sessão
