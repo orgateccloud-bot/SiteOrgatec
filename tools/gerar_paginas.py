@@ -732,7 +732,7 @@ def cliente() -> None:
         f'<p class="og-cartao-texto mb-3">Extratos conferidos com a contabilidade e laudo das divergências.</p><p class="flex flex-wrap items-center gap-3">{acesso("conciliacao", "og-btn og-btn-primario og-btn-md")}'
         f'<a href="{{p}}solucoes/conciliacao.html" class="og-link text-sm">Saiba mais</a></p></div>',
         f'<div class="og-cartao"><span class="og-cartao-ref">Para empresas</span><h3 class="og-cartao-titulo">Gestão financeira</h3>'
-        f'<p class="og-cartao-texto mb-3">Lançamentos, extratos, notas e projeção de CBS e IBS por empresa.</p><p class="flex flex-wrap items-center gap-3">{acesso("gestaoFinanceira", "og-btn og-btn-primario og-btn-md")}'
+        f'<p class="og-cartao-texto mb-3">Lançamentos, extratos, notas e projeção de CBS e IBS por empresa. O acompanhamento de crédito entra aqui quando a operação começar; ainda não há oferta de crédito.</p><p class="flex flex-wrap items-center gap-3">{acesso("gestaoFinanceira", "og-btn og-btn-primario og-btn-md")}'
         f'<a href="{{p}}solucoes/index.html" class="og-link text-sm">Saiba mais</a></p></div>',
     ], "md:grid-cols-2 lg:grid-cols-3")
     corpo = "\n".join([
@@ -892,7 +892,7 @@ def solucoes_vitrine() -> None:
         f'<h3 class="og-cartao-titulo"><a href="{{p}}solucoes/auditoria-rural.html" class="hover:text-acao">Auditoria forense rural (NFA-e)</a></h3><p class="og-cartao-texto">As notas avulsas do produtor rural conferidas uma a uma, com score de risco, Funrural, IRPF rural e laudo.</p>'
         f'<p class="mt-3 flex flex-wrap items-center gap-3">{acesso("auditoriaRural", "og-btn og-btn-contorno og-btn-md")}<a href="{{p}}solucoes/auditoria-rural.html" class="og-link text-sm">Conhecer o serviço →</a></p></div>',
         f'<div class="og-cartao"><span class="og-cartao-ref">Para empresas · em preparação</span>'
-        f'<h3 class="og-cartao-titulo">Gestão financeira para empresas</h3><p class="og-cartao-texto">Lançamentos, importação de extratos e notas e projeção de CBS e IBS num painel por empresa.</p>'
+        f'<h3 class="og-cartao-titulo">Gestão financeira para empresas</h3><p class="og-cartao-texto">Lançamentos, importação de extratos e notas e projeção de CBS e IBS num painel por empresa. O acompanhamento de crédito entra neste módulo quando a operação começar; ainda não há oferta de crédito.</p>'
         f'<p class="mt-3 flex flex-wrap items-center gap-3">{acesso("gestaoFinanceira")}'
         f'<a {WHATS} data-msg="Olá! Quero ser avisado quando a gestão financeira da ORGATEC estiver disponível." class="og-link text-sm">Quero ser avisado</a></p></div>',
     ]

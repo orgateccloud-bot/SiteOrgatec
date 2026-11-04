@@ -99,8 +99,7 @@
     solucoes: {
       conciliacao: { situacao: 'demonstracao', url: null },       // OrgConc
       auditoriaRural: { situacao: 'servico', url: null },         // OrgAudi (interno)
-      gestaoFinanceira: { situacao: 'em_breve', url: null },      // Mini
-      credito: { situacao: 'rascunho', url: null }                // OrgCred (decisão D5)
+      gestaoFinanceira: { situacao: 'em_breve', url: null }       // Mini e OrgCred (crédito; D5 decidida em 04/11/2026)
     },
     /* Tela de abertura (raiz): `entrada` é o botão "Entrar no site" (a vitrine, que reúne todas as áreas);
        as demais chaves são os atalhos do cartão. */
