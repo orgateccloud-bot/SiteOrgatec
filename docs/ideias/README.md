@@ -4,3 +4,4 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Módulo LOCAR](modulo-locar.md) | em desenvolvimento | `ideia/modulo-locar` | |
