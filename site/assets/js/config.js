@@ -53,8 +53,8 @@
        informam que o retorno será pelo WhatsApp.
        --------------------------------------------------------------------------- */
     emails: {
-      contato: { endereco: 'contato@orgatec.io', ativo: false },
-      dpo: { endereco: 'dpo@orgatec.io', ativo: false }
+      contato: { endereco: 'contato@orgatec.io', ativo: true },
+      dpo: { endereco: 'dpo@orgatec.io', ativo: true }
     },
 
     /* ---------------------------------------------------------------------------

@@ -26,7 +26,7 @@ from defusedxml import ElementTree
 RAIZ = Path(__file__).resolve().parent.parent
 CONFIG = RAIZ / "tools" / "agro_fontes.json"
 DESTINO = RAIZ / "site" / "dados" / "agro" / "noticias.json"
-USER_AGENT = "orgatec.io orgatec.cloud@gmail.com"
+USER_AGENT = "orgatec.io contato@orgatec.io"
 BRASILIA = timezone(timedelta(hours=-3))
 DIAS_MAX = 90          # notícia mais antiga que isso não entra (o feed da Receita mistura itens de anos atrás)
 POR_ATIVIDADE = 3

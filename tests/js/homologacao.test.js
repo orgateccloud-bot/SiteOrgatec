@@ -27,7 +27,8 @@ test('modo teste: nada pronto para produção e configuração atual com pendên
   assert.equal(CONFIG.ambiente, 'homologacao');
   assert.equal(av.resumo.prontoParaProducao, false);
   assert.ok(av.resumo.bloqueios > 0);
-  for (const id of ['C1', 'C2', 'C3', 'C4', 'C5', 'D4', 'V1', 'T9']) assert.equal(status(av, id), 'aberta', id);
+  for (const id of ['C1', 'C2', 'C5', 'D4', 'V1', 'T9']) assert.equal(status(av, id), 'aberta', id);
+  for (const id of ['C3', 'C4']) assert.equal(status(av, id), 'resolvida', id); // contato@ e dpo@ ativados em 04/11/2026
   assert.equal(status(av, 'V8'), 'resolvida'); // nenhum item com consulta antiga em 31/10/2026
   assert.equal(av.resumo.total, H.PENDENCIAS.length);
   assert.equal(av.resumo.abertas + av.resumo.resolvidas, av.resumo.total);

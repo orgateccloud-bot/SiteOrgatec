@@ -39,8 +39,8 @@ LOG = RAIZ / "tools" / "logs" / "campo.log"
 MONTAR = RAIZ / "tools" / "campo_montar.js"
 
 URL_MET = "https://api.met.no/weatherapi/locationforecast/2.0/complete"
-# Contato exigido pelos termos do MET Norway (troque pelo e-mail institucional quando contato@orgatec.io for ativado)
-USER_AGENT = "orgatec.io orgatec.cloud@gmail.com"
+# Contato exigido pelos termos do MET Norway
+USER_AGENT = "orgatec.io contato@orgatec.io"
 BRASILIA = timezone(timedelta(hours=-3))  # o Brasil não tem horário de verão desde 2019
 HORARIOS = (5, 11, 17)
 ARQUIVO_DIAS = 30

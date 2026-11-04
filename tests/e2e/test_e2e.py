@@ -215,7 +215,7 @@ def test_demos_homologacao_e_pendencias(navegador, servidor):
     expect(pg.locator("#portalErp")).to_contain_text("Athenas Online")
     for a in pg.locator("[data-link='portal']").all():  # portal.orgatec.io ainda sem DNS (T5)
         assert a.get_attribute("href").startswith("https://orgatec.athenas.online/")
-    assert "contato@orgatec.io" not in pg.inner_text("body")  # e-mail não ativado não é exibido
+    expect(pg.locator("#rodapeEmails a[href='mailto:dpo@orgatec.io']")).to_be_visible()  # canal do encarregado no rodapé
 
 
 @pytest.mark.parametrize("pagina", ["inicio.html", "privacidade.html", "marca.html", "orgatec-template2.html", "reforma/simples-hibrido.html", "reforma/index.html", "tributario/index.html"])
@@ -633,8 +633,12 @@ def test_alertas_regionais_em_pagina_propria(navegador, servidor):
 
 def test_rodape_dpo_aponta_para_o_contato(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "reforma/ibs.html")
-    expect(pg.locator("#rodapeEmails a")).to_have_attribute("href", "../contato/index.html")
-    assert not erros, erros
+    expect(pg.locator("#rodapeEmails a")).to_have_attribute("href", "mailto:dpo@orgatec.io")
+    # com o canal desligado em config.js, o rodapé volta a apontar para o formulário de contato
+    rota = _config_alterada([("dpo: { endereco: 'dpo@orgatec.io', ativo: true }", "dpo: { endereco: 'dpo@orgatec.io', ativo: false }")])
+    pg2, erros2 = _abrir(navegador, servidor, "reforma/ibs.html", rotas={"**/assets/js/config.js": rota})
+    expect(pg2.locator("#rodapeEmails a")).to_have_attribute("href", "../contato/index.html")
+    assert not erros and not erros2, erros + erros2
 
 
 def test_marcos_do_metodo_na_consultoria(navegador, servidor):
@@ -1157,11 +1161,12 @@ def test_escritorio_obrigacoes_proprias_e_canal_do_dpo(navegador, servidor):
     expect(bloco).to_contain_text("não ocorrência ao CFC até 31 de janeiro")
     expect(bloco).to_contain_text("não emite parecer jurídico")
     expect(bloco.locator("a[href='../compliance/prevencao-lavagem.html#item-pld-profissionais-contabilidade']")).to_be_visible()
-    expect(pg.locator("[data-dpo]")).to_contain_text("canal em ativação")
-    assert pg.locator("[data-dpo] a[href^='mailto:']").count() == 0
-    rota = _config_alterada([("dpo: { endereco: 'dpo@orgatec.io', ativo: false }", "dpo: { endereco: 'dpo@orgatec.io', ativo: true }")])
+    expect(pg.locator("[data-dpo] a[href='mailto:dpo@orgatec.io']")).to_be_visible()
+    # com o canal desligado em config.js, o endereço some e volta o aviso
+    rota = _config_alterada([("dpo: { endereco: 'dpo@orgatec.io', ativo: true }", "dpo: { endereco: 'dpo@orgatec.io', ativo: false }")])
     pg2, erros2 = _abrir(navegador, servidor, "escritorio/index.html", rotas={"**/assets/js/config.js": rota})
-    expect(pg2.locator("[data-dpo] a[href='mailto:dpo@orgatec.io']")).to_be_visible()
+    expect(pg2.locator("[data-dpo]")).to_contain_text("canal em ativação")
+    assert pg2.locator("[data-dpo] a[href^='mailto:']").count() == 0
     assert not erros and not erros2, erros + erros2
 
 
@@ -1556,3 +1561,12 @@ def test_modulo_locar_na_area_do_cliente(navegador, servidor):
     assert not erros, erros
     pg2, _ = _abrir(navegador, servidor, "index.html")
     assert pg2.locator(".holo-atalhos [data-destino=locar]").inner_text().strip() == "Módulo LOCAR"
+
+
+def test_emails_institucionais_ativos(navegador, servidor):
+    """C3 e C4: contato@ e dpo@ aparecem no site depois de ativados em config.js."""
+    pg, erros = _abrir(navegador, servidor, "contato/index.html")
+    expect(pg.locator("#contatoEmailLinha a[href='mailto:contato@orgatec.io']")).to_be_visible()
+    pg2, erros2 = _abrir(navegador, servidor, "privacidade.html")
+    expect(pg2.locator("#dpoLinha a[href='mailto:dpo@orgatec.io']")).to_be_visible()
+    assert not erros and not erros2, erros + erros2
