@@ -1,9 +1,9 @@
 # Pendências para a próxima fase
 
-Gerado em 03/11/2026 a partir de site/assets/js/homologacao.js.
+Gerado em 04/11/2026 a partir de site/assets/js/homologacao.js.
 
-- Abertas: 44 de 50
-- Bloqueiam a produção: 13
+- Abertas: 45 de 51
+- Bloqueiam a produção: 14
 
 ## Decisões da ORGATEC
 
@@ -47,6 +47,7 @@ Gerado em 03/11/2026 a partir de site/assets/js/homologacao.js.
 | V5 | Alíquota de referência estimada usada no simulador | aberta | não | Responsável técnico (CRC) | `site/assets/js/config.js → simulador.aliquotaReferenciaEstimada; fontes.js → cfg_aliquota_ref` | Valor atual: 28% (estimativa). |
 | V6 | Prazos de retenção da política de privacidade | aberta | sim | Responsável técnico (CRC) | `site/privacidade.html` | Os prazos de 24 meses para leads e 30 dias para opt-in não confirmado são proposta do desenvolvimento e precisam de aprovação. Situação técnica em 03/11/2026: a rotina existe (python tools/lgpd.py retencao, prazos em backend/retencao.py) e apaga os dados sem quebrar a trilha audit_hash, mas ainda não roda sozinha: falta agendá-la junto com a API (T1). Os logs do Cloud Run seguirão a retenção do Cloud Logging, que precisa ser ajustada aos prazos aprovados. |
 | V14 | Aprovar a política de privacidade versão 2026-11 | aberta | sim | Responsável técnico (CRC) | `site/privacidade.html; docs/ideias/privacidade-2026-11.md` | Texto reescrito em 03/11/2026. O responsável técnico aprova a redação e resolve os trechos com o selo "pendente de validação": enquadramento das transferências internacionais no art. 33 da LGPD; prazos de guarda (V6); autenticação multifator, registro de acessos e local dos dados no portal (C2). Conferir também se os registros de acesso ao site precisam ser guardados pelo prazo do Marco Civil da Internet. Depende também de quem será o encarregado (C4). |
+| V15 | Aprovar os documentos internos de proteção de dados | aberta | sim | Responsável técnico (CRC) | `docs/lgpd/README.md` | Rascunhos de 03/11/2026, fora do site: registro das operações, plano de incidentes, atendimento ao titular e lista de operadores. A equipe preenche o que só ela sabe e o responsável técnico aprova. Sustenta o que o site afirma na V12. |
 | V7 | Pontos de leitura da lei marcados para revisão | aberta | não | Responsável técnico (CRC) | `docs/revisao-tecnica.md` | Receita igual a R$ 3,6 milhões, ausência de redução no transporte de cargas, crédito do diesel, limite do LCDPR e orientação comercial do programa de conformidade. |
 | V8 | Itens da reforma com consulta antiga (mais de 90 dias) | resolvida | não | Responsável técnico (CRC) | `site/assets/js/reforma-itens.js → consultadoEm` | Nenhum item atrasado. |
 | V9 | Vencimento do IBS no calendário fiscal | aberta | não | Responsável técnico (CRC) | `site/assets/js/fontes.js → cal_ibs; site/assets/js/calendario.js` | Sem data confirmada no regulamento do IBS. |
