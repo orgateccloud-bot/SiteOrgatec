@@ -805,24 +805,28 @@ def test_abertura_sequencia(navegador, servidor):
 
 
 def test_abertura_holograma_rodizio(navegador, servidor):
-    """Projeção só com ORGATEC e LOCAR (máscaras de holo-logos.js), alternando entre si: a legenda acompanha o logotipo;
-    com movimento reduzido, quadro fixo na ORGATEC."""
+    """Projeção com os logotipos da ORGATEC em rodízio (máscaras de holo-logos.js), terminando na assinatura
+    "By Warley Veloso": a legenda acompanha o logotipo; "50 anos" só com os anos de atuação comprovados; com movimento
+    reduzido, quadro fixo no símbolo."""
     pg, erros = _abrir(navegador, servidor, "index.html")
-    assert pg.evaluate("window.Orgatec.holoLogos.map(l => l.id).join(' ')") == "orgatec locar"
+    assert pg.evaluate("window.Orgatec.holoLogos.length") == 7
     status = pg.evaluate("Promise.all(window.Orgatec.holoLogos.map(l => fetch(l.arquivo).then(r => r.status + ' ' + r.headers.get('content-type'))))")
     assert all(s.startswith("200 image/png") for s in status), status  # máscaras publicadas junto com o site
     legenda = pg.locator("[data-holo-legenda]")
-    assert legenda.get_attribute("data-rodizio") == "orgatec locar"
-    expect(legenda).to_have_attribute("data-logo", "orgatec")
-    expect(legenda).to_have_attribute("data-logo", "locar", timeout=10000)  # entrada + 5 s + meia troca
-    expect(legenda).to_have_text("LOCAR · TRANSPORTE DE BOVINOS")
-    expect(legenda).to_have_attribute("data-logo", "orgatec", timeout=8000)  # volta ao primeiro
+    # sem comprovação, sem "50 anos"; a assinatura fecha o rodízio
+    assert legenda.get_attribute("data-rodizio") == "simbolo servicos ia parceiro audi-agro trilhum assinatura"
+    expect(legenda).to_have_attribute("data-logo", "simbolo")
+    expect(legenda).to_have_attribute("data-logo", "servicos", timeout=10000)  # entrada + 5 s + meia troca
+    expect(legenda).to_have_text("ORGATEC SERVIÇOS CONTÁBEIS")
+    rota = _config_alterada([("inicioAtuacao: null", "inicioAtuacao: '1975-03-01'"), ("comprovacao: null", "comprovacao: 'contrato social'")])
+    pg2, erros2 = _abrir(navegador, servidor, "index.html", rotas={"**/assets/js/config.js": rota})
+    assert pg2.get_attribute("[data-holo-legenda]", "data-rodizio") == "simbolo servicos ia 50-anos parceiro audi-agro trilhum assinatura"
     ctx = navegador.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce")
     pg3 = ctx.new_page()
     pg3.goto(f"{servidor}/")
     pg3.wait_for_timeout(7000)
-    assert pg3.get_attribute("[data-holo-legenda]", "data-logo") == "orgatec"  # sem rodízio
-    assert not erros, erros
+    assert pg3.get_attribute("[data-holo-legenda]", "data-logo") == "simbolo"  # sem rodízio
+    assert not erros and not erros2, erros + erros2
 
 
 def test_abertura_movimento_reduzido(navegador, servidor):

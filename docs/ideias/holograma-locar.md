@@ -1,6 +1,6 @@
 # Holograma só com ORGATEC e LOCAR
 
-- **Situação:** lançada em 03/11/2026
+- **Situação:** descartada: lançada em 03/11/2026 e revertida a pedido do usuário em 04/11/2026 (`ideia/holograma-reverter`). O rodízio voltou aos 7 quadros.
 - **Branch:** `ideia/holograma-locar` (removida)
 - **Prévia:** https://orgatec-site--ideia-holograma-locar-prxpwqtv.web.app
 
