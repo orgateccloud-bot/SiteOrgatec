@@ -21,8 +21,9 @@ RAIZ = Path(__file__).resolve().parent.parent
 ORIGENS = RAIZ / "fontes-marca" / "projecao"
 PASTA = RAIZ / "site" / "assets" / "marca" / "holo"
 DESTINO = RAIZ / "site" / "assets" / "js" / "holo-logos.js"
-LADO = 360      # lado maior da máscara publicada, em pixels
-ANALISE = 900   # lado maior usado para calcular a máscara (antes da redução)
+LADO = 720      # lado maior da máscara publicada, em pixels
+ANALISE = 1440  # lado maior usado para calcular a máscara: originais pequenos são ampliados antes, e o corte por
+                # cor sai com borda firme
 
 # id, legenda, arquivo, recorte (x0, y0, x1, y1) no original ou None, regra(h, s, v) → é marca?, exige
 LOGOS = [
@@ -55,7 +56,8 @@ def mascara(arquivo: str, recorte, regra) -> Image.Image:
     im = im.convert("RGB")
     if recorte:
         im = im.crop(recorte)
-    im.thumbnail((ANALISE, ANALISE))
+    escala = ANALISE / max(im.size)
+    im = im.resize((round(im.width * escala), round(im.height * escala)), Image.LANCZOS)
     w, h = im.size
     px = im.load()
     alfa = Image.new("L", (w, h), 0)
@@ -71,16 +73,15 @@ def mascara(arquivo: str, recorte, regra) -> Image.Image:
         raise SystemExit(f"{arquivo}: máscara vazia; ajuste a regra ou o recorte")
     alfa = alfa.crop(caixa)
     alfa.thumbnail((LADO, LADO), Image.LANCZOS)
-    saida = Image.new("RGBA", alfa.size, (255, 255, 255, 0))
-    saida.putalpha(alfa)
-    return saida
+    alfa = alfa.point(lambda v: v // 17 * 17)  # 16 níveis bastam e reduzem bastante o PNG
+    return Image.merge("LA", (Image.new("L", alfa.size, 255), alfa))
 
 
 def previa(imagens: list[tuple[str, Image.Image]], caminho: Path) -> None:
     tela = Image.new("RGB", (len(imagens) * 380, 420), (8, 14, 28))
     d = ImageDraw.Draw(tela)
     for i, (nome, im) in enumerate(imagens):
-        tela.paste(im, (10 + i * 380, 40), im)
+        tela.paste(im.convert("RGBA"), (10 + i * 380, 40), im.convert("RGBA"))
         d.text((10 + i * 380, 10), nome, fill=(200, 210, 230))
     tela.save(caminho)
 
