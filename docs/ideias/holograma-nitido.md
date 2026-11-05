@@ -2,7 +2,7 @@
 
 - **Situação:** em prévia
 - **Branch:** `ideia/holograma-nitido`
-- **Prévia:**
+- **Prévia:** https://orgatec-site--ideia-holograma-nitido-2hlv5qgd.web.app
 
 ## Problema
 
