@@ -7,51 +7,51 @@
     "id": "simbolo",
     "nome": "ORGATEC",
     "arquivo": "assets/marca/holo/simbolo.png",
-    "largura": 312,
-    "altura": 345
+    "largura": 651,
+    "altura": 720
   },
   {
     "id": "servicos",
     "nome": "ORGATEC SERVIÇOS CONTÁBEIS",
     "arquivo": "assets/marca/holo/servicos.png",
-    "largura": 360,
-    "altura": 91
+    "largura": 720,
+    "altura": 183
   },
   {
     "id": "ia",
     "nome": "ORGATEC IA",
     "arquivo": "assets/marca/holo/ia.png",
-    "largura": 360,
-    "altura": 352
+    "largura": 720,
+    "altura": 698
   },
   {
     "id": "50-anos",
     "nome": "ORGATEC 50 ANOS",
     "arquivo": "assets/marca/holo/50-anos.png",
-    "largura": 329,
-    "altura": 360,
+    "largura": 659,
+    "altura": 720,
     "exige": "anos50"
   },
   {
     "id": "parceiro",
     "nome": "ORGATEC · PARCEIRO FINANCEIRO",
     "arquivo": "assets/marca/holo/parceiro.png",
-    "largura": 360,
-    "altura": 144
+    "largura": 720,
+    "altura": 289
   },
   {
     "id": "audi-agro",
     "nome": "ORGATEC AUDI AGRO",
     "arquivo": "assets/marca/holo/audi-agro.png",
-    "largura": 360,
-    "altura": 211
+    "largura": 720,
+    "altura": 422
   },
   {
     "id": "trilhum",
     "nome": "TRILHUM",
     "arquivo": "assets/marca/holo/trilhum.png",
-    "largura": 360,
-    "altura": 322
+    "largura": 720,
+    "altura": 643
   }
 ];
 })(this);

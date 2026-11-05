@@ -108,7 +108,7 @@
     var escala = 2 * S / Math.max(lg.fw, lg.fh), w = Math.max(2, Math.round(lg.fw * escala * dpr)), h = Math.max(2, Math.round(lg.fh * escala * dpr));
     var tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
     var tg = tmp.getContext('2d'); tg.drawImage(lg.fonte, 0, 0, w, h);
-    var src = tg.getImageData(0, 0, w, h).data, passo = Math.max(2, Math.round(2.4 * dpr)), ponto = Math.max(1, Math.round(1.25 * dpr));
+    var src = tg.getImageData(0, 0, w, h).data, passo = Math.max(2, Math.round(2 * dpr)), ponto = Math.max(1, Math.round(1.25 * dpr));
     function camada(c, forca) {
       var out = document.createElement('canvas'); out.width = w; out.height = h;
       var og = out.getContext('2d'), img = og.createImageData(w, h), d = img.data;
@@ -121,7 +121,7 @@
           var borda = x < passo || y < passo || x + passo >= w || y + passo >= h ||
             src[(y * w + x - passo) * 4 + 3] < 28 || src[(y * w + x + passo) * 4 + 3] < 28 ||
             src[((y - passo) * w + x) * 4 + 3] < 28 || src[((y + passo) * w + x) * 4 + 3] < 28;
-          var alfa = Math.min(255, a * linha * forca * (borda ? 1.35 : 0.62));
+          var alfa = Math.min(255, a * linha * forca * (borda ? 1.5 : 0.7));
           for (var dy = 0; dy < ponto && y + dy < h; dy++) for (var dx = 0; dx < ponto && x + dx < w; dx++) {
             var k = ((y + dy) * w + x + dx) * 4;
             d[k] = c[0]; d[k + 1] = c[1]; d[k + 2] = c[2]; d[k + 3] = alfa;
@@ -140,7 +140,7 @@
 
   function medir() {
     if (!ctx) return;
-    dpr = Math.min(window.devicePixelRatio || 1, fraco ? 1.25 : 1.75);
+    dpr = Math.min(window.devicePixelRatio || 1, fraco ? 1.25 : 2);
     W = innerWidth; H = innerHeight;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
@@ -242,14 +242,15 @@
     // se desloca sin(giro) × profundidade, o que mostra a lateral quando ele gira
     var sp = sprite(atual);
     if (sp) {
-      var camadas = fraco ? 4 : 8, prof = S * 0.3, ca = Math.cos(ang), sa = Math.sin(ang);
+      var camadas = fraco ? 3 : 5, prof = S * 0.12, ca = Math.cos(ang), sa = Math.sin(ang);  // volume discreto: mais profundidade borra
       var pisca = giro > 0 ? 0.75 + 0.25 * Math.abs(Math.sin(t * 47)) : 1;
       ctx.save();
       if (forma < 1) { ctx.beginPath(); ctx.rect(0, ly + sp.h / 2 - sp.h * forma, W, sp.h * forma + 2); ctx.clip(); }
       for (var j = camadas - 1; j >= 0; j--) {
         var z = (j / (camadas - 1) - 0.5) * prof, frenteCamada = j === 0;
-        ctx.globalAlpha = forma * pisca * (frenteCamada ? 1 : 0.28 + 0.4 * (1 - j / (camadas - 1)));
+        ctx.globalAlpha = forma * pisca * (frenteCamada ? 1 : 0.14 + 0.3 * (1 - j / (camadas - 1)));
         ctx.globalCompositeOperation = frenteCamada ? 'lighter' : 'source-over';
+        ctx.imageSmoothingQuality = 'high';
         ctx.setTransform(dpr * ca, 0, 0, dpr, dpr * (cx + sa * z), dpr * ly);
         ctx.drawImage(frenteCamada ? sp.frente : sp.tras, -sp.w / 2, -sp.h / 2, sp.w, sp.h);
       }
