@@ -72,6 +72,49 @@ def test_simulacao_mostra_a_conta_real():
     assert 'class="end"' in com_contato and 'class="zap"' in com_contato
 
 
+def test_arte_aprovada_sem_etiqueta_nem_codigo_interno(dados):
+    p, lams, _ = dados["por_id"]["P01"]
+    texto = lambda status: re.sub(r"data:[^\"')]+", "", I.lamina_html(p, status, lams[1], 2, len(lams), dados["cfg"]))  # noqa: E731
+    assert "P01" not in texto("aprovado") and "Rascunho" not in texto("aprovado") and "02/06" in texto("aprovado")
+    assert "P01 · 02/06" in texto("rascunho") and "Rascunho" in texto("rascunho")
+
+
+def test_capa_tem_simbolo_grande_so_quando_o_rascunho_pede(dados):
+    p01 = dados["por_id"]["P01"][1][0]
+    assert p01["simbolo"] is True and p01["sub"] == "Contabilidade consultiva e auditoria."
+    assert dados["por_id"]["P03"][1][0]["simbolo"] is False
+
+
+def test_lamina_com_varios_itens_vira_lista(dados):
+    p, lams, _ = dados["por_id"]["P01"]
+    html = I.lamina_html(p, "aprovado", lams[2], 3, len(lams), dados["cfg"])
+    assert '<ul class="itens">' in html and html.count("<li>") == 5
+    assert "<li>Empresas do Simples, do presumido e do real</li>" in html and "<li>Pessoas físicas com imóveis</li>" in html
+
+
+@pytest.mark.skipif(not _tem_playwright(), reason="Playwright ausente")
+def test_simbolo_da_capa_mantem_a_proporcao_original(dados):
+    from concurrent.futures import ThreadPoolExecutor
+
+    from PIL import Image
+
+    def medir(html):
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as pw:
+            nav = pw.chromium.launch()
+            pg = nav.new_page(viewport={"width": I.FEED[0], "height": I.FEED[1]})
+            pg.set_content(html)
+            r = pg.evaluate("(() => { const q = document.querySelector('.meio img').getBoundingClientRect(); return [q.width, q.height]; })()")
+            nav.close()
+        return r
+
+    p, lams, _ = dados["por_id"]["P01"]
+    with ThreadPoolExecutor(max_workers=1) as ex:  # thread própria: a suíte e2e mantém um Playwright síncrono aberto
+        largura, altura = ex.submit(medir, I.lamina_html(p, "aprovado", lams[0], 1, len(lams), dados["cfg"])).result()
+    original = Image.open(RAIZ / "site" / "assets" / "marca" / "orgatec-original.png").size
+    assert abs(largura / altura - original[0] / original[1]) < 0.02
+
+
 def test_regras_das_pecas(dados):
     for p, status, lam, html in dados["casos"] + [(None, "rascunho", None, h) for h in dados["stories_html"]]:
         texto = re.sub(r"data:[^\"')]+", "", html)

@@ -117,7 +117,7 @@ def laminas(peca: dict) -> tuple[dict, list[dict]]:
         r = (rotulo or "").lower()
         if i == 0:
             partes = re.sub(r"\s*\([^)]*\)\s*$", "", resto).split(" · ")  # o parêntese final é nota de arte
-            saida.append({"tipo": "capa", "titulo": partes[0], "sub": " · ".join(partes[1:])})
+            saida.append({"tipo": "capa", "titulo": partes[0], "sub": " · ".join(partes[1:]), "simbolo": "símbolo grande" in resto})
         elif r.startswith("o que fazer"):
             saida.append({"tipo": "fazer", "titulo": rotulo, "itens": [x.rstrip(".") for x in resto.split(" · ")]})
         elif r == "fontes":
@@ -169,6 +169,9 @@ svg{{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-li
   background:var(--brand-soft);color:var(--hl)}}
 .chip.rascunho{{background:transparent;color:var(--muted);border:2px dashed var(--line)}}
 .meio{{flex:1;display:flex;flex-direction:column;justify-content:center;gap:28px;padding:40px 0}}
+.meio img{{align-self:flex-start}}
+.itens{{display:flex;flex-direction:column;gap:20px;list-style:none;font:400 44px/1.25 var(--f-body)}}
+.itens li{{padding-left:24px;border-left:5px solid var(--hl)}}
 .eyebrow{{font:500 22px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hl)}}
 .barra{{width:96px;height:8px;border-radius:4px;background:var(--hl)}}
 h1{{font-family:var(--f-display);font-weight:700;letter-spacing:-.03em;line-height:1.05}}
@@ -213,18 +216,25 @@ def _zap(cfg: dict) -> str:
             f'<p class="numero">{escape(cfg["w"])}</p>')
 
 
+def _maiuscula(texto: str) -> str:
+    return texto[:1].upper() + texto[1:]
+
+
 def lamina_html(peca: dict, status: str, lam: dict, n: int, total: int, cfg: dict) -> str:
     tipo = lam["tipo"]
     if tipo == "capa":
         tam = 92 if len(lam["titulo"]) <= 40 else 76 if len(lam["titulo"]) <= 70 else 64
         publico = "" if peca["publico"].lower() == "geral" else f'<p class="eyebrow">{escape(peca["publico"])}</p>'
-        meio = (f'{publico}<div class="barra"></div>'
+        simbolo = M.logo_img(340) if lam.get("simbolo") else ""
+        meio = (f'{simbolo}{publico}<div class="barra"></div>'
                 f'<h1 style="font-size:{tam}px">{_md(lam["titulo"])}</h1>' + (f'<p class="sub">{_md(lam["sub"])}</p>' if lam["sub"] else ""))
     elif tipo == "ideia":
-        meio = ((f'<h2>{_md(lam["titulo"])}</h2>' if lam["titulo"] else "") +
-                f'<p class="corpo{"" if lam["titulo"] else " so"}">{_md(lam["corpo"])}</p>')
+        partes = lam["corpo"].split(" · ")
+        texto = (f'<ul class="itens">{"".join(f"<li>{_md(_maiuscula(x.rstrip(chr(46))))}</li>" for x in partes)}</ul>' if len(partes) > 1
+                 else f'<p class="corpo{"" if lam["titulo"] else " so"}">{_md(_maiuscula(lam["corpo"]))}</p>')
+        meio = (f'<h2>{_md(lam["titulo"])}</h2>' if lam["titulo"] else "") + texto
     elif tipo == "fazer":
-        itens = "".join(f'<li><span class="ic">{_icone(CHECK, 34)}</span><span>{_md(x)}</span></li>' for x in lam["itens"])
+        itens = "".join(f'<li><span class="ic">{_icone(CHECK, 34)}</span><span>{_md(_maiuscula(x))}</span></li>' for x in lam["itens"])
         meio = f'<h2>{_md(lam["titulo"])}</h2><ul class="lista">{itens}</ul>'
     elif tipo == "fontes":
         itens = "".join(f"<li>{_md(x)}</li>" for x in lam["itens"])
@@ -235,8 +245,9 @@ def lamina_html(peca: dict, status: str, lam: dict, n: int, total: int, cfg: dic
         meio = (f'<h2>{_md(lam["titulo"])}</h2>{_zap(cfg)}'
                 f'<p class="rt">Responsável técnico: {escape(RT[0])} · {escape(RT[1])}</p>')
     seta = "<b>Arraste →</b>" if tipo == "capa" and total > 1 else ""
+    codigo = "" if status == "aprovado" else f'{escape(peca["id"])} · '  # o código da peça é interno: não vai na arte final
     corpo = (f'<main class="f">{_topo(peca, status)}<section class="meio">{meio}</section>'
-             f'<footer class="pe"><span>{escape(peca["id"])} · {n:02d}/{total:02d}</span>{seta}</footer></main>')
+             f'<footer class="pe"><span>{codigo}{n:02d}/{total:02d}</span>{seta}</footer></main>')
     return M.documento(corpo, CSS, *FEED)
 
 
