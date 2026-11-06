@@ -1,0 +1,48 @@
+name: Boletim da Janela de Campo (teste de deploy em prévia)
+
+# TESTE: gera o boletim, entra no Google por federação de identidade (sem chave) e publica SÓ num canal de prévia
+# (teste-actions, expira em 1 dia). Não toca no canal ao vivo (orgatec.io), não tem cron e não substitui o agendador
+# do Windows. A federação só aceita este repositório e esta branch. Plano: docs/ideias/boletim-no-actions.md
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ideia/boletim-actions]
+    paths:
+      - .github/workflows/boletim-campo-teste-deploy.yml
+
+concurrency:
+  group: boletim-campo-teste-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # token OIDC para a federação com o Google
+
+jobs:
+  previa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install httpx defusedxml Pillow playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: python tools/restaurar_dados_do_site.py
+      - run: python tools/gerar_boletim_campo.py
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/295512971453/locations/global/workloadIdentityPools/github-actions/providers/github-orgatec
+          service_account: boletim-deploy@orgatec-site.iam.gserviceaccount.com
+
+      - name: Publicar só no canal de prévia
+        run: npx --yes firebase-tools@15.34.1 hosting:channel:deploy teste-actions --expires 1d --project orgatec-site
