@@ -1,7 +1,7 @@
 # Holograma mais nítido
 
-- **Situação:** em prévia
-- **Branch:** `ideia/holograma-nitido`
+- **Situação:** lançada em 05/11/2026
+- **Branch:** `ideia/holograma-nitido` (removida)
 - **Prévia:** https://orgatec-site--ideia-holograma-nitido-2hlv5qgd.web.app
 
 ## Problema
