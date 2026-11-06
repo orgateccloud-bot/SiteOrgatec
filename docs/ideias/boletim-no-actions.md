@@ -28,11 +28,11 @@ Rodar o mesmo gerador num runner do GitHub, com a publicação feita sem chave d
 - **Publicação sem chave:** a ação `FirebaseExtended/action-hosting-deploy` só documenta chave JSON. Usar `firebase-tools` com credencial da federação (ADC), sem chave, **não foi confirmado** na documentação oficial; precisa de um teste real antes de qualquer ativação.
 - **Faturamento:** não se sabe se o Hosting exige o plano Blaze para a federação funcionar. A conta de faturamento do projeto está fechada (ver o estudo de custos).
 - **Horário:** o `schedule` do GitHub roda em UTC, pode atrasar e só vale na branch padrão. Os horários de Brasília (05h, 11h, 17h) são 08h, 14h e 20h UTC (sem horário de verão desde 2019).
-- **Rede:** as fontes do boletim e do cartão precisam responder a partir dos IPs do GitHub; só uma execução real mostra.
+- **Rede:** testado em 06/11/2026 (execução do protótipo na branch): as fontes (MET Norway, notícias do agro) responderam a partir do GitHub e o boletim saiu com 20 polos e o cartão do status. Uma falha transitória do MET Norway apareceu numa execução local; o gerador já registra o erro e mantém o boletim anterior, mas convém medir a frequência antes de ativar.
 
 ## Fontes e validação
 
-- Cota e preço do Actions: `docs/github-actions-e-custos-2026-11.md` (arquivo local, fora do git). Em resumo: o plano Free tem US$ 12/mês de computação (cerca de 2.000 min no Linux); 3 execuções por dia de cerca de 4 min dão perto de 360 min/mês, dentro da cota.
+- Cota e preço do Actions: `docs/github-actions-e-custos-2026-11.md` (arquivo local, fora do git). Em resumo: o plano Free tem US$ 12/mês de computação (cerca de 2.000 min no Linux); a execução de teste levou 45 s (cobrada como 1 min); 3 por dia dão cerca de 90 a 100 min/mês, bem dentro da cota.
 - Federação Google: documentação do `google-github-actions/auth` (versão 3) e do Workload Identity Federation. Quem aprova: o usuário, por mexer em IAM do projeto `orgatec-site`.
 
 ## Decisões que são do usuário
