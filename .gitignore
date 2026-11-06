@@ -26,3 +26,11 @@ tools/logs/
 tools/cache/
 .claude/settings.local.json
 .claude/worktrees/
+
+# Estudos de custos e arquivo de documentos substituídos: ficam fora do git (decisão de 05/11/2026)
+docs/relatorio-custos-*.md
+docs/custos-*.md
+docs/levantamento-workspace-*.md
+docs/mapeamento-custos-*.md
+docs/github-actions-*.md
+docs/_arquivo/

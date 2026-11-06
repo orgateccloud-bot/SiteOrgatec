@@ -33,7 +33,7 @@ Um incidente no escritório atinge vários clientes ao mesmo tempo. Esse efeito 
 
 **Dez primeiras ações (detalhe na seção 12):**
 
-1. Confirmar segunda etapa forte e códigos de recuperação em `orgatec.cloud@gmail.com`.
+1. Confirmar segunda etapa forte e códigos de recuperação na conta `orgatec@orgatec.io` (antes `orgatec.cloud@gmail.com`: é a mesma conta).
 2. Proteger a recuperação da única conta proprietária: decisão da direção de 04/11/2026 é manter `orgatec@orgatec.io` como proprietária única.
 3. Trocar a senha citada na T12 e confirmar as demais credenciais expostas.
 4. Fazer um backup real dos dados do escritório e testar a restauração. O backup antigo, do projeto aposentado, foi desativado.
@@ -98,7 +98,7 @@ O texto do pedido previa que a configuração do Firebase seria desconhecida. Co
 
 | Item | Estado | Marca |
 |---|---|---|
-| Proprietário (`roles/owner`) | Em 03/11/2026, só `orgatec.cloud@gmail.com`. Em 04/11/2026, só `orgatec@orgatec.io`, sem `SetIamPolicy` correspondente no log. Causa não esclarecida [NC] | [V] |
+| Proprietário (`roles/owner`) | Em 03/11/2026, só `orgatec.cloud@gmail.com`. Em 04/11/2026, só `orgatec@orgatec.io`, sem `SetIamPolicy` no log. **Esclarecido em 05/11/2026:** é a **mesma conta Google**, cujo e-mail passou de `orgatec.cloud@gmail.com` para `orgatec@orgatec.io` (aviso do Google Payments). Não há duas contas | [V/I] |
 | Organização no Google Cloud | Existe `orgatec-cloud-org`, mas **`orgatec-site` está fora dela** (`parent: null`) | [V] |
 | Faturamento | **Desligado**, sem conta vinculada; plano gratuito (Spark) | [V] |
 | Firestore | `southamerica-east1`, Native, **0 coleções** | [V] |
@@ -430,7 +430,7 @@ As respostas citam a **Trilha A** (incidente com dado pessoal) da seção 11. O 
 
 **Criticidade 15 (alta).** RTO 4 h · MTTD 1 h · MTTR 24 h.
 
-- **Cenário.** Invasão de `orgatec.cloud@gmail.com`, Hostinger, GitHub, gov.br, Athenas ou Supabase. A conta Google é hoje ponto único do projeto, e pode ser também a caixa dos alertas.
+- **Cenário.** Invasão da conta `orgatec@orgatec.io` (antes `orgatec.cloud@gmail.com`), Hostinger, GitHub, gov.br, Athenas ou Supabase. A conta Google é hoje ponto único do projeto, e pode ser também a caixa dos alertas.
 - **Riscos.** Publicar conteúdo falso em `orgatec.io`, excluir o projeto, trocar o DNS, ler dados, redirecionar e-mail.
 - **Firebase/Google.** O proprietário [gerencia papéis e faturamento, exclui e restaura projeto](https://firebase.google.com/docs/projects/iam/roles-basic). O projeto está fora da organização `orgatec-cloud-org`, logo não herda política central nem Security Command Center Standard. As chaves sem validade de `orgatec` e `orgatec-prod` são outro caminho de acesso, sem segunda etapa. O Google recomenda [mais de um proprietário e migrar produção para organização](https://docs.cloud.google.com/resource-manager/docs/project-suspension-guidelines). A MFA é [obrigatória para contas pessoais em consoles desde 12/05/2025](https://docs.cloud.google.com/docs/authentication/mfa-requirement), mas o método atual não foi verificado. Duas contas registradas no `gcloud` do PC aumentam a chance de erro humano.
 - **Prevenção.** Conta individual para cada pessoa (5.16), chave de acesso (8.5), revisão trimestral (5.18), conta de emergência guardada offline (8.2), alerta para `SetIamPolicy`, Workspace ou Cloud Identity no domínio (5.23).
