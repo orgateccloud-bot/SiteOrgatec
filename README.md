@@ -209,5 +209,6 @@ Ficam na Janela de Campo, depois do boletim. A configuração única está em `t
   - `destaques/*.png` (capas, 1080 × 1920);
   - `feed/pNN-MM.png` (lâminas 1080 × 1350; `pNN-capa.png` para peça ainda "a escrever");
   - `stories/DD-MM.png` (véspera de prazo, 1080 × 1920);
-  - `simulacao-perfil.html` (simulação local do perfil, abre do disco).
+  - `simulacao-perfil.html` (simulação local e interativa do perfil, abre do disco: toque na peça abre o carrossel, com setas, teclado e arraste, e os stories avançam sozinhos).
+- **Estilo:** vidro azul escuro (`VIDRO` e `FUNDO` em `tools/modelos_instagram.py`), derivado só dos tokens da paleta. No Instagram a peça é imagem: a interação fica na simulação.
 - **Regras das peças:** etiqueta RASCUNHO até o status `aprovado`; verde só no botão do WhatsApp; sem o endereço do site enquanto `config.ambiente` não for `producao` (vale também para o cartão da Janela de Campo); fontes e CRC do responsável técnico na última lâmina.

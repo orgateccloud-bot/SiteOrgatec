@@ -158,44 +158,54 @@ def config_site() -> dict:
 
 # ---------- desenho
 
+# Vidro azul escuro: tudo derivado dos tokens da paleta (ink em transparência sobre brilhos de brand e hl)
+FUNDO = ("radial-gradient(640px 640px at 90% 6%,color-mix(in srgb,var(--brand) 62%,transparent),transparent 72%),"
+         "radial-gradient(760px 760px at 4% 98%,color-mix(in srgb,var(--hl) 34%,transparent),transparent 74%),"
+         "radial-gradient(560px 560px at 34% 40%,var(--brand-soft),transparent 76%),var(--bg)")
+VIDRO = ("background:linear-gradient(150deg,color-mix(in srgb,var(--ink) 13%,transparent),color-mix(in srgb,var(--ink) 4%,transparent));"
+         "backdrop-filter:blur(36px) saturate(150%);border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);"
+         "box-shadow:0 34px 90px color-mix(in srgb,var(--bg) 78%,transparent),inset 0 1.5px 0 color-mix(in srgb,var(--ink) 28%,transparent)")
+SUAVE = "color-mix(in srgb,var(--ink) 78%,transparent)"
+
 CSS = f"""
-.f{{height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:76px 80px 64px;
-  background:radial-gradient(820px 640px at 100% 0,var(--brand-soft),transparent 70%),var(--bg)}}
+.f{{height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:64px 56px 56px;background:{FUNDO}}}
+.vidro{{width:100%;display:flex;flex-direction:column;gap:28px;padding:56px 52px;border-radius:36px;{VIDRO}}}
 svg{{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}}
 .topo{{display:flex;justify-content:space-between;align-items:center;gap:16px}}
 .marca{{display:flex;align-items:center;gap:14px;font:800 30px/1 var(--f-display);letter-spacing:-.02em}}
 .chips{{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}}
 .chip{{font:500 18px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;padding:10px 16px;border-radius:999px;
-  background:var(--brand-soft);color:var(--hl)}}
-.chip.rascunho{{background:transparent;color:var(--muted);border:2px dashed var(--line)}}
-.meio{{flex:1;display:flex;flex-direction:column;justify-content:center;gap:28px;padding:40px 0}}
-.meio img{{align-self:flex-start}}
+  color:var(--ink);{VIDRO}}}
+.chip.rascunho{{background:transparent;backdrop-filter:none;box-shadow:none;color:{SUAVE};border:2px dashed {SUAVE}}}
+.meio{{flex:1;display:flex;align-items:center;padding:32px 0}}
+.vidro img{{align-self:flex-start}}
 .itens{{display:flex;flex-direction:column;gap:20px;list-style:none;font:400 44px/1.25 var(--f-body)}}
 .itens li{{padding-left:24px;border-left:5px solid var(--hl)}}
 .eyebrow{{font:500 22px/1.2 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--hl)}}
 .barra{{width:96px;height:8px;border-radius:4px;background:var(--hl)}}
 h1{{font-family:var(--f-display);font-weight:700;letter-spacing:-.03em;line-height:1.05}}
 h2{{font:700 60px/1.1 var(--f-display);letter-spacing:-.02em}}
-.sub{{font:500 30px/1.3 var(--f-mono);color:var(--muted)}}
+.sub{{font:500 30px/1.3 var(--f-mono);color:{SUAVE}}}
 .corpo{{font:400 48px/1.38 var(--f-body);color:var(--ink)}}
 .corpo.so{{font-size:58px}}
 strong{{font-weight:600;color:var(--hl)}}
 .lista{{display:flex;flex-direction:column;gap:26px;list-style:none}}
 .lista li{{display:flex;gap:22px;align-items:flex-start;font:400 38px/1.3 var(--f-body)}}
-.lista li span.ic{{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:var(--brand-soft);color:var(--brand);margin-top:-2px}}
+.lista li span.ic{{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;color:var(--hl);{VIDRO};margin-top:-2px}}
 .fontes{{display:flex;flex-direction:column;gap:12px;list-style:none;font:500 23px/1.35 var(--f-mono);color:var(--ink)}}
-.fontes li{{padding-left:22px;border-left:3px solid var(--line)}}
-.consulta{{font:500 22px/1 var(--f-mono);color:var(--muted)}}
+.fontes li{{padding-left:22px;border-left:3px solid {SUAVE}}}
+.consulta{{font:500 22px/1 var(--f-mono);color:{SUAVE}}}
 .zap{{display:inline-flex;align-items:center;gap:16px;align-self:flex-start;padding:22px 34px;border-radius:999px;
   background:{CONTATO["contato"]};color:{CONTATO["sobre-contato"]};font:600 34px/1 var(--f-body)}}
 .numero{{font:600 40px/1 var(--f-display)}}
-.rt{{font:400 24px/1.35 var(--f-body);color:var(--muted)}}
-.pe{{display:flex;justify-content:space-between;align-items:center;font:500 22px/1 var(--f-mono);color:var(--muted)}}
-.pe b{{color:var(--brand);font-weight:500}}
-.st{{padding:{STORY_MARGENS[0]}px 80px {STORY_MARGENS[1]}px}}
-.st h1{{font-size:96px}}
-.st .corpo{{font-size:46px}}
-.capa-destaque{{height:100%;display:grid;place-items:center;background:radial-gradient(700px 700px at 50% 50%,var(--brand-soft),transparent 72%),var(--bg);color:var(--hl)}}
+.rt{{font:400 24px/1.35 var(--f-body);color:{SUAVE}}}
+.pe{{display:flex;justify-content:space-between;align-items:center;font:500 22px/1 var(--f-mono);color:{SUAVE}}}
+.pe b{{color:var(--hl);font-weight:500}}
+.st{{padding:{STORY_MARGENS[0]}px 56px {STORY_MARGENS[1]}px}}
+.st h1{{font-size:88px}}
+.st .corpo{{font-size:44px}}
+.capa-destaque{{height:100%;display:grid;place-items:center;background:{FUNDO};color:var(--hl)}}
+.disco{{width:800px;height:800px;border-radius:50%;display:grid;place-items:center;{VIDRO}}}
 .perfil{{height:100%;display:grid;place-items:center;background:radial-gradient(560px 560px at 50% 45%,var(--brand-soft),transparent 75%),var(--bg)}}
 """
 
@@ -246,7 +256,7 @@ def lamina_html(peca: dict, status: str, lam: dict, n: int, total: int, cfg: dic
                 f'<p class="rt">Responsável técnico: {escape(RT[0])} · {escape(RT[1])}</p>')
     seta = "<b>Arraste →</b>" if tipo == "capa" and total > 1 else ""
     codigo = "" if status == "aprovado" else f'{escape(peca["id"])} · '  # o código da peça é interno: não vai na arte final
-    corpo = (f'<main class="f">{_topo(peca, status)}<section class="meio">{meio}</section>'
+    corpo = (f'<main class="f">{_topo(peca, status)}<section class="meio"><div class="vidro">{meio}</div></section>'
              f'<footer class="pe"><span>{codigo}{n:02d}/{total:02d}</span>{seta}</footer></main>')
     return M.documento(corpo, CSS, *FEED)
 
@@ -262,8 +272,8 @@ def story_html(story: dict, base: dict | None, lams: list[dict], status: str, cf
     peca = {"id": "Story", "pilar": base["pilar"] if base else "agenda"}
     fontes_html = (f'<ul class="fontes">{"".join(f"<li>{_md(x)}</li>" for x in citadas)}</ul>'
                    f'<p class="consulta">{escape(fontes["consulta"])} · {escape(RT[1])}</p>') if citadas else ""
-    corpo = (f'<main class="f st">{_topo(peca, status)}<section class="meio"><p class="eyebrow">Prazo · {escape(story["prazo"])}</p>'
-             f'<div class="barra"></div><h1>{_md(titulo)}</h1>{detalhe}</section>'
+    corpo = (f'<main class="f st">{_topo(peca, status)}<section class="meio"><div class="vidro"><p class="eyebrow">Prazo · {escape(story["prazo"])}</p>'
+             f'<div class="barra"></div><h1>{_md(titulo)}</h1>{detalhe}</div></section>'
              f'<footer style="display:flex;flex-direction:column;gap:18px">{fontes_html}'
              f'<p class="rt">Toque na figurinha para falar no WhatsApp · {escape(cfg["w"])}</p></footer></main>')
     return M.documento(corpo, CSS, *STORY)
@@ -271,8 +281,8 @@ def story_html(story: dict, base: dict | None, lams: list[dict], status: str, cf
 
 def destaque_html(nome: str) -> str:
     chave = _chave(nome)
-    miolo = M.logo_img(560) if chave == "quem-somos" else _icone(ICONES[_icone_de(chave)], 520)
-    return M.documento(f'<main class="capa-destaque">{miolo}</main>', CSS, *STORY)
+    miolo = M.logo_img(460) if chave == "quem-somos" else _icone(ICONES[_icone_de(chave)], 440)
+    return M.documento(f'<main class="capa-destaque"><div class="disco">{miolo}</div></main>', CSS, *STORY)
 
 
 def perfil_html() -> str:
@@ -289,24 +299,98 @@ def _icone_de(chave: str) -> str:
 
 # ---------- simulação do perfil
 
+# Visor da simulação: abre carrossel ou stories, navega por setas, teclado e arraste; stories avançam a cada 5 s.
+# Só existe neste arquivo local: uma publicação no Instagram é imagem e não roda script.
+VISOR_JS = """
+(function () {
+  var visor = document.getElementById('visor'), img = visor.querySelector('img'), barras = visor.querySelector('.barras');
+  var titulo = visor.querySelector('.titulo'), conta = visor.querySelector('.conta'), fechar = visor.querySelector('.fechar');
+  var parado = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var grupo = null, pos = 0, relogio = null, origem = null, inicioX = null;
+
+  function mostrar() {
+    clearTimeout(relogio);
+    img.src = grupo.imagens[pos];
+    titulo.textContent = grupo.titulo;
+    conta.textContent = (pos + 1) + '/' + grupo.imagens.length;
+    barras.className = 'barras' + (grupo.stories ? ' auto' : '');
+    barras.innerHTML = grupo.imagens.map(function (_, i) {
+      return '<i class="' + (i < pos ? 'feita' : i === pos ? 'agora' : '') + '"></i>';
+    }).join('');
+    if (grupo.stories && !parado) relogio = setTimeout(function () { andar(1); }, 5000);
+  }
+  function abrir(chave, i, quem) {
+    if (!GRUPOS[chave] || !GRUPOS[chave].imagens.length) return;
+    grupo = GRUPOS[chave]; pos = i || 0; origem = quem;
+    visor.hidden = false; mostrar(); fechar.focus();
+  }
+  function sair() {
+    clearTimeout(relogio); visor.hidden = true; img.removeAttribute('src');
+    if (origem) origem.focus();
+  }
+  function andar(passo) {
+    var novo = pos + passo;
+    if (novo < 0) return;
+    if (novo >= grupo.imagens.length) { if (grupo.stories) sair(); return; }
+    pos = novo; mostrar();
+  }
+  document.addEventListener('click', function (e) {
+    var alvo = e.target.closest('[data-abrir]');
+    if (alvo) { e.preventDefault(); abrir(alvo.dataset.abrir, Number(alvo.dataset.i || 0), alvo); return; }
+    var seta = e.target.closest('[data-passo]');
+    if (seta) andar(Number(seta.dataset.passo));
+    else if (e.target === visor || e.target === fechar) sair();
+  });
+  document.querySelectorAll('[data-abrir]:not(a)').forEach(function (el) {
+    el.tabIndex = 0; el.setAttribute('role', 'button');
+  });
+  document.addEventListener('keydown', function (e) {
+    if (visor.hidden) {
+      var alvo = e.target.closest ? e.target.closest('[data-abrir]') : null;
+      if (alvo && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault(); abrir(alvo.dataset.abrir, Number(alvo.dataset.i || 0), alvo);
+      }
+      return;
+    }
+    if (e.key === 'Escape') sair();
+    else if (e.key === 'ArrowRight') andar(1);
+    else if (e.key === 'ArrowLeft') andar(-1);
+  });
+  var quadro = visor.querySelector('figure');
+  quadro.addEventListener('pointerdown', function (e) { inicioX = e.clientX; });
+  quadro.addEventListener('pointerup', function (e) {
+    if (inicioX === null) return;
+    var d = e.clientX - inicioX; inicioX = null;
+    if (Math.abs(d) > 40) andar(d < 0 ? 1 : -1);
+  });
+  quadro.addEventListener('pointercancel', function () { inicioX = null; });
+})();
+"""
+
+
 def simulacao_html(perf: dict, pecas: list[dict], stories: list[dict], cfg: dict) -> str:
     cores = ";".join(f"--{k}:{v}" for k, v in M.cores().items())
     grade = []
     for p in reversed(pecas):  # o perfil mostra a mais recente primeiro
         capa = p["arquivos"][0]
         varias = '<span class="multi" title="carrossel">▣</span>' if len(p["arquivos"]) > 1 else ""
-        grade.append(f'<a href="#{p["id"].lower()}" title="{escape(p["id"] + " · " + p["titulo"])}"><img src="{capa}" alt="">{varias}</a>')
-    destaques = "".join(f'<figure><img src="destaques/{_chave(d)}.png" alt=""><figcaption>{escape(d)}</figcaption></figure>'
+        grade.append(f'<a href="#{p["id"].lower()}" data-abrir="{p["id"].lower()}" title="{escape(p["id"] + " · " + p["titulo"])}"><img src="{capa}" alt="">{varias}</a>')
+    grupos = {p["id"].lower(): {"titulo": f'{p["id"]} · {p["titulo"]}', "imagens": p["arquivos"]} for p in pecas}
+    grupos["stories"] = {"titulo": "Stories de prazo", "imagens": [f'stories/{s["arquivo"]}' for s in stories], "stories": True}
+    alvo = {"quem-somos": "p01", "prazos": "stories"}  # destaque com conteúdo; os demais mostram só a capa por enquanto
+    for d in perf["destaques"]:
+        grupos[f"destaque-{_chave(d)}"] = {"titulo": f"Destaque: {d}", "imagens": [f"destaques/{_chave(d)}.png"], "stories": True}
+    destaques = "".join(f'<figure data-abrir="{alvo.get(_chave(d), "destaque-" + _chave(d))}"><img src="destaques/{_chave(d)}.png" alt=""><figcaption>{escape(d)}</figcaption></figure>'
                         for d in perf["destaques"])
     secoes = []
     for p in pecas:
-        tiras = "".join(f'<img src="{a}" alt="">' for a in p["arquivos"])
+        tiras = "".join(f'<img src="{a}" alt="" data-abrir="{p["id"].lower()}" data-i="{i}">' for i, a in enumerate(p["arquivos"]))
         situacao = "a escrever" if not p["rascunho"] else SITUACAO.get(p["status"], p["status"])
         secoes.append(f'<section id="{p["id"].lower()}"><h3>{escape(p["id"])} · {escape(p["titulo"])}</h3>'
                       f'<p class="meta">{escape(p["data"])} · {escape(p["canais"])} · {escape(p["publico"])} · <b>{escape(situacao)}</b></p>'
                       f'<div class="tira">{tiras}</div></section>')
-    tiras_story = "".join(f'<figure><img src="stories/{s["arquivo"]}" alt=""><figcaption>{escape(s["data"])} · {escape(s["texto"])}</figcaption></figure>'
-                          for s in stories)
+    tiras_story = "".join(f'<figure data-abrir="stories" data-i="{i}"><img src="stories/{s["arquivo"]}" alt=""><figcaption>{escape(s["data"])} · {escape(s["texto"])}</figcaption></figure>'
+                          for i, s in enumerate(stories))
     bio = "<br>".join(escape(b) for b in perf["bio"])
     link = perf["link"].split("?")[0].removeprefix("https://")
     endereco = f'<p class="end">{escape(perf["endereco"])}</p>' if perf["contato"] else ""
@@ -318,11 +402,30 @@ def simulacao_html(perf: dict, pecas: list[dict], stories: list[dict], cfg: dict
 <style>
 :root{{{cores};--f-display:'Sora',sans-serif;--f-body:'IBM Plex Sans',sans-serif;--f-mono:'IBM Plex Mono',monospace}}
 *{{box-sizing:border-box;margin:0;padding:0}}
-body{{background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--f-body);padding:32px 16px 64px}}
-.aviso{{max-width:1240px;margin:0 auto 28px;padding:14px 18px;border:1px dashed var(--line);border-radius:14px;color:var(--muted)}}
+body{{background:{FUNDO};background-attachment:fixed;min-height:100vh;color:var(--ink);font:400 15px/1.45 var(--f-body);padding:32px 16px 64px}}
+.aviso{{max-width:1240px;margin:0 auto 28px;padding:14px 18px;border-radius:14px;color:{SUAVE};{VIDRO}}}
+[data-abrir]{{cursor:pointer;transition:transform .18s,filter .18s}}
+.tira img[data-abrir]:hover,.stories figure:hover,.dest figure:hover{{transform:translateY(-4px);filter:brightness(1.12)}}
+.visor{{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;gap:14px;padding:16px;
+  background:color-mix(in srgb,var(--bg) 62%,transparent);backdrop-filter:blur(18px)}}
+.visor[hidden]{{display:none}}
+.visor figure{{width:min(440px,calc(100vw - 32px));padding:14px;border-radius:26px;touch-action:pan-y;user-select:none;{VIDRO}}}
+.visor img{{width:100%;max-height:74vh;object-fit:contain;border-radius:16px;display:block}}
+.visor figcaption{{margin-top:10px;font-size:13px;color:{SUAVE};display:flex;justify-content:space-between;gap:12px}}
+.barras{{display:flex;gap:4px;margin-bottom:10px}}
+.barras i{{flex:1;height:4px;border-radius:2px;background:color-mix(in srgb,var(--ink) 22%,transparent);overflow:hidden}}
+.barras i.feita{{background:var(--hl)}}
+.barras i.agora::after{{content:"";display:block;height:100%;width:100%;background:var(--hl)}}
+.barras.auto i.agora::after{{animation:encher 5s linear forwards}}
+@keyframes encher{{from{{width:0}}to{{width:100%}}}}
+.visor button{{flex:none;width:46px;height:46px;border-radius:50%;color:var(--ink);font-size:24px;line-height:1;cursor:pointer;{VIDRO}}}
+.visor button:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
+.visor .fechar{{position:absolute;top:16px;right:16px}}
+@media (max-width:620px){{.visor .seta{{display:none}}}}
+@media (prefers-reduced-motion:reduce){{[data-abrir]{{transition:none}}.barras.auto i.agora::after{{animation:none}}}}
 .aviso strong{{color:var(--ink)}}
 .grade-geral{{max-width:1240px;margin:0 auto;display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap}}
-.celular{{width:390px;flex:none;background:#000;border:10px solid #1b1f27;border-radius:46px;overflow:hidden;color:#f5f5f5;position:sticky;top:24px}}
+.celular{{width:min(390px,100%);flex:none;background:#000;border:10px solid #1b1f27;border-radius:46px;overflow:hidden;color:#f5f5f5;position:sticky;top:24px}}
 .celular .tela{{height:780px;overflow-y:auto;padding:14px 0 0}}
 .barra-topo{{display:flex;justify-content:space-between;align-items:center;padding:6px 16px 12px;font-weight:600;font-size:17px}}
 .cab{{display:flex;align-items:center;gap:22px;padding:0 16px}}
@@ -370,7 +473,16 @@ Os textos vêm dos rascunhos do marketing; para atualizar, rode <code>python too
 {"".join(secoes)}
 <section><h3>Stories de véspera de prazo</h3><p class="meta">1080 × 1920 · a figurinha de link do WhatsApp entra no app, na área livre embaixo</p>
 <div class="stories">{tiras_story}</div></section></div>
-</div></body></html>"""
+</div>
+<div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Visualização da peça" hidden>
+<button type="button" class="fechar" aria-label="Fechar">×</button>
+<button type="button" class="seta" data-passo="-1" aria-label="Anterior">‹</button>
+<figure><div class="barras"></div><img alt="" draggable="false"><figcaption><span class="titulo"></span><span class="conta"></span></figcaption></figure>
+<button type="button" class="seta" data-passo="1" aria-label="Próxima">›</button>
+</div>
+<script>const GRUPOS = {json.dumps(grupos, ensure_ascii=False).replace("</", "<\\/")};
+{VISOR_JS}</script>
+</body></html>"""
 
 
 # ---------- geração

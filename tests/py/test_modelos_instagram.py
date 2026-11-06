@@ -115,6 +115,37 @@ def test_simbolo_da_capa_mantem_a_proporcao_original(dados):
     assert abs(largura / altura - original[0] / original[1]) < 0.02
 
 
+@pytest.mark.skipif(not _tem_playwright(), reason="Playwright ausente")
+def test_simulacao_abre_e_arrasta_o_carrossel():
+    from concurrent.futures import ThreadPoolExecutor
+
+    peca = {"id": "P01", "titulo": "Teste", "data": "05/11", "canais": "IG", "publico": "geral", "rascunho": "x.md",
+            "status": "rascunho", "arquivos": ["a.png", "b.png"]}
+    html = I.simulacao_html(I.perfil(), [peca], [], I.config_site())
+
+    def exercitar():
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as pw:
+            nav = pw.chromium.launch()
+            pg = nav.new_page(viewport={"width": 1200, "height": 800})
+            pg.set_content(html)
+            pg.click('.grade a[data-abrir="p01"]')
+            antes = pg.inner_text(".conta")
+            q = pg.locator(".visor figure").bounding_box()
+            pg.mouse.move(q["x"] + q["width"] - 30, q["y"] + 60)
+            pg.mouse.down()
+            pg.mouse.move(q["x"] + 30, q["y"] + 60, steps=5)
+            pg.mouse.up()
+            depois = pg.inner_text(".conta")
+            pg.keyboard.press("Escape")
+            fechou = pg.evaluate("document.getElementById('visor').hidden")
+            nav.close()
+        return antes, depois, fechou
+
+    with ThreadPoolExecutor(max_workers=1) as ex:  # thread própria: a suíte e2e mantém um Playwright síncrono aberto
+        assert ex.submit(exercitar).result() == ("1/2", "2/2", True)
+
+
 def test_regras_das_pecas(dados):
     for p, status, lam, html in dados["casos"] + [(None, "rascunho", None, h) for h in dados["stories_html"]]:
         texto = re.sub(r"data:[^\"')]+", "", html)
