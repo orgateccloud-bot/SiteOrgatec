@@ -56,6 +56,38 @@ def test_arquivo_ignorado_nao_bloqueia(repo):
     assert P.motivo_para_nao_publicar(repo) is None
 
 
+def _resposta(codigo, saida):
+    return subprocess.CompletedProcess(["firebase"], codigo, stdout=saida, stderr="")
+
+
+@pytest.mark.parametrize("saida", ["Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth",
+                                   "Error: Assertion failed: resolving hosting target of a site with no site name or target name",
+                                   "HTTP Error: 401, Request had invalid authentication credentials."])
+def test_credencial_vencida_vira_aviso_claro(monkeypatch, saida):
+    monkeypatch.setattr(P, "_firebase", lambda *a, **k: _resposta(1, saida))
+    assert P.conferir_acesso() == P.AVISO_CREDENCIAL
+    with pytest.raises(RuntimeError, match="firebase login --reauth"):
+        P.implantar()
+
+
+def test_erro_de_outro_tipo_mantem_a_mensagem_original(monkeypatch):
+    monkeypatch.setattr(P, "_firebase", lambda *a, **k: _resposta(1, "Error: quota exceeded"))
+    assert P.conferir_acesso() == "Error: quota exceeded"
+
+
+def test_acesso_ok_nao_tem_motivo(monkeypatch):
+    monkeypatch.setattr(P, "_firebase", lambda *a, **k: _resposta(0, "live"))
+    assert P.conferir_acesso() is None
+
+
+def test_credencial_vencida_para_antes_da_suite(monkeypatch, capsys):
+    monkeypatch.setattr(P, "motivo_para_nao_publicar", lambda: None)
+    monkeypatch.setattr(P, "conferir_acesso", lambda: P.AVISO_CREDENCIAL)
+    monkeypatch.setattr(P, "rodar_suite", lambda: pytest.fail("não deveria rodar a suíte"))
+    assert P.main([]) == 1
+    assert "firebase login --reauth" in capsys.readouterr().out
+
+
 def test_boletim_nao_publica_com_a_pasta_travada(monkeypatch):
     import gerar_boletim_campo as G
     implantou = []

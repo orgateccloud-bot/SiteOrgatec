@@ -18,8 +18,12 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 PROJETO = "orgatec-site"
-CONTA = "orgatec@orgatec.io"  # conta do Workspace; a Gmail fica como proprietária de reserva do projeto
+CONTA = "orgatec@orgatec.io"  # proprietária do projeto; vale também para o boletim agendado e para as prévias
 BRANCH = "main"
+# Sinais de credencial vencida na saída do Firebase CLI. "resolving hosting target" aparece no deploy quando ele não
+# consegue consultar o site padrão do projeto. firebase login:list não serve de teste: só lista as contas salvas.
+SINAIS_CREDENCIAL = ("credentials are no longer valid", "invalid authentication credentials", "resolving hosting target")
+AVISO_CREDENCIAL = f"credencial do Firebase vencida: rode firebase login --reauth e entre com {CONTA}"
 
 
 def git(*args: str, raiz: Path = RAIZ) -> str:
@@ -46,14 +50,31 @@ def motivo_para_nao_publicar(raiz: Path = RAIZ) -> str | None:
     return None
 
 
-def implantar(raiz: Path = RAIZ) -> None:
+def _firebase(*args: str, raiz: Path = RAIZ) -> subprocess.CompletedProcess:
     firebase = shutil.which("firebase")
     if not firebase:
         raise RuntimeError("Firebase CLI não encontrado no PATH")
-    cmd = [firebase, "deploy", "--only", "hosting", "--project", PROJETO, "--account", CONTA]
-    r = subprocess.run(cmd, cwd=raiz, capture_output=True, text=True, encoding="utf-8", check=False)  # nosec B603 — argumentos fixos
+    cmd = [firebase, *args, "--project", PROJETO, "--account", CONTA]
+    return subprocess.run(cmd, cwd=raiz, capture_output=True, text=True, encoding="utf-8", check=False)  # nosec B603 — argumentos fixos
+
+
+def explicar_falha(r: subprocess.CompletedProcess) -> str:
+    saida = " ".join(filter(None, (r.stderr, r.stdout))).strip()
+    if any(sinal in saida for sinal in SINAIS_CREDENCIAL):
+        return AVISO_CREDENCIAL
+    return saida
+
+
+def conferir_acesso(raiz: Path = RAIZ) -> str | None:
+    """Devolve o motivo se o Firebase não responder. Consulta real, para falhar antes dos minutos da suíte."""
+    r = _firebase("hosting:channel:list", raiz=raiz)
+    return None if r.returncode == 0 else explicar_falha(r)
+
+
+def implantar(raiz: Path = RAIZ) -> None:
+    r = _firebase("deploy", "--only", "hosting", raiz=raiz)
     if r.returncode != 0:
-        raise RuntimeError(f"publicação falhou: {r.stderr.strip() or r.stdout.strip()}")
+        raise RuntimeError(f"publicação falhou: {explicar_falha(r)}")
 
 
 def suite(raiz: Path = RAIZ) -> list[tuple[str, list[str]]]:
@@ -77,6 +98,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--simular", action="store_true", help="só confere se a pasta pode publicar")
     a = ap.parse_args(argv)
     motivo = motivo_para_nao_publicar()
+    if motivo:
+        print(f"não publicado: {motivo}")
+        return 1
+    motivo = conferir_acesso()
     if motivo:
         print(f"não publicado: {motivo}")
         return 1
