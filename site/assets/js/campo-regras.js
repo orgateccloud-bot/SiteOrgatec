@@ -33,6 +33,8 @@
   var PERIODOS = [[0, 5], [6, 9], [10, 11], [12, 14], [15, 17], [18, 23]];  // mesmos 6 períodos do boletim manual
   var GRAVIDADE = { ok: 0, atencao: 1, evitar: 2 };
   var FUSO = -3;  // horário de Brasília
+  var HORAS_UTEIS = 16;   // 05h às 20h, a janela em que as operações acontecem
+  var MAX_RESUMO = 90;    // caracteres do resumo de cada operação na região
 
   function arred(n, casas) { var f = Math.pow(10, casas || 0); return Math.round(n * f) / f; }
   function pior(a, b) { return GRAVIDADE[a] >= GRAVIDADE[b] ? a : b; }
@@ -159,10 +161,12 @@
     });
     var ok = janela(porHora, 'ok', 5, 20), ate = janela(porHora, 'atencao', 5, 20);
     var uteis = Object.keys(porHora).filter(function (k) { return k >= 5 && k <= 20; }).length;
+    // Nenhuma hora útil com previsão: falta dado, não há condição ruim. Fica em 'atenção' (não promete nada) e diz isso.
+    if (!uteis) return { estado: 'atencao', porHora: porHora, janela: null, tipoJanela: null, motivo: 'sem previsão para as horas úteis', horasPrevistas: 0 };
     var estado = ok && (ok.ate - ok.de) >= Math.min(8, uteis) ? 'ok' : (ok && ok.ate - ok.de >= 3) || (ate && ate.ate - ate.de >= 3) ? 'atencao' : 'evitar';
     var principal = Object.keys(motivos).sort(function (a, b) { return motivos[b] - motivos[a]; })[0] || null;
     var livre = ok && ok.ate - ok.de >= 2;
-    return { estado: estado, porHora: porHora, janela: livre ? ok : ate, tipoJanela: livre ? 'ok' : ate ? 'atencao' : null, motivo: principal };
+    return { estado: estado, porHora: porHora, janela: livre ? ok : ate, tipoJanela: livre ? 'ok' : ate ? 'atencao' : null, motivo: principal, horasPrevistas: uteis };
   }
 
   /* Estado da região: o de pelo menos metade dos polos (empate puxa para o pior). */
@@ -185,6 +189,33 @@
     var cont = TURNOS.map(function (t) { return horas.filter(function (h) { return h >= t[1] && h <= t[2]; }).length; });
     var i = cont.indexOf(Math.max.apply(null, cont));
     return TURNOS[i][0];
+  }
+
+  /* Resumo da operação na região, até MAX_RESUMO caracteres: o estado, a janela comum, o fator decisivo e os polos que
+     fogem do padrão. O que não couber sai do mais para o menos dispensável; o detalhe de cada polo fica no painel do polo. */
+  function resumoRegiao(op, est, ps) {
+    var com = ps.filter(function (p) { return p.ops[op].horasPrevistas > 0; });
+    if (!com.length) return 'Sem previsão para as horas úteis de hoje (05h às 20h).';
+    var lead = est === 'ok' ? 'Favorável' : est === 'atencao' ? 'Com restrição' : 'Evitar';
+    var js = com.map(function (p) { return p.ops[op].janela; });
+    var jc = js.every(Boolean) ? { de: Math.max.apply(null, js.map(function (j) { return j.de; })), ate: Math.min.apply(null, js.map(function (j) { return j.ate; })) } : null;
+    var cont = {};
+    com.forEach(function (p) { var o = p.ops[op]; if (o.estado !== 'ok' && o.motivo) cont[o.motivo] = (cont[o.motivo] || 0) + 1; });
+    var fator = Object.keys(cont).sort(function (a, b) { return cont[b] - cont[a]; })[0];
+    var fora = com.filter(function (p) { return p.ops[op].estado !== est; }).map(function (p) { return p.cfg.nome; });
+    var parcial = com.some(function (p) { return p.ops[op].horasPrevistas < HORAS_UTEIS; });
+    var partes = [[lead, 9]];
+    if (jc && jc.ate - jc.de >= 2) partes.push(['janela comum ' + textoJanela(jc), 2]);
+    if (fator && est !== 'ok') partes.push([fator, 3]);
+    if (fora.length) partes.push([fora.length <= 2 ? 'exceção: ' + listaPolos(fora) : fora.length + ' polos diferem', 1]);
+    if (parcial) partes.push(['previsão parcial do dia', 4]);
+    var texto = function () { return partes.map(function (x) { return x[0]; }).join(' · '); };
+    while (texto().length > MAX_RESUMO && partes.length > 1) {
+      var menor = 0;
+      partes.forEach(function (x, i) { if (x[1] < partes[menor][1]) menor = i; });
+      partes.splice(menor, 1);
+    }
+    return texto();
   }
 
   var PREFIXO = {
@@ -248,15 +279,10 @@
         : okP ? 'Melhor janela: ' + textoJanela(okP) + ' (horário de Brasília).' : 'Sem período livre de chuva na maior parte dos polos.';
       var ops = {};
       OPERACOES.forEach(function (op) {
-        var est = agregar(ps.map(function (p) { return p.ops[op].estado; }));
-        var porPoloTxt = ps.map(function (p) {
-          var o = p.ops[op];
-          var motivo = o.motivo ? ' (' + o.motivo + ')' : '';
-          if (o.tipoJanela === 'ok') return p.cfg.nome + ': ' + textoJanela(o.janela);
-          if (o.tipoJanela === 'atencao') return p.cfg.nome + ': com restrição das ' + textoJanela(o.janela) + motivo;
-          return p.cfg.nome + ': sem janela' + motivo;
-        }).join('; ');
-        ops[op] = [est, PREFIXO[op][est] + ' ' + porPoloTxt + '.'];
+        var comDado = ps.filter(function (p) { return p.ops[op].horasPrevistas > 0; });
+        var est = comDado.length ? agregar(comDado.map(function (p) { return p.ops[op].estado; })) : 'atencao';
+        // [estado, resumo curto, orientação]: a orientação é a recomendação de segurança, mostrada só na operação escolhida
+        ops[op] = [est, resumoRegiao(op, est, ps), comDado.length ? PREFIXO[op][est] : 'Sem previsão suficiente: consulte o próximo boletim e os avisos do INMET.'];
       });
       return { id: r.id, nome: r.nome, uf: r.uf, polos: r.polos,
         ceu: ceu || 'Sem dado suficiente para o período diurno',
@@ -314,7 +340,7 @@
       polos: e.polos.map(function (p) {
         var x = porPolo[p.id];
         return { id: p.id, nome: p.nome, uf: p.uf, regiao: p.regiao, lat: p.lat, lon: p.lon, horas: x.horas,
-          ops: OPERACOES.reduce(function (acc, op) { acc[op] = { estado: x.ops[op].estado, janela: textoJanela(x.ops[op].janela), tipoJanela: x.ops[op].tipoJanela, motivo: x.ops[op].motivo, porHora: x.ops[op].porHora }; return acc; }, {}),
+          ops: OPERACOES.reduce(function (acc, op) { acc[op] = { estado: x.ops[op].estado, janela: textoJanela(x.ops[op].janela), tipoJanela: x.ops[op].tipoJanela, motivo: x.ops[op].motivo, horasPrevistas: x.ops[op].horasPrevistas, porHora: x.ops[op].porHora }; return acc; }, {}),
           dias: x.dias };
       }),
       confianca: avisoFonte.concat([
@@ -334,5 +360,5 @@
 
   return { LIMITES: LIMITES, CRITERIOS: CRITERIOS, OPERACOES: OPERACOES, NOME_OP: NOME_OP, PERIODOS: PERIODOS, FUSO: FUSO,
     itu: itu, familia: familia, rotuloDia: rotuloDia, normalizarMet: normalizarMet, avaliar: avaliar, condicao: condicao, janela: janela,
-    diaOperacao: diaOperacao, agregar: agregar, montar: montar };
+    diaOperacao: diaOperacao, agregar: agregar, resumoRegiao: resumoRegiao, HORAS_UTEIS: HORAS_UTEIS, MAX_RESUMO: MAX_RESUMO, montar: montar };
 });

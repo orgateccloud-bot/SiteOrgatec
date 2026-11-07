@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Janela de Campo: painel que discrimina e avisa dado faltando (Fase 1)](campo-qualidade.md) | em desenvolvimento | `ideia/campo-qualidade` | ainda não gerada |
 | [Janela de Campo: boletim resistente a falha da fonte (Fase 0)](campo-confiabilidade.md) | em desenvolvimento | `ideia/campo-confiabilidade` | ainda não gerada |
 | [Vitrine em vidro azul com a logo em holograma](vidro-azul.md) | aprovada em 07/11/2026 (modelo A); falta lançar | `ideia/vidro-azul` | [link](https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html) |
 | [Holograma mais nítido](holograma-nitido.md) | lançada em 05/11/2026 | removida | [link](https://orgatec-site--ideia-holograma-nitido-2hlv5qgd.web.app) |

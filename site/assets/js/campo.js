@@ -114,6 +114,9 @@
     return fetch(url, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); });
   }
 
+  // O selo já diz o estado: no bloco da operação escolhida, o resumo não repete a palavra inicial
+  function resumoSemEstado(t) { return String(t).replace(/^(Favorável|Com restrição|Evitar)( · )?/, ''); }
+
   function poloDe(id) { return (b.polos || []).filter(function (p) { return p.id === id; })[0]; }
   function regiaoDe(id) { return b.regioes.filter(function (r) { return r.id === id; })[0]; }
   function ajustarSelecao() {
@@ -280,7 +283,7 @@
     linha.setAttribute('aria-label', r.dia.map(function (s, i) { return PERIODOS[i] + ' ' + (ESTADOS[s] ? ESTADOS[s].rotulo : 'já passou'); }).join('; '));
     q('[data-campo-nota]').textContent = r.nota;
     var op = r.ops[o.id];
-    q('[data-campo-rec]').innerHTML = '<div class="flex flex-wrap items-center gap-2"><h4 class="text-lg font-bold text-tinta">' + esc(o.nome) + '</h4>' + selo(op[0]) + '</div><p>' + esc(op[1]) + '</p>';
+    q('[data-campo-rec]').innerHTML = '<div class="flex flex-wrap items-center gap-2"><h4 class="text-lg font-bold text-tinta">' + esc(o.nome) + '</h4>' + selo(op[0]) + '</div>' + (resumoSemEstado(op[1]) ? '<p>' + esc(resumoSemEstado(op[1])) + '</p>' : '') + (op[2] ? '<p class="text-sm">' + esc(op[2]) + '</p>' : '');
     q('[data-campo-todas]').innerHTML = OPERACOES.map(function (x) { return '<div>' + selo(r.ops[x.id][0], x.nome) + '<span>' + esc(r.ops[x.id][1]) + '</span></div>'; }).join('');
     if (b.polos) {
       q('[data-campo-polos]').innerHTML = (r.polos || []).map(function (id) {
@@ -298,7 +301,8 @@
         h.setAttribute('aria-label', o.nome + ' em ' + p.nome + ', hora a hora: ' + celulas.length + ' horas; ' + (po.janela ? (po.tipoJanela === 'ok' ? 'janela favorável ' : 'janela com restrição ') + po.janela : 'sem janela') + '.');
         q('[data-campo-polo-txt]').textContent = p.nome + ': ' + ESTADOS[po.estado].rotulo.toLowerCase() + '. ' +
           (po.janela ? (po.tipoJanela === 'ok' ? 'Janela favorável das ' : 'Janela com restrição das ') + po.janela + '.' : 'Sem janela no dia.') +
-          (po.motivo && po.estado !== 'ok' ? ' Motivo mais frequente: ' + po.motivo + '.' : '');
+          (po.motivo && po.estado !== 'ok' ? ' Motivo mais frequente: ' + po.motivo + '.' : '') +
+          (po.horasPrevistas != null && po.horasPrevistas < 16 ? ' Previsão para ' + po.horasPrevistas + ' das 16 horas úteis (05h às 20h).' : '');
       }
     }
     if (b.polos && O.campoMapa) O.campoMapa.atualizar();
