@@ -90,6 +90,15 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "orgatec-api",
+          "region": "southamerica-east1"
+        }
+      }
     ]
   },
   "firestore": {
