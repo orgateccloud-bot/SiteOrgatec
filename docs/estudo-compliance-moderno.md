@@ -257,3 +257,18 @@ Classificação das 43 perguntas contra as três perguntas do DOJ, os parâmetro
 - **Correção de passagem:** `tools/gerar_design_system.py` ignora a pasta `site/assets/marca/holo/`. Sem isso, a geração parava na `desenvolvimento`.
 - **Testes:** JS, para camadas, evidência, plano e V21; e2e, para a camada depois do "sim", o indicador e o download do `.ics` sem rede.
 - **Ainda depende do responsável técnico:** os textos das camadas e os pesos (V11). Em produção, o termômetro continua oculto até a revisão.
+
+## 11. Ondas 2 e 3 executadas (07/11/2026)
+
+Tudo fica atrás da revisão técnica: em produção nada novo aparece até o responsável técnico aprovar.
+
+| Entrega | Onde | Estado |
+|---|---|---|
+| 4 perguntas de cultura e relatos (art. 57, I, V, X, XI, XII e XV do Decreto nº 11.129/2022, conferido no Planalto em 07/11/2026) | `termometro.js` (`cultura: true`) | Texto aguarda o responsável técnico (V1) |
+| Pesos por perfil com justificativa e fonte (Simples pelo art. 57, § 1º, I e II; transportador pelo § 1º, VII) | `termometro.js` → `PESOS_PERFIL`, `pesoDe` | `status: 'proposta'`: os pesos padrão continuam valendo até a aprovação (V11) |
+| Boletim de mudanças por público, montado do `historico` dos itens | `compliance/boletim.html`, `boletim.js` | Fora do índice; oculto em produção (`em-revisao.js`) |
+| Página "Como o escritório verifica" | `compliance/como-verificamos.html` | Sem nome de sistema (decisão 4 da direção) e sem taxa de acerto; oculta em produção |
+| Página de revisão do responsável técnico | `docs/revisao/revisao-tecnica.html` (fora do site) | Cada decisão leva o hash do conteúdo revisado; o registro tem `audit_hash`, conferido por `tools/conferir_revisao.py` |
+| Diagnóstico de eficácia como serviço | `docs/diagnostico-eficacia.md` | Roteiro e modelo com dados fictícios; depende da decisão comercial |
+
+**Para ir ao ar:** aprovar, na página de revisão, os textos e os pesos. Depois aplicar o registro: `REVISAO` e `PESOS_PERFIL` passam a `aprovada`, com o nome do responsável e a data. Por fim, tirar o `data-em-revisao` das páginas aprovadas.

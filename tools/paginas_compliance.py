@@ -416,6 +416,55 @@ def termometro() -> None:
               trilha=[("Compliance", "compliance/index.html"), ("Termômetro", None)])
 
 
+def boletim() -> None:
+    """Boletim de mudanças por público (onda 2 do compliance moderno). Fora do índice até a revisão técnica."""
+    corpo = "\n".join([
+        gp.intro("Compliance · Boletim", "O que mudou para cada público",
+                 "As mudanças registradas em cada ponto da reforma e do compliance, separadas por público, com a data e o link para a regra. "
+                 "Os pontos são conferidos na fonte oficial pelo menos a cada 90 dias."),
+        """        <section class="py-12" data-em-revisao>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6 md:grid-cols-2" data-boletim></div>
+        </section>""",
+    ])
+    gp.pagina("compliance/boletim.html", "Boletim de mudanças por público",
+              "Boletim da ORGATEC: o que mudou na reforma tributária e no compliance para cada público, com a fonte de cada ponto.",
+              "compliance", "autoridade", corpo, indexar=False,
+              extra=["compliance-itens.js", "boletim.js", "boletim-tela.js", "em-revisao.js"],
+              trilha=[("Compliance", "compliance/index.html"), ("Boletim", None)])
+
+
+METODO_VERIFICA = [
+    ("Cruzamento de extratos com a contabilidade",
+     "Os extratos bancários (OFX, PDF ou XML) são cruzados com o razão contábil. Cada divergência recebe uma severidade e entra no relatório da conciliação."),
+    ("Auditoria de notas avulsas do produtor rural",
+     "As notas fiscais avulsas são lidas e passam por testes determinísticos, como notas fracionadas abaixo de limites, que viram um laudo para o cliente."),
+    ("Toda a base, não amostra",
+     "Os cruzamentos olham todos os lançamentos e todas as notas do período, não uma amostra. Isso acha o que a revisão por amostragem costuma deixar passar."),
+    ("Triagem não é prova",
+     "Testes estatísticos, como a Lei de Benford, servem só para apontar onde olhar. Eles falham com poucos dados e perto de limites de aprovação; a conclusão sai da conferência do documento."),
+    ("O que ainda não medimos",
+     "Ainda não publicamos a taxa de acerto e de alarmes falsos dos cruzamentos. Quando houver medição, ela entra aqui com o método."),
+]
+
+
+def como_verifica() -> None:
+    """Página "como o escritório verifica" (onda 2). Só serviço que existe; sem dado de cliente; sem números de acerto."""
+    cartoes = "".join(f'<article class="og-cartao"><h2 class="og-cartao-titulo">{t}</h2><p class="og-cartao-texto mt-2">{x}</p></article>'
+                      for t, x in METODO_VERIFICA)
+    corpo = "\n".join([
+        gp.intro("Compliance · Método", "Como o escritório verifica",
+                 "Declarar que um controle existe é o começo. O escritório confere se ele funciona, com os documentos da própria empresa. "
+                 "Nenhum dado de cliente aparece neste site."),
+        f"""        <section class="py-12" data-em-revisao>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6 md:grid-cols-2">{cartoes}</div>
+        </section>""",
+    ])
+    gp.pagina("compliance/como-verificamos.html", "Como o escritório verifica",
+              "Como a ORGATEC confere se os controles da empresa funcionam: cruzamento de toda a base, triagem e conferência do documento.",
+              "compliance", "autoridade", corpo, indexar=False, extra=["em-revisao.js"],
+              trilha=[("Compliance", "compliance/index.html"), ("Como verificamos", None)])
+
+
 MAPA = [("compliance/index.html", "captação + autoridade"), ("compliance/termometro.html", "captação"),
         ("compliance/conformidade-tributaria.html", "captação + autoridade"), ("compliance/prevencao-lavagem.html", "autoridade"),
         ("compliance/protecao-de-dados.html", "autoridade"), ("compliance/integridade.html", "autoridade"),
@@ -428,3 +477,5 @@ def gerar() -> None:
     publicos()
     publicos_paginas()
     termometro()
+    boletim()
+    como_verifica()
