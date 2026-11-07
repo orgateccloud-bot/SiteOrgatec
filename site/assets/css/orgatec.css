@@ -300,6 +300,7 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 .chip-opcao input:checked+span{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
 .chip-opcao input:focus-visible+span{outline:3px solid var(--focus);outline-offset:2px}
 .pergunta+.pergunta{border-top:1px solid var(--line);padding-top:18px}
+.camadas-prova{border-left:3px solid var(--brand);padding:4px 0 4px 14px;display:grid;gap:10px}
 .termometro-resultado{position:sticky;top:96px}
 .termometro-resumo{display:none}
 .relatorio-impressao{display:none}

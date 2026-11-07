@@ -400,6 +400,7 @@ def termometro() -> None:
                     <div class="flex flex-wrap gap-3 mt-6">
                         <a {gp.WHATS} data-msg="Olá! Fiz o termômetro de conformidade no site da ORGATEC e quero conversar sobre o resultado." class="og-btn og-btn-contato og-btn-md">Conversar sobre o resultado</a>
                         <button type="button" class="og-btn og-btn-contorno og-btn-md" data-termometro-imprimir>Imprimir ou salvar em PDF</button>
+                        <button type="button" class="og-btn og-btn-contorno og-btn-md" data-termometro-ics hidden>Baixar plano de ação (.ics)</button>
                         <button type="button" class="og-btn og-btn-contorno og-btn-md" data-termometro-limpar>Limpar respostas</button>
                     </div>
                     <p class="text-xs text-tinta-fraca mt-4">A mensagem do WhatsApp não leva as suas respostas.</p>
@@ -411,7 +412,7 @@ def termometro() -> None:
     ])
     gp.pagina("compliance/termometro.html", "Termômetro de conformidade",
               "Termômetro de conformidade da ORGATEC: perguntas sobre conformidade tributária, prevenção à lavagem de dinheiro, LGPD e integridade, com a fonte legal de cada uma. Roda só no seu navegador.",
-              "compliance", "captação", corpo, extra=["compliance-itens.js", "termometro.js", "compliance.js"], barra=False,
+              "compliance", "captação", corpo, extra=["compliance-itens.js", "calendario.js", "termometro.js", "compliance.js"], barra=False,
               trilha=[("Compliance", "compliance/index.html"), ("Termômetro", None)])
 
 

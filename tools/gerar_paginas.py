@@ -377,7 +377,8 @@ def reforma() -> None:
 def subnav_setores(ativo: str) -> str:
     botoes = "".join(f'<a href="{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
                      for chave, rot, arq in [("agro", "Agro", "agro.html"), ("transporte", "Transporte", "transporte.html"),
-                                             ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html")])
+                                             ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html"),
+                                             ("mercado", "Cotações e notícias", "agro-mercado.html")])
     return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex flex-wrap gap-3">{botoes}</div>'
 
 
@@ -394,22 +395,46 @@ def compliance_do_setor(slug: str) -> str:
                  "bg-superficie", "compliance")
 
 
+def caminho_agro(ref: str, titulo: str, texto: str, href: str, extras: tuple = ()) -> str:
+    """Cartão de um caminho do produtor: o link principal no título e, se houver, links próximos logo abaixo."""
+    lis = "".join(f'<li><a href="{h}" class="og-link">{r}</a></li>' for r, h in extras)
+    lista = f'<ul class="mt-3 grid gap-1 text-sm">{lis}</ul>' if lis else ""
+    return (f'<article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">{ref}</span>'
+            f'<h3 class="og-cartao-titulo"><a href="{href}" class="hover:text-acao">{titulo}</a></h3>'
+            f'<p class="og-cartao-texto">{texto}</p>{lista}</article>')
+
+
+def caminhos_agro() -> str:
+    """Entrada única do produtor rural: o que ele quer fazer, em 4 caminhos que reúnem o conteúdo antes espalhado."""
+    return secao("Para o produtor rural", "O que você quer fazer hoje?", grade([
+        caminho_agro("Tempo", "Janela de Campo", "Boletim automático três vezes por dia: a janela do dia por operação, os próximos 7 dias e o satélite.",
+                     "{p}setores/janela-de-campo.html"),
+        caminho_agro("Mercado", "Cotações e notícias", "Por atividade: o indicador do CEPEA, as notícias e a legislação que mexem com o seu preço e o seu imposto.",
+                     "{p}setores/agro-mercado.html"),
+        caminho_agro("Tributos e obrigações", "Reforma, LCDPR e Funrural", "O que muda para o produtor e o que ele precisa cumprir.", "#tributos",
+                     (("Calculadora: produtor contribuinte?", "{p}ferramentas/index.html#produtor"),
+                      ("Compliance do produtor rural", "{p}compliance/publico/produtor-rural.html"),
+                      ("Alertas regionais do agro em GO, TO e PA", "{p}setores/regional.html?setor=agro"))),
+        caminho_agro("Serviços", "Auditoria rural e diagnóstico", "As notas do produtor conferidas uma a uma, com laudo, e um diagnóstico para o seu caso.",
+                     "{p}solucoes/auditoria-rural.html", (("Falar com a equipe", "{p}contato/index.html"),)),
+    ]))
+
+
 def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, alertas: bool, ferramenta: str) -> None:
     bloco_alertas = ""
     if alertas:
-        bloco_alertas = secao("Eixo GO-TO-PA", "Alertas regionais para o agro", """                <div data-alertas="agro">
-                    <div class="og-campo max-w-xs mb-6"><label class="og-campo-rotulo" for="aUf">Estado</label>
-                        <select id="aUf" class="og-campo-controle og-campo-md"><option value="GO">Goiás</option><option value="TO">Tocantins</option><option value="PA">Pará</option></select></div>
-                    <ul class="lista-alertas grid grid-cols-1 md:grid-cols-2 gap-4"></ul>
-                </div>
+        # Os alertas ficam numa página só (regional.html); aqui, o caminho até eles já no setor certo
+        bloco_alertas = secao("Eixo GO-TO-PA", "Alertas regionais para o agro", """                <p class="text-tinta-suave max-w-3xl mb-6">Os pontos de atenção do agro em Goiás, no Tocantins e no Pará, com a fonte legal de cada um, ficam numa página própria.</p>
+                <a href="regional.html?setor=agro" class="og-btn og-btn-primario og-btn-lg" data-alertas-agro>Ver os alertas do agro por estado</a>
                 <p class="mt-6"><a href="regional.html" class="og-link">Alertas de comércio atacadista e indústria →</a></p>""", "bg-superficie")
     corpo = "\n".join([
         hero(f"Setor · {nome}", titulo, lead,
              f'<a {WHATS} data-msg="Olá! Quero falar sobre a reforma tributária no setor de {nome.lower()}." class="og-btn og-btn-contato og-btn-lg">Agendar Diagnóstico com Especialista</a>'
              f'<a href="{ferramenta}" class="og-btn og-btn-sobre-palco og-btn-lg">Usar a ferramenta do setor</a>'),
         subnav_setores(slug),
+        caminhos_agro() if slug == "agro" else "",
         secao("Por que importa", f"A reforma no {nome.lower()}", f'                <p class="text-tinta-suave max-w-3xl leading-relaxed">{porque}</p>'),
-        secao("Itens", f"Pontos da reforma para {nome.lower()}", itens(destino=f"setor-{slug}", setor=slug)),
+        secao("Itens", f"Pontos da reforma para {nome.lower()}", itens(destino=f"setor-{slug}", setor=slug), "bg-fundo", "tributos" if slug == "agro" else ""),
         compliance_do_setor(slug),
         bloco_alertas,
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
@@ -503,10 +528,7 @@ def secao_agro(cfg: dict) -> str:
 def janela_de_campo() -> None:
     """Janela de Campo: boletim agrometeorológico para o produtor rural (retenção do público agro).
     Dados em assets/js/boletins-campo.js; tela em assets/js/campo.js. Boletim vencido continua como arquivo, marcado.
-    Depois do boletim, os cards por atividade (Orgatec Audi Agro, secao_agro)."""
-    import json
-    cfg_agro = json.loads(AGRO.read_text(encoding="utf-8"))
-    widgets_cepea(cfg_agro)
+    Os cards por atividade (Orgatec Audi Agro) moraram aqui; agora estão em agro_mercado()."""
     corpo = "\n".join([
         intro("Setor · Agro · Janela de Campo", "Janela de Campo: o tempo para o trabalho no campo",
               "Boletim automático para o produtor rural, atualizado três vezes por dia: por região e por operação (pulverização, plantio, colheita, manejo de animais e máquinas), a janela do dia hora a hora, os próximos 7 dias e as nuvens e a chuva por satélite."),
@@ -517,12 +539,31 @@ def janela_de_campo() -> None:
             </div>
             <p class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 text-xs text-tinta-fraca font-mono">Boletim informativo gerado automaticamente a partir das fontes listadas (previsão: MET Norway, CC BY 4.0; satélite: NASA/NOAA). Não substitui os avisos oficiais do <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a> e da Defesa Civil do seu município, nem a bula dos produtos.</p>
         </section>""",
-        secao_agro(cfg_agro),
+        secao("Mercado", "Cotações e notícias por atividade", """                <p class="text-tinta-suave max-w-3xl mb-6">O indicador do CEPEA, as notícias e a legislação de cada atividade do agro estão numa página própria.</p>
+                <a href="agro-mercado.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie"),
         faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe."),
     ])
     pagina("setores/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
            "Boletim agrometeorológico da ORGATEC para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
-           "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js", "agro-cards.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
+           "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
+
+
+def agro_mercado() -> None:
+    """Cotações e notícias por atividade (Orgatec Audi Agro): cards de secao_agro, preenchidos por assets/js/agro-cards.js.
+    Tinham sido incluídos na Janela de Campo; a página própria deixa o boletim leve e dá ao produtor um endereço para o mercado."""
+    import json
+    cfg_agro = json.loads(AGRO.read_text(encoding="utf-8"))
+    widgets_cepea(cfg_agro)
+    corpo = "\n".join([
+        intro("Setor · Agro · Mercado", "Cotações e notícias do agro por atividade",
+              "Para cada atividade, o indicador do CEPEA, as notícias e a legislação do setor, com a fonte e a data de cada item."),
+        subnav_setores("mercado"),
+        secao_agro(cfg_agro),
+        faixa_cta("O preço mexe no imposto", "Variação de preço, mudança de regime e crédito presumido do comprador alteram o resultado do produtor. Converse com a equipe."),
+    ])
+    pagina("setores/agro-mercado.html", "Cotações e notícias do agro por atividade",
+           "Cotações do CEPEA/Esalq e notícias e legislação por atividade do agro (soja, milho, boi, leite e outras), com a fonte e a data de cada item.",
+           "setores", "retenção", corpo, extra=["agro-cards.js"], trilha=[("Setores", None), ("Cotações e notícias", None)])
 
 
 def regional() -> None:
@@ -1110,6 +1151,7 @@ def abertura() -> None:
 MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("index.html", "captação: tela de abertura"), ("inicio.html", "captação"), ("tributario/index.html", "captação + autoridade"), ("reforma/index.html", "autoridade + retenção"),
     ("setores/agro.html", "captação + autoridade"), ("setores/transporte.html", "captação + autoridade"), ("setores/regional.html", "autoridade"), ("setores/janela-de-campo.html", "retenção"),
+    ("setores/agro-mercado.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
     ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),
     ("compliance/index.html", "captação + autoridade"), ("compliance/termometro.html", "captação"), ("compliance/conformidade-tributaria.html", "captação + autoridade"),
@@ -1163,7 +1205,7 @@ def testes() -> None:
                 </div>"""),
     ])
     pagina("testes/index.html", "Painel de testes", "Painel interno da fase de testes do site ORGATEC: pendências da próxima fase e autoteste.",
-           None, "interno: homologação", corpo, indexar=False, extra=["calendario.js", "validadores.js", "homologacao.js"], barra=False)
+           None, "interno: homologação", corpo, indexar=False, extra=["calendario.js", "validadores.js", "compliance-itens.js", "homologacao.js"], barra=False)
 
 
 def main() -> None:
@@ -1181,6 +1223,7 @@ def main() -> None:
           False, "{p}ferramentas/simulador.html?setor=transporte")
     regional()
     janela_de_campo()
+    agro_mercado()
     ferramentas()
     simulador()
     calendario()

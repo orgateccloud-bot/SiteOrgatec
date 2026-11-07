@@ -190,6 +190,52 @@
       corrigir: 'Aplicar a redução de 70% da locação e o redutor social residencial no cálculo do IBS e da CBS.' }
   ];
 
+  /* Camadas de prova (docs/estudo-compliance-moderno.md, seção 3.1): nas perguntas de peso 3, quem responde "sim"
+     diz também se o controle funcionou no período e se há registro que mostre. Não muda o percentual, que continua
+     medindo declarações: vira um indicador à parte. */
+  var CAMADAS = {
+    't-docs-fiscais': { funciona: 'Nos últimos 3 meses, alguma nota saiu sem os campos de IBS e CBS?', prova: 'Dá para mostrar o XML de notas recentes com os campos preenchidos?', invertida: true },
+    't-obrigacoes-2026': { funciona: 'As obrigações de 2026 foram entregues dentro do prazo até agora?', prova: 'Há recibos ou protocolos das entregas?' },
+    't-inconsistencias': { funciona: 'Os apontamentos já corrigidos sumiram da consulta do programa?', prova: 'Há registro do que foi corrigido e quando?' },
+    'p-cadastro': { funciona: 'Os cadastros dos clientes do último ano estão completos?', prova: 'Uma amostra de cadastros e registros pode ser mostrada?' },
+    'p-comunicacao': { funciona: 'O procedimento foi usado ou testado no último ano?', prova: 'Há registro das comunicações ou da declaração de não ocorrência?' },
+    'l-seguranca': { funciona: 'Acessos, senhas e cópias de segurança foram revisados no último ano?', prova: 'Há registro dessa revisão?' },
+    'tr-rntrc': { funciona: 'A revalidação deste ano já foi feita?', prova: 'Há o comprovante da ANTT?' },
+    'tr-ciot': { funciona: 'Nos últimos 3 meses, algum frete contratado saiu sem CIOT?', prova: 'Dá para listar os CIOT do período pela instituição de pagamento?', invertida: true },
+    'ru-car': { funciona: 'Os dados do CAR batem com a área e os documentos atuais do imóvel?', prova: 'Há os recibos de inscrição de cada imóvel?' },
+    'ru-itr': { funciona: 'Algum dos últimos 5 exercícios ficou sem entrega ou sem pagamento?', prova: 'Os recibos dos 5 exercícios estão guardados?', invertida: true },
+    'pq-mei-limite': { funciona: 'A receita está sendo somada mês a mês?', prova: 'Há o controle mensal de receitas?' },
+    'pq-nanoempreendedor': { funciona: 'A receita do ano está sendo somada mês a mês?', prova: 'Há extratos ou um controle que mostre a receita?' },
+    'pq-simples-opcao': { funciona: 'A comparação foi feita com números da própria empresa?', prova: 'Há a simulação guardada?' },
+    'pq-simples-docs-2027': { funciona: 'Já saiu nota de teste com os campos de IBS e CBS?', prova: 'Há o XML de teste validado?' },
+    'im-enquadramento': { funciona: 'A conta usou a receita e os imóveis do ano anterior completos?', prova: 'Há os contratos e recibos que sustentam a conta?' }
+  };
+
+  /* Quantas respostas "sim" nas perguntas com camada foram confirmadas na prática e com registro.
+     Resposta de "funciona": 'sim' confirma; em pergunta `invertida` (ex.: "alguma nota saiu sem..."), confirma o 'nao'. */
+  function evidencia(respostas, perguntas) {
+    respostas = respostas || {};
+    var r = { declaradas: 0, funcionam: 0, comProva: 0, semProva: [] };
+    (perguntas || PERGUNTAS).forEach(function (p) {
+      var c = CAMADAS[p.id];
+      if (!c || respostas[p.id] !== 'sim') return;
+      r.declaradas++;
+      var f = respostas[p.id + '__funciona'], ok = c.invertida ? f === 'nao' : f === 'sim';
+      if (ok) r.funcionam++;
+      if (ok && respostas[p.id + '__prova'] === 'sim') r.comProva++;
+      else r.semProva.push(p);
+    });
+    return r;
+  }
+
+  /* Plano de ação: pendências cujo item tem prazo de hoje em diante, em ordem de data (para o .ics). */
+  function planoDeAcao(pendencias, itensPorId, hoje) {
+    return (pendencias || []).map(function (pd) {
+      var it = itensPorId[pd.pergunta.item];
+      return it && it.prazo && it.prazo >= hoje ? { id: 'termometro-' + pd.pergunta.id, data: it.prazo, titulo: 'ORGATEC: ' + pd.pergunta.corrigir } : null;
+    }).filter(Boolean).sort(function (a, b) { return a.data < b.data ? -1 : a.data > b.data ? 1 : 0; });
+  }
+
   function faixa(percentual) {
     if (percentual == null) return null;
     for (var i = 0; i < FAIXAS.length; i++) if (percentual >= FAIXAS[i].minimo) return FAIXAS[i];
@@ -253,6 +299,12 @@
       PERFIS[k].pilares.forEach(function (p) { if (PILARES.indexOf(p) < 0) erros.push('perfil ' + k + ': frente inválida ' + p); });
     });
     PILARES.forEach(function (p) { if (!REGRA[p] && !PERGUNTAS.every(function (q) { return q.pilar !== p || q.publicos; })) erros.push(p + ': frente sem página'); });
+    Object.keys(CAMADAS).forEach(function (id) {
+      var q = PERGUNTAS.filter(function (p) { return p.id === id; })[0];
+      if (!q) erros.push('camada sem pergunta: ' + id);
+      else if (q.peso !== 3) erros.push(id + ': camada só nas perguntas de peso 3');
+      if (!CAMADAS[id].funciona || !CAMADAS[id].prova) erros.push(id + ': camada incompleta');
+    });
     return erros;
   }
 
@@ -264,5 +316,5 @@
 
   return { PERGUNTAS: PERGUNTAS, FAIXAS: FAIXAS, RESPOSTAS: RESPOSTAS, PILARES: PILARES, REVISAO: REVISAO, REGRA: REGRA, PERFIS: PERFIS, PAGINA_PUBLICO: PAGINA_PUBLICO,
     avaliar: avaliar, faixa: faixa, validar: validar, publicavel: publicavel, pilaresDoPerfil: pilaresDoPerfil,
-    perguntaVale: perguntaVale, regraDe: regraDe };
+    perguntaVale: perguntaVale, regraDe: regraDe, CAMADAS: CAMADAS, evidencia: evidencia, planoDeAcao: planoDeAcao };
 });

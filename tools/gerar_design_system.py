@@ -389,7 +389,7 @@ footer .ds-mono {{ color: #0ea5e9; }}
 
     # Versão avulsa para download: logotipos embutidos como data URI, links do site apontando para o domínio.
     avulsa = pagina
-    for arq in sorted((RAIZ / "site" / "assets" / "marca").iterdir()):
+    for arq in sorted(a for a in (RAIZ / "site" / "assets" / "marca").iterdir() if a.is_file()):  # marca/holo/ é pasta
         tipo = "image/svg+xml" if arq.suffix == ".svg" else "image/png"
         uri = f"data:{tipo};base64,{base64.b64encode(arq.read_bytes()).decode()}"
         avulsa = avulsa.replace(f'href="assets/marca/{arq.name}" download', f'href="{uri}" download="{arq.name}"')
@@ -878,6 +878,7 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .chip-opcao input:checked+span{{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}}
 .chip-opcao input:focus-visible+span{{outline:3px solid var(--focus);outline-offset:2px}}
 .pergunta+.pergunta{{border-top:1px solid var(--line);padding-top:18px}}
+.camadas-prova{{border-left:3px solid var(--brand);padding:4px 0 4px 14px;display:grid;gap:10px}}
 .termometro-resultado{{position:sticky;top:96px}}
 .termometro-resumo{{display:none}}
 .relatorio-impressao{{display:none}}
