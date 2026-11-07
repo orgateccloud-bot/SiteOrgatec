@@ -191,7 +191,7 @@ A cada boletim gravado, `tools/cartao_campo.py` faz imagens PNG 1080 × 1920 com
 
 ## Cards por atividade (Orgatec Audi Agro)
 
-Ficam na Janela de Campo, depois do boletim. A configuração única está em `tools/agro_fontes.json`: atividades, códigos do widget do CEPEA, palavras-chave e feeds.
+Ficam na página `setores/agro-mercado.html` (Cotações e notícias), gerada por `agro_mercado()`; a Janela de Campo só aponta para ela. A configuração única está em `tools/agro_fontes.json`: atividades, códigos do widget do CEPEA, palavras-chave e feeds.
 
 - **Cotações:** vêm do widget oficial do CEPEA, em `site/cotacoes/<atividade>.html`, gerado por `tools/gerar_paginas.py`. A página abre num iframe com `sandbox="allow-scripts"`, e a CSP só libera o script do CEPEA em `/cotacoes/`.
   - O site não copia nem guarda os valores: a política do CEPEA só libera o widget sem autorização (pendência D21).

@@ -264,7 +264,7 @@ def test_design_system_html(navegador, servidor, tema):
 PAGINAS_NOVAS = ["compliance/index.html", "compliance/conformidade-tributaria.html", "compliance/prevencao-lavagem.html",
                  "compliance/protecao-de-dados.html", "compliance/integridade.html", "compliance/termometro.html",
                  "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "tributario/index.html", "reforma/index.html", "setores/agro.html", "setores/transporte.html", "setores/regional.html",
-                 "setores/janela-de-campo.html",
+                 "setores/janela-de-campo.html", "setores/agro-mercado.html",
                  "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "cliente/locar.html", "escritorio/index.html", CONTATO]
 
 
@@ -367,13 +367,31 @@ def test_calculadoras(navegador, servidor):
     assert not erros, erros
 
 
-def test_setor_agro_alertas_regionais(navegador, servidor):
+def test_setor_agro_e_a_entrada_do_produtor_rural(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "setores/agro.html")
     assert pg.locator("[data-itens] .og-item").count() >= 6
-    for uf in ["GO", "TO", "PA"]:
-        pg.select_option("#aUf", uf)
-        assert pg.locator(".lista-alertas li").count() >= 1, uf
+    caminhos = pg.locator("[data-agro-caminho]")
+    assert caminhos.count() == 4
+    hrefs = caminhos.evaluate_all("els => els.flatMap(e => [...e.querySelectorAll('a')].map(a => a.getAttribute('href')))")
+    for esperado in ["../setores/janela-de-campo.html", "../setores/agro-mercado.html", "#tributos", "../ferramentas/index.html#produtor",
+                     "../compliance/publico/produtor-rural.html", "../setores/regional.html?setor=agro", "../solucoes/auditoria-rural.html"]:
+        assert esperado in hrefs, esperado
+    assert pg.locator("#tributos [data-itens]").count() == 1  # o caminho "Tributos" leva à lista de pontos da reforma
+    # os alertas ficam numa página só: aqui não há mais a lista nem o seletor de estado
+    assert pg.locator("#aUf, .lista-alertas").count() == 0
+    expect(pg.locator("a[data-alertas-agro]")).to_have_attribute("href", "regional.html?setor=agro")
     assert not erros, erros
+
+
+def test_alertas_regionais_abrem_no_setor_e_estado_do_link(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/regional.html?setor=agro&uf=TO")
+    expect(pg.locator("#tabsSetor button.tab-ativa")).to_have_text("Agronegócio")
+    expect(pg.locator("#tabsUf button.tab-ativa")).to_have_text("Tocantins")
+    assert pg.locator("#listaRegional li").count() >= 1
+    pg2, erros2 = _abrir(navegador, servidor, "setores/regional.html?setor=inexistente&uf=XX")  # valor inválido: volta ao padrão
+    expect(pg2.locator("#tabsUf button.tab-ativa")).to_have_text("Goiás")
+    assert pg2.locator("#listaRegional li").count() >= 1
+    assert not erros and not erros2, (erros, erros2)
 
 
 def test_home_ultimas_da_reforma_e_simulador_pre_selecionado(navegador, servidor):
@@ -407,7 +425,7 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg.select_option("#pdStatus", "")
     pg.uncheck("#pdBloqueia")
     assert pg.locator("[data-pendencias] article").count() > abertas  # inclui as resolvidas (V8)
-    assert pg.locator("tbody a.og-link").count() == 38  # mapa de páginas
+    assert pg.locator("tbody a.og-link").count() == 39  # mapa de páginas
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
 
@@ -1364,7 +1382,7 @@ def test_setor_transporte_aponta_para_o_compliance_do_setor(navegador, servidor)
     assert not erros, erros
 
 
-# ---------- Cards por atividade (Orgatec Audi Agro) na Janela de Campo
+# ---------- Cards por atividade (Orgatec Audi Agro) na página de cotações e notícias (setores/agro-mercado.html)
 
 # Só no teste: substitui o script do CEPEA por uma tabela marcada como exemplo (nenhum valor real nem inventado no site)
 WIDGET_TESTE = ("document.write('<table class=\"imagenet-widget-tabela\"><tr><td>EXEMPLO DE TESTE</td></tr>"
@@ -1381,7 +1399,7 @@ NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "fontes": [{"id": "sen
 def _cards(navegador, servidor, vp="desktop", rotas=None):
     import json
     noticias = {"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=200, content_type="application/json", body=json.dumps(NOTICIAS_EXEMPLO))}
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas={**_rotas_campo(_boletim_automatico()), **noticias, **(rotas or {})})
+    pg, erros = _abrir(navegador, servidor, "setores/agro-mercado.html", vp, rotas={**noticias, **(rotas or {})})
     pg.locator("[data-agro]").scroll_into_view_if_needed()
     return pg, erros
 
@@ -1721,3 +1739,18 @@ def test_termometro_camadas_de_prova_e_plano_ics(navegador, servidor):
     assert pedidos == [], pedidos
     assert pg.evaluate("document.documentElement.scrollWidth") <= 375
     assert not erros and not erros2, erros + erros2
+
+
+def test_janela_de_campo_sem_os_cards_e_com_caminho_para_o_mercado(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    assert pg.locator("[data-agro], [data-agro-atividade], iframe").count() == 0
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html")
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros, erros
+
+
+def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
+    for caminho in ["setores/agro.html", "setores/janela-de-campo.html", "setores/agro-mercado.html", "setores/regional.html", "setores/transporte.html"]:
+        pg, erros = _abrir(navegador, servidor, caminho)
+        expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../setores/agro-mercado.html']").first).to_be_visible()
+        assert not erros, (caminho, erros)

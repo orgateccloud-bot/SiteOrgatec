@@ -355,6 +355,10 @@
   /* ---------- Alertas regionais ---------- */
   function initRegional() {
     var estado = { uf: 'GO', setor: 'agro' };
+    // ?uf=GO&setor=agro (links de outras páginas, como o do agro): só valores que existem; o resto fica no padrão
+    var pedido = new URLSearchParams(location.search), ufPedida = (pedido.get('uf') || '').toUpperCase(), setorPedido = pedido.get('setor');
+    if (['GO', 'TO', 'PA'].indexOf(ufPedida) >= 0) estado.uf = ufPedida;
+    if (R.SETORES_REGIONAIS.indexOf(setorPedido) >= 0) estado.setor = setorPedido;
     function tabs(alvo, itens, chave) {
       itens.forEach(function (it) {
         var b = el('button', { type: 'button', role: 'tab', class: 'text-sm font-medium px-4 py-2 rounded-lg border border-slate-300 bg-white transition', 'data-valor': it.v, text: it.r });
