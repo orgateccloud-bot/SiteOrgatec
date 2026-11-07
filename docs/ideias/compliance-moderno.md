@@ -2,7 +2,7 @@
 
 - **Situação:** ideia (estudo pronto, aguardando decisão)
 - **Branch:** `ideia/compliance-moderno`
-- **Prévia:** sem prévia; o painel do estudo é `docs/painel-compliance-moderno.html`
+- **Prévia:** sem prévia; o painel do estudo é `docs/painel/modelo-3-bento.html` (modelo escolhido em 07/11/2026)
 
 ## Problema
 

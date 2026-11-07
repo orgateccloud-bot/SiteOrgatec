@@ -1,6 +1,6 @@
 # Estudo: compliance moderno na área de Compliance do site
 
-**Data:** 07/11/2026. **Branch:** `ideia/compliance-moderno`. **Painel interativo:** `docs/painel-compliance-moderno.html` (abrir no navegador).
+**Data:** 07/11/2026. **Branch:** `ideia/compliance-moderno`. **Painel interativo (padrão):** `docs/painel/modelo-3-bento.html` (abrir no navegador). Outros modelos em `docs/painel/`; o rascunho com vidro e aurora fica em `docs/painel-compliance-moderno.html`.
 **Situação:** estudo e plano. Nada do site mudou. As ondas abaixo só começam depois do "execute".
 
 ## 1. Resumo
