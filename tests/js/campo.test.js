@@ -58,3 +58,13 @@ test('data por extenso sem depender do fuso', () => {
   assert.equal(C.formatarDia('2027-01-01'), 'sexta-feira, 1 de janeiro de 2027');
   assert.equal(C.dataCurta('2026-10-28'), '28/10/2026');
 });
+
+test('polo da seleção: o escolhido se tiver previsão; senão o primeiro da região que tem (polo sem previsão não é escolhido)', () => {
+  const b = { polos: [{ id: 'b' }, { id: 'c' }, { id: 'z' }] };
+  const regiao = { polos: ['a', 'b', 'c'] };  // 'a' está na região, mas ficou sem previsão neste boletim
+  assert.equal(C.poloValido(b, regiao, undefined), 'b');
+  assert.equal(C.poloValido(b, regiao, 'a'), 'b');
+  assert.equal(C.poloValido(b, regiao, 'c'), 'c');
+  assert.equal(C.poloValido(b, regiao, 'z'), 'b');  // de outra região
+  assert.equal(C.poloValido(b, { polos: ['a'] }, 'a'), undefined);
+});

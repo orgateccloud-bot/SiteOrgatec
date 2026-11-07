@@ -74,7 +74,14 @@
   }
   var LIMITE_HORAS = 18;
 
-  var api = { OPERACOES: OPERACOES, ESTADOS: ESTADOS, PERIODOS: PERIODOS, LIMITE_HORAS: LIMITE_HORAS, validar: validar, situacao: situacao,
+  /* Polo da seleção: o escolhido, se for da região e tiver previsão neste boletim; senão o primeiro da região que tem.
+     (Um polo sem previsão consta em regiao.polos, mas não está em polos.) */
+  function poloValido(b, regiao, escolhido) {
+    var existentes = (regiao.polos || []).filter(function (id) { return (b.polos || []).some(function (p) { return p.id === id; }); });
+    return existentes.indexOf(escolhido) >= 0 ? escolhido : existentes[0];
+  }
+
+  var api = { poloValido: poloValido, OPERACOES: OPERACOES, ESTADOS: ESTADOS, PERIODOS: PERIODOS, LIMITE_HORAS: LIMITE_HORAS, validar: validar, situacao: situacao,
     ordenar: ordenar, escolher: escolher, formatarDia: formatarDia, dataCurta: dataCurta, horasDesde: horasDesde };
 
   // ---------- Tela (só no navegador, na página que tem [data-campo])
@@ -112,7 +119,7 @@
   function ajustarSelecao() {
     if (!regiaoDe(selR)) selR = b.regioes[0].id;
     var r = regiaoDe(selR);
-    if (b.polos && (!poloDe(selP) || (r.polos || []).indexOf(selP) < 0)) selP = (r.polos || [])[0];
+    if (b.polos) selP = poloValido(b, r, selP);
   }
 
   function textoSituacao() {
