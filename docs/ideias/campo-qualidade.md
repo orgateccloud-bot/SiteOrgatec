@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; a revisão dos limites depende de validação técnica, V20)
 - **Branch:** `ideia/campo-qualidade` (parte de `ideia/campo-confiabilidade`, que ainda não foi juntada a `desenvolvimento`)
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) (inclui a Fase 0; expira em 07/12/2026). O boletim da prévia foi gerado com o código desta branch, em 07/11/2026 às 19h56; o aviso de polo sem previsão não aparece nela porque a fonte respondeu a todos os polos, mas a lacuna de 04/11 aparece no seletor.
 
 ## Problema
 

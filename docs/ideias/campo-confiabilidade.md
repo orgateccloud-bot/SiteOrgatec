@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; falta prévia e decisão do canal de alerta)
 - **Branch:** `ideia/campo-confiabilidade`
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) (a mesma das Fases 0 e 1; expira em 07/12/2026)
 
 ## Problema
 
