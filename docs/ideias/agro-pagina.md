@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; falta a prévia e a sua aprovação)
 - **Branch:** `ideia/agro-pagina` (parte de `ideia/campo-layout`, que junta as Fases 0 a 3)
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-agro-pagina-85dosbz7.web.app/setores/agro.html) (expira em 07/12/2026). Usa um boletim real gerado com o código das Fases 0 e 1, em 07/11/2026 às 20h45.
 
 ## Problema
 
