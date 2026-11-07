@@ -162,3 +162,9 @@ def test_ip_por_posicao_no_x_forwarded_for(tmp_path, monkeypatch, caplog):
         assert c.post("/api/contato", json=corpo, headers={"X-Forwarded-For": "8.8.8.8, 200.9.9.9, 35.1.1.1"}).status_code == 429
     assert "200.9.9.x" in caplog.text and "200.9.9.9" not in caplog.text  # diagnóstico sem o IP inteiro
     assert mod.mascarar_ip("2804:14c::1") == "2804:14c::x" and mod.mascarar_ip("") == ""
+
+
+def test_esquema_da_api_nao_fica_publico(cliente):
+    c, _, _ = cliente
+    for caminho in ("/docs", "/redoc", "/openapi.json"):
+        assert c.get(caminho).status_code == 404, caminho
