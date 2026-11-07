@@ -112,3 +112,29 @@ test('perfis comércio e serviços: perguntas gerais mais as do público, sem as
   const s = T.avaliar({ 'tc-estoque': 'nao', 'ts-reducao-60': 'nao' }, T.pilaresDoPerfil('servicos'), 'servicos');
   assert.deepEqual(s.pendencias.map((p) => p.pergunta.id), ['ts-reducao-60']);
 });
+
+test('camadas de prova: só nas perguntas de peso 3 e sem mudar o percentual', () => {
+  Object.keys(T.CAMADAS).forEach((id) => assert.equal(T.PERGUNTAS.find((p) => p.id === id).peso, 3, id));
+  const base = T.avaliar({ 'tr-ciot': 'sim' }, ['transporte']);
+  const comCamada = T.avaliar({ 'tr-ciot': 'sim', 'tr-ciot__funciona': 'sim', 'tr-ciot__prova': 'nao' }, ['transporte']);
+  assert.equal(comCamada.percentual, base.percentual);  // a camada é um indicador à parte
+});
+
+test('evidência: confirma prática e registro; pergunta invertida confirma com "não"', () => {
+  const ps = T.PERGUNTAS;
+  // tr-ciot é invertida ("algum frete saiu sem CIOT?"): "não" confirma a prática
+  let e = T.evidencia({ 'tr-ciot': 'sim', 'tr-ciot__funciona': 'nao', 'tr-ciot__prova': 'sim' }, ps);
+  assert.deepEqual([e.declaradas, e.funcionam, e.comProva, e.semProva.length], [1, 1, 1, 0]);
+  e = T.evidencia({ 'tr-rntrc': 'sim', 'tr-rntrc__funciona': 'sim', 'tr-rntrc__prova': 'nao_sei' }, ps);
+  assert.deepEqual([e.declaradas, e.funcionam, e.comProva], [1, 1, 0]);
+  assert.equal(e.semProva[0].id, 'tr-rntrc');
+  assert.equal(T.evidencia({ 'tr-rntrc': 'nao' }, ps).declaradas, 0);  // só "sim" entra
+});
+
+test('plano de ação: só pendências com prazo de hoje em diante, em ordem de data', () => {
+  const r = T.avaliar({ 'ru-eudr': 'nao', 't-produtor-2027': 'nao', 'ru-car': 'nao' });
+  const plano = T.planoDeAcao(r.pendencias, itensPorId, '2026-11-07');
+  assert.deepEqual(plano.map((x) => x.data), ['2026-12-30', '2027-01-01']);
+  assert.ok(plano.every((x) => x.titulo.startsWith('ORGATEC: ')));
+  assert.equal(T.planoDeAcao(r.pendencias, itensPorId, '2027-02-01').length, 0);  // prazos vencidos ficam fora
+});

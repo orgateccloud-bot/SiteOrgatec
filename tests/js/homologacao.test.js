@@ -98,3 +98,12 @@ test('pendência concluída no código (resolvida: true) sai das abertas', () =>
   assert.equal(status(av, 'T3'), 'resolvida');
   assert.ok(!H.comoTexto(av, '31/10/2026').includes('| T3 | Trocar o Tailwind via CDN pelo CSS compilado | aberta'));
 });
+
+test('V21: revalidação de 90 dias lista pontos com consulta antiga, inclusive os de compliance', () => {
+  const CI = require('../../site/assets/js/compliance-itens.js');
+  const v = (hoje) => H.avaliar(Object.assign(ctx(), { complianceItens: CI, hoje })).itens.find((i) => i.id === 'V21');
+  assert.equal(v('2026-11-07').status, 'resolvida');
+  const velho = v('2027-06-01');
+  assert.equal(velho.status, 'aberta');
+  assert.match(velho.detalhe, /consulta antiga/);
+});

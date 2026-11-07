@@ -1676,3 +1676,33 @@ def test_vidro_aparelho_lento_desliga_as_animacoes(navegador, servidor):
     assert pg.evaluate("document.documentElement.classList.contains('vidro-leve')")
     assert pg.locator(".vidro-varredura b").evaluate("e => getComputedStyle(e).animationName") == "none"
     assert pg.locator(".vidro-aneis i").first.evaluate("e => getComputedStyle(e).animationName") == "none"
+
+
+# ---------- Onda 1 do estudo de compliance moderno: camadas de prova e plano de ação em .ics
+
+def test_termometro_camadas_de_prova_e_plano_ics(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "compliance/termometro.html#perfil-transportador", "mobile")
+    pedidos = []
+    pg.on("request", lambda r: pedidos.append(r.url))
+    camada = pg.locator("[data-camadas=tr-ciot]")
+    expect(camada).to_be_hidden()  # só aparece depois de um "sim"
+    pg.check("[data-pergunta=tr-ciot] input[value=sim]", force=True)
+    expect(camada).to_be_visible()
+    expect(pg.locator("[data-evidencia-resumo]")).to_contain_text("0 de 1")
+    pg.check("input[name=tr-ciot__funciona][value=nao]", force=True)  # pergunta invertida: "nenhum frete sem CIOT"
+    pg.check("input[name=tr-ciot__prova][value=sim]", force=True)
+    expect(pg.locator("[data-evidencia-resumo]")).to_contain_text("1 de 1")
+    expect(pg.locator("[data-termometro-ics]")).to_be_hidden()  # nenhuma pendência com prazo ainda
+    pg2, erros2 = _abrir(navegador, servidor, "compliance/termometro.html#perfil-produtor")
+    pg2.check("[data-pergunta=ru-eudr] input[value=nao]", force=True)
+    botao = pg2.locator("[data-termometro-ics]")
+    expect(botao).to_be_visible()
+    with pg2.expect_download() as d:
+        botao.click()
+    caminho = d.value.path()
+    texto = open(caminho, encoding="utf-8").read()
+    assert d.value.suggested_filename == "orgatec-plano-de-acao.ics"
+    assert "BEGIN:VCALENDAR" in texto and "DTSTART;VALUE=DATE:20261230" in texto
+    assert pedidos == [], pedidos
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros and not erros2, erros + erros2

@@ -1132,7 +1132,7 @@ def testes() -> None:
                 </div>"""),
     ])
     pagina("testes/index.html", "Painel de testes", "Painel interno da fase de testes do site ORGATEC: pendências da próxima fase e autoteste.",
-           None, "interno: homologação", corpo, indexar=False, extra=["calendario.js", "validadores.js", "homologacao.js"], barra=False)
+           None, "interno: homologação", corpo, indexar=False, extra=["calendario.js", "validadores.js", "compliance-itens.js", "homologacao.js"], barra=False)
 
 
 def main() -> None:

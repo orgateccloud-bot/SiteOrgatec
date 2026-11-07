@@ -246,3 +246,14 @@ Classificação das 43 perguntas contra as três perguntas do DOJ, os parâmetro
 
 **Não usar**
 - Shu et al., PNAS 2012, retratado em 2021: https://pmc.ncbi.nlm.nih.gov/articles/PMC8463784
+
+## 10. Onda 1 executada (07/11/2026)
+
+- **Camadas de prova no termômetro** (`termometro.CAMADAS`, `evidencia()`): as 15 perguntas de peso 3 ganharam "funcionou na prática?" e "há registro?". Elas aparecem só depois de um "sim".
+  - O percentual continua medindo declarações. A prova vira o indicador separado "Prova do que foi declarado", que também sai no relatório impresso.
+  - Nas perguntas invertidas (por exemplo, "algum frete saiu sem CIOT?"), quem confirma a prática é o "não".
+- **Plano de ação em `.ics`** (`termometro.planoDeAcao()`): as pendências cujo ponto tem prazo legal futuro viram eventos no calendário do visitante. Usa `calendario.gerarIcs` e não envia nada pela rede.
+- **Revalidação de 90 dias:** a pendência V21 do painel de testes é verificada automaticamente com `conteudo.atrasados()` sobre os pontos da reforma e do compliance.
+- **Correção de passagem:** `tools/gerar_design_system.py` ignora a pasta `site/assets/marca/holo/`. Sem isso, a geração parava na `desenvolvimento`.
+- **Testes:** JS, para camadas, evidência, plano e V21; e2e, para a camada depois do "sim", o indicador e o download do `.ics` sem rede.
+- **Ainda depende do responsável técnico:** os textos das camadas e os pesos (V11). Em produção, o termômetro continua oculto até a revisão.

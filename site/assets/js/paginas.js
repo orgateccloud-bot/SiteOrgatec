@@ -181,7 +181,7 @@
       return '<li class="og-cartao flex items-start gap-3" data-ok="' + c.ok + '"><span class="og-selo og-selo-' + (c.ok ? 'definido' : 'pendente') + '">' + (c.ok ? 'passou' : 'falhou') + '</span>' +
         '<div class="min-w-0"><p class="font-semibold text-tinta text-sm">' + K.esc(c.nome) + '</p><p class="og-item-meta">' + K.esc(c.detalhe) + '</p></div></li>';
     }).join('');
-    var av = H.avaliar({ config: C, fontes: F, itens: O.reformaItens, ufs: O.ufs, conteudo: K, hoje: HOJE });
+    var av = H.avaliar({ config: C, fontes: F, itens: O.reformaItens, complianceItens: O.complianceItens || [], ufs: O.ufs, conteudo: K, hoje: HOJE });
     var res = { ambiente: C.ambiente === 'homologacao' ? 'Homologação' : 'Produção', abertas: av.resumo.abertas + ' / ' + av.resumo.total,
       bloqueios: String(av.resumo.bloqueios), autoteste: okN + ' / ' + casos.length };
     Object.keys(res).forEach(function (k) { var el = $('[data-resumo="' + k + '"]'); if (el) el.textContent = res[k]; });
