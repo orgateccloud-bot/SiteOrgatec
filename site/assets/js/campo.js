@@ -95,6 +95,7 @@
   var params = new URLSearchParams(location.search);
   var manuais = ordenar(O.boletinsCampo || []);
   var indice = [];          // [{id, dia, geradoEm, arquivo}] dos boletins automáticos publicados
+  var lacunas = [];         // dias do arquivo em que nenhum boletim saiu (AAAA-MM-DD)
   var carregados = {};      // id -> boletim já baixado
   var lista = [], b = null;
 
@@ -121,7 +122,8 @@
     if (horas != null && horas > LIMITE_HORAS) return ['vencido', '<strong>Boletim desatualizado:</strong> gerado há ' + Math.round(horas) + ' horas. A atualização automática pode ter falhado. ' + inmet];
     if (b.automatico) {
       var hora = b.geradoEm.slice(11, 16).replace(':', 'h');
-      return ['vigente', '<strong>Atualizado às ' + esc(hora) + ' de ' + esc(dataCurta(b.dia)) + '</strong>' + (b.proximaAtualizacao ? ' · próxima atualização ' + esc(b.proximaAtualizacao) : '') + '. ' + inmet];
+      return ['vigente', '<strong>Atualizado às ' + esc(hora) + ' de ' + esc(dataCurta(b.dia)) + '</strong>' + (b.proximaAtualizacao ? ' · próxima atualização ' + esc(b.proximaAtualizacao) : '') + '. ' +
+        (b.semDados && b.semDados.length ? 'Sem previsão neste horário: ' + esc(b.semDados.map(function (p) { return p.nome; }).join(', ')) + '. ' : '') + inmet];
     }
     return ['vigente', '<strong>Boletim em vigor</strong> para ' + esc(formatarDia(b.dia)) + '. ' + inmet];
   }
@@ -130,10 +132,11 @@
     var ids = {}, itens = [];
     indice.forEach(function (x) { ids[x.id] = true; itens.push({ id: x.id, dia: x.dia, auto: true }); });
     manuais.forEach(function (x) { if (!ids[x.id]) itens.push({ id: x.id, dia: x.dia }); });
+    lacunas.forEach(function (d) { if (!ids[d]) itens.push({ id: d, dia: d, lacuna: true }); });
     itens.sort(function (a, c) { return a.dia < c.dia ? 1 : -1; });
     if (itens.length < 2) return '';
     return '<div class="og-campo max-w-xs"><label class="og-campo-rotulo" for="campoBoletim">Boletim</label><select id="campoBoletim" class="og-campo-controle og-campo-md">' +
-      itens.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === b.id ? ' selected' : '') + '>' + esc(dataCurta(x.dia)) + (x.dia < HOJE ? ' (arquivo)' : '') + '</option>'; }).join('') + '</select></div>';
+      itens.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.lacuna ? ' disabled' : '') + (x.id === b.id ? ' selected' : '') + '>' + esc(dataCurta(x.dia)) + (x.lacuna ? ' (sem boletim)' : x.dia < HOJE ? ' (arquivo)' : '') + '</option>'; }).join('') + '</select></div>';
   }
 
   function montar() {
@@ -327,6 +330,7 @@
     .then(function (r) {
       var atual = r[0] && !validar(r[0]).length ? r[0] : null;
       indice = (r[1] && r[1].boletins) || [];
+      lacunas = (r[1] && r[1].lacunas) || [];
       if (atual) carregados[atual.id] = atual;
       lista = (atual ? [atual] : []).concat(manuais);
       b = escolher(lista, params.get('boletim'));

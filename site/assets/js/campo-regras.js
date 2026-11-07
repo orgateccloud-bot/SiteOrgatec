@@ -305,22 +305,24 @@
     }).concat(['Raios: recolha animais de áreas abertas e de perto de cercas de arame; não opere máquinas em campo aberto durante a trovoada.']) } : null;
 
     var hora = e.geradoEm.slice(11, 16).replace(':', 'h');
+    var semDados = e.semDados || [];  // polos cuja previsão não veio nesta rodada (ficam fora de polos e das regiões)
+    var avisoFonte = semDados.length ? [{ rotulo: 'Sem previsão neste horário:', texto: listaPolos(semDados.map(function (p) { return p.nome; })) + '. A região é avaliada pelos demais polos.' }] : [];
     return {
       id: dia, dia: dia, emitidoEm: dia, geradoEm: e.geradoEm, automatico: true, proximaAtualizacao: e.proximaAtualizacao || null,
-      resumo: 'Boletim automático gerado às ' + hora + ' com a previsão hora a hora para ' + e.polos.length + ' polos agrícolas. Escolha a região e a operação no painel para ver a janela do dia; no mapa, as nuvens e a chuva por satélite.',
-      alerta: alerta, regioes: regioes, proximos: proximos, tendencia: tendencia, criterios: CRITERIOS,
+      resumo: 'Boletim automático gerado às ' + hora + ' com a previsão hora a hora para ' + e.polos.length + ' polos agrícolas' + (semDados.length ? ' (' + semDados.length + ' sem previsão neste horário)' : '') + '. Escolha a região e a operação no painel para ver a janela do dia; no mapa, as nuvens e a chuva por satélite.',
+      alerta: alerta, semDados: semDados, regioes: regioes, proximos: proximos, tendencia: tendencia, criterios: CRITERIOS,
       polos: e.polos.map(function (p) {
         var x = porPolo[p.id];
         return { id: p.id, nome: p.nome, uf: p.uf, regiao: p.regiao, lat: p.lat, lon: p.lon, horas: x.horas,
           ops: OPERACOES.reduce(function (acc, op) { acc[op] = { estado: x.ops[op].estado, janela: textoJanela(x.ops[op].janela), tipoJanela: x.ops[op].tipoJanela, motivo: x.ops[op].motivo, porHora: x.ops[op].porHora }; return acc; }, {}),
           dias: x.dias };
       }),
-      confianca: [
+      confianca: avisoFonte.concat([
         { rotulo: 'Previsão por ponto, não por fazenda.', texto: 'Cada polo representa o município; pancadas de verão são irregulares e uma propriedade pode receber chuva forte enquanto a vizinha fica seca.' },
         { rotulo: 'Até 2 dias: hora a hora.', texto: 'Do terceiro dia em diante a fonte passa a blocos de 6 horas, com menos detalhe.' },
         { rotulo: 'Lacunas da fonte:', texto: 'sem rajadas e sem probabilidade de chuva para o Brasil; a trovoada vem do símbolo previsto.' },
         { rotulo: 'Critérios:', texto: 'os limites por operação estão descritos abaixo e aguardam validação técnica.' }
-      ],
+      ]),
       fontes: [
         { rotulo: 'MET Norway · previsão hora a hora (locationforecast 2.0), licença CC BY 4.0', url: 'https://api.met.no/weatherapi/locationforecast/2.0/documentation' },
         { rotulo: 'NASA GIBS · imagens GOES-East (NOAA) e IMERG', url: 'https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api' },

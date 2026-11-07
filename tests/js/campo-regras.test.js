@@ -103,3 +103,24 @@ test('vigência do boletim automático: desatualizado depois de 18 h', () => {
   assert.equal(C.horasDesde({}, ger), null);
   assert.equal(C.LIMITE_HORAS, 18);
 });
+
+test('polos sem previsão ficam de fora, e o boletim avisa quais são (validação continua passando)', () => {
+  const todos = CFG.polos.map((p) => Object.assign({}, p, { regiao: CFG.regioes.find((r) => r.polos.includes(p.id)).id, met: MET }));
+  const ausente = todos[0];
+  const b = R.montar({ dia: '2026-11-02', geradoEm: '2026-11-02T11:02-03:00', regioes: CFG.regioes, polos: todos.slice(1),
+    semDados: [{ id: ausente.id, nome: ausente.nome, uf: ausente.uf, regiao: ausente.regiao }] });
+  assert.deepEqual(C.validar(b), []);
+  assert.deepEqual(b.semDados.map((p) => p.id), [ausente.id]);
+  assert.equal(b.polos.length, CFG.polos.length - 1);
+  assert.ok(b.polos.every((p) => p.id !== ausente.id));
+  assert.match(b.resumo, /1 sem previsão/);
+  assert.match(b.confianca[0].rotulo, /Sem previsão/);
+  assert.ok(b.confianca[0].texto.includes(ausente.nome));
+});
+
+test('sem falha da fonte, semDados é vazio e a confiança começa pela previsão por ponto', () => {
+  const polos = CFG.polos.map((p) => Object.assign({}, p, { regiao: CFG.regioes.find((r) => r.polos.includes(p.id)).id, met: MET }));
+  const b = R.montar({ dia: '2026-11-02', geradoEm: '2026-11-02T11:02-03:00', regioes: CFG.regioes, polos });
+  assert.deepEqual(b.semDados, []);
+  assert.match(b.confianca[0].rotulo, /Previsão por ponto/);
+});
