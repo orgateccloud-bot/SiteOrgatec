@@ -1574,3 +1574,49 @@ def test_emails_institucionais_ativos(navegador, servidor):
     pg2, erros2 = _abrir(navegador, servidor, "privacidade.html")
     expect(pg2.locator("#dpoLinha a[href='mailto:dpo@orgatec.io']")).to_be_visible()
     assert not erros and not erros2, erros + erros2
+
+
+# ---------- Modelos de vidro azul da vitrine (ideia/vidro-azul): só agem com ?vidro=a ou ?vidro=b
+
+@pytest.mark.parametrize("modelo", ["a", "b"])
+@pytest.mark.parametrize("vp", ["mobile", "desktop"])
+def test_vitrine_modelos_de_vidro(navegador, servidor, modelo, vp):
+    pg, erros = _abrir(navegador, servidor, f"inicio.html?vidro={modelo}", vp)
+    assert pg.get_attribute("html", "data-vidro") == modelo
+    assert pg.get_attribute("html", "data-tema") == "azul-fl-esc"  # o tema salvo não muda o resultado
+    fundo = pg.locator(".vidro-fundo")
+    assert fundo.get_attribute("aria-hidden") == "true"  # decorativo: leitor de tela ignora
+    assert fundo.evaluate("e => getComputedStyle(e).pointerEvents") == "none"  # não atrapalha cliques
+    assert pg.locator(".vidro-fundo .vidro-logo i").count() == 3
+    mascara = pg.locator(".vidro-logo .base").evaluate("e => getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage")
+    assert "orgatec-simbolo-branco.svg" in mascara  # a logo é o símbolo ORGATEC, não um desenho refeito
+    assert pg.request.get(f"{servidor}/assets/marca/orgatec-simbolo-branco.svg").ok
+    filtro = pg.locator("main .og-cartao").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter")
+    assert filtro and filtro != "none"  # os cartões são de vidro: desfocam o que passa atrás
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
+    assert not erros, erros
+
+
+def test_vitrine_sem_parametro_nao_muda(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "inicio.html?vidro=zzz")
+    assert pg.get_attribute("html", "data-vidro") is None
+    assert pg.locator(".vidro-fundo").count() == 0
+    assert pg.locator("main .og-cartao").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter") in ("none", "", None)
+    assert not erros, erros
+
+
+@pytest.mark.parametrize("calmo", [False, True])
+def test_vidro_holograma_segue_o_ponteiro_e_para_com_movimento_reduzido(navegador, servidor, calmo):
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce" if calmo else "no-preference")
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/inicio.html?vidro=a")
+    pg.wait_for_load_state("load")
+    fundo = pg.locator(".vidro-fundo")
+    pg.mouse.move(1180, 200)
+    pg.wait_for_timeout(150)
+    hx = fundo.evaluate("e => e.style.getPropertyValue('--hx')")
+    animacao = pg.locator(".vidro-logo").evaluate("e => getComputedStyle(e).animationName")
+    if calmo:
+        assert hx == "" and animacao == "none"
+    else:
+        assert float(hx) > 0.5 and animacao != "none"

@@ -1,0 +1,158 @@
+/* Modelos de vidro azul da vitrine (ideia/vidro-azul).
+   Só valem com ?vidro=a ou ?vidro=b: o vidro.js põe data-vidro no <html>. Toda regra começa por html[data-vidro] ou
+   :root[data-vidro]; sem o atributo a página não muda.
+
+   A = Noturno: vidro azul-fumê sobre azul-marinho, logo em volume com feixe de projetor.
+   B = Cristal: vidro claro sobre azul vivo, logo grande à direita com varredura de luz.
+
+   Hologram x vidro: o vidro é um objeto (borda clara, desfoque do fundo); o holograma é luz (transparência alta, linhas
+   de varredura, brilho nas bordas, um só tom). A logo fica fixa atrás da página para o vidro dos cartões desfocá-la
+   enquanto se rola. Seções não podem ter filter, opacity, mask nem backdrop-filter: isso isolaria o fundo dos cartões. */
+
+/* ---------- Fundo ---------- */
+html[data-vidro="a"] {
+  --v-fundo: radial-gradient(900px 720px at 80% 6%, rgb(37 99 235 / .40), transparent 70%),
+             radial-gradient(820px 820px at 4% 94%, rgb(14 165 233 / .22), transparent 72%), #050C1A;
+  --v-orbe-1: 59 130 246; --v-orbe-2: 34 211 238;
+  --v-vidro: linear-gradient(150deg, rgb(120 170 255 / .17), rgb(120 170 255 / .05) 62%);
+  --v-borda: rgb(160 200 255 / .26);
+  --v-filtro: blur(20px) saturate(165%);
+  --v-sombra: 0 26px 60px -30px rgb(0 0 0 / .75), inset 0 1px 0 rgb(255 255 255 / .24), inset 0 0 0 1px rgb(255 255 255 / .03);
+  --v-topo: #BAE6FD; --v-meio: #60A5FA; --v-base: #2563EB;
+  --v-brilho: 96 165 250; --v-linha: 5 12 26;
+  --v-barra: rgb(8 18 40 / .52);
+}
+html[data-vidro="b"] {
+  --v-fundo: radial-gradient(760px 640px at 78% 4%, rgb(56 189 248 / .42), transparent 68%),
+             radial-gradient(900px 700px at 0% 100%, rgb(125 211 252 / .20), transparent 70%),
+             linear-gradient(158deg, #0B3CB5 0%, #1457C9 46%, #0A2F8F 100%);
+  --v-orbe-1: 125 211 252; --v-orbe-2: 255 255 255;
+  /* Um azul escuro por baixo e brilho só nas bordas: segura o texto branco onde a logo passa clara atrás do cartão */
+  --v-vidro: linear-gradient(125deg, rgb(255 255 255 / .18), rgb(255 255 255 / .04) 44%, rgb(255 255 255 / .09)), linear-gradient(rgb(6 36 130 / .36), rgb(6 36 130 / .36));
+  --v-borda: rgb(255 255 255 / .44);
+  --v-filtro: blur(26px) saturate(150%) brightness(.8);
+  --v-sombra: 0 24px 50px -26px rgb(3 16 72 / .65), inset 0 1px 0 rgb(255 255 255 / .72), inset 0 -1px 0 rgb(255 255 255 / .16);
+  --v-topo: #FFFFFF; --v-meio: #BAE6FD; --v-base: #38BDF8;
+  --v-brilho: 186 230 253; --v-linha: 10 63 191;
+  --v-barra: rgb(255 255 255 / .12);
+}
+/* No B o texto é branco sobre azul vivo: redefine as cores da paleta no corpo e na seção escura, que as declara de novo. */
+html[data-vidro="b"] body,
+html[data-vidro="b"] .folha-escura {
+  --ink: #FFFFFF; --tinta: #FFFFFF; --tinta-texto: #FFFFFF;
+  --muted: #DCE9FF; --tinta-suave: #DCE9FF; --tinta-fraca: #C8DCFF;
+  --line: rgb(255 255 255 / .30); --linha: rgb(255 255 255 / .30);
+  --hl: #E4F1FF; --hl-ink: #0A2F8F;
+  --brand: #FFFFFF; --acao: #FFFFFF; --sobre-acao: #0A2F8F; --link: #FFFFFF;
+  --surface: rgb(255 255 255 / .10); --superficie: rgb(255 255 255 / .10); --surface2: rgb(255 255 255 / .08);
+  /* As classes de cor do Tailwind do site leem estes canais, não as variáveis acima */
+  --ink-rgb: 255 255 255; --muted-rgb: 220 233 255; --brand-rgb: 255 255 255; --hl-rgb: 228 241 255; --line-rgb: 255 255 255;
+}
+html[data-vidro="a"] body,
+html[data-vidro="a"] .folha-escura {
+  --surface: rgb(120 170 255 / .08); --superficie: rgb(120 170 255 / .08); --surface2: rgb(120 170 255 / .06);
+  --line: rgb(160 200 255 / .24); --linha: rgb(160 200 255 / .24);
+  --muted: #BCC9E0; --tinta-suave: #BCC9E0; --tinta-fraca: #A9B8D2; --muted-rgb: 188 201 224;
+  --link: #A9CCFF;
+}
+html[data-vidro] { background: var(--v-fundo); }
+html[data-vidro] body { background: transparent; }
+html[data-vidro] main section, html[data-vidro] main section.folha-escura { background: transparent; }
+html[data-vidro] .holo-nome { display: none; }
+html[data-vidro] .holo-vitrine { isolation: auto; overflow: visible; }
+html[data-vidro] .folha { margin-top: 0; border-radius: 0; box-shadow: none; }
+html[data-vidro] .holo-vitrine h1, html[data-vidro] .holo-vitrine > div > p { text-shadow: 0 2px 28px rgb(3 10 28 / .6); }
+
+.vidro-fundo { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--v-fundo); }
+.vidro-orbe { position: absolute; border-radius: 50%; will-change: transform;
+  transform: translate(calc(var(--hx, 0) * -30px), calc(var(--hy, 0) * -22px)); transition: transform .8s ease-out; }
+.vidro-orbe.o1 { width: 52vmax; height: 52vmax; right: -14vmax; top: -18vmax; background: radial-gradient(circle, rgb(var(--v-orbe-1) / .30), transparent 66%); }
+.vidro-orbe.o2 { width: 44vmax; height: 44vmax; left: -16vmax; bottom: -20vmax; background: radial-gradient(circle, rgb(var(--v-orbe-2) / .16), transparent 66%); }
+
+/* ---------- Holograma da logo ---------- */
+.vidro-palco { position: absolute; width: min(92vmin, 800px); aspect-ratio: 314 / 347; left: 50%; top: 50%;
+  transform: translate(-50%, -52%) perspective(1100px) rotateX(calc(var(--hy, 0) * -7deg)) rotateY(calc(var(--hx, 0) * 11deg));
+  transition: transform .5s ease-out; will-change: transform; }
+html[data-vidro="b"] .vidro-palco { width: min(80vmin, 720px); left: 77%; top: 57%; }
+.vidro-logo { position: absolute; inset: 0; animation: vidro-flutua 8s ease-in-out infinite; filter: drop-shadow(0 0 26px rgb(var(--v-brilho) / .55)); }
+.vidro-logo > i, .vidro-varredura { position: absolute; inset: 0;
+  -webkit-mask: url(../marca/orgatec-simbolo-branco.svg) center / contain no-repeat; mask: url(../marca/orgatec-simbolo-branco.svg) center / contain no-repeat; }
+.vidro-logo .base { opacity: .34; animation: vidro-pisca 9s steps(1) infinite;
+  background: repeating-linear-gradient(to bottom, transparent 0 3px, rgb(var(--v-linha) / .4) 3px 4px), linear-gradient(180deg, var(--v-topo), var(--v-meio) 50%, var(--v-base)); }
+html[data-vidro="b"] .vidro-logo .base { opacity: .42; }
+.vidro-logo .ciano { background: rgb(34 211 238); transform: translateX(-.9%); opacity: .14; mix-blend-mode: screen; }
+.vidro-logo .azul { background: rgb(59 130 246); transform: translateX(.9%); opacity: .2; mix-blend-mode: screen; }
+.vidro-logo::before { content: ""; position: absolute; inset: 1.5% 0; border: 1px solid rgb(var(--v-brilho) / .42); border-radius: 50%; transform: rotate(8deg); }
+.vidro-varredura { overflow: hidden; opacity: .55; }
+html[data-vidro="b"] .vidro-varredura { opacity: .7; }
+.vidro-varredura b { position: absolute; left: 0; right: 0; top: 0; height: 14%; animation: vidro-varre 5.5s linear infinite;
+  background: linear-gradient(to bottom, transparent, rgb(255 255 255 / .85), transparent); }
+
+/* A: feixe de projetor e anéis sob a logo */
+.vidro-feixe { position: absolute; left: 50%; bottom: -14%; width: 112%; height: 78%; transform: translateX(-50%);
+  background: conic-gradient(from 180deg at 50% 100%, transparent 152deg, rgb(96 165 250 / .14) 168deg, rgb(147 197 253 / .26) 180deg, rgb(96 165 250 / .14) 192deg, transparent 208deg); }
+.vidro-feixe::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 12%; background: radial-gradient(ellipse at 50% 100%, rgb(125 211 252 / .65), transparent 66%); }
+.vidro-aneis { position: absolute; left: 50%; bottom: -8%; width: 80%; height: 15%; transform: translateX(-50%); }
+.vidro-aneis i { position: absolute; inset: 0; border: 1px solid rgb(147 197 253 / .4); border-radius: 50%; animation: vidro-onda 4.2s ease-out infinite; }
+.vidro-aneis i:nth-child(2) { animation-delay: 2.1s; }
+/* B: órbita tracejada e cantos de mira */
+.vidro-orbita { display: none; }
+html[data-vidro="b"] .vidro-feixe, html[data-vidro="b"] .vidro-aneis { display: none; }
+html[data-vidro="b"] .vidro-orbita { display: block; position: absolute; inset: -9% -14%; border: 1px dashed rgb(255 255 255 / .34); border-radius: 50%; animation: vidro-gira 70s linear infinite; }
+html[data-vidro="b"] .vidro-palco::before, html[data-vidro="b"] .vidro-palco::after { content: ""; position: absolute; width: 11%; height: 11%; border: 2px solid rgb(255 255 255 / .55); }
+html[data-vidro="b"] .vidro-palco::before { left: -4%; top: 2%; border-right: 0; border-bottom: 0; }
+html[data-vidro="b"] .vidro-palco::after { right: -4%; bottom: 2%; border-left: 0; border-top: 0; }
+
+@keyframes vidro-flutua { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+@keyframes vidro-pisca { 0%, 91%, 100% { opacity: .34; } 92% { opacity: .2; } 94% { opacity: .3; } 95% { opacity: .16; } }
+@keyframes vidro-varre { from { transform: translateY(-120%); } to { transform: translateY(780%); } }
+@keyframes vidro-onda { from { transform: scale(.6); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes vidro-gira { to { transform: rotate(360deg); } }
+
+/* ---------- Vidro ---------- */
+:root[data-vidro][data-float] .og-cartao,
+:root[data-vidro][data-float] .numero,
+:root[data-vidro][data-float] .faq details,
+:root[data-vidro][data-float] .caixa-sim,
+:root[data-vidro][data-float] .carrossel-botao,
+:root[data-vidro][data-float] .faixa-pausa,
+:root[data-vidro][data-float] footer,
+:root[data-vidro][data-float] body > header.sticky,
+:root[data-vidro][data-float] .barra-movel {
+  background: var(--v-vidro); border: 1px solid var(--v-borda); color: var(--ink);
+  -webkit-backdrop-filter: var(--v-filtro); backdrop-filter: var(--v-filtro);
+  box-shadow: var(--v-sombra);
+}
+:root[data-vidro][data-float] body > header.sticky { background: var(--v-barra); border-width: 0 0 1px; box-shadow: none; }
+:root[data-vidro][data-float] footer { border-width: 1px 0 0; border-radius: 0; box-shadow: none; background: var(--v-barra); }
+:root[data-vidro][data-float] .barra-movel { background: var(--v-barra); border-width: 1px 0 0; box-shadow: none; }
+:root[data-vidro][data-float] a.og-cartao:hover { border-color: rgb(255 255 255 / .62); transform: translateY(-3px); box-shadow: var(--v-sombra), 0 0 32px -8px rgb(var(--v-brilho) / .5); }
+html[data-vidro] .faixa-trilho a { background: rgb(255 255 255 / .09); border-color: var(--v-borda); color: var(--ink); }
+html[data-vidro] .previa { background: rgb(255 255 255 / .07); }
+html[data-vidro] .eyebrow, html[data-vidro] .numero b { color: var(--hl); }
+/* Simulador: o cartão era claro com texto escuro; vira vidro com campos translúcidos */
+html[data-vidro] .caixa-sim { color: var(--ink); }
+html[data-vidro] .caixa-campo select, html[data-vidro] .caixa-campo input { background: rgb(255 255 255 / .09); border-color: rgb(255 255 255 / .28); color: var(--ink); }
+html[data-vidro] .caixa-campo input::placeholder { color: color-mix(in srgb, var(--ink) 58%, transparent); }
+html[data-vidro] .caixa-sim-enviar { background: var(--hl); color: var(--hl-ink); }
+html[data-vidro="b"] .og-btn-primario { background: #fff; color: #0A2F8F; }
+html[data-vidro="b"] .og-btn-primario:hover { background: #E4F1FF; }
+
+/* B no computador: texto à esquerda e logo à direita */
+@media (min-width: 1024px) {
+  html[data-vidro="b"] .holo-vitrine > div { margin-left: max(16px, 6vw); margin-right: auto; text-align: left; }
+  html[data-vidro="b"] .holo-vitrine .caixa-sim { margin-left: 0; max-width: 660px; }
+  html[data-vidro="b"] .holo-vitrine > div > p.mt-6 { justify-content: flex-start; }
+}
+@media (max-width: 760px) {
+  .vidro-palco { width: 132vw; top: 40%; }
+  html[data-vidro="b"] .vidro-palco { width: 150vw; left: 74%; top: 34%; }
+  .vidro-orbe.o1 { width: 90vw; height: 90vw; }
+  .vidro-orbe.o2 { width: 80vw; height: 80vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vidro-logo, .vidro-logo .base, .vidro-varredura b, .vidro-aneis i, .vidro-orbita { animation: none !important; }
+  .vidro-palco, .vidro-orbe { transition: none; transform: translate(-50%, -52%); }
+  html[data-vidro="b"] .vidro-palco { transform: translate(-50%, -52%); }
+  .vidro-orbe { transform: none; }
+}

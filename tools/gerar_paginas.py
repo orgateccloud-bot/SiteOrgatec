@@ -190,6 +190,11 @@ PREVIAS = {
 }
 
 
+VIDRO_HEAD = """
+    <link rel="stylesheet" href="assets/css/vidro.css">
+    <script src="assets/js/vidro.js"></script>"""
+
+
 def inicio() -> None:
     """Página inicial (inspirada na estrutura do Adobe Firefly, no design ORGATEC Trilha):
     herói com a simulação em destaque e faixa de marcos, seções em "folha" com títulos centralizados,
@@ -302,7 +307,9 @@ def inicio() -> None:
     ])
     pagina(layout.INICIO, "Contabilidade Consultiva e Inteligência Tributária",
            "Contabilidade estratégica e transição para a Reforma Tributária (IBS, CBS e Split Payment) em todo o Brasil, com força no eixo GO, TO e PA. Resp. Técnico: Robson Veloso - CRC-TO 002032/O-5 T-GO.",
-           None, "captação", corpo, extra=["inicio.js"])
+           None, "captação", corpo, extra=["inicio.js"],
+           # Modelos de vidro azul (ideia/vidro-azul): só agem com ?vidro=a ou ?vidro=b
+           head_extra=VIDRO_HEAD)
 
 
 def tributario() -> None:
