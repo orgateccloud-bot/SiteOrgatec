@@ -732,7 +732,11 @@ def test_painel_de_fontes_oficiais(navegador, servidor):
     planalto = pg.evaluate("window.Orgatec.fontes.lista.filter(f => f.url && /planalto\.gov\.br/.test(f.url)).length")
     expect(orgaos.first).to_contain_text(f"{planalto} dispositivos citados")
     expect(pg.locator("#fontes")).to_contain_text("não indica parceria")
-    # painel escuro: fundo da seção diferente do fundo da página na paleta clara padrão
+    # No vidro azul (paleta padrão) a seção é transparente de propósito: os cartões de vidro desfocam a logo que passa atrás
+    assert pg.locator("#fontes [data-orgao]").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter") != "none"
+    # Em outra paleta, volta o painel escuro: fundo da seção diferente do fundo da página
+    pg.click("#btnCores")
+    pg.click("#temaPop [data-tema-id=verde]")
     fundo = pg.evaluate("getComputedStyle(document.getElementById('fontes')).backgroundColor")
     assert fundo != pg.evaluate("getComputedStyle(document.body).backgroundColor")
     assert not erros, erros
@@ -1576,14 +1580,13 @@ def test_emails_institucionais_ativos(navegador, servidor):
     assert not erros and not erros2, erros + erros2
 
 
-# ---------- Modelos de vidro azul da vitrine (ideia/vidro-azul): só agem com ?vidro=a ou ?vidro=b
+# ---------- Vitrine em vidro azul com a logo em holograma (ideia/vidro-azul, modelo A "Noturno")
 
-@pytest.mark.parametrize("modelo", ["a", "b"])
 @pytest.mark.parametrize("vp", ["mobile", "desktop"])
-def test_vitrine_modelos_de_vidro(navegador, servidor, modelo, vp):
-    pg, erros = _abrir(navegador, servidor, f"inicio.html?vidro={modelo}", vp)
-    assert pg.get_attribute("html", "data-vidro") == modelo
-    assert pg.get_attribute("html", "data-tema") == "azul-fl-esc"  # o tema salvo não muda o resultado
+def test_vitrine_em_vidro_azul(navegador, servidor, vp):
+    pg, erros = _abrir(navegador, servidor, "inicio.html", vp)
+    assert pg.get_attribute("html", "data-tema") == "azul-fl-esc"  # o vidro vale na paleta padrão
+    assert pg.evaluate("document.documentElement.hasAttribute('data-vidro')")
     fundo = pg.locator(".vidro-fundo")
     assert fundo.get_attribute("aria-hidden") == "true"  # decorativo: leitor de tela ignora
     assert fundo.evaluate("e => getComputedStyle(e).pointerEvents") == "none"  # não atrapalha cliques
@@ -1598,19 +1601,38 @@ def test_vitrine_modelos_de_vidro(navegador, servidor, modelo, vp):
     assert not erros, erros
 
 
-def test_vitrine_sem_parametro_nao_muda(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "inicio.html?vidro=zzz")
-    assert pg.get_attribute("html", "data-vidro") is None
-    assert pg.locator(".vidro-fundo").count() == 0
+def test_vidro_so_na_paleta_padrao(navegador, servidor):
+    """Quem troca a paleta em "Cores" vê a vitrine normal; ao voltar para a padrão, o vidro volta."""
+    pg, erros = _abrir(navegador, servidor, "inicio.html")
+    html = pg.locator("html")
+    expect(html).to_have_attribute("data-vidro", "")
+    pg.click("#btnCores")
+    pg.click("#temaPop [data-tema-id=verde]")
+    expect(html).not_to_have_attribute("data-vidro", "")
+    assert pg.locator(".vidro-fundo").evaluate("e => getComputedStyle(e).display") == "none"
     assert pg.locator("main .og-cartao").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter") in ("none", "", None)
+    pg.click("#temaPop [data-tema-id=azul-fl-esc]")
+    expect(html).to_have_attribute("data-vidro", "")
+    assert pg.locator(".vidro-fundo").evaluate("e => getComputedStyle(e).display") != "none"
     assert not erros, erros
+
+
+def test_vidro_nao_aparece_com_outra_paleta_salva(navegador, servidor):
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    ctx.add_init_script("try { localStorage.setItem('orgatec.tema', 'verde'); } catch (e) {}")
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/inicio.html")
+    pg.wait_for_load_state("load")
+    assert pg.get_attribute("html", "data-tema") == "verde"
+    assert not pg.evaluate("document.documentElement.hasAttribute('data-vidro')")
+    assert pg.locator(".vidro-fundo").count() == 0  # nem chega a montar o fundo
 
 
 @pytest.mark.parametrize("calmo", [False, True])
 def test_vidro_holograma_segue_o_ponteiro_e_para_com_movimento_reduzido(navegador, servidor, calmo):
     ctx = navegador.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce" if calmo else "no-preference")
     pg = ctx.new_page()
-    pg.goto(f"{servidor}/inicio.html?vidro=a")
+    pg.goto(f"{servidor}/inicio.html")
     pg.wait_for_load_state("load")
     fundo = pg.locator(".vidro-fundo")
     pg.mouse.move(1180, 200)
@@ -1623,24 +1645,12 @@ def test_vidro_holograma_segue_o_ponteiro_e_para_com_movimento_reduzido(navegado
         assert float(hx) > 0.5 and animacao != "none"
 
 
-def test_vidro_chave_para_comparar_os_modelos(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "inicio.html?vidro=b")
-    links = pg.locator(".vidro-troca a")
-    assert links.evaluate_all("els => els.map(e => e.textContent)") == ["Original", "A", "B"]
-    assert pg.locator(".vidro-troca a[aria-current=true]").inner_text() == "B"
-    assert links.evaluate_all("els => els.map(e => new URL(e.href).search)") == ["", "?vidro=a", "?vidro=b"]
-    links.nth(1).click()
-    pg.wait_for_load_state("load")
-    assert pg.get_attribute("html", "data-vidro") == "a"
-    assert not erros, erros
-
-
 def test_vidro_desliga_as_animacoes_com_a_pagina_rolada(navegador, servidor):
     """Com a logo atrás dos cartões, qualquer animação faria todo cartão de vidro refazer o desfoque a cada quadro."""
     ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
     pg = ctx.new_page()
     pg.add_init_script("window.__vidroSemSonda = true")
-    pg.goto(f"{servidor}/inicio.html?vidro=a")
+    pg.goto(f"{servidor}/inicio.html")
     pg.wait_for_load_state("load")
     html, varredura = pg.locator("html"), pg.locator(".vidro-varredura b")
     expect(varredura).not_to_have_css("animation-name", "none")
@@ -1656,7 +1666,7 @@ def test_vidro_desliga_as_animacoes_com_a_pagina_rolada(navegador, servidor):
 def test_vidro_aparelho_lento_desliga_as_animacoes(navegador, servidor):
     ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
     pg = ctx.new_page()
-    pg.goto(f"{servidor}/inicio.html?vidro=a")
+    pg.goto(f"{servidor}/inicio.html")
     pg.wait_for_load_state("load")
     ctx.new_cdp_session(pg).send("Emulation.setCPUThrottlingRate", {"rate": 25})
     for _ in range(60):  # a sonda mede duas vezes seguidas: leva uns 5 s com a CPU limitada

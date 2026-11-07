@@ -8,7 +8,8 @@ Base: `gemini-code-1793402547492.html` (mantido intacto na raiz como referência
 site/                         ← publicar esta pasta (estático)
   index.html                  RAIZ = tela de abertura (holograma se forma, cartão surge; "Entrar no site" leva a inicio.html) — tools/gerar_paginas.py abertura()
   inicio.html                 vitrine do site ("Início" do menu, layout.INICIO) em 8 blocos: herói com painel da transição, números, "qual é o seu caso?",
-                              últimas da reforma, ferramentas, perguntas e faixa de diagnóstico
+                              últimas da reforma, ferramentas, perguntas e faixa de diagnóstico; visual em vidro azul com a logo em holograma ao fundo
+                              (assets/css/vidro.css e assets/js/vidro.js), só na paleta Azul flutuante escuro: em outra paleta do botão Cores volta ao visual normal
   ferramentas/simulador.html  simulador + lead    ferramentas/calendario.html  calendário, .ics e opt-in
                               abertura: assets/js/abertura.js, abertura-intro.js (pré-pintura), holo-logos.js + assets/marca/holo/*.png (máscaras dos logotipos do holograma, geradas) e assets/css/abertura.css; destinos em config.abertura
   setores/janela-de-campo.html  Janela de Campo AUTOMÁTICA: tools/gerar_boletim_campo.py (agendado 05h/11h/17h no Windows) busca o MET Norway para os polos de

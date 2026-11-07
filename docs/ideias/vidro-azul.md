@@ -1,8 +1,8 @@
 # Vitrine em vidro azul com a logo em holograma
 
-- **Situação:** em prévia (dois modelos para a ORGATEC escolher)
+- **Situação:** aprovada em 07/11/2026 (modelo A, Noturno); integrada na `desenvolvimento`, falta lançar
 - **Branch:** `ideia/vidro-azul`
-- **Prévia:** modelo A https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html?vidro=a e modelo B https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html?vidro=b (expira em 06/12/2026)
+- **Prévia:** https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html (expira em 06/12/2026; a vitrine já abre no vidro). A chave de comparação e o parâmetro `?vidro` foram retirados.
 
 ## Problema
 
@@ -14,10 +14,10 @@ Quem chega à vitrine por orgatec.io, em computador e em celular.
 
 ## Proposta
 
-Os dois modelos usam a vitrine real e não mudam a página padrão: só agem com `?vidro=a` ou `?vidro=b`. A logo é o símbolo ORGATEC (`orgatec-simbolo-branco.svg`) usado como máscara, fixa atrás da página, e os cartões de vidro desfocam a logo enquanto se rola. A logo inclina com o mouse ou o dedo e fica parada com movimento reduzido. Uma chave "Modelo: Original · A · B" no canto da página permite comparar (existe só nesta prévia e sai quando um modelo for escolhido).
+Foram feitos dois modelos sobre a vitrine real, ativados por `?vidro=a` e `?vidro=b`. A ORGATEC escolheu o A, que virou o visual da vitrine; o B (Cristal: vidro claro sobre azul vivo, logo grande à direita) e a chave de comparação foram removidos. A logo é o símbolo ORGATEC (`orgatec-simbolo-branco.svg`) usado como máscara, fixa atrás da página, e os cartões de vidro desfocam a logo enquanto se rola. A logo inclina com o mouse ou o dedo e fica parada com movimento reduzido. O vidro vale na paleta padrão (Azul flutuante escuro): quem troca a paleta no botão "Cores" vê a vitrine normal, e quem pede "reduzir transparência" ao sistema recebe painéis sólidos.
 
-- **A, Noturno:** vidro azul-fumê sobre azul-marinho. Logo em volume, centralizada atrás do título, com feixe de projetor, anéis e leve vibração de cor.
-- **B, Cristal:** vidro claro sobre azul vivo. Logo à direita, com varredura de luz, órbita tracejada e cantos de mira; o texto fica à esquerda no computador. O vidro leva um azul escuro por baixo para segurar o texto branco onde a logo passa clara.
+- **A, Noturno (escolhido):** vidro azul-fumê sobre azul-marinho. Logo em volume, centralizada atrás do título, com feixe de projetor, anéis e leve vibração de cor.
+- **B, Cristal (descartado):** vidro claro sobre azul vivo, logo grande à direita com varredura de luz, órbita tracejada e cantos de mira.
 
 Código: `site/assets/css/vidro.css` e `site/assets/js/vidro.js`, ligados só à vitrine em `tools/gerar_paginas.py`.
 
@@ -47,7 +47,7 @@ Sem regra, alíquota ou prazo. A logo vem do arquivo da marca já usado no site.
 
 ## Pronto quando
 
-- A ORGATEC escolhe um modelo (ou pede ajustes).
-- O escolhido vira padrão ou tema, e o outro é removido junto com a chave de comparação.
+- A ORGATEC escolhe um modelo (ou pede ajustes). **Feito:** modelo A, em 07/11/2026.
+- O escolhido vira o visual da vitrine, e o outro sai junto com a chave de comparação. **Feito.**
 - Teste em aparelho real, de preferência um celular de entrada: as medições abaixo são em navegador sem placa de vídeo.
 - A suíte passa nos três navegadores.

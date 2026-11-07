@@ -308,7 +308,7 @@ def inicio() -> None:
     pagina(layout.INICIO, "Contabilidade Consultiva e Inteligência Tributária",
            "Contabilidade estratégica e transição para a Reforma Tributária (IBS, CBS e Split Payment) em todo o Brasil, com força no eixo GO, TO e PA. Resp. Técnico: Robson Veloso - CRC-TO 002032/O-5 T-GO.",
            None, "captação", corpo, extra=["inicio.js"],
-           # Modelos de vidro azul (ideia/vidro-azul): só agem com ?vidro=a ou ?vidro=b
+           # Vitrine em vidro azul com a logo em holograma (ideia/vidro-azul): vale só na paleta Azul flutuante escuro
            head_extra=VIDRO_HEAD)
 
 

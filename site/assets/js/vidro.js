@@ -1,46 +1,37 @@
-/* Modelos de vidro azul da vitrine (ideia/vidro-azul). Ativa só com ?vidro=a ou ?vidro=b; sem o parâmetro não faz nada.
-   Roda no <head>: o atributo data-vidro precisa estar no <html> antes da primeira pintura, para a página não piscar.
-   Monta o fundo fixo com a logo em holograma (o desenho está em vidro.css) e inclina a logo conforme o ponteiro.
-   Com movimento reduzido, o holograma fica parado. */
+/* Vitrine em vidro azul, com a logo ORGATEC em holograma ao fundo (o desenho está em vidro.css).
+   Vale quando a paleta ativa é Azul flutuante escuro, a padrão do site. Se o visitante trocar a paleta em "Cores", o atributo
+   data-vidro sai do <html> e a vitrine volta ao visual normal; ao voltar para a padrão, o vidro volta.
+   Roda no <head>, depois do tema.js: data-vidro precisa estar no <html> antes da primeira pintura, para a página não piscar.
+   Monta o fundo fixo, inclina a logo conforme o ponteiro e cuida do desempenho (veja vidro.css). Com movimento reduzido, fica parado. */
 (function () {
   'use strict';
-  var raiz = document.documentElement, modelo = '';
-  try { modelo = (new URLSearchParams(window.location.search).get('vidro') || '').toLowerCase(); } catch (e) { modelo = ''; }
-  if (modelo !== 'a' && modelo !== 'b') return;
-  raiz.setAttribute('data-vidro', modelo);
-
-  // Os dois modelos partem da paleta Azul flutuante escuro; um tema salvo no navegador não pode mudar o resultado.
-  function paleta() {
-    try { if (window.Orgatec && window.Orgatec.tema) window.Orgatec.tema.aplicar('azul-fl-esc'); } catch (e) { /* segue com a paleta atual */ }
-  }
-  paleta();
-
+  var raiz = document.documentElement, PALETA = 'azul-fl-esc';
   var calmo = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var fundo = null;
 
   function montar() {
-    paleta();
-    if (document.querySelector('.vidro-fundo')) return;
-    var fundo = document.createElement('div');
+    if (fundo || !document.body) return;
+    fundo = document.createElement('div');
     fundo.className = 'vidro-fundo';
     fundo.setAttribute('aria-hidden', 'true');
     fundo.innerHTML = '<div class="vidro-orbe o1"></div><div class="vidro-orbe o2"></div>' +
-      '<div class="vidro-palco"><div class="vidro-feixe"></div><div class="vidro-aneis"><i></i><i></i></div><div class="vidro-orbita"></div>' +
+      '<div class="vidro-palco"><div class="vidro-feixe"></div><div class="vidro-aneis"><i></i><i></i></div>' +
       '<div class="vidro-logo"><span class="brilho"><i></i></span><i class="base"></i><i class="ciano"></i><i class="azul"></i><div class="vidro-varredura"><b></b></div></div></div>';
     document.body.insertBefore(fundo, document.body.firstChild);
+    if (!calmo) animar();
+  }
 
-    // Chave para comparar com a página original e entre os modelos (prévia: sai quando um modelo for escolhido)
-    var caminho = window.location.pathname;
-    var troca = document.createElement('nav');
-    troca.className = 'vidro-troca';
-    troca.setAttribute('aria-label', 'Modelos de vidro');
-    troca.innerHTML = '<span>Modelo</span><a href="' + caminho + '">Original</a>' +
-      '<a href="' + caminho + '?vidro=a"' + (modelo === 'a' ? ' aria-current="true"' : '') + '>A</a>' +
-      '<a href="' + caminho + '?vidro=b"' + (modelo === 'b' ? ' aria-current="true"' : '') + '>B</a>';
-    document.body.appendChild(troca);
-    if (calmo) return;
+  function sincronizar() {
+    if (raiz.getAttribute('data-tema') === PALETA) {
+      raiz.setAttribute('data-vidro', '');
+      montar();
+    } else {
+      raiz.removeAttribute('data-vidro');
+    }
+  }
 
-    // Desempenho. O vidro é barato; o que pesa é o fundo mudar a cada quadro, porque todo cartão refaz o desfoque.
-    // 1) Com a página rolada, a logo está atrás dos cartões: as animações pausam.
+  function animar() {
+    // 1) Com a página rolada, a logo está atrás dos cartões: as animações desligam.
     var pausado = false, rolando = 0;
     function conferirRolagem() {
       rolando = 0;
@@ -71,7 +62,7 @@
     }
     window.setTimeout(function () { conferirAparelho(1); }, 1500);
 
-    // Uma atualização por quadro, e só enquanto o ponteiro se mexe (mouse ou dedo).
+    // 3) Inclinação pelo ponteiro: uma atualização por quadro, e só enquanto ele se mexe (mouse ou dedo).
     var quadro = 0, hx = 0, hy = 0;
     function desenhar() {
       quadro = 0;
@@ -88,5 +79,8 @@
       if (!quadro) quadro = window.requestAnimationFrame(desenhar);
     });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montar); else montar();
+
+  sincronizar();
+  if (window.MutationObserver) new MutationObserver(sincronizar).observe(raiz, { attributes: true, attributeFilter: ['data-tema'] });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sincronizar);
 })();
