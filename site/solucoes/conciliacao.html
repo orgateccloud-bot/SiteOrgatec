@@ -113,15 +113,19 @@
                 </div>
             </div>
         </section>
-        <section class="py-16 bg-superficie">
+        <section id="confianca" class="py-16 bg-superficie">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <p class="eyebrow">Segurança e LGPD</p>
-                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Como os dados ficam protegidos</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="og-cartao"><h3 class="og-cartao-titulo">Uma empresa não vê a outra</h3><p class="og-cartao-texto">O isolamento por empresa é aplicado pelo próprio banco de dados, não só pela tela.</p></div>
-                    <div class="og-cartao"><h3 class="og-cartao-titulo">Acesso com segundo fator</h3><p class="og-cartao-texto">Login com senha e aplicativo autenticador ou chave de acesso (passkey).</p></div>
-                    <div class="og-cartao"><h3 class="og-cartao-titulo">Este site não recebe seus dados</h3><p class="og-cartao-texto">Extratos, notas e documentos são enviados só dentro do sistema, com login, ou diretamente à equipe. O site só leva você até lá.</p></div>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">O que o sistema faz hoje, e o que ainda não faz</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="og-cartao" data-controle><span class="og-selo og-selo-futuro mb-3">em parte</span><h3 class="og-cartao-titulo">Um escritório não vê o outro</h3><p class="og-cartao-texto">Nas tabelas de clientes, conciliações e lançamentos, a separação por escritório é uma regra do próprio banco de dados, não só da tela. Os arquivos de cada conciliação ainda não estão sob essa regra: o sistema os separa por usuário.</p></div>
+                    <div class="og-cartao" data-controle><span class="og-selo og-selo-definido mb-3">no sistema</span><h3 class="og-cartao-titulo">Trilha de auditoria encadeada</h3><p class="og-cartao-texto">Cada ação registrada leva o código (hash) da ação anterior e uma assinatura. O registro não aceita alteração nem exclusão, e o sistema confere a cadeia inteira de uma vez.</p></div>
+                    <div class="og-cartao" data-controle><span class="og-selo og-selo-definido mb-3">no sistema</span><h3 class="og-cartao-titulo">Inteligência artificial desligada</h3><p class="og-cartao-texto">Vem desligada e só é ligada se o escritório decidir. Antes de qualquer envio, CPF, CNPJ e e-mail são mascarados. Nomes digitados no histórico do banco, como num PIX, ainda não são; por isso ela fica desligada.</p></div>
+                    <div class="og-cartao" data-controle><span class="og-selo og-selo-futuro mb-3">em parte</span><h3 class="og-cartao-titulo">Segundo fator de login</h3><p class="og-cartao-texto">Aplicativo autenticador disponível para todos e exigido nas funções de administração do escritório. A chave de acesso (passkey) existe no sistema, mas depende de um domínio próprio, ainda não configurado.</p></div>
+                    <div class="og-cartao" data-controle><span class="og-selo og-selo-definido mb-3">no sistema</span><h3 class="og-cartao-titulo">Arquivos cifrados</h3><p class="og-cartao-texto">Os arquivos das conciliações e os segredos do segundo fator ficam cifrados no armazenamento. Senhas são guardadas só como hash.</p></div>
+                    <div class="og-cartao" data-controle><span class="og-selo og-selo-pendente mb-3">a definir</span><h3 class="og-cartao-titulo">Hospedagem, guarda e exclusão</h3><p class="og-cartao-texto">A região de hospedagem, o prazo de guarda dos dados e a exclusão completa a pedido do cliente serão publicados aqui antes da abertura do sistema. Hoje o cadastro do cliente pode ser anonimizado a pedido.</p></div>
                 </div>
+                <p class="text-sm text-tinta-fraca mt-6 max-w-3xl" data-controles-nota>O sistema não tem certificação ISO 27001 nem SOC 2, e esta página não afirma que tenha. Uma revisão de segurança está em andamento antes da abertura do acesso; até lá, o uso é por demonstração com a equipe. Este site não recebe extratos, notas nem documentos.</p>
             </div>
         </section>
         <section class="py-16 bg-superficie border-t border-linha">

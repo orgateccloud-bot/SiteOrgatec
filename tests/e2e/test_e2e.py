@@ -915,6 +915,21 @@ def test_solucoes_sem_link_para_sistemas_e_sem_codigo_externo():
         assert not re.search(r'<script[^>]+src="https?://', html), caminho
 
 
+def test_conciliacao_bloco_de_confianca_so_afirma_o_conferido():
+    """Cada controle tem selo de situação e evidência em docs/conciliacao-confianca-evidencias.md.
+    Frases que o código do OrgConc não sustenta (conferido em 07/11/2026) não podem voltar."""
+    html = (RAIZ / "site" / "solucoes" / "conciliacao.html").read_text(encoding="utf-8")
+    bloco = html[html.index('id="confianca"'):]
+    bloco = bloco[:bloco.index("</section>")]
+    selos = re.findall(r'data-controle><span class="og-selo og-selo-\w+ mb-3">([^<]+)</span>', bloco)
+    assert len(selos) == 6 and set(selos) <= {"no sistema", "em parte", "a definir"}, selos
+    for proibida in ("aplicado pelo próprio banco de dados, não só pela tela", "ISO 27001 e", "certificad", "São Paulo",
+                     "treina", "à prova de adulteração", "nomes são substituídos"):
+        assert proibida not in bloco, proibida
+    assert "não tem certificação ISO 27001 nem SOC 2" in bloco
+    assert (RAIZ / "docs" / "conciliacao-confianca-evidencias.md").exists()
+
+
 def test_solucoes_entrar_obedece_config(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "solucoes/index.html")
     assert pg.locator("[data-solucao-entrar]:not([hidden])").count() == 0  # nada disponível por padrão

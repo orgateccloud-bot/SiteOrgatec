@@ -919,6 +919,41 @@ def solucoes_vitrine() -> None:
            "solucoes", "captação", corpo, trilha=[("Soluções", None)])
 
 
+SITUACAO_CONTROLE = {"no sistema": "og-selo-definido", "em parte": "og-selo-futuro", "a definir": "og-selo-pendente"}
+
+
+def controles(itens: list[tuple[str, str, str]], nota: str) -> str:
+    """Bloco de confiança: (controle, o que ele faz e o limite dele, situação). Situação em SITUACAO_CONTROLE.
+    Só entra o que foi conferido no código do sistema; a evidência fica em docs/conciliacao-confianca-evidencias.md."""
+    cartoes = [f'<div class="og-cartao" data-controle><span class="og-selo {SITUACAO_CONTROLE[s]} mb-3">{s}</span>'
+               f'<h3 class="og-cartao-titulo">{t}</h3><p class="og-cartao-texto">{x}</p></div>' for t, x, s in itens]
+    return grade(cartoes, "md:grid-cols-2 lg:grid-cols-3") + f'\n                <p class="text-sm text-tinta-fraca mt-6 max-w-3xl" data-controles-nota>{nota}</p>'
+
+
+# Conferido no código do OrgConc (branch main) em 07/11/2026. Antes de mudar uma frase, confira a evidência no doc.
+CONFIANCA_CONCILIACAO = controles([
+    ("Um escritório não vê o outro",
+     "Nas tabelas de clientes, conciliações e lançamentos, a separação por escritório é uma regra do próprio banco de dados, "
+     "não só da tela. Os arquivos de cada conciliação ainda não estão sob essa regra: o sistema os separa por usuário.", "em parte"),
+    ("Trilha de auditoria encadeada",
+     "Cada ação registrada leva o código (hash) da ação anterior e uma assinatura. O registro não aceita alteração nem exclusão, "
+     "e o sistema confere a cadeia inteira de uma vez.", "no sistema"),
+    ("Inteligência artificial desligada",
+     "Vem desligada e só é ligada se o escritório decidir. Antes de qualquer envio, CPF, CNPJ e e-mail são mascarados. "
+     "Nomes digitados no histórico do banco, como num PIX, ainda não são; por isso ela fica desligada.", "no sistema"),
+    ("Segundo fator de login",
+     "Aplicativo autenticador disponível para todos e exigido nas funções de administração do escritório. "
+     "A chave de acesso (passkey) existe no sistema, mas depende de um domínio próprio, ainda não configurado.", "em parte"),
+    ("Arquivos cifrados",
+     "Os arquivos das conciliações e os segredos do segundo fator ficam cifrados no armazenamento. Senhas são guardadas só como hash.", "no sistema"),
+    ("Hospedagem, guarda e exclusão",
+     "A região de hospedagem, o prazo de guarda dos dados e a exclusão completa a pedido do cliente serão publicados aqui "
+     "antes da abertura do sistema. Hoje o cadastro do cliente pode ser anonimizado a pedido.", "a definir"),
+], "O sistema não tem certificação ISO 27001 nem SOC 2, e esta página não afirma que tenha. Uma revisão de segurança "
+   "está em andamento antes da abertura do acesso; até lá, o uso é por demonstração com a equipe. "
+   "Este site não recebe extratos, notas nem documentos.")
+
+
 def solucao_conciliacao() -> None:
     msg = "Olá! Quero conhecer a conciliação bancária da ORGATEC."
     corpo = "\n".join([
@@ -943,11 +978,7 @@ def solucao_conciliacao() -> None:
             ("Contrapartes", "Consulta do CNPJ de quem paga e de quem recebe em base pública."),
             ("Reforma tributária", "Projeção de CBS e IBS sobre as operações para acompanhar a transição de 2026 a 2033."),
         ])),
-        secao("Segurança e LGPD", "Como os dados ficam protegidos", lista([
-            ("Uma empresa não vê a outra", "O isolamento por empresa é aplicado pelo próprio banco de dados, não só pela tela."),
-            ("Acesso com segundo fator", "Login com senha e aplicativo autenticador ou chave de acesso (passkey)."),
-            SEGURANCA_COMUM,
-        ], "md:grid-cols-3"), "bg-superficie"),
+        secao("Segurança e LGPD", "O que o sistema faz hoje, e o que ainda não faz", CONFIANCA_CONCILIACAO, "bg-superficie", "confianca"),
         faixa_solucao("Veja a conciliação com dados fictícios", "Na demonstração, a equipe mostra o sistema com um período de exemplo e explica o que seria enviado no seu caso.", msg),
     ])
     pagina("solucoes/conciliacao.html", "Conciliação bancária", "Conciliação bancária da ORGATEC: extratos OFX, PDF e CSV conferidos com a contabilidade, divergências por severidade e laudo.",
