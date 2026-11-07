@@ -61,7 +61,13 @@ html[data-vidro] main section, html[data-vidro] main section.folha-escura { back
 html[data-vidro] .holo-nome { display: none; }
 html[data-vidro] .holo-vitrine { isolation: auto; overflow: visible; }
 html[data-vidro] .folha { margin-top: 0; border-radius: 0; box-shadow: none; }
-html[data-vidro] .holo-vitrine h1, html[data-vidro] .holo-vitrine > div > p { text-shadow: 0 2px 28px rgb(3 10 28 / .6); }
+/* Halo escuro atrás das letras do herói: a logo flutua, inclina e a varredura passa, então o fundo atrás do texto muda o tempo todo */
+html[data-vidro="a"] { --v-txt: 3 10 28; }
+html[data-vidro="b"] { --v-txt: 4 26 105; }
+html[data-vidro] .holo-vitrine h1, html[data-vidro] .holo-vitrine > div > p {
+  text-shadow: 0 0 10px rgb(var(--v-txt) / .85), 0 0 26px rgb(var(--v-txt) / .75), 0 2px 3px rgb(var(--v-txt) / .6);
+}
+html[data-vidro="a"] .holo-vitrine p.text-muted { color: #D6E0F2; }
 
 .vidro-fundo { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--v-fundo); }
 .vidro-orbe { position: absolute; border-radius: 50%; will-change: transform;
@@ -84,7 +90,7 @@ html[data-vidro="b"] .vidro-logo .base { opacity: .42; }
 .vidro-logo .azul { background: rgb(59 130 246); transform: translateX(.9%); opacity: .2; mix-blend-mode: screen; }
 .vidro-logo::before { content: ""; position: absolute; inset: 1.5% 0; border: 1px solid rgb(var(--v-brilho) / .42); border-radius: 50%; transform: rotate(8deg); }
 .vidro-varredura { overflow: hidden; opacity: .55; }
-html[data-vidro="b"] .vidro-varredura { opacity: .7; }
+html[data-vidro="b"] .vidro-varredura { opacity: .5; }
 .vidro-varredura b { position: absolute; left: 0; right: 0; top: 0; height: 14%; animation: vidro-varre 5.5s linear infinite;
   background: linear-gradient(to bottom, transparent, rgb(255 255 255 / .85), transparent); }
 
