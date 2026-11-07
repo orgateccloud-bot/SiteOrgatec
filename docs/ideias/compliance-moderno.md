@@ -1,6 +1,6 @@
 # Compliance moderno
 
-- **Situação:** ideia (estudo pronto, aguardando decisão)
+- **Situação:** ondas 1, 2 e 3 implementadas (07/11/2026); aguardando a revisão do responsável técnico e as decisões da direção
 - **Branch:** `ideia/compliance-moderno`
 - **Prévia:** sem prévia; o painel do estudo é `docs/painel/modelo-3-bento.html` (modelo escolhido em 07/11/2026)
 
