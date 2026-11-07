@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel Compliance · Lateral</title>
+<link rel="stylesheet" href="base.css">
+<style>.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+.camadas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.camada{padding:14px;border-radius:14px;border:1px dashed var(--line);text-align:center;color:var(--muted);font-size:14px}
+.camada b{display:block;color:var(--ink);font:700 20px var(--f-display)}
+.subtitulo{margin-top:22px;font-size:17px}
+.tabela{overflow-x:auto}
+@media (max-width:640px){.camadas{grid-template-columns:1fr}}
+.casca{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{background:var(--surface);border-right:1px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
+.marca{display:flex;align-items:center;gap:10px;font:800 18px var(--f-display);letter-spacing:.04em}
+.logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--hl))}
+aside .abas{display:grid;gap:6px}
+aside .abas .btn{text-align:left;border-radius:10px;border-color:transparent;background:transparent}
+aside .abas .btn[aria-pressed="true"]{background:var(--brand-soft);color:var(--ink);border-color:var(--brand)}
+aside .rodape{margin-top:auto}
+main{padding:28px clamp(16px,3vw,40px) 60px;max-width:1100px}
+.cab h1{font-size:clamp(24px,3vw,34px)}
+.cab p{color:var(--muted);margin:6px 0 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;border-left:4px solid var(--brand)}
+.kpi b{display:block;font:700 28px var(--f-mono)}
+.kpi small{color:var(--muted)}
+.kpi.alerta{border-left-color:var(--warn)} .kpi.alerta b{color:var(--warn)}
+.bloco{background:var(--surface);border:1px solid var(--line);border-radius:var(--raio);padding:20px 22px}
+.bloco .cartao{background:var(--surface2)}
+@media (max-width:860px){.casca{grid-template-columns:1fr}aside{position:static;height:auto}aside .abas{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}}</style>
+</head>
+<body>
+<div class="casca">
+<aside><div class="marca"><span class="logo" aria-hidden="true"></span><span>ORGATEC</span></div><nav class="abas" role="tablist" aria-label="Seções do painel" aria-orientation="vertical"><button class="btn" role="tab" data-aba="frentes" aria-pressed="true">Frentes</button><button class="btn" role="tab" data-aba="termometro" aria-pressed="false">Termômetro</button><button class="btn" role="tab" data-aba="evidencia" aria-pressed="false">Evidência</button><button class="btn" role="tab" data-aba="plano" aria-pressed="false">Plano</button><button class="btn" role="tab" data-aba="nao" aria-pressed="false">Não adotar</button></nav><div class="rodape"><button class="btn" id="tema" type="button">Tema claro/escuro</button><p class="nota">Estudo de 07/11/2026 · sem dados de clientes</p></div></aside>
+<main>
+  <header class="cab"><p class="nota">Compliance · estudo</p><h1>Compliance moderno na área do site</h1><p>Da pergunta "o que a lei exige" para "o controle funciona, e como você sabe".</p></header>
+  <div class="kpis"><div class="kpi "><b>38</b><small>pontos com fonte</small></div><div class="kpi "><b>43</b><small>perguntas no termômetro</small></div><div class="kpi "><b>9</b><small>perfis de público</small></div><div class="kpi alerta"><b>0</b><small>pontos aprovados na revisão técnica</small></div><div class="kpi alerta"><b>43</b><small>perguntas só de declaração</small></div><div class="kpi "><b>9</b><small>frentes analisadas</small></div></div>
+  
+<section class="bloco" data-painel="frentes">
+  <h2>As nove frentes</h2>
+  <p class="nota">Clique em um cartão para ver o que muda no site e no serviço.</p>
+  <div class="filtros" id="filtroClasse">
+    <button class="btn" data-classe="todas" aria-pressed="true">Todas</button>
+    <button class="btn" data-classe="A" aria-pressed="false">A · norma</button>
+    <button class="btn" data-classe="B" aria-pressed="false">B · experimento</button>
+    <button class="btn" data-classe="C" aria-pressed="false">C · observacional</button>
+  </div>
+  <div class="grade" id="frentes"></div>
+</section>
+<section class="bloco" data-painel="termometro" hidden>
+  <h2>Cobertura do termômetro</h2>
+  <p class="nota">Quantas das 43 perguntas tocam cada eixo. Mapa do estudo, seção 4.</p>
+  <div id="cobertura"></div>
+  <h3 class="subtitulo">Camadas propostas</h3>
+  <div class="camadas">
+    <div class="camada"><b>Existe?</b>O controle está no papel</div>
+    <div class="camada"><b>Funciona?</b>Foi usado no período, com que resultado</div>
+    <div class="camada"><b>Como sabe?</b>Que registro mostra isso</div>
+  </div>
+</section>
+<section class="bloco" data-painel="evidencia" hidden>
+  <h2>Estudos e normas</h2>
+  <div class="tabela"><table><thead><tr><th>Fonte</th><th>Classe</th><th>Achado</th><th>Limite</th></tr></thead><tbody id="tabelaEvidencia"></tbody></table></div>
+</section>
+<section class="bloco" data-painel="plano" hidden>
+  <h2>Plano em três ondas</h2>
+  <div class="onda" id="ondas"></div>
+</section>
+<section class="bloco" data-painel="nao" hidden>
+  <h2>O que não adotar</h2>
+  <div class="tabela"><table><thead><tr><th>Ideia</th><th>Por quê</th></tr></thead><tbody id="tabelaNao"></tbody></table></div>
+</section>
+</main>
+</div>
+<script src="painel.js"></script>
+</body>
+</html>

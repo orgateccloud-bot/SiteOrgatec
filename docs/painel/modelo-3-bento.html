@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel Compliance · Bento</title>
+<link rel="stylesheet" href="base.css">
+<style>.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+.camadas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.camada{padding:14px;border-radius:14px;border:1px dashed var(--line);text-align:center;color:var(--muted);font-size:14px}
+.camada b{display:block;color:var(--ink);font:700 20px var(--f-display)}
+.subtitulo{margin-top:22px;font-size:17px}
+.tabela{overflow-x:auto}
+@media (max-width:640px){.camadas{grid-template-columns:1fr}}
+:root{--raio:22px}
+.pagina{max-width:1200px;margin:0 auto;padding:22px 16px 60px}
+.topo{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.marca{display:flex;align-items:center;gap:10px;font:800 18px var(--f-display)}
+.logo{width:26px;height:26px;border-radius:7px;background:conic-gradient(var(--brand),var(--hl),var(--brand))}
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.folha{background:var(--surface);border:1px solid var(--line);border-radius:var(--raio);padding:18px}
+.titulo{grid-column:span 4;background:linear-gradient(140deg,var(--brand-soft),var(--surface));}
+.titulo h1{font-size:clamp(24px,3.2vw,38px)}
+.titulo p{color:var(--muted);margin:8px 0 0}
+.lacuna{grid-column:span 2;border-color:var(--warn);background:var(--warn-soft)}
+.lacuna b{display:block;font:700 44px var(--f-mono);color:var(--warn)}
+.cel{grid-column:span 1;padding:14px}
+.cel b{display:block;font:700 26px var(--f-mono)}
+.cel small{color:var(--muted);font-size:12px}
+.cel.alerta b{color:var(--warn)}
+.abas-folha{grid-column:span 6;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.abas-folha .abas{display:flex;flex-wrap:wrap;gap:8px}
+.area{grid-column:span 6}
+.area .cartao{background:var(--surface2);border-radius:16px}
+@media (max-width:900px){.bento{grid-template-columns:repeat(2,1fr)}.titulo,.lacuna,.abas-folha,.area{grid-column:span 2}}</style>
+</head>
+<body>
+<div class="pagina">
+<div class="topo"><div class="marca"><span class="logo" aria-hidden="true"></span><span>ORGATEC</span></div><button class="btn" id="tema" type="button">Tema</button></div>
+<div class="bento">
+  <div class="folha titulo"><p class="nota">Compliance moderno · 07/11/2026</p><h1>Da regra à prova de que funciona</h1><p>Nove frentes, evidência classificada e um plano em três ondas.</p></div>
+  <div class="folha lacuna"><b>0/43</b>perguntas do termômetro pedem prova de que o controle funciona</div>
+  <div class="folha cel "><b>38</b><small>pontos com fonte</small></div><div class="folha cel "><b>43</b><small>perguntas no termômetro</small></div><div class="folha cel "><b>9</b><small>perfis de público</small></div><div class="folha cel alerta"><b>0</b><small>pontos aprovados na revisão técnica</small></div><div class="folha cel alerta"><b>43</b><small>perguntas só de declaração</small></div><div class="folha cel "><b>9</b><small>frentes analisadas</small></div>
+  <div class="folha abas-folha"><nav class="abas" role="tablist" aria-label="Seções do painel"><button class="btn" role="tab" data-aba="frentes" aria-pressed="true">Frentes</button><button class="btn" role="tab" data-aba="termometro" aria-pressed="false">Termômetro</button><button class="btn" role="tab" data-aba="evidencia" aria-pressed="false">Evidência</button><button class="btn" role="tab" data-aba="plano" aria-pressed="false">Plano</button><button class="btn" role="tab" data-aba="nao" aria-pressed="false">Não adotar</button></nav><span class="nota">Classe A norma · B experimento · C observacional</span></div>
+  <div class="area">
+<section class="folha" data-painel="frentes">
+  <h2>As nove frentes</h2>
+  <p class="nota">Clique em um cartão para ver o que muda no site e no serviço.</p>
+  <div class="filtros" id="filtroClasse">
+    <button class="btn" data-classe="todas" aria-pressed="true">Todas</button>
+    <button class="btn" data-classe="A" aria-pressed="false">A · norma</button>
+    <button class="btn" data-classe="B" aria-pressed="false">B · experimento</button>
+    <button class="btn" data-classe="C" aria-pressed="false">C · observacional</button>
+  </div>
+  <div class="grade" id="frentes"></div>
+</section>
+<section class="folha" data-painel="termometro" hidden>
+  <h2>Cobertura do termômetro</h2>
+  <p class="nota">Quantas das 43 perguntas tocam cada eixo. Mapa do estudo, seção 4.</p>
+  <div id="cobertura"></div>
+  <h3 class="subtitulo">Camadas propostas</h3>
+  <div class="camadas">
+    <div class="camada"><b>Existe?</b>O controle está no papel</div>
+    <div class="camada"><b>Funciona?</b>Foi usado no período, com que resultado</div>
+    <div class="camada"><b>Como sabe?</b>Que registro mostra isso</div>
+  </div>
+</section>
+<section class="folha" data-painel="evidencia" hidden>
+  <h2>Estudos e normas</h2>
+  <div class="tabela"><table><thead><tr><th>Fonte</th><th>Classe</th><th>Achado</th><th>Limite</th></tr></thead><tbody id="tabelaEvidencia"></tbody></table></div>
+</section>
+<section class="folha" data-painel="plano" hidden>
+  <h2>Plano em três ondas</h2>
+  <div class="onda" id="ondas"></div>
+</section>
+<section class="folha" data-painel="nao" hidden>
+  <h2>O que não adotar</h2>
+  <div class="tabela"><table><thead><tr><th>Ideia</th><th>Por quê</th></tr></thead><tbody id="tabelaNao"></tbody></table></div>
+</section></div>
+</div>
+</div>
+<script src="painel.js"></script>
+</body>
+</html>
