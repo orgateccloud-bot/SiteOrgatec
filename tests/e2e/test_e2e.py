@@ -1587,7 +1587,8 @@ def test_vitrine_modelos_de_vidro(navegador, servidor, modelo, vp):
     fundo = pg.locator(".vidro-fundo")
     assert fundo.get_attribute("aria-hidden") == "true"  # decorativo: leitor de tela ignora
     assert fundo.evaluate("e => getComputedStyle(e).pointerEvents") == "none"  # não atrapalha cliques
-    assert pg.locator(".vidro-fundo .vidro-logo i").count() == 3
+    assert pg.locator(".vidro-fundo .vidro-logo > i").count() == 3  # base e as duas franjas de cor; o brilho fica numa camada à parte
+    assert pg.locator(".vidro-fundo .vidro-logo .brilho").count() == 1
     mascara = pg.locator(".vidro-logo .base").evaluate("e => getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage")
     assert "orgatec-simbolo-branco.svg" in mascara  # a logo é o símbolo ORGATEC, não um desenho refeito
     assert pg.request.get(f"{servidor}/assets/marca/orgatec-simbolo-branco.svg").ok
@@ -1615,8 +1616,53 @@ def test_vidro_holograma_segue_o_ponteiro_e_para_com_movimento_reduzido(navegado
     pg.mouse.move(1180, 200)
     pg.wait_for_timeout(150)
     hx = fundo.evaluate("e => e.style.getPropertyValue('--hx')")
-    animacao = pg.locator(".vidro-logo").evaluate("e => getComputedStyle(e).animationName")
+    animacao = pg.locator(".vidro-varredura b").evaluate("e => getComputedStyle(e).animationName")
     if calmo:
         assert hx == "" and animacao == "none"
     else:
         assert float(hx) > 0.5 and animacao != "none"
+
+
+def test_vidro_chave_para_comparar_os_modelos(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "inicio.html?vidro=b")
+    links = pg.locator(".vidro-troca a")
+    assert links.evaluate_all("els => els.map(e => e.textContent)") == ["Original", "A", "B"]
+    assert pg.locator(".vidro-troca a[aria-current=true]").inner_text() == "B"
+    assert links.evaluate_all("els => els.map(e => new URL(e.href).search)") == ["", "?vidro=a", "?vidro=b"]
+    links.nth(1).click()
+    pg.wait_for_load_state("load")
+    assert pg.get_attribute("html", "data-vidro") == "a"
+    assert not erros, erros
+
+
+def test_vidro_desliga_as_animacoes_com_a_pagina_rolada(navegador, servidor):
+    """Com a logo atrás dos cartões, qualquer animação faria todo cartão de vidro refazer o desfoque a cada quadro."""
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx.new_page()
+    pg.add_init_script("window.__vidroSemSonda = true")
+    pg.goto(f"{servidor}/inicio.html?vidro=a")
+    pg.wait_for_load_state("load")
+    html, varredura = pg.locator("html"), pg.locator(".vidro-varredura b")
+    expect(varredura).not_to_have_css("animation-name", "none")
+    pg.evaluate("window.scrollTo(0, 1200)")  # a rolagem da página é suave: as verificações esperam o fim
+    expect(html).to_have_class(re.compile("vidro-pausa"))
+    expect(varredura).to_have_css("animation-name", "none")
+    pg.evaluate("window.scrollTo(0, 0)")
+    expect(html).not_to_have_class(re.compile("vidro-pausa"))
+    expect(varredura).not_to_have_css("animation-name", "none")
+
+
+@pytest.mark.skipif(NAVEGADOR != "chromium", reason="a CPU lenta é emulada pelo protocolo do Chromium")
+def test_vidro_aparelho_lento_desliga_as_animacoes(navegador, servidor):
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/inicio.html?vidro=a")
+    pg.wait_for_load_state("load")
+    ctx.new_cdp_session(pg).send("Emulation.setCPUThrottlingRate", {"rate": 25})
+    for _ in range(60):  # a sonda mede duas vezes seguidas: leva uns 5 s com a CPU limitada
+        if pg.evaluate("document.documentElement.classList.contains('vidro-leve')"):
+            break
+        pg.wait_for_timeout(500)
+    assert pg.evaluate("document.documentElement.classList.contains('vidro-leve')")
+    assert pg.locator(".vidro-varredura b").evaluate("e => getComputedStyle(e).animationName") == "none"
+    assert pg.locator(".vidro-aneis i").first.evaluate("e => getComputedStyle(e).animationName") == "none"

@@ -25,9 +25,51 @@
     fundo.setAttribute('aria-hidden', 'true');
     fundo.innerHTML = '<div class="vidro-orbe o1"></div><div class="vidro-orbe o2"></div>' +
       '<div class="vidro-palco"><div class="vidro-feixe"></div><div class="vidro-aneis"><i></i><i></i></div><div class="vidro-orbita"></div>' +
-      '<div class="vidro-logo"><i class="base"></i><i class="ciano"></i><i class="azul"></i><div class="vidro-varredura"><b></b></div></div></div>';
+      '<div class="vidro-logo"><span class="brilho"><i></i></span><i class="base"></i><i class="ciano"></i><i class="azul"></i><div class="vidro-varredura"><b></b></div></div></div>';
     document.body.insertBefore(fundo, document.body.firstChild);
+
+    // Chave para comparar com a página original e entre os modelos (prévia: sai quando um modelo for escolhido)
+    var caminho = window.location.pathname;
+    var troca = document.createElement('nav');
+    troca.className = 'vidro-troca';
+    troca.setAttribute('aria-label', 'Modelos de vidro');
+    troca.innerHTML = '<span>Modelo</span><a href="' + caminho + '">Original</a>' +
+      '<a href="' + caminho + '?vidro=a"' + (modelo === 'a' ? ' aria-current="true"' : '') + '>A</a>' +
+      '<a href="' + caminho + '?vidro=b"' + (modelo === 'b' ? ' aria-current="true"' : '') + '>B</a>';
+    document.body.appendChild(troca);
     if (calmo) return;
+
+    // Desempenho. O vidro é barato; o que pesa é o fundo mudar a cada quadro, porque todo cartão refaz o desfoque.
+    // 1) Com a página rolada, a logo está atrás dos cartões: as animações pausam.
+    var pausado = false, rolando = 0;
+    function conferirRolagem() {
+      rolando = 0;
+      var pausar = window.scrollY > window.innerHeight * 0.5;
+      if (pausar !== pausado) { pausado = pausar; raiz.classList.toggle('vidro-pausa', pausar); }
+    }
+    window.addEventListener('scroll', function () { if (!rolando) rolando = window.requestAnimationFrame(conferirRolagem); }, { passive: true });
+    conferirRolagem();
+
+    // 2) Aparelho lento: mede o tempo de quadro com tudo animado e, se ficar abaixo de cerca de 30 quadros por segundo
+    //    duas vezes seguidas, desliga as animações (a inclinação pelo ponteiro continua).
+    function sonda(ms, depois) {
+      var t0 = window.performance.now(), ultimo = t0, quadros = [];
+      function passo(t) {
+        quadros.push(t - ultimo); ultimo = t;
+        if (t - t0 < ms) { window.requestAnimationFrame(passo); return; }
+        quadros.shift(); quadros.sort(function (a, b) { return a - b; });
+        depois(quadros[Math.floor(quadros.length / 2)]);
+      }
+      window.requestAnimationFrame(passo);
+    }
+    function conferirAparelho(vez) {
+      if (window.__vidroSemSonda || raiz.classList.contains('vidro-leve') || pausado) return;
+      sonda(1500, function (mediana) {
+        if (mediana <= 34) return;
+        if (vez >= 2) raiz.classList.add('vidro-leve'); else conferirAparelho(vez + 1);
+      });
+    }
+    window.setTimeout(function () { conferirAparelho(1); }, 1500);
 
     // Uma atualização por quadro, e só enquanto o ponteiro se mexe (mouse ou dedo).
     var quadro = 0, hx = 0, hy = 0;
