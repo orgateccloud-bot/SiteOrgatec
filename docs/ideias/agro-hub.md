@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; falta a sua decisão sobre a marca Audi Agro e a aprovação da prévia)
 - **Branch:** `ideia/agro-hub` (parte de `desenvolvimento`; independente das branches `ideia/campo-confiabilidade` e `ideia/campo-qualidade`)
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-agro-hub-kk86piet.web.app/setores/agro.html) (expira em 07/12/2026)
 
 ## Problema
 
