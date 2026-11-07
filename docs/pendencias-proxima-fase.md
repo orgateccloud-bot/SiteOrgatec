@@ -1,9 +1,9 @@
 # Pendências para a próxima fase
 
-Gerado em 06/11/2026 a partir de site/assets/js/homologacao.js.
+Gerado em 07/11/2026 a partir de site/assets/js/homologacao.js.
 
-- Abertas: 42 de 51
-- Bloqueiam a produção: 12
+- Abertas: 40 de 51
+- Bloqueiam a produção: 10
 
 ## Decisões da ORGATEC
 
@@ -61,7 +61,7 @@ Gerado em 06/11/2026 a partir de site/assets/js/homologacao.js.
 
 | ID | Pendência | Status | Bloqueia produção | Responsável | Onde resolver | Situação |
 |---|---|---|---|---|---|---|
-| T1 | Publicar no Firebase: site no Hosting, API no Cloud Run e banco no Firestore (São Paulo) | aberta | sim | Desenvolvimento | `docs/publicacao.md; firebase.json; firestore.rules; tools/preparar_firebase.py` | Pacote pronto e testado em 31/10/2026: repositório Firestore com a mesma trilha audit_hash (contrato no emulador, 12 envios simultâneos), imagem Docker gravando no emulador, rewrite /api/** para o Cloud Run em southamerica-east1, regras que negam acesso pelo navegador. Site publicado em homologação em https://orgatec-site.web.app e em orgatec.io, com os formulários pelo WhatsApp. Em 06/11/2026 o faturamento (plano Blaze) foi ativado no projeto orgatec-site, com alerta de orçamento mensal, e o Firestore tem proteção contra exclusão. Falta decidir se o site terá API: sem API, o site segue estático e o contato segue pelo WhatsApp; com API (Cloud Run), entram T2, T11, os formulários próprios e o login real do módulo LOCAR. A API ainda não foi publicada. Depende de: decisão da direção sobre lançamento completo ou em etapas (D2). |
+| T1 | Publicar no Firebase: site no Hosting, API no Cloud Run e banco no Firestore (São Paulo) | resolvida | sim | Desenvolvimento | `docs/publicacao.md; firebase.json; firestore.rules; tools/preparar_firebase.py` | Marcada como resolvida. |
 | T2 | Envio real do e-mail de confirmação do opt-in | aberta | sim | Desenvolvimento | `backend/app.py → /api/optin` | Hoje os links de confirmação e de descadastro não são enviados a ninguém: o banco guarda só o hash dos tokens. O serviço de envio precisa mandar o link de confirmação e, em toda mensagem, o de descadastro (/api/optin/sair). Em 01/11/2026 a ORGATEC pediu lançamento completo, então os alertas por e-mail entram na produção. Em 06/11/2026 o domínio orgatec.io já tem registro MX, SPF, DKIM e DMARC (em modo de monitoramento) do Google Workspace, e contato@ e dpo@ estão ativos. Falta escolher o serviço de envio dos alertas (se não for o Workspace, incluir o novo provedor no SPF e criar o DKIM dele) e implementar o envio, que depende da API (T1). Depende de: C3. |
 | T3 | Trocar o Tailwind via CDN pelo CSS compilado | resolvida | sim | Desenvolvimento | `tools/compilar_css.py → site/assets/css/tailwind.css` | Marcada como resolvida. |
 | T4 | Servir as fontes do site localmente | resolvida | não | Desenvolvimento | `tools/baixar_fontes.py → site/assets/fontes/` | Marcada como resolvida. |
@@ -72,7 +72,7 @@ Gerado em 06/11/2026 a partir de site/assets/js/homologacao.js.
 | T8 | Republicar o design system orgatec-template2 no Claude | aberta | não | Desenvolvimento | `design-system/orgatec-template2/` | Em 02/11/2026 foram republicados no design system do Claude (artefato orgatec-template2) o selo "vigência futura" (tom futuro), os estilos do cartão de item da reforma (og-item) e a regra do símbolo com as cores originais. Falta o componente do cartão de item da reforma: hoje ele existe só no site (reforma-itens.js), e o bundle do design system tem apenas o CSS. |
 | T10 | Logotipo em vetor fiel ao original | aberta | não | Desenvolvimento | `fontes-marca/orgatec-logo-original.jpg; tools/extrair_logo_original.py; site/marca.html` | O site usa o símbolo extraído da imagem original (PNG de 313 × 346 px, sem redesenho). Ele fica nítido até cerca de 300 px. Para impressão, fachada e para refazer as assinaturas e ícones do manual de marca, enviar o arquivo vetorial original (AI, SVG ou PDF). As versões vetoriais atuais do manual são uma reconstrução e diferem do original. |
 | T20 | Levar o boletim automático para o Cloud Scheduler | aberta | não | Desenvolvimento | `tools/gerar_boletim_campo.py (mesmo script) + Cloud Run job + Cloud Scheduler` | Hoje o boletim é gerado no PC pelo Agendador de Tarefas do Windows (05h, 11h e 17h) e só roda com o computador ligado. Com o faturamento Blaze ativo, o mesmo script roda na nuvem. Depende de: T1. |
-| T11 | Calibrar a posição do IP do visitante no Cloud Run | aberta | sim | Desenvolvimento | `Cloud Run → ORGATEC_IP_POSICAO e ORGATEC_DIAGNOSTICO_IP` | O Firebase Hosting não documenta em que posição do X-Forwarded-For o IP do visitante chega. Na homologação, ler o log diagnostico-ip, fixar ORGATEC_IP_POSICAO e desligar o diagnóstico. Sem isso, o limite de envios por visitante pode ser contornado ou valer para todos juntos. Depende de: T1. |
+| T11 | Calibrar a posição do IP do visitante no Cloud Run | resolvida | sim | Desenvolvimento | `Cloud Run → ORGATEC_IP_POSICAO e ORGATEC_DIAGNOSTICO_IP` | Marcada como resolvida. Depende de: T1. |
 | T12 | Segurança dos sistemas antes de ligar o botão "Entrar" (Fase 0 do plano) | aberta | não | Desenvolvimento | `docs/plano-incorporacao-produtos.md, Fase 0 (documento interno); depois site/assets/js/config.js → solucoes.<id>.situacao = disponivel` | Nenhum sistema tem link público hoje. Antes de ligar qualquer um, a ORGATEC conclui a revisão de segurança da Fase 0. Os detalhes ficam só no documento interno: este painel é público. |
 | T9 | Virar o site para produção | aberta | não | Desenvolvimento | `site/assets/js/config.js → ambiente: 'producao'` | Ambiente atual: homologacao. Depende de: todas as que bloqueiam. |
 

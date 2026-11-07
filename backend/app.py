@@ -79,7 +79,8 @@ def _criar_repo():
 
 repo = _criar_repo()
 
-app = FastAPI(title="ORGATEC — API pública", version="1.0.0", docs_url=None, redoc_url=None)
+# Sem /docs, /redoc nem /openapi.json: o esquema da API não precisa ficar público.
+app = FastAPI(title="ORGATEC — API pública", version="1.0.0", docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in os.environ.get("ORGATEC_ORIGENS", "https://orgatec.io").split(",")],
