@@ -894,7 +894,7 @@ def test_janela_de_campo(navegador, servidor, vp):
     # sem o boletim automático publicado, a página usa o manual mais recente (28/10/2026, já vencido)
     sem_auto = {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
     pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=sem_auto)
-    pg.wait_for_selector(".campo-celula")
+    pg.wait_for_selector(".campo-celula", state="attached")
     regioes = pg.evaluate("window.Orgatec.boletinsCampo[0].regioes.length")
     assert pg.locator(".campo-celula").count() == regioes * 5
     # boletim de 28/10/2026 já passou: aparece como arquivo, com o aviso para consultar o INMET, e sem role=alert
@@ -902,12 +902,14 @@ def test_janela_de_campo(navegador, servidor, vp):
     expect(pg.locator("[data-campo-situacao] a[href='https://alertas2.inmet.gov.br']")).to_be_visible()
     assert pg.locator(".campo-alerta[role=alert]").count() == 0
     expect(pg.locator("[data-campo-dia]")).to_contain_text("28 de outubro de 2026")
-    # célula da matriz escolhe região e operação
+    # célula da matriz escolhe região e operação (no celular a comparação vem recolhida)
+    if not pg.locator("[data-campo-comparar]").evaluate("e => e.open"):
+        pg.click("[data-campo-comparar] summary")
     pg.click(".campo-celula[data-r=sul][data-o=colheita]")
     expect(pg.locator("#campoRegiao")).to_have_text("Sul")
     expect(pg.locator("[data-campo-rec]")).to_contain_text("Colheita")
     expect(pg.locator("[data-campo-rec]")).to_contain_text("trigo")
-    expect(pg.locator(".campo-aba[data-o=colheita]")).to_have_attribute("aria-pressed", "true")
+    expect(pg.locator(".campo-op[data-o=colheita]")).to_have_attribute("aria-pressed", "true")
     assert pg.locator("[data-campo-linha] > div").count() == 6
     assert pg.locator("[data-campo-fontes] a[href^='https://']").count() >= 1
     # a escolha fica lembrada
@@ -1252,6 +1254,8 @@ def test_janela_de_campo_automatica(navegador, servidor, vp):
     pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=_rotas_campo(b))
     expect(pg.locator("[data-campo-situacao]")).to_contain_text("Atualizado às")
     expect(pg.locator("[data-campo-situacao]")).not_to_contain_text("vencido")
+    if vp == "mobile":
+        pg.click("[data-aba=satelite]")  # no desktop o satélite fica sempre à vista
     # mapa de satélite: imagens da NASA (aqui servidas pelo teste), 20 polos coloridos e horário do infravermelho
     expect(pg.locator(".mapa-polo")).to_have_count(len(b["polos"]))
     expect(pg.locator("[data-mapa-hora]")).to_contain_text("Infravermelho")
@@ -1263,7 +1267,7 @@ def test_janela_de_campo_automatica(navegador, servidor, vp):
     assert pg.locator("[data-campo-horaria] > div").count() == 24
     expect(pg.locator("[data-campo-polo-txt]")).to_contain_text("Palmas")
     # trocar a operação recolore o mapa
-    pg.locator(".campo-aba[data-o=animais]").first.click()
+    pg.locator(".campo-op[data-o=animais]").click()
     expect(pg.locator("[data-polo='palmas']")).to_have_attribute("aria-label", re.compile("Palmas"))
     # próximos 7 dias, critérios pendentes e fontes com o MET Norway
     assert pg.locator(".campo-semana tbody tr").count() == len(b["regioes"])
@@ -1754,3 +1758,84 @@ def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
         pg, erros = _abrir(navegador, servidor, caminho)
         expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../setores/agro-mercado.html']").first).to_be_visible()
         assert not erros, (caminho, erros)
+
+
+# ---------- Janela de Campo: nova ordem (Fase 3 do plano de modernização do agro)
+
+def test_janela_primeira_decisao_na_primeira_tela_do_celular(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    pg.wait_for_selector(".campo-op")
+    assert pg.locator(".campo-op").count() == 5
+    topo = pg.evaluate("document.querySelector('.campo-op').getBoundingClientRect().top + scrollY")
+    assert topo <= 812, topo
+    assert pg.evaluate("document.documentElement.scrollHeight") <= 5000
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    # resumo curto por operação e comparação das regiões recolhida
+    assert all(len(t) <= 90 for t in pg.locator(".campo-op-txt").all_inner_texts())
+    assert not pg.locator("[data-campo-comparar]").evaluate("e => e.open")
+    # o satélite só carrega quando a aba é aberta
+    assert pg.locator(".mapa-satelite").count() == 0 and pg.locator(".mapa-palco img").count() == 0
+    assert not erros, erros
+
+
+def test_janela_abas_com_teclado_e_satelite_sob_demanda(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    assert pg.locator("[data-aba]").evaluate_all("els => els.map(e => e.getAttribute('data-aba'))") == ["horas", "semana", "satelite", "como"]
+    expect(pg.locator("[data-aba=horas]")).to_have_attribute("aria-selected", "true")
+    expect(pg.locator("[data-painel=horas]")).to_be_visible()
+    expect(pg.locator("[data-painel=semana]")).to_be_hidden()
+    pg.focus("[data-aba=horas]")
+    pg.keyboard.press("ArrowRight")
+    expect(pg.locator("[data-aba=semana]")).to_have_attribute("aria-selected", "true")
+    expect(pg.locator("[data-painel=semana]")).to_be_visible()
+    pg.keyboard.press("End")
+    expect(pg.locator("[data-aba=como]")).to_have_attribute("aria-selected", "true")
+    expect(pg.locator("[data-painel=como] .campo-criterios")).to_be_visible()
+    pg.keyboard.press("Home")
+    expect(pg.locator("[data-aba=horas]")).to_have_attribute("aria-selected", "true")
+    pg.click("[data-aba=satelite]")
+    expect(pg.locator(".mapa-polo")).to_have_count(len(b["polos"]))
+    assert not erros, erros
+
+
+def test_janela_desktop_duas_colunas_com_satelite_sempre_a_vista(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-painel=satelite]")).to_be_visible()
+    expect(pg.locator("[data-aba=satelite]")).to_be_hidden()
+    expect(pg.locator(".mapa-polo")).to_have_count(len(b["polos"]))
+    expect(pg.locator("[data-campo-comparar]")).to_have_attribute("open", "")
+    esq, dir_ = pg.locator(".campo-esq").bounding_box(), pg.locator(".campo-dir").bounding_box()
+    assert esq["x"] + esq["width"] <= dir_["x"] + 1 and abs(esq["y"] - dir_["y"]) < 40  # lado a lado
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS["desktop"][0]
+    assert not erros, erros
+
+
+def test_janela_avisa_polo_sem_previsao_e_mantem_um_polo_escolhido(navegador, servidor):
+    b = _boletim_automatico()
+    ausente = b["polos"].pop()
+    b["semDados"] = [{"id": ausente["id"], "nome": ausente["nome"], "uf": ausente["uf"], "regiao": ausente["regiao"]}]
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-campo-situacao]")).to_contain_text("Sem previsão neste horário: " + ausente["nome"])
+    pg.click(f".campo-aba[data-r={ausente['regiao']}]")
+    regiao = next(r for r in b["regioes"] if r["id"] == ausente["regiao"])
+    assert pg.locator("[data-campo-polos] .campo-aba").count() == len(regiao["polos"]) - 1
+    assert pg.locator("[data-campo-polos] .campo-aba[aria-pressed=true]").count() == 1
+    assert pg.locator("[data-campo-horaria] > div").count() == 24
+    assert not erros, erros
+
+
+def test_janela_minha_atividade_leva_ao_card_e_fica_lembrada(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", rotas=_rotas_campo(_boletim_automatico()))
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html")
+    pg.select_option("[data-minha-atividade]", "soja")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    pg.reload()
+    pg.wait_for_load_state("load")
+    expect(pg.locator("[data-minha-atividade]")).to_have_value("soja")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    assert not erros, erros

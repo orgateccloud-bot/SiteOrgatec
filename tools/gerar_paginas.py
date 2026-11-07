@@ -65,10 +65,12 @@ def hero(sobre: str, titulo: str, lead: str, ctas: str) -> str:
         </section>"""
 
 
-def intro(sobre: str, titulo: str, texto: str = "", depois: str = "") -> str:
-    """Abertura curta das páginas internas (ferramentas, cliente, contato)."""
-    paragrafo = f'\n                <p class="text-tinta-suave max-w-3xl">{texto}</p>' if texto else ""
-    return f"""        <section class="py-10 sm:py-14 bg-superficie border-b border-linha" data-hero>
+def intro(sobre: str, titulo: str, texto: str = "", depois: str = "", compacto: bool = False) -> str:
+    """Abertura curta das páginas internas (ferramentas, cliente, contato). compacto: no celular, sem o texto e com menos
+    espaço, para a página que precisa mostrar a decisão na primeira tela (Janela de Campo)."""
+    classe_texto = "text-tinta-suave max-w-3xl" + (" hidden sm:block" if compacto else "")
+    paragrafo = f'\n                <p class="{classe_texto}">{texto}</p>' if texto else ""
+    return f"""        <section class="{"py-4 sm:py-14" if compacto else "py-10 sm:py-14"} bg-superficie border-b border-linha" data-hero>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <p class="eyebrow">{sobre}</p>
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-tinta tracking-tight mt-2 mb-4">{titulo}</h1>{paragrafo}
@@ -379,7 +381,7 @@ def subnav_setores(ativo: str) -> str:
                      for chave, rot, arq in [("agro", "Agro", "agro.html"), ("transporte", "Transporte", "transporte.html"),
                                              ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html"),
                                              ("mercado", "Cotações e notícias", "agro-mercado.html")])
-    return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex flex-wrap gap-3">{botoes}</div>'
+    return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores>{botoes}</div>'
 
 
 # Página "Por público" da área de Compliance que corresponde ao setor (só as que já estão no ar)
@@ -529,17 +531,22 @@ def janela_de_campo() -> None:
     """Janela de Campo: boletim agrometeorológico para o produtor rural (retenção do público agro).
     Dados em assets/js/boletins-campo.js; tela em assets/js/campo.js. Boletim vencido continua como arquivo, marcado.
     Os cards por atividade (Orgatec Audi Agro) moraram aqui; agora estão em agro_mercado()."""
+    import json
+    from html import escape
+    atividades = json.loads(AGRO.read_text(encoding="utf-8"))["atividades"]
+    opcoes_atividades = "".join(f'<option value="{a["id"]}">{escape(a["nome"])}</option>' for a in atividades)
     corpo = "\n".join([
-        intro("Setor · Agro · Janela de Campo", "Janela de Campo: o tempo para o trabalho no campo",
-              "Boletim automático para o produtor rural, atualizado três vezes por dia: por região e por operação (pulverização, plantio, colheita, manejo de animais e máquinas), a janela do dia hora a hora, os próximos 7 dias e as nuvens e a chuva por satélite."),
+        intro("Setor · Agro", "Janela de Campo",
+              "Boletim automático três vezes ao dia, por região e operação.", compacto=True),
         subnav_setores("campo"),
-        """        <section class="py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8" data-campo>
+        """        <section class="py-5 sm:py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-4 sm:gap-8" data-campo>
                 <p class="og-cartao-texto">Carregando o boletim. Se nada aparecer, ative o JavaScript ou consulte os avisos do INMET em <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.</p>
             </div>
             <p class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 text-xs text-tinta-fraca font-mono">Boletim informativo gerado automaticamente a partir das fontes listadas (previsão: MET Norway, CC BY 4.0; satélite: NASA/NOAA). Não substitui os avisos oficiais do <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a> e da Defesa Civil do seu município, nem a bula dos produtos.</p>
         </section>""",
-        secao("Mercado", "Cotações e notícias por atividade", """                <p class="text-tinta-suave max-w-3xl mb-6">O indicador do CEPEA, as notícias e a legislação de cada atividade do agro estão numa página própria.</p>
+        secao("Mercado", "Minha atividade", f"""                <p class="text-tinta-suave max-w-3xl mb-6">Escolha a sua atividade: o indicador do CEPEA, as notícias e a legislação dela estão na página de cotações e notícias.</p>
+                <div class="og-campo max-w-xs mb-6"><label class="og-campo-rotulo" for="minhaAtividade">Minha atividade</label><select id="minhaAtividade" class="og-campo-controle og-campo-md" data-minha-atividade><option value="">Todas as atividades</option>{opcoes_atividades}</select></div>
                 <a href="agro-mercado.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie"),
         faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe."),
     ])
