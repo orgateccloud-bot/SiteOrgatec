@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel Compliance · Relatório</title>
+<link rel="stylesheet" href="base.css">
+<style>.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.filtros{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+.camadas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.camada{padding:14px;border-radius:14px;border:1px dashed var(--line);text-align:center;color:var(--muted);font-size:14px}
+.camada b{display:block;color:var(--ink);font:700 20px var(--f-display)}
+.subtitulo{margin-top:22px;font-size:17px}
+.tabela{overflow-x:auto}
+@media (max-width:640px){.camadas{grid-template-columns:1fr}}
+:root{--f-display:"Sora","Segoe UI",system-ui,sans-serif;--f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif}
+body{font-size:16px}
+.faixa{background:var(--brand);color:var(--brand-ink)}
+.faixa .dentro{max-width:980px;margin:0 auto;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.marca{display:flex;align-items:center;gap:10px;font:700 17px var(--f-display);letter-spacing:.05em}
+.logo{width:24px;height:24px;border-radius:50%;border:3px solid var(--brand-ink)}
+.faixa .btn{background:transparent;color:var(--brand-ink);border-color:rgba(255,255,255,.5)}
+.capa{max-width:980px;margin:0 auto;padding:44px 16px 18px}
+.capa .eyebrow{font:600 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--brand)}
+.capa h1{font-size:clamp(28px,4.4vw,48px);line-height:1.08;margin-top:10px}
+.capa p{font-size:19px;color:var(--muted);max-width:720px}
+.numeros{max-width:980px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));border-top:2px solid var(--ink);border-bottom:1px solid var(--line)}
+.num{padding:16px 12px;border-right:1px solid var(--line)}
+.num:last-child{border-right:0}
+.num b{display:block;font:700 34px var(--f-display);color:var(--brand)}
+.num.alerta b{color:var(--warn)}
+.num small{color:var(--muted)}
+.conteudo{max-width:980px;margin:0 auto;padding:22px 16px 64px}
+.conteudo .abas{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.secao h2{font-size:26px;margin-bottom:6px}
+.secao .cartao{box-shadow:0 1px 2px rgba(12,26,51,.06)}</style>
+</head>
+<body>
+<div class="faixa"><div class="dentro"><div class="marca"><span class="logo" aria-hidden="true"></span><span>ORGATEC</span></div><button class="btn" id="tema" type="button">Tema</button></div></div>
+<header class="capa"><span class="eyebrow">Estudo · 07/11/2026</span><h1>O controle existe. Mas funciona?</h1><p>Diagnóstico da área de Compliance do site e o que normas e estudos dizem sobre compliance moderno.</p></header>
+<div class="numeros"><div class="num "><b>38</b><small>pontos com fonte</small></div><div class="num "><b>43</b><small>perguntas no termômetro</small></div><div class="num "><b>9</b><small>perfis de público</small></div><div class="num alerta"><b>0</b><small>pontos aprovados na revisão técnica</small></div><div class="num alerta"><b>43</b><small>perguntas só de declaração</small></div><div class="num "><b>9</b><small>frentes analisadas</small></div></div>
+<main class="conteudo"><nav class="abas" role="tablist" aria-label="Seções do painel"><button class="btn" role="tab" data-aba="frentes" aria-pressed="true">Frentes</button><button class="btn" role="tab" data-aba="termometro" aria-pressed="false">Termômetro</button><button class="btn" role="tab" data-aba="evidencia" aria-pressed="false">Evidência</button><button class="btn" role="tab" data-aba="plano" aria-pressed="false">Plano</button><button class="btn" role="tab" data-aba="nao" aria-pressed="false">Não adotar</button></nav>
+<section class="secao" data-painel="frentes">
+  <h2>As nove frentes</h2>
+  <p class="nota">Clique em um cartão para ver o que muda no site e no serviço.</p>
+  <div class="filtros" id="filtroClasse">
+    <button class="btn" data-classe="todas" aria-pressed="true">Todas</button>
+    <button class="btn" data-classe="A" aria-pressed="false">A · norma</button>
+    <button class="btn" data-classe="B" aria-pressed="false">B · experimento</button>
+    <button class="btn" data-classe="C" aria-pressed="false">C · observacional</button>
+  </div>
+  <div class="grade" id="frentes"></div>
+</section>
+<section class="secao" data-painel="termometro" hidden>
+  <h2>Cobertura do termômetro</h2>
+  <p class="nota">Quantas das 43 perguntas tocam cada eixo. Mapa do estudo, seção 4.</p>
+  <div id="cobertura"></div>
+  <h3 class="subtitulo">Camadas propostas</h3>
+  <div class="camadas">
+    <div class="camada"><b>Existe?</b>O controle está no papel</div>
+    <div class="camada"><b>Funciona?</b>Foi usado no período, com que resultado</div>
+    <div class="camada"><b>Como sabe?</b>Que registro mostra isso</div>
+  </div>
+</section>
+<section class="secao" data-painel="evidencia" hidden>
+  <h2>Estudos e normas</h2>
+  <div class="tabela"><table><thead><tr><th>Fonte</th><th>Classe</th><th>Achado</th><th>Limite</th></tr></thead><tbody id="tabelaEvidencia"></tbody></table></div>
+</section>
+<section class="secao" data-painel="plano" hidden>
+  <h2>Plano em três ondas</h2>
+  <div class="onda" id="ondas"></div>
+</section>
+<section class="secao" data-painel="nao" hidden>
+  <h2>O que não adotar</h2>
+  <div class="tabela"><table><thead><tr><th>Ideia</th><th>Por quê</th></tr></thead><tbody id="tabelaNao"></tbody></table></div>
+</section><p class="nota">Não é parecer jurídico nem probabilidade de autuação. Detalhes: docs/estudo-compliance-moderno.md.</p></main>
+<script src="painel.js"></script>
+</body>
+</html>
