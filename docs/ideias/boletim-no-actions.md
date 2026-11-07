@@ -1,6 +1,6 @@
 # Boletim da Janela de Campo no GitHub Actions
 
-- **Situação:** em desenvolvimento (protótipo que só gera, sem publicar)
+- **Situação:** em desenvolvimento (gera e já publicou numa prévia de teste, sem chave; ativação no ar pendente)
 - **Branch:** `ideia/boletim-actions`
 - **Prévia:** não se aplica (o protótipo não publica; o resultado fica como artefato da execução, por 7 dias)
 
@@ -25,8 +25,8 @@ Rodar o mesmo gerador num runner do GitHub, com a publicação feita sem chave d
 
 ### O que o protótipo não prova
 
-- **Publicação sem chave:** a ação `FirebaseExtended/action-hosting-deploy` só documenta chave JSON. Usar `firebase-tools` com credencial da federação (ADC), sem chave, **não foi confirmado** na documentação oficial; precisa de um teste real antes de qualquer ativação.
-- **Faturamento:** não se sabe se o Hosting exige o plano Blaze para a federação funcionar. A conta de faturamento do projeto está fechada (ver o estudo de custos).
+- **Publicação sem chave:** CONFIRMADO em 07/11/2026 (execução 42306843277, branch `ideia/boletim-actions`): `google-github-actions/auth@v3` entrou no Google por federação e o `firebase-tools@15.34.1` aceitou a credencial, publicando o canal de prévia `teste-actions` (boletim do dia, 5 boletins de histórico e cartão do status presentes; canal ao vivo intacto). Foi preciso, além do papel de administrador do Hosting, o papel `serviceusage.serviceUsageConsumer` (sem ele: 403 em `serviceusage.services.get`).
+- **Faturamento:** o teste rodou depois da ativação do Blaze (06/11/2026), então não prova que a federação funciona sem Blaze. As APIs `iamcredentials`, `sts` e `iam` foram ativadas ainda sem faturamento.
 - **Horário:** o `schedule` do GitHub roda em UTC, pode atrasar e só vale na branch padrão. Os horários de Brasília (05h, 11h, 17h) são 08h, 14h e 20h UTC (sem horário de verão desde 2019).
 - **Rede:** testado em 06/11/2026 (execução do protótipo na branch): as fontes (MET Norway, notícias do agro) responderam a partir do GitHub e o boletim saiu com 20 polos e o cartão do status. Uma falha transitória do MET Norway apareceu numa execução local; o gerador já registra o erro e mantém o boletim anterior, mas convém medir a frequência antes de ativar.
 
@@ -47,3 +47,7 @@ Rodar o mesmo gerador num runner do GitHub, com a publicação feita sem chave d
 - O workflow roda sem erro num runner limpo e o artefato traz o boletim do dia, o índice com histórico e o cartão do status.
 - O teste `tests/py/test_restaurar_dados_do_site.py` passa e a suíte completa segue verde.
 - O deploy sem chave foi testado numa prévia (`hosting:channel:deploy`), nunca direto no canal ao vivo, e o resultado está registrado aqui.
+
+## Federação criada (07/11/2026)
+
+Projeto `orgatec-site`: pool `github-actions`, provedor `github-orgatec` (aceita só o repositório `orgateccloud-bot/SiteOrgatec` e a branch `ideia/boletim-actions`) e conta de serviço `boletim-deploy` sem chave, com `firebasehosting.admin` e `serviceusage.serviceUsageConsumer`. Para ativar no ar seria preciso ampliar a condição do provedor para a `main`, criar o agendamento e decidir onde fica `site/dados/`. Para reverter: apagar a conta de serviço, o provedor e o pool.
