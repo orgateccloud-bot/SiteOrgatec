@@ -2,7 +2,7 @@
 
 - **Situação:** em prévia (dois modelos para a ORGATEC escolher)
 - **Branch:** `ideia/vidro-azul`
-- **Prévia:** modelo A com `inicio.html?vidro=a` e modelo B com `inicio.html?vidro=b` (endereço da prévia no registro de ideias)
+- **Prévia:** modelo A https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html?vidro=a e modelo B https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html?vidro=b (expira em 06/12/2026)
 
 ## Problema
 

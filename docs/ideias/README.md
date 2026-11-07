@@ -4,7 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Vitrine em vidro azul com a logo em holograma](vidro-azul.md) | em prévia | `ideia/vidro-azul` | a gerar |
+| [Vitrine em vidro azul com a logo em holograma](vidro-azul.md) | em prévia | `ideia/vidro-azul` | [A](https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html?vidro=a) · [B](https://orgatec-site--ideia-vidro-azul-lz7ujg2j.web.app/inicio.html?vidro=b) |
 | [Holograma mais nítido](holograma-nitido.md) | lançada em 05/11/2026 | removida | [link](https://orgatec-site--ideia-holograma-nitido-2hlv5qgd.web.app) |
 | [Holograma só com ORGATEC e LOCAR](holograma-locar.md) | revertida em 04/11/2026 | removida | [link](https://orgatec-site--ideia-holograma-locar-prxpwqtv.web.app) |
 | [Módulo LOCAR](modulo-locar.md) | lançada em 03/11/2026 | removida | [link](https://orgatec-site--ideia-modulo-locar-jelxw25c.web.app/cliente/locar.html) |
