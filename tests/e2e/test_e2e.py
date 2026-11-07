@@ -369,13 +369,16 @@ def test_calculadoras(navegador, servidor):
 
 def test_setor_agro_e_a_entrada_do_produtor_rural(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "setores/agro.html")
-    assert pg.locator("[data-itens] .og-item").count() >= 6
+    pg.wait_for_selector("#tributos .og-item")
     caminhos = pg.locator("[data-agro-caminho]")
     assert caminhos.count() == 4
     hrefs = caminhos.evaluate_all("els => els.flatMap(e => [...e.querySelectorAll('a')].map(a => a.getAttribute('href')))")
-    for esperado in ["../setores/janela-de-campo.html", "../setores/agro-mercado.html", "#tributos", "../ferramentas/index.html#produtor",
-                     "../compliance/publico/produtor-rural.html", "../setores/regional.html?setor=agro", "../solucoes/auditoria-rural.html"]:
-        assert esperado in hrefs, esperado
+    assert hrefs == ["../setores/janela-de-campo.html", "../setores/agro-mercado.html", "#tributos", "../solucoes/auditoria-rural.html"]
+    # chamadas claras: a calculadora e a auditoria rural, mais o compliance e os alertas do setor
+    passos = pg.locator("#proximos-passos a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    for esperado in ["../ferramentas/index.html#produtor", "../solucoes/auditoria-rural.html", "../compliance/publico/produtor-rural.html",
+                     "regional.html?setor=agro"]:
+        assert esperado in passos, esperado
     assert pg.locator("#tributos [data-itens]").count() == 1  # o caminho "Tributos" leva à lista de pontos da reforma
     # os alertas ficam numa página só: aqui não há mais a lista nem o seletor de estado
     assert pg.locator("#aUf, .lista-alertas").count() == 0
@@ -1838,4 +1841,80 @@ def test_janela_minha_atividade_leva_ao_card_e_fica_lembrada(navegador, servidor
     pg.wait_for_load_state("load")
     expect(pg.locator("[data-minha-atividade]")).to_have_value("soja")
     expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    assert not erros, erros
+
+
+# ---------- Página Agro: resumo do dia, pontos da reforma recolhidos por tema (Fase 4)
+
+def _agro(navegador, servidor, vp="desktop", boletim=None, rotas=None):
+    todas = _rotas_campo(boletim) if boletim is not None else {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
+    return _abrir(navegador, servidor, "setores/agro.html", vp, rotas={**todas, **(rotas or {})})
+
+
+def test_agro_resumo_do_dia_na_regiao_escolhida(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _agro(navegador, servidor, boletim=b)
+    pg.wait_for_selector("[data-agro-hoje-lista] li")
+    assert pg.locator("[data-agro-hoje-lista] li").count() == 5
+    nomes = pg.locator("[data-agro-hoje-lista] li > span:first-child").all_inner_texts()
+    assert nomes == ["Pulverização", "Plantio", "Colheita", "Manejo de animais", "Máquinas e insumos"]
+    assert pg.locator("[data-agro-hoje-lista] .campo-selo").count() == 5  # estado com ícone, texto e cor
+    # trocar a região grava a escolha na mesma chave da Janela de Campo, que abre na mesma região
+    alvo = b["regioes"][2]
+    pg.select_option("#agroHojeRegiao", alvo["id"])
+    assert pg.evaluate("JSON.parse(localStorage.getItem('orgatec.campo')).r") == alvo["id"]
+    pg2 = pg.context.new_page()
+    for padrao, f in _rotas_campo(b).items():
+        pg2.route(padrao, f)
+    pg2.goto(f"{servidor}/setores/janela-de-campo.html")
+    expect(pg2.locator("#campoRegiao")).to_have_text(alvo["nome"])
+    assert not erros, erros
+
+
+def test_agro_resumo_do_dia_sem_boletim_valido_fica_so_o_link(navegador, servidor):
+    for boletim in (None, _boletim_automatico(horas_atras=20)):
+        pg, erros = _agro(navegador, servidor, boletim=boletim)
+        pg.wait_for_timeout(800)
+        assert pg.locator("[data-agro-hoje-lista]").count() == 0  # nenhum número sem boletim vigente
+        expect(pg.locator("a[data-agro-hoje-link]")).to_have_attribute("href", "janela-de-campo.html")
+        assert not [e for e in erros if "404" not in e], erros
+
+
+def test_agro_pontos_da_reforma_recolhidos_por_tema_com_fontes(navegador, servidor):
+    pg, erros = _agro(navegador, servidor)
+    pg.wait_for_selector("#tributos .og-item")
+    total = pg.evaluate("window.Orgatec.reformaItens.filter(i => i.destinos.includes('setor-agro')).length")
+    assert pg.locator("#tributos details.og-item").count() == 5 and pg.locator("#tributos details[open]").count() == 0
+    expect(pg.locator("#tributos [data-contagem]")).to_have_text(f"Mostrando 5 de {total} pontos")
+    pg.click("[data-ver-todos]")
+    assert pg.locator("#tributos details.og-item").count() == total
+    expect(pg.locator("[data-ver-todos]")).to_be_hidden()
+    # leitura sob demanda, com o teclado: fato, orientação e fontes só depois de abrir; nada é omitido
+    primeiro = pg.locator("#tributos details.og-item").first
+    expect(primeiro.locator(".og-item-fontes a").first).to_be_hidden()
+    primeiro.locator("summary").focus()
+    pg.keyboard.press("Enter")
+    expect(primeiro).to_have_attribute("open", "")
+    expect(primeiro.locator(".og-item-fontes a").first).to_be_visible()
+    expect(primeiro.locator(".og-item-meta")).to_contain_text("Consultado em")
+    # chips de tema: só os temas que têm item; o filtro mostra todos os itens do tema
+    chips = pg.locator("[data-temas] button")
+    rotulos = chips.all_inner_texts()
+    assert rotulos[0] == "Todos" and len(rotulos) >= 3
+    chips.nth(1).click()
+    tema = pg.evaluate("window.Orgatec.reformaItens.find(i => i.destinos.includes('setor-agro')).tema")
+    esperado = pg.evaluate("t => window.Orgatec.reformaItens.filter(i => i.destinos.includes('setor-agro') && i.tema === t).length", pg.locator("#tributos details.og-item").first.get_attribute("data-tema"))
+    assert pg.locator("#tributos details.og-item").count() == esperado and tema
+    expect(chips.nth(1)).to_have_attribute("aria-pressed", "true")
+    assert not erros, erros
+
+
+def test_agro_celular_curto_e_sem_rolagem_horizontal(navegador, servidor):
+    pg, erros = _agro(navegador, servidor, "mobile", boletim=_boletim_automatico())
+    pg.wait_for_selector("[data-agro-hoje-lista] li")
+    assert pg.evaluate("document.documentElement.scrollHeight") <= 5000
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    # o resumo do dia vem antes dos caminhos, e estes antes dos pontos da reforma
+    ys = pg.evaluate("['[data-agro-hoje]', '[data-agro-caminho]', '#tributos', '#proximos-passos'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
+    assert ys == sorted(ys)
     assert not erros, erros

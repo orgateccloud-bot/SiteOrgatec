@@ -214,6 +214,19 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 .campo-matriz tbody tr.selecionada th{box-shadow:inset 4px 0 0 var(--brand)}
 .campo-celula{width:100%;min-height:52px;padding:6px 8px;display:flex;align-items:center;border:0;background:transparent;font:inherit;color:inherit;cursor:pointer}
 .campo-celula.ativa .campo-selo{outline:2px solid var(--ink);outline-offset:1px}
+/* Página Agro: resumo do dia (agro-hoje.js) e itens da reforma recolhidos (conteudo.renderItem com recolhido) */
+.campo-hoje-mini{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.campo-hoje-mini li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--line)}
+.campo-hoje-mini li:last-child{border-bottom:0}
+.og-cartao.og-item-recolhivel{display:block;padding:0}
+.og-item-resumo{list-style:none;cursor:pointer;display:grid;gap:6px;padding:14px 44px 14px 16px;position:relative}
+.og-item-linha{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.og-item-resumo::-webkit-details-marker{display:none}
+.og-item-resumo::after{content:"+";position:absolute;right:16px;top:14px;font:600 22px/1 var(--f-mono);color:var(--muted)}
+.og-item-recolhivel[open]>.og-item-resumo::after{content:"2"}
+.og-item-resumo:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:var(--r)}
+.og-item-resumo .og-cartao-titulo{margin:0}
+.og-item-corpo{display:grid;gap:12px;padding:0 16px 16px}
 /* Janela de Campo, nova ordem: seletor, "Hoje na minha região", abas e, no desktop, duas colunas com o satélite sempre à vista */
 .campo-grade{display:grid;gap:24px;min-width:0}
 .campo-esq,.campo-dir{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-content:start;min-width:0}

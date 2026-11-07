@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Página Agro: o dia do produtor e os pontos da reforma sob demanda (Fase 4)](agro-pagina.md) | em desenvolvimento | `ideia/agro-pagina` | ainda não gerada |
 | [Janela de Campo: a decisão do dia na primeira tela (Fase 3)](campo-layout.md) | em prévia | `ideia/campo-layout` | [link](https://orgatec-site--ideia-campo-layout-xu3bh1tl.web.app/setores/janela-de-campo.html) |
 | [Janela de Campo: painel que discrimina e avisa dado faltando (Fase 1)](campo-qualidade.md) | em prévia | `ideia/campo-qualidade` | [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) |
 | [Janela de Campo: boletim resistente a falha da fonte (Fase 0)](campo-confiabilidade.md) | em prévia | `ideia/campo-confiabilidade` | [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) |

@@ -67,63 +67,69 @@
     <!-- Objetivo: captação + autoridade -->
     <main data-objetivo="captação + autoridade">
         <nav class="trilha max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6" aria-label="Trilha de navegação"><ol><li><a href="../inicio.html">Início</a></li><li aria-current="page">Setores</li><li aria-current="page">Agro</li></ol></nav>
-        <section class="py-16 lg:py-24" data-hero>
+        <section class="py-6 sm:py-16 lg:py-24" data-hero>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="max-w-3xl">
                     <p class="eyebrow">Setor · Agro</p>
-                    <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.05] text-ink my-6">A reforma tributária no agronegócio e para o produtor rural.</h1>
-                    <p class="text-lg text-muted mb-8 leading-relaxed">Redução de 60% para in natura e insumos, produtor não contribuinte até R$ 3,6 milhões, crédito presumido de quem compra e LCDPR: o que muda no campo.</p>
-                    <div class="flex flex-col sm:flex-row gap-3"><a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" data-msg="Olá! Quero falar sobre a reforma tributária no setor de agro." class="og-btn og-btn-contato og-btn-lg">Agendar Diagnóstico com Especialista</a><a href="../ferramentas/index.html#produtor" class="og-btn og-btn-sobre-palco og-btn-lg">Usar a ferramenta do setor</a></div>
+                    <h1 class="text-3xl sm:text-6xl my-3 sm:my-6 font-extrabold leading-[1.05] text-ink">A reforma tributária no agronegócio e para o produtor rural.</h1>
+                    <p class="text-lg text-muted mb-5 sm:mb-8 line-clamp-3 sm:line-clamp-none leading-relaxed">Redução de 60% para in natura e insumos, produtor não contribuinte até R$ 3,6 milhões, crédito presumido de quem compra e LCDPR: o que muda no campo.</p>
+                    <div class="flex flex-col sm:flex-row gap-3"><a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" data-msg="Olá! Quero falar sobre a reforma tributária no setor de agro." class="og-btn og-btn-contato og-btn-lg">Agendar Diagnóstico com Especialista</a><span class="hidden sm:contents"><a href="../ferramentas/index.html#produtor" class="og-btn og-btn-sobre-palco og-btn-lg">Usar a ferramenta do setor</a></span></div>
                 </div>
             </div>
         </section>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores><a href="agro.html" class="og-btn og-btn-primario og-btn-md">Agro</a><a href="transporte.html" class="og-btn og-btn-contorno og-btn-md">Transporte</a><a href="regional.html" class="og-btn og-btn-contorno og-btn-md">Alertas regionais</a><a href="janela-de-campo.html" class="og-btn og-btn-contorno og-btn-md">Janela de Campo</a><a href="agro-mercado.html" class="og-btn og-btn-contorno og-btn-md">Cotações e notícias</a></div>
-        <section class="py-16 bg-fundo">
+        <section class="py-6" aria-labelledby="agroHojeTitulo" data-agro-hoje data-campo-dados="../dados/campo/">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="og-cartao grid gap-3">
+                    <div><h2 id="agroHojeTitulo" class="eyebrow">Hoje na sua região<span class="sr-only">: <span data-agro-hoje-regiao>Janela de Campo</span></span></h2></div>
+                    <div class="grid gap-3" data-agro-hoje-corpo>
+                        <p class="og-cartao-texto">Veja se hoje dá para pulverizar, plantar, colher e fazer o manejo dos animais na sua região.</p>
+                    </div>
+                    <p><a href="janela-de-campo.html" class="og-btn og-btn-primario og-btn-md" data-agro-hoje-link>Abrir a Janela de Campo</a></p>
+                </div>
+            </div>
+        </section>
+        <section class="py-8 sm:py-16 bg-fundo">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <p class="eyebrow">Para o produtor rural</p>
                 <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">O que você quer fazer hoje?</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Tempo</span><h3 class="og-cartao-titulo"><a href="../setores/janela-de-campo.html" class="hover:text-acao">Janela de Campo</a></h3><p class="og-cartao-texto">Boletim automático três vezes por dia: a janela do dia por operação, os próximos 7 dias e o satélite.</p></article>
-                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Mercado</span><h3 class="og-cartao-titulo"><a href="../setores/agro-mercado.html" class="hover:text-acao">Cotações e notícias</a></h3><p class="og-cartao-texto">Por atividade: o indicador do CEPEA, as notícias e a legislação que mexem com o seu preço e o seu imposto.</p></article>
-                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Tributos e obrigações</span><h3 class="og-cartao-titulo"><a href="#tributos" class="hover:text-acao">Reforma, LCDPR e Funrural</a></h3><p class="og-cartao-texto">O que muda para o produtor e o que ele precisa cumprir.</p><ul class="mt-3 grid gap-1 text-sm"><li><a href="../ferramentas/index.html#produtor" class="og-link">Calculadora: produtor contribuinte?</a></li><li><a href="../compliance/publico/produtor-rural.html" class="og-link">Compliance do produtor rural</a></li><li><a href="../setores/regional.html?setor=agro" class="og-link">Alertas regionais do agro em GO, TO e PA</a></li></ul></article>
-                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Serviços</span><h3 class="og-cartao-titulo"><a href="../solucoes/auditoria-rural.html" class="hover:text-acao">Auditoria rural e diagnóstico</a></h3><p class="og-cartao-texto">As notas do produtor conferidas uma a uma, com laudo, e um diagnóstico para o seu caso.</p><ul class="mt-3 grid gap-1 text-sm"><li><a href="../contato/index.html" class="og-link">Falar com a equipe</a></li></ul></article>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Tempo</span><h3 class="og-cartao-titulo"><a href="../setores/janela-de-campo.html" class="hover:text-acao">Janela de Campo</a></h3><p class="og-cartao-texto hidden sm:block">A janela do dia por operação, os próximos 7 dias e o satélite.</p></article>
+                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Mercado</span><h3 class="og-cartao-titulo"><a href="../setores/agro-mercado.html" class="hover:text-acao">Cotações e notícias</a></h3><p class="og-cartao-texto hidden sm:block">Indicador do CEPEA, notícias e legislação por atividade.</p></article>
+                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Tributos e obrigações</span><h3 class="og-cartao-titulo"><a href="#tributos" class="hover:text-acao">Reforma, LCDPR e Funrural</a></h3><p class="og-cartao-texto hidden sm:block">Os pontos da reforma, a calculadora do produtor, o compliance e os alertas do agro.</p></article>
+                    <article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">Serviços</span><h3 class="og-cartao-titulo"><a href="../solucoes/auditoria-rural.html" class="hover:text-acao">Auditoria rural e diagnóstico</a></h3><p class="og-cartao-texto hidden sm:block">As notas do produtor conferidas uma a uma, com laudo.</p></article>
                 </div>
             </div>
         </section>
-        <section class="py-16 bg-fundo">
+        <section id="tributos" class="py-8 sm:py-16 bg-fundo">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <p class="eyebrow">Por que importa</p>
-                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">A reforma no agro</h2>
-                <p class="text-tinta-suave max-w-3xl leading-relaxed">O agro tem as maiores reduções da reforma, mas também as escolhas mais difíceis: ser ou não contribuinte de IBS e CBS muda o preço negociado com cooperativas, tradings e frigoríficos, e o fim gradual do ICMS reduz o valor dos incentivos estaduais de 2029 a 2032.</p>
-            </div>
-        </section>
-        <section id="tributos" class="py-16 bg-fundo">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <p class="eyebrow">Itens</p>
-                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Pontos da reforma para agro</h2>
-                <div data-itens data-destino="setor-agro" data-setor="agro">
+                <p class="eyebrow">Itens da reforma</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Pontos da reforma para o agro</h2>
+                <details class="mb-4 max-w-3xl"><summary class="font-semibold cursor-pointer py-2">Por que importa para o agro</summary><p class="text-tinta-suave leading-relaxed mt-2">O agro tem as maiores reduções da reforma, mas também as escolhas mais difíceis: ser ou não contribuinte de IBS e CBS muda o preço negociado com cooperativas, tradings e frigoríficos, e o fim gradual do ICMS reduz o valor dos incentivos estaduais de 2029 a 2032.</p></details>
+                <div data-itens data-destino="setor-agro" data-setor="agro" data-recolher data-inicial="5">
+                    <div class="campo-abas mb-3" role="group" aria-label="Tema" data-temas hidden></div>
+                    <p class="text-sm text-tinta-fraca mb-3" data-contagem aria-live="polite"></p>
                     <div class="lista-itens grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <p class="mt-4"><button type="button" class="og-btn og-btn-contorno og-btn-md" data-ver-todos hidden>Ver todos os pontos</button></p>
                 </div>
             </div>
         </section>
-        <section id="compliance" class="py-16 bg-superficie">
+        <section id="proximos-passos" class="py-8 sm:py-16 bg-superficie">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <p class="eyebrow">Compliance</p>
-                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">O que o seu setor precisa cumprir</h2>
-                <p class="text-tinta-suave max-w-3xl mb-6">Além do IBS e da CBS, o setor tem obrigações próprias, com prazo e penalidade. Elas estão reunidas, com a fonte oficial, na área de Compliance.</p>
-                <a href="../compliance/publico/produtor-rural.html" class="og-btn og-btn-primario og-btn-lg" data-compliance-setor>Ver o que o setor precisa cumprir</a>
+                <p class="eyebrow">Próximos passos</p>
+                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Do número ao laudo</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="../ferramentas/index.html#produtor" class="og-cartao"><span class="og-cartao-ref">Calculadora</span><h3 class="og-cartao-titulo">O produtor é contribuinte?</h3><p class="og-cartao-texto">Veja, pela receita do ano, se o produtor fica dentro ou fora do regime regular de IBS e CBS.</p></a>
+                    <a href="../solucoes/auditoria-rural.html" class="og-cartao"><span class="og-cartao-ref">Serviço do escritório</span><h3 class="og-cartao-titulo">Auditoria forense rural (NFA-e)</h3><p class="og-cartao-texto">As notas do produtor conferidas uma a uma, com laudo.</p></a>
+                </div>
+                <p class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    <a href="../compliance/publico/produtor-rural.html" class="og-link" data-compliance-setor>O que o produtor rural precisa cumprir (Compliance)</a>
+                    <a href="regional.html?setor=agro" class="og-link" data-alertas-agro>Alertas do agro por estado: GO, TO e PA</a>
+                    <a href="regional.html" class="og-link">Alertas de atacado e indústria</a>
+                </p>
             </div>
         </section>
-        <section class="py-16 bg-superficie">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <p class="eyebrow">Eixo GO-TO-PA</p>
-                <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Alertas regionais para o agro</h2>
-                <p class="text-tinta-suave max-w-3xl mb-6">Os pontos de atenção do agro em Goiás, no Tocantins e no Pará, com a fonte legal de cada um, ficam numa página própria.</p>
-                <a href="regional.html?setor=agro" class="og-btn og-btn-primario og-btn-lg" data-alertas-agro>Ver os alertas do agro por estado</a>
-                <p class="mt-6"><a href="regional.html" class="og-link">Alertas de comércio atacadista e indústria →</a></p>
-            </div>
-        </section>
-        <section class="py-16 bg-superficie border-t border-linha">
+        <section class="py-8 sm:py-16 bg-superficie border-t border-linha">
             <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
                 <h2 class="text-2xl font-bold text-tinta mb-3">Diagnóstico para agro</h2>
                 <p class="text-tinta-suave mb-6">Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano.</p>
@@ -171,6 +177,8 @@
     <script src="../assets/js/conteudo.js"></script>
     <script src="../assets/js/reforma-itens.js"></script>
     <script src="../assets/js/calculadoras.js"></script>
+    <script src="../assets/js/campo.js"></script>
+    <script src="../assets/js/agro-hoje.js"></script>
     <script src="../assets/js/paginas.js"></script>
 </body>
 </html>
