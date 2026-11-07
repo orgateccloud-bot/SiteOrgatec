@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; falta a prévia e a sua aprovação)
 - **Branch:** `ideia/campo-layout` (junta as Fases 0, 1 e 2: `ideia/campo-qualidade` e `ideia/agro-hub`)
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-campo-layout-xu3bh1tl.web.app/setores/janela-de-campo.html) (expira em 07/12/2026). Usa um boletim real gerado com o código das Fases 0 e 1, em 07/11/2026 às 20h22.
 
 ## Problema
 
@@ -35,16 +35,16 @@ Outras mudanças:
 - **Subnavegação dos setores** em uma fileira com rolagem lateral no celular.
 - **O que não muda na interface:** estados sempre com ícone, texto e cor; movimento reduzido respeitado; o mapa e seus controles são os mesmos.
 
-## Medição (Playwright, 375 x 812 e 1280 x 900, com o ambiente de homologação e a faixa de aviso do topo)
+## Medição (Playwright na prévia, com dados reais, 375 x 812 e 1280 x 900)
 
 | | Antes | Agora |
 |---|---|---|
-| Janela no celular | 14.092 px | 4.403 px |
-| Primeira decisão no celular | 2.068 px | 741 px (o topo da primeira operação) |
-| Janela no desktop | 7.606 px | 3.440 px |
+| Janela no celular | 14.092 px | 4.376 px |
+| Primeira decisão no celular (topo da primeira operação) | 2.068 px | 718 px |
+| Janela no desktop | 7.606 px | 3.982 px |
 | Rolagem horizontal | nenhuma | nenhuma |
 
-A medição usou um boletim gerado com a resposta gravada do MET Norway e o arquivo de dados real, com 2 polos sem previsão (o que deixa o texto de status com uma linha a mais). Na produção a faixa de homologação do topo (cerca de 80 px) não aparece, e a primeira operação começa em torno de 660 px. Com a faixa, parte da primeira operação fica sob a barra fixa de contato do rodapé do celular.
+A medição foi feita com a faixa de homologação do topo (cerca de 80 px), que não aparece em produção; sem ela, a primeira operação começa em torno de 640 px. Com a faixa, parte da primeira operação fica sob a barra fixa de contato do rodapé do celular. Na prévia o satélite não carrega no celular até a aba ser aberta (0 imagens), e carrega no desktop (27).
 
 ## Fora desta fase
 
