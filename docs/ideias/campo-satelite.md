@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; falta a prévia e a sua aprovação)
 - **Branch:** `ideia/campo-satelite` (parte de `desenvolvimento`, que já tem as Fases 0 a 4)
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-campo-satelite-20z856ne.web.app/setores/janela-de-campo.html) (expira em 07/12/2026). Conferida em 375 px e 1280 px com as imagens reais da NASA, em 07/11/2026 às 22h: celular sem pedido à NASA antes de abrir a aba; cor real às 21h20 (infravermelho às 21h30); chuva IMERG de 06/11; sem erros nem rolagem lateral.
 
 ## Problema
 
