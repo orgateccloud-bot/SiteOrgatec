@@ -82,6 +82,7 @@ def test_acesso_ok_nao_tem_motivo(monkeypatch):
 
 def test_credencial_vencida_para_antes_da_suite(monkeypatch, capsys):
     monkeypatch.setattr(P, "motivo_para_nao_publicar", lambda: None)
+    monkeypatch.setattr(P, "motivo_remoto", lambda: None)  # sem isto o teste depende do git do ambiente (no GitHub a main local fica atrás)
     monkeypatch.setattr(P, "conferir_acesso", lambda: P.AVISO_CREDENCIAL)
     monkeypatch.setattr(P, "rodar_suite", lambda: pytest.fail("não deveria rodar a suíte"))
     assert P.main([]) == 1
