@@ -34,3 +34,6 @@ docs/levantamento-workspace-*.md
 docs/mapeamento-custos-*.md
 docs/github-actions-*.md
 docs/_arquivo/
+
+# Mapeamentos de segurança: descrevem fragilidades reais, ficam só no disco
+docs/mapeamento-seguranca-*
