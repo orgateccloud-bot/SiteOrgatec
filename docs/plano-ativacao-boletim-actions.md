@@ -1,6 +1,8 @@
 # Plano de ativação do boletim no GitHub Actions, com alerta (08/11/2026)
 
-Canal de alerta escolhido em 08/11/2026: **GitHub Actions**. Este plano diz o que já existe, o que falta, o que você precisa decidir e como reverter. **Nada foi ativado**: nenhum workflow novo está em `.github/workflows`, nenhuma permissão foi alterada e as tarefas do Windows continuam como estão.
+Canal de alerta escolhido em 08/11/2026: **GitHub Actions**. Este plano diz o que já existe, o que falta, o que você precisa decidir e como reverter.
+
+**Atualização (08/11/2026, depois da sua autorização da semana de sombra):** a sombra e o vigia estão prontos na branch `ideia/boletim-sombra` (workflows `boletim-campo-sombra.yml` e `boletim-vigia.yml`, `tools/comparar_sombra.py`, restauração do histórico de notícias) e **só passam a rodar quando essa branch chegar à `main` por uma publicação**, porque execuções agendadas só valem na branch padrão. A sombra **não publica e não entra no Google** (sem `id-token`), então a federação e o IAM do projeto ficam como estão até a virada. As tarefas do Windows continuam como estão.
 
 ## 1. Onde estamos (conferido em 08/11/2026)
 
@@ -15,7 +17,7 @@ Canal de alerta escolhido em 08/11/2026: **GitHub Actions**. Este plano diz o qu
 ## 2. O alerta, em camadas
 
 1. **Falha da execução.** Se o workflow do boletim falhar (geração ou publicação), o GitHub avisa por e-mail. Pela [documentação do GitHub](https://docs.github.com/en/actions/concepts/workflows-and-actions/notifications-for-workflow-runs), o aviso de execução agendada vai para quem criou o workflow, e muda para quem editar a linha do `cron` depois; o e-mail só chega se essa pessoa tiver as notificações de Actions ligadas (dá para limitar a "só falhas").
-2. **Vigia de atraso** (pronto, inativo). `tools/vigiar_boletim.py`, com testes, confere o boletim que está no ar e falha quando ele passa de 14 horas, está ilegível ou o site não responde. O workflow de exemplo é `docs/ideias/boletim-vigia.yml.exemplo` (a cada 2 h, no minuto 23). Ele cobre o que a camada 1 não vê: a execução que **não rodou** (o GitHub avisa que execuções agendadas podem atrasar ou ser descartadas em horários de pico, sobretudo no começo da hora) e a publicação que falhou sem erro visível. Testado contra o boletim real: em dia (3,8 h), e alerta com limite de 1 h.
+2. **Vigia de atraso** (pronto). `tools/vigiar_boletim.py`, com testes, confere o boletim que está no ar e falha quando ele passa de 14 horas, está ilegível ou o site não responde. O workflow é `.github/workflows/boletim-vigia.yml` (a cada 2 h, no minuto 23). Ele cobre o que a camada 1 não vê: a execução que **não rodou** (o GitHub avisa que execuções agendadas podem atrasar ou ser descartadas em horários de pico, sobretudo no começo da hora) e a publicação que falhou sem erro visível. Testado contra o boletim real: em dia (3,8 h), e alerta com limite de 1 h.
 3. **O próprio site.** O visitante já vê "Boletim desatualizado" depois de 18 horas. O vigia avisa antes (14 h).
 
 **Limites que continuam:**
@@ -25,20 +27,22 @@ Canal de alerta escolhido em 08/11/2026: **GitHub Actions**. Este plano diz o qu
 
 ## 3. O que falta fazer para ativar (checklist)
 
-1. **Workflow do boletim** (`.github/workflows/boletim-campo.yml`, a partir de `docs/ideias/boletim-no-actions-publicar.yml.exemplo`), com estes ajustes que o exemplo ainda não tem:
-   - **Código da última tag, não da `main`.** Fazer o checkout da tag `publicado-*` mais recente e gerar o boletim com o código dela, que já passou na suíte, para o GitHub não levar ao ar código sem suíte (mesma regra do agendador depois do commit `7f0fc2b`).
+1. **Workflow que publica** (`.github/workflows/boletim-campo.yml`, para a virada, a partir de `docs/ideias/boletim-no-actions-publicar.yml.exemplo`), com estes ajustes que o exemplo ainda não tem. **A sombra (`boletim-campo-sombra.yml`) já faz o primeiro; o segundo e o terceiro entram junto com a publicação:**
+   - **Código da última tag, não da `main`** (feito na sombra, ordenando as tags pelo nome). Gerar o boletim com o código da tag `publicado-*` mais recente, que já passou na suíte, para o GitHub não levar ao ar código sem suíte (mesma regra do agendador depois do commit `7f0fc2b`).
    - **Conferir a tag de novo antes de publicar.** Se uma publicação nova acontecer enquanto a execução está em andamento, abortar em vez de sobrescrever o código novo com o antigo.
    - Cron em minuto "quebrado", por exemplo `7 8,14,20 * * *` (05h, 11h e 17h de Brasília, que são 08h, 14h e 20h UTC).
-2. **Restaurar também o histórico de notícias.** `tools/restaurar_dados_do_site.py` (na branch do protótipo) restaura só `agro/noticias.json` (constante `FIXOS`). Falta `agro/historico.json`, criado na Fase 6. Sem ele, cada execução no GitHub começaria sem histórico e o acúmulo de 180 dias das notícias nunca se formaria.
+2. **Restaurar também o histórico de notícias** (FEITO na branch `ideia/boletim-sombra`, com teste). `tools/restaurar_dados_do_site.py` restaurava só `agro/noticias.json`; agora restaura também `agro/historico.json`, criado na Fase 6. Sem ele, cada execução no GitHub começaria sem histórico e o acúmulo de 180 dias das notícias nunca se formaria.
 3. **Ampliar o provedor da federação** para aceitar a `main` (hoje só aceita `ideia/boletim-actions`). Mexe em IAM do projeto `orgatec-site`.
 4. **Se a `main` ganhar outros destinos de rewrite** além do Cloud Run `orgatec-api`, dar leitura neles à conta `boletim-deploy` (o reteste de 08/11 falhou com 403 até isso ser feito para o `orgatec-api`).
-5. **Vigia:** copiar `boletim-vigia.yml.exemplo` para `.github/workflows/boletim-vigia.yml` na `main`.
+5. **Vigia:** FEITO na branch `ideia/boletim-sombra` (`.github/workflows/boletim-vigia.yml`); entra na `main` com a publicação.
 6. **Desligar as tarefas do Windows** só no fim da semana de sombra: `python tools/gerar_boletim_campo.py --remover-agendador`.
 7. Atualizar `docs/ideias/boletim-no-actions.md` e a memória do projeto.
 
-## 4. Semana de sombra (recomendada)
+## 4. Semana de sombra (autorizada em 08/11/2026)
 
-Durante 7 dias o GitHub gera o boletim e publica **só num canal de prévia**, enquanto o agendador do Windows continua publicando no ar. Assim os dois nunca disputam o `orgatec.io`. Passa para o ar se, em 7 dias (21 rodadas), não houver falha, o boletim do GitHub tiver o mesmo formato do que está no ar e o vigia ficar verde. Depois: ampliar o provedor, trocar o canal de publicação para o ao vivo e desligar o agendador do Windows no mesmo dia.
+Durante 7 dias o GitHub gera o boletim e as notícias **sem publicar e sem entrar no Google**, compara com o que está no ar e guarda o resultado, enquanto o agendador do Windows continua publicando. Assim os dois nunca disputam o `orgatec.io`, e a federação do Google não precisa mudar na sombra (a publicação sem chave já foi provada numa prévia).
+
+**Critérios para passar para o ar:** em 7 dias (21 rodadas), nenhuma execução falha, o formato é o mesmo do que está no ar em todas, as rodadas começam perto das 05h, 11h e 17h, o histórico de notícias do GitHub não encolhe e o vigia fica verde. Se passar: ampliar o provedor para a `main`, acrescentar a publicação (primeiro num canal de prévia, depois no ao vivo) e desligar o agendador do Windows no mesmo dia.
 
 ## 5. Custo (segundo `docs/github-actions-e-custos-2026-11.md`, arquivo local da outra branch)
 
@@ -59,6 +63,6 @@ Plano Free com cerca de 2.000 minutos por mês no Linux. O boletim, 3 execuçõe
 - Desfazer a federação: apagar a conta `boletim-deploy`, o provedor e o pool (`docs/ideias/boletim-no-actions.md`).
 - O vigia não altera nada; é só leitura de um arquivo público.
 
-## 8. O que foi criado agora
+## 8. O que foi criado
 
-`tools/vigiar_boletim.py` e `tests/py/test_vigiar_boletim.py` (20 testes), `docs/ideias/boletim-vigia.yml.exemplo` e este plano. Nada disso roda sozinho nem vai ao ar até alguém publicar a `desenvolvimento`.
+`tools/vigiar_boletim.py` (20 testes), `tools/comparar_sombra.py` (testes em `tests/py/test_comparar_sombra.py`), a restauração do histórico de notícias, `.github/workflows/boletim-campo-sombra.yml`, `.github/workflows/boletim-vigia.yml` e este plano. Simulação dos passos da sombra fora do GitHub, em 08/11/2026: restaurou 10 arquivos, gerou o boletim sem publicar (20 polos, 47 notícias no histórico, nenhuma perdida) e a comparação deu "mesmo formato". Nada roda no GitHub até a `main` ganhar os workflows por uma publicação.

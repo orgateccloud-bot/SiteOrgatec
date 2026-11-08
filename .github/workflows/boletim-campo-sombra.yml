@@ -1,0 +1,70 @@
+name: Boletim da Janela de Campo (sombra)
+
+# SOMBRA: roda no GitHub o mesmo boletim que o agendador do Windows publica, só que SEM PUBLICAR e SEM credencial do Google.
+# Serve para provar, durante uma semana, que o GitHub gera o mesmo formato (mesmos polos, regiões e notícias) e roda no
+# horário. O boletim de verdade continua nas tarefas do Windows (ORGATEC\JanelaCampo05h/11h/17h).
+# Plano e critérios: docs/plano-ativacao-boletim-actions.md. Para desligar: aba Actions > Disable workflow, ou apagar este arquivo.
+#
+# Gera com o código da ÚLTIMA publicação (tag publicado-*), que já passou na suíte, e não com a ponta da main.
+# Resultado: resumo da execução (comparação com o que está no ar) e o artefato site/dados por 7 dias.
+# Um formato diferente do que está no ar FALHA a execução; o GitHub avisa por e-mail quem criou o workflow ou editou o cron.
+
+on:
+  schedule:
+    # 05h, 11h e 17h de Brasília (UTC-3), no minuto 7: o começo da hora é o mais disputado e tem mais atraso e descarte de execuções
+    - cron: "7 8,14,20 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: boletim-campo-sombra
+  cancel-in-progress: false
+
+permissions:
+  contents: read   # sem id-token: a sombra não entra no Google
+
+jobs:
+  sombra:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Usar o código da última publicação
+        run: |
+          # As tags publicado-AAAAMMDD-HHMM são leves: o nome, e não a data do commit, diz qual é a mais recente.
+          ULTIMA=$(git tag --list 'publicado-*' | sort | tail -1)
+          test -n "$ULTIMA" || { echo "nenhuma tag publicado-* encontrada"; exit 1; }
+          git checkout --detach "$ULTIMA"
+          echo "Código da publicação **$ULTIMA** ($(git log -1 --format=%h))" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - name: Dependências do gerador
+        run: pip install httpx defusedxml Pillow playwright
+      - name: Navegador para o cartão do status
+        run: python -m playwright install --with-deps chromium
+
+      - name: Restaurar o histórico que está no ar
+        run: python tools/restaurar_dados_do_site.py
+
+      - name: Gerar o boletim e as notícias (sem publicar)
+        run: python tools/gerar_boletim_campo.py
+
+      - name: Comparar com o que está no ar
+        run: python tools/comparar_sombra.py
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sombra-boletim-${{ github.run_id }}
+          path: site/dados
+          retention-days: 7

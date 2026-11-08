@@ -16,7 +16,7 @@ Equipe interna (continuidade da publicação). O visitante não nota diferença.
 
 Rodar o mesmo gerador num runner do GitHub, com a publicação feita sem chave de serviço (federação de identidade). Em duas etapas:
 
-1. **Protótipo (esta branch):** `.github/workflows/boletim-campo-prototipo.yml`. Só dispara à mão (`workflow_dispatch`), não tem `cron`, não publica e não usa credencial do Google. Restaura o histórico que está no ar (`tools/restaurar_dados_do_site.py`), gera o boletim e o cartão do status, confere o resultado e guarda `site/dados` como artefato.
+1. **Protótipo (esta branch):** `.github/workflows/boletim-campo-prototipo.yml` (a partir de 08/11/2026 substituído por `boletim-campo-sombra.yml`, com agendamento, código da última tag e comparação; ver `docs/plano-ativacao-boletim-actions.md`). Só dispara à mão (`workflow_dispatch`), não tem `cron`, não publica e não usa credencial do Google. Restaura o histórico que está no ar (`tools/restaurar_dados_do_site.py`), gera o boletim e o cartão do status, confere o resultado e guarda `site/dados` como artefato.
 2. **Ativação (depende de autorização do usuário):** agendar, ligar a federação com o Google e publicar. O arquivo `boletim-no-actions-publicar.yml.exemplo` mostra o esqueleto; ele não roda (extensão `.exemplo`, fora de `.github/workflows`).
 
 ### Por que o histórico precisa ser restaurado

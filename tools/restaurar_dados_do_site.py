@@ -7,6 +7,7 @@ que o gerador compara para marcar o que mudou. O que é restaurado:
     dados/campo/indice.json e os boletins que ele lista (os 30 dias mais recentes)
     dados/campo/atual.json
     dados/agro/noticias.json
+    dados/agro/historico.json   (o acumulado de 180 dias das notícias; sem ele cada execução recomeça do zero)
 
 Boletins mais antigos que os 30 do índice não têm como ser listados pela web e não voltam.
 
@@ -31,7 +32,7 @@ import httpx
 RAIZ = Path(__file__).resolve().parent.parent
 BASE = "https://orgatec.io"
 DESTINO = RAIZ / "site" / "dados"
-FIXOS = ("campo/indice.json", "campo/atual.json", "agro/noticias.json")
+FIXOS = ("campo/indice.json", "campo/atual.json", "agro/noticias.json", "agro/historico.json")
 NOME_BOLETIM = re.compile(r"^boletim-\d{4}-\d{2}-\d{2}\.json$")
 USER_AGENT = "orgatec-boletim-actions"
 
