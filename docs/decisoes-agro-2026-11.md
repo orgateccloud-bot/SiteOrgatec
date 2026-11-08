@@ -4,8 +4,8 @@ Estado: as Fases 0 a 6 da modernização do boletim de campo e da área rural es
 
 | # | Pendência | Quem decide ou revisa | O que destrava | Recomendação |
 |---|---|---|---|---|
-| 1 | D23: autor nas notícias do Senado | Você | Manter, pedir confirmação ou tirar o Senado dos cards | Pedir confirmação à Agência Senado e manter por ora |
-| 2 | Alerta de falha do boletim | Você | Quem fica sabendo quando o boletim ou a publicação falha | GitHub Actions, junto com a saída do agendador do PC (T20) |
+| 1 | D23: autor nas notícias do Senado | Você | **Decidido em 08/11/2026: pedir confirmação à Agência Senado e manter por ora.** Falta enviar o pedido (rascunho abaixo) e registrar a resposta | Enviar o pedido |
+| 2 | Alerta de falha do boletim | Você | **Canal escolhido em 08/11/2026: GitHub Actions.** Plano de ativação e vigia prontos em `docs/plano-ativacao-boletim-actions.md`; nada foi ativado | Decidir os 5 pontos do plano |
 | 3 | V20: limites agronômicos | Responsável técnico ou agrônomo | Revisar vento, ITU, chuva e o critério do dia "ok" | Mandar o roteiro da seção 3, com os números medidos |
 | 4 | Marca Audi Agro no holograma | Você | Onde a marca volta a aparecer | Deixar como está até decidir a realocação |
 | 5 | Revisão técnica dos itens da reforma | Responsável técnico | A virada do site para `ambiente: 'producao'` | Revisar com a folha da seção 5, começando pelos 10 do agro |
@@ -19,7 +19,7 @@ Em mensagens anteriores eu disse que a lista de pontos da reforma do agro "fica 
 - **O que a fonte diz** ([política de uso do Senado](https://www12.senado.leg.br/noticias/politica-de-uso), lida em 07/11/2026): "A reprodução de matérias e fotografias é livre, desde que não haja descaracterização de conteúdo e mediante a citação da Agência Senado e do autor."
 - **O que o site faz:** lista o título sem alteração, a data e o link para a matéria, com o nome "Agência Senado".
 - **O que falta:** o feed do Senado não informa o autor (conferido: o item traz só título, descrição, data e `guid`). A matéria original traz.
-- **Opções:**
+- **Decisão (08/11/2026): opção B.** As opções que estavam em aberto:
   - **A.** Manter como está. Barato, mas o autor não é citado na lista.
   - **B (recomendada).** Manter por ora e pedir confirmação à Agência Senado de que título e link para a matéria bastam. Se disserem que não, passa para C.
   - **C.** Tirar o Senado dos cards. É uma linha em `tools/agro_fontes.json`. Custo: o Senado hoje contribui com pouca coisa (1 notícia de cana e 1 de arroz na medição de 07/11), e o histórico das demais fontes continua.
