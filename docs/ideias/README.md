@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Janela de Campo: satélite com divisas, hora em cada imagem e aviso de falha (Fase 5)](campo-satelite.md) | em prévia | `ideia/campo-satelite` | [link](https://orgatec-site--ideia-campo-satelite-20z856ne.web.app/setores/janela-de-campo.html) |
 | [Página Agro: o dia do produtor e os pontos da reforma sob demanda (Fase 4)](agro-pagina.md) | aprovada em 07/11/2026; falta lançar | `ideia/agro-pagina` | [link](https://orgatec-site--ideia-agro-pagina-85dosbz7.web.app/setores/agro.html) |
 | [Janela de Campo: a decisão do dia na primeira tela (Fase 3)](campo-layout.md) | aprovada em 07/11/2026; falta lançar | `ideia/campo-layout` | [link](https://orgatec-site--ideia-campo-layout-xu3bh1tl.web.app/setores/janela-de-campo.html) |
 | [Janela de Campo: painel que discrimina e avisa dado faltando (Fase 1)](campo-qualidade.md) | aprovada em 07/11/2026; falta lançar | `ideia/campo-qualidade` | [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) |

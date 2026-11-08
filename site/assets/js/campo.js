@@ -222,6 +222,7 @@
     if (mapaMontado || !pos || !b.polos || !O.campoMapa) return;
     mapaMontado = true;
     O.campoMapa.montar(pos, {
+      divisas: alvo.getAttribute('data-campo-divisas') || null,
       polos: b.polos,
       estado: function (p) { return p.ops[selO] ? p.ops[selO].estado : 'ok'; },
       rotulo: function (p) { var o = p.ops[selO]; return p.nome + ' (' + p.uf + '): ' + ESTADOS[o.estado].rotulo + (o.janela ? ', ' + (o.tipoJanela === 'ok' ? 'janela ' : 'com restrição ') + o.janela : ''); },
@@ -290,7 +291,19 @@
     if (sel) sel.addEventListener('change', function () { trocar(sel.value); });
     abrirAba(abaAtiva);
     desenhar();
-    if (largo.matches) garantirMapa();
+    observarMapa();
+  }
+
+  /* No desktop o satélite fica à vista, mas as imagens da NASA só são pedidas quando o painel chega perto da tela
+     (rolagem). No celular, quando a aba Satélite é aberta (abrirAba). */
+  function observarMapa() {
+    var painel = alvo.querySelector('[data-painel="satelite"]');
+    if (!painel || !largo.matches) return;
+    if (!('IntersectionObserver' in window)) { garantirMapa(); return; }
+    var io = new IntersectionObserver(function (es) {
+      if (es.some(function (e) { return e.isIntersecting; })) { io.disconnect(); garantirMapa(); }
+    }, { rootMargin: '300px 0px' });
+    io.observe(painel);
   }
 
   function proximosHtml() {

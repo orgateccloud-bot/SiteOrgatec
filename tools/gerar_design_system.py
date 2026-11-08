@@ -909,6 +909,32 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .mapa-polo-nome{{position:absolute;left:14px;top:-4px;padding:1px 6px;border-radius:6px;background:rgba(8,17,31,.78);color:#fff;font:600 11px var(--f-body);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}}
 .mapa-polo:hover .mapa-polo-nome,.mapa-polo:focus-visible .mapa-polo-nome{{opacity:1}}
 .mapa-hora{{position:absolute;left:10px;bottom:10px;padding:4px 10px;border-radius:999px;background:rgba(8,17,31,.78);color:#fff;font:500 12px var(--f-mono)}}
+/* Mapa de satélite: aviso de falha da NASA, divisas, controle de tempo e legendas de cor (campo-mapa.js) */
+.mapa-opcoes{{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}}
+.mapa-aviso{{display:grid;gap:10px;justify-items:start;padding:12px 16px;border:1px solid var(--warn);border-radius:var(--r);background:var(--warn-soft);color:var(--ink);font-size:15px}}
+.mapa-aviso[hidden]{{display:none}}
+.mapa-aviso p{{margin:0}}
+.mapa-divisas{{position:absolute;inset:0;width:100%;height:100%;max-width:none;pointer-events:none}}
+.mapa-divisas[hidden]{{display:none}}
+.mapa-faixa{{flex:1;min-width:200px;display:grid;gap:2px}}
+.mapa-faixa input[type=range]{{width:100%;height:44px;margin:0;background:transparent;accent-color:var(--brand);cursor:pointer}}
+.mapa-faixa input[type=range]::-webkit-slider-thumb{{width:26px;height:26px}}
+.mapa-faixa input[type=range]::-moz-range-thumb{{width:26px;height:26px}}
+.mapa-faixa-rotulos{{display:flex;align-items:center;justify-content:space-between;gap:8px;font:500 12px var(--f-mono);color:var(--muted)}}
+.mapa-faixa-rotulos output{{padding:2px 10px;border-radius:999px;background:var(--surface2);color:var(--ink);font-weight:600}}
+.mapa-escala{{display:grid;gap:12px;max-width:760px;width:100%;justify-self:center}}
+.mapa-escala-bloco{{display:grid;gap:6px}}
+.mapa-escala-titulo{{margin:0;font:600 13px var(--f-body);color:var(--ink)}}
+.mapa-escala-barra{{height:14px;border-radius:7px;border:1px solid var(--line)}}
+.mapa-escala-marcas{{position:relative;height:16px;font:400 11px var(--f-mono);color:var(--muted)}}
+.mapa-escala-marcas span{{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}}
+.mapa-escala-marcas span:first-child{{transform:none}}
+.mapa-escala-marcas span:last-child{{transform:translateX(-100%)}}
+.mapa-escala-texto{{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}}
+.mapa-creditos{{max-width:760px;width:100%;justify-self:center;font-size:13px;color:var(--muted)}}
+.mapa-creditos>summary{{cursor:pointer;padding:6px 0;font-weight:600;color:var(--ink)}}
+.mapa-creditos>summary:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
+.mapa-creditos p{{margin:6px 0 0}}
 .mapa-tempo{{display:flex;flex-wrap:wrap;align-items:center;gap:12px;max-width:760px;width:100%;justify-self:center}}
 .mapa-tempo input[type=range]{{flex:1;min-width:160px;accent-color:var(--brand)}}
 /* Termômetro de conformidade: respostas como chips (rádio acessível por teclado) */
