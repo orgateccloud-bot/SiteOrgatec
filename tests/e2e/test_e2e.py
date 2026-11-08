@@ -1650,6 +1650,12 @@ def test_vitrine_em_vidro_azul(navegador, servidor, vp):
     assert fundo.evaluate("e => getComputedStyle(e).pointerEvents") == "none"  # não atrapalha cliques
     assert pg.locator(".vidro-fundo .vidro-logo > i").count() == 3  # base e as duas franjas de cor; o brilho fica numa camada à parte
     assert pg.locator(".vidro-fundo .vidro-logo .brilho").count() == 1
+    assert pg.locator(".vidro-fundo .vidro-orbita").count() == 1  # a logo segue o Cristal: órbita tracejada e cantos de mira
+    # No computador, texto à esquerda e a logo à direita; no celular o texto fica centralizado e a logo, cortada à direita
+    alinhamento = pg.locator("[data-hero] h1").evaluate("e => getComputedStyle(e).textAlign")
+    assert alinhamento == ("left" if vp == "desktop" else "center")
+    centro_logo = pg.locator(".vidro-palco").evaluate("e => { const r = e.getBoundingClientRect(); return r.left + r.width / 2; }")
+    assert centro_logo > VIEWPORTS[vp][0] * 0.65
     mascara = pg.locator(".vidro-logo .base").evaluate("e => getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage")
     assert "orgatec-simbolo-branco.svg" in mascara  # a logo é o símbolo ORGATEC, não um desenho refeito
     assert pg.request.get(f"{servidor}/assets/marca/orgatec-simbolo-branco.svg").ok
@@ -1733,7 +1739,7 @@ def test_vidro_aparelho_lento_desliga_as_animacoes(navegador, servidor):
         pg.wait_for_timeout(500)
     assert pg.evaluate("document.documentElement.classList.contains('vidro-leve')")
     assert pg.locator(".vidro-varredura b").evaluate("e => getComputedStyle(e).animationName") == "none"
-    assert pg.locator(".vidro-aneis i").first.evaluate("e => getComputedStyle(e).animationName") == "none"
+    assert pg.locator(".vidro-orbita").evaluate("e => getComputedStyle(e).animationName") == "none"
 
 
 # ---------- Onda 1 do estudo de compliance moderno: camadas de prova e plano de ação em .ics

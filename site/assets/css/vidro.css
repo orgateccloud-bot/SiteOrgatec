@@ -26,8 +26,9 @@ html[data-vidro] {
   --v-filtro: blur(20px) saturate(150%) brightness(.9);
   --v-filtro-painel: blur(30px) saturate(160%);
   --v-sombra: 0 26px 60px -30px rgb(0 0 0 / .75), inset 0 1px 0 rgb(255 255 255 / .24), inset 0 0 0 1px rgb(255 255 255 / .03);
-  --v-topo: #BAE6FD; --v-meio: #60A5FA; --v-base: #2563EB;
-  --v-brilho: 96 165 250; --v-linha: 5 12 26; --v-txt: 3 10 28;
+  /* A logo segue a do modelo Cristal: degradê de branco a ciano e linhas de varredura em azul */
+  --v-topo: #FFFFFF; --v-meio: #BAE6FD; --v-base: #38BDF8;
+  --v-brilho: 186 230 253; --v-linha: 10 63 191; --v-txt: 3 10 28;
   background: var(--v-fundo);
 }
 html[data-vidro] body,
@@ -47,6 +48,8 @@ html[data-vidro] .holo-vitrine h1, html[data-vidro] .holo-vitrine > div > p {
   text-shadow: 0 0 10px rgb(var(--v-txt) / .85), 0 0 26px rgb(var(--v-txt) / .75), 0 2px 3px rgb(var(--v-txt) / .6);
 }
 html[data-vidro] .holo-vitrine p.text-muted { color: #D6E0F2; }
+/* O registro no CRC passa sobre a parte clara da logo: azul mais claro para manter o contraste */
+html[data-vidro] .holo-vitrine .text-link { color: #D6E8FF; }
 
 html:not([data-vidro]) .vidro-fundo { display: none; }
 .vidro-fundo { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--v-fundo); }
@@ -56,7 +59,7 @@ html:not([data-vidro]) .vidro-fundo { display: none; }
 .vidro-orbe.o2 { width: 44vmax; height: 44vmax; left: -16vmax; bottom: -20vmax; background: radial-gradient(circle, rgb(var(--v-orbe-2) / .16), transparent 66%); }
 
 /* ---------- Holograma da logo ---------- */
-.vidro-palco { position: absolute; width: min(92vmin, 800px); aspect-ratio: 314 / 347; left: 50%; top: 50%;
+.vidro-palco { position: absolute; width: min(80vmin, 720px); aspect-ratio: 314 / 347; left: 77%; top: 57%;
   transform: translate(-50%, -52%) perspective(1100px) rotateX(calc(var(--hy, 0) * -7deg)) rotateY(calc(var(--hx, 0) * 11deg));
   transition: transform .5s ease-out; will-change: transform; }
 .vidro-logo { position: absolute; inset: 0; }
@@ -64,26 +67,24 @@ html:not([data-vidro]) .vidro-fundo { display: none; }
   -webkit-mask: url(../marca/orgatec-simbolo-branco.svg) center / contain no-repeat; mask: url(../marca/orgatec-simbolo-branco.svg) center / contain no-repeat; }
 .vidro-logo .brilho { position: absolute; inset: 0; filter: blur(22px); opacity: .5; transform: scale(1.03); }
 .vidro-logo .brilho i { background: rgb(var(--v-brilho)); }
-.vidro-logo .base { opacity: .34;
+.vidro-logo .base { opacity: .42;
   background: repeating-linear-gradient(to bottom, transparent 0 3px, rgb(var(--v-linha) / .4) 3px 4px), linear-gradient(180deg, var(--v-topo), var(--v-meio) 50%, var(--v-base)); }
 .vidro-logo .ciano { background: rgb(34 211 238); transform: translateX(-.9%); opacity: .14; }
 .vidro-logo .azul { background: rgb(59 130 246); transform: translateX(.9%); opacity: .2; }
 .vidro-logo::before { content: ""; position: absolute; inset: 1.5% 0; border: 1px solid rgb(var(--v-brilho) / .42); border-radius: 50%; transform: rotate(8deg); }
-.vidro-varredura { overflow: hidden; opacity: .55; }
+.vidro-varredura { overflow: hidden; opacity: .5; }
 .vidro-varredura b { position: absolute; left: 0; right: 0; top: 0; height: 14%; opacity: 0; animation: vidro-varre 9s linear infinite;
   background: linear-gradient(to bottom, transparent, rgb(255 255 255 / .85), transparent); }
 
-/* Feixe de projetor e anéis sob a logo */
-.vidro-feixe { position: absolute; left: 50%; bottom: -14%; width: 112%; height: 78%; transform: translateX(-50%);
-  background: conic-gradient(from 180deg at 50% 100%, transparent 152deg, rgb(96 165 250 / .14) 168deg, rgb(147 197 253 / .26) 180deg, rgb(96 165 250 / .14) 192deg, transparent 208deg); }
-.vidro-feixe::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 12%; background: radial-gradient(ellipse at 50% 100%, rgb(125 211 252 / .65), transparent 66%); }
-.vidro-aneis { position: absolute; left: 50%; bottom: -8%; width: 80%; height: 15%; transform: translateX(-50%); }
-.vidro-aneis i { position: absolute; inset: 0; border: 1px solid rgb(147 197 253 / .4); border-radius: 50%; animation: vidro-onda 9s ease-out infinite; }
-.vidro-aneis i:nth-child(2) { animation-delay: 1s; }
+/* Órbita tracejada (avança em passos, para o fundo quase não mudar entre um passo e outro) e cantos de mira */
+.vidro-orbita { position: absolute; inset: -9% -14%; border: 1px dashed rgb(255 255 255 / .34); border-radius: 50%; animation: vidro-gira 72s steps(36) infinite; }
+.vidro-palco::before, .vidro-palco::after { content: ""; position: absolute; width: 11%; height: 11%; border: 2px solid rgb(255 255 255 / .55); }
+.vidro-palco::before { left: -4%; top: 2%; border-right: 0; border-bottom: 0; }
+.vidro-palco::after { right: -4%; bottom: 2%; border-left: 0; border-top: 0; }
 
 /* Varre em cerca de 2 s e descansa o resto do ciclo: sem mudança no fundo, os cartões de vidro não refazem o desfoque */
 @keyframes vidro-varre { 0% { transform: translateY(-120%); opacity: 0; } 2% { opacity: 1; } 22% { transform: translateY(780%); opacity: 1; } 24%, 100% { transform: translateY(780%); opacity: 0; } }
-@keyframes vidro-onda { 0% { transform: scale(.6); opacity: .9; } 25%, 100% { transform: scale(1.35); opacity: 0; } }
+@keyframes vidro-gira { to { transform: rotate(360deg); } }
 
 /* ---------- Vidro ---------- */
 :root[data-vidro][data-float] .og-cartao,
@@ -124,8 +125,14 @@ html[data-vidro] .caixa-campo select, html[data-vidro] .caixa-campo input { back
 html[data-vidro] .caixa-campo input::placeholder { color: color-mix(in srgb, var(--ink) 58%, transparent); }
 html[data-vidro] .caixa-sim-enviar { background: var(--hl); color: var(--hl-ink); }
 
+/* No computador, texto à esquerda e a logo à direita, como no Cristal */
+@media (min-width: 1024px) {
+  html[data-vidro] .holo-vitrine > div { margin-left: max(16px, 6vw); margin-right: auto; text-align: left; }
+  html[data-vidro] .holo-vitrine .caixa-sim { margin-left: 0; max-width: 660px; }
+  html[data-vidro] .holo-vitrine > div > p.mt-6 { justify-content: flex-start; }
+}
 @media (max-width: 760px) {
-  .vidro-palco { width: 132vw; top: 40%; }
+  .vidro-palco { width: 150vw; left: 74%; top: 34%; }
   .vidro-orbe.o1 { width: 90vw; height: 90vw; }
   .vidro-orbe.o2 { width: 80vw; height: 80vw; }
 }
@@ -136,7 +143,7 @@ html.vidro-leve .vidro-fundo *, html.vidro-leve .vidro-fundo ::before, html.vidr
 html.vidro-leve .vidro-varredura { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .vidro-varredura b, .vidro-aneis i { animation: none !important; }
+  .vidro-varredura b, .vidro-orbita { animation: none !important; }
   .vidro-palco, .vidro-orbe { transition: none; }
   .vidro-palco { transform: translate(-50%, -52%); }
   .vidro-orbe { transform: none; }
