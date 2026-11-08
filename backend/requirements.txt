@@ -1,5 +1,5 @@
 fastapi>=0.162
-uvicorn>=0.29
+uvicorn>=0.54.0
 pydantic>=2.14.2
 # testes
 pytest>=9.2.0
