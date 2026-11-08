@@ -1,6 +1,6 @@
 # Logo do Noturno igual à do Cristal
 
-- **Situação:** em prévia (pedido do usuário em 08/11/2026)
+- **Situação:** integrada na `desenvolvimento` em 08/11/2026 (aprovada pelo usuário); falta lançar
 - **Branch:** `ideia/vidro-logo-cristal`
 - **Prévia:** https://orgatec-site--ideia-vidro-logo-cristal-ka2ny2mm.web.app/inicio.html (expira em 08/12/2026)
 
