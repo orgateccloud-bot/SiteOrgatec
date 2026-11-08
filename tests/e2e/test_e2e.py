@@ -1919,3 +1919,154 @@ def test_agro_celular_curto_e_sem_rolagem_horizontal(navegador, servidor):
     ys = pg.evaluate("['[data-agro-hoje]', '[data-agro-caminho]', '#tributos', '#proximos-passos'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
     assert ys == sorted(ys)
     assert not erros, erros
+
+
+# ---------- Satélite da Janela de Campo: divisas, hora de cada imagem, falha da NASA, carga sob demanda (Fase 5)
+
+GIBS = "https://gibs.earthdata.nasa.gov/**"
+
+
+def _png(rota):
+    rota.fulfill(status=200, content_type="image/png", body=PNG_1PX)
+
+
+def _satelite(navegador, servidor, vp="desktop", gibs=_png):
+    b = _boletim_automatico()
+    rotas = {**_rotas_campo(b), GIBS: gibs}
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=rotas)
+    pg.wait_for_selector(".campo-op")
+    if vp == "mobile":
+        pg.click("[data-aba=satelite]")
+    return pg, erros
+
+
+def test_satelite_divisas_dos_estados_com_credito_do_ibge(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor)
+    divisas = pg.locator("img[data-mapa-divisas]")
+    expect(divisas).to_be_visible()
+    assert divisas.get_attribute("src").endswith("assets/img/divisas-ufs.svg")
+    assert divisas.evaluate("i => i.complete && i.naturalWidth > 0"), "o SVG das divisas não carregou"
+    chave = pg.locator("[data-mapa-divisas-chave]")
+    expect(chave).to_be_checked()
+    chave.uncheck()
+    expect(divisas).to_be_hidden()
+    chave.check()
+    expect(divisas).to_be_visible()
+    creditos = pg.locator(".mapa-creditos")
+    creditos.locator("summary").click()
+    for texto in ("IBGE", "Malha Municipal Digital", "CC BY 4.0", "simplificadas"):
+        expect(creditos).to_contain_text(texto)
+    assert not erros, erros
+
+
+def test_satelite_hora_de_cada_imagem_e_legendas(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor)
+    hora = pg.locator("[data-mapa-hora]")
+    expect(hora).to_contain_text(re.compile(r"Infravermelho · \d{2}h\d{2} \(Brasília\)"))
+    # a faixa de tempo mostra as horas das pontas e a da imagem escolhida
+    expect(pg.locator("[data-mapa-inicio]")).to_have_text(re.compile(r"\d{2}h\d{2}"))
+    expect(pg.locator("[data-mapa-faixa-hora]")).to_have_text(re.compile(r"\d{2}h\d{2}"))
+    pg.locator("[data-mapa-quadro]").fill("0")
+    expect(pg.locator("[data-mapa-faixa-hora]")).to_have_text(pg.locator("[data-mapa-inicio]").inner_text())
+    assert "Brasília" in pg.locator("[data-mapa-quadro]").get_attribute("aria-valuetext")
+    # legenda de cores do infravermelho, a partir da escala oficial da NASA (°C)
+    expect(pg.locator(".mapa-escala-titulo").first).to_have_text("Temperatura do topo da nuvem (°C)")
+    assert pg.locator(".mapa-escala-barra").first.evaluate("e => getComputedStyle(e).backgroundImage").startswith("linear-gradient")
+    # cor real: a hora também aparece
+    pg.click("[data-camada=cor]")
+    expect(hora).to_contain_text(re.compile(r"Cor real · \d{2}h\d{2} \(Brasília\)"))
+    expect(pg.locator("[data-mapa-tempo]")).to_be_hidden()
+    # chuva: só é pedida quando ligada; traz o dia e a escala em mm/h
+    pedidas = []
+    pg.on("request", lambda r: pedidas.append(r.url) if "IMERG" in r.url else None)
+    assert not pedidas
+    pg.check("[data-mapa-chuva]")
+    expect(pg.locator(".mapa-chuva")).to_be_visible()
+    expect(hora).to_contain_text(re.compile(r"chuva IMERG de \d{2}/\d{2}"))
+    expect(pg.locator(".mapa-escala-titulo").last).to_contain_text("mm/h")
+    assert pedidas and all("/IMERG_Precipitation_Rate/default/20" in u for u in pedidas)  # com o dia na URL
+    pg.uncheck("[data-mapa-chuva]")
+    expect(pg.locator(".mapa-chuva")).to_be_hidden()
+    assert not erros, erros
+
+
+def test_satelite_aviso_claro_quando_a_nasa_nao_responde_e_tentar_de_novo(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor, gibs=lambda rota: rota.abort())
+    aviso = pg.locator("[data-mapa-aviso]")
+    expect(aviso).to_be_visible(timeout=15000)
+    expect(aviso).to_contain_text("NASA")
+    expect(aviso).to_contain_text("previsão e os polos continuam valendo")
+    expect(pg.locator("[data-mapa-hora]")).to_have_text("Imagem de satélite indisponível agora")
+    # a previsão não depende do satélite: os polos seguem no mapa e a decisão do dia segue na tela
+    assert pg.locator(".mapa-polo").count() == 20 and pg.locator(".campo-op").count() == 5
+    # a NASA volta: o botão tenta de novo e o aviso some
+    pg.unroute(GIBS)
+    pg.route(GIBS, _png)
+    pg.click("[data-mapa-tentar]")
+    expect(aviso).to_be_hidden(timeout=15000)
+    expect(pg.locator("[data-mapa-hora]")).to_contain_text("Infravermelho ·")
+    assert not [e for e in erros if "ERR_FAILED" not in e and "net::" not in e], erros
+
+
+def test_satelite_aviso_de_imagem_parcial(navegador, servidor):
+    import re as _re
+    # o quadrado do canto do recorte (não o central, que a sondagem usa) falha na primeira e na segunda tentativa
+    pg0, _ = _abrir(navegador, servidor, "setores/janela-de-campo.html", "desktop", rotas=_rotas_campo(_boletim_automatico()))
+    tx, ty = pg0.evaluate("Orgatec.campoMapa.TILES[0]")
+    pg0.close()
+
+    def falha_quadrado(rota):
+        if _re.search(rf"Band13.*/4/{ty}/{tx}\.png", rota.request.url):
+            rota.fulfill(status=404, body="")
+        else:
+            _png(rota)
+    pg, erros = _satelite(navegador, servidor, gibs=falha_quadrado)
+    aviso = pg.locator("[data-mapa-aviso]")
+    expect(aviso).to_be_visible(timeout=15000)
+    expect(aviso).to_contain_text("Parte da imagem de satélite não carregou")
+    assert pg.locator(".mapa-polo").count() == 20
+
+
+def test_satelite_so_carrega_quando_aparece_na_tela(navegador, servidor):
+    b = _boletim_automatico()
+    # desktop com janela baixa: o painel do satélite começa bem abaixo da dobra; nada é pedido à NASA até a rolagem chegar perto
+    ctx = navegador.new_context(viewport={"width": 1440, "height": 300})
+    pg = ctx.new_page()
+    pedidas = []
+    pg.on("request", lambda r: pedidas.append(r.url) if "gibs.earthdata.nasa.gov" in r.url else None)
+    for padrao, f in {**_rotas_campo(b), GIBS: _png}.items():
+        pg.route(padrao, f)
+    pg.goto(f"{servidor}/setores/janela-de-campo.html")
+    pg.wait_for_selector(".campo-op")
+    pg.wait_for_timeout(800)
+    assert pg.locator(".mapa-satelite").count() == 0 and not pedidas
+    pg.evaluate("window.scrollTo(0, 700)")
+    expect(pg.locator(".mapa-satelite")).to_be_attached(timeout=10000)
+    expect(pg.locator("[data-mapa-hora]")).to_contain_text("Infravermelho")
+    assert pedidas
+    # celular: nada é pedido até a aba Satélite ser aberta
+    ctx2 = navegador.new_context(viewport={"width": 375, "height": 812})
+    pm = ctx2.new_page()
+    pedidas_m = []
+    pm.on("request", lambda r: pedidas_m.append(r.url) if "gibs.earthdata.nasa.gov" in r.url else None)
+    for padrao, f in {**_rotas_campo(b), GIBS: _png}.items():
+        pm.route(padrao, f)
+    pm.goto(f"{servidor}/setores/janela-de-campo.html")
+    pm.wait_for_selector(".campo-op")
+    pm.wait_for_timeout(800)
+    assert not pedidas_m
+    pm.click("[data-aba=satelite]")
+    expect(pm.locator("[data-mapa-hora]")).to_contain_text("Infravermelho")
+    assert pedidas_m
+
+
+def test_satelite_celular_controle_de_tempo_facil_de_tocar_e_sem_rolagem_lateral(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor, "mobile")
+    pg.wait_for_selector("[data-mapa-quadro]", state="attached")
+    expect(pg.locator("[data-mapa-tempo]")).to_be_visible()
+    assert pg.locator("[data-mapa-quadro]").bounding_box()["height"] >= 40  # área de toque confortável
+    assert pg.locator("[data-mapa-play]").bounding_box()["height"] >= 40
+    for seletor in ("[data-mapa-inicio]", "[data-mapa-faixa-hora]", "[data-mapa-fim]", ".mapa-escala-barra"):
+        expect(pg.locator(seletor).first).to_be_visible()
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros, erros

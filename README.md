@@ -171,7 +171,8 @@ python tools/gerar_boletim_campo.py --remover-agendador
 
 - Previsão: MET Norway (CC BY 4.0, uso comercial permitido). O User-Agent identifica o site, e o cache respeita o `Expires`.
 - Não usados: CPTEC/INPE (termos proíbem uso comercial sem autorização) e a API do INMET (protegida contra robôs, sem documentação para terceiros). O site leva aos avisos oficiais do INMET.
-- Se a previsão de um polo falhar, nada é gravado nem publicado; o log fica em `tools/logs/campo.log`.
+- Se a fonte falhar, cada polo tem 3 tentativas e, depois, vale a previsão guardada há até 3 horas; polo sem previsão fica de fora e o boletim avisa (`semDados`), desde que cada região mantenha metade dos polos. Abaixo disso, nada é gravado nem publicado e o boletim anterior continua no ar; o log fica em `tools/logs/campo.log`.
+- Satélite (`assets/js/campo-mapa.js`): NASA GIBS (GOES-East e IMERG) direto para o navegador, com a hora de cada imagem, aviso quando a NASA falha e a chuva só pedida quando ligada. As divisas dos estados são do IBGE (Malha Municipal Digital 2025, CC BY 4.0), em `site/assets/img/divisas-ufs.svg`, geradas por `python tools/gerar_divisas_ufs.py` (baixa o BR_UF_2025.zip do IBGE) e simplificadas, o que o mapa informa no crédito. As escalas de cor das legendas vêm dos colormaps oficiais da NASA GIBS.
 - Critérios por operação em `site/assets/js/campo-regras.js`, marcados como pendentes de validação (V10).
 
 ### Cartão para o status do WhatsApp, os stories e o TikTok

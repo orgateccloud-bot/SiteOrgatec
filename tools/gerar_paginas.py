@@ -600,7 +600,7 @@ def janela_de_campo() -> None:
               "Boletim automático três vezes ao dia, por região e operação.", compacto=True),
         subnav_setores("campo"),
         """        <section class="py-5 sm:py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-4 sm:gap-8" data-campo>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-4 sm:gap-8" data-campo data-campo-divisas="{p}assets/img/divisas-ufs.svg">
                 <p class="og-cartao-texto">Carregando o boletim. Se nada aparecer, ative o JavaScript ou consulte os avisos do INMET em <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.</p>
             </div>
             <p class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 text-xs text-tinta-fraca font-mono">Boletim informativo gerado automaticamente a partir das fontes listadas (previsão: MET Norway, CC BY 4.0; satélite: NASA/NOAA). Não substitui os avisos oficiais do <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a> e da Defesa Civil do seu município, nem a bula dos produtos.</p>
