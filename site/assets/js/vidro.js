@@ -15,7 +15,7 @@
     fundo.className = 'vidro-fundo';
     fundo.setAttribute('aria-hidden', 'true');
     fundo.innerHTML = '<div class="vidro-orbe o1"></div><div class="vidro-orbe o2"></div>' +
-      '<div class="vidro-palco"><div class="vidro-feixe"></div><div class="vidro-aneis"><i></i><i></i></div>' +
+      '<div class="vidro-palco"><div class="vidro-orbita"></div>' +
       '<div class="vidro-logo"><span class="brilho"><i></i></span><i class="base"></i><i class="ciano"></i><i class="azul"></i><div class="vidro-varredura"><b></b></div></div></div>';
     document.body.insertBefore(fundo, document.body.firstChild);
     if (!calmo) animar();
