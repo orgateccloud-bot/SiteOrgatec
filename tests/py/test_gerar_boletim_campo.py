@@ -93,3 +93,145 @@ def test_cache_respeita_expires_sem_ir_a_rede(monkeypatch, tmp_path):
         def get(self, *a, **k):
             raise AssertionError("não devia consultar o MET dentro do Expires")
     assert G.buscar_met(polo, SemRede(), AGORA) == {"ok": 1}
+
+
+# ---- confiabilidade da fonte (MET Norway devolveu 502/503 em 04 e 05/11/2026)
+
+POLO = {"id": "teste", "nome": "Teste", "lat": -17.79, "lon": -50.92}
+
+
+class Resposta:
+    def __init__(self, status, corpo=None, cabecalhos=None):
+        self.status_code, self._corpo, self.headers = status, corpo, cabecalhos or {}
+
+    def json(self):
+        return self._corpo
+
+
+class Cliente:
+    def __init__(self, *respostas):
+        self.respostas, self.chamadas = list(respostas), 0
+
+    def get(self, *a, **k):
+        self.chamadas += 1
+        r = self.respostas.pop(0)
+        if isinstance(r, Exception):
+            raise r
+        return r
+
+
+@pytest.fixture
+def esperas(monkeypatch, tmp_path):
+    monkeypatch.setattr(G, "CACHE", tmp_path)
+    dormiu = []
+    monkeypatch.setattr(G.time, "sleep", dormiu.append)
+    return dormiu
+
+
+def test_tenta_de_novo_e_aceita_a_segunda_resposta(esperas):
+    c = Cliente(Resposta(503), Resposta(200, {"ok": 2}))
+    assert G.buscar_met(POLO, c, AGORA) == {"ok": 2}
+    assert c.chamadas == 2 and esperas == [2]
+
+
+def test_retry_after_da_fonte_vale_com_teto(esperas):
+    c = Cliente(Resposta(429, cabecalhos={"retry-after": "500"}), Resposta(200, {"ok": 3}))
+    G.buscar_met(POLO, c, AGORA)
+    assert esperas == [G.ESPERA_MAXIMA]
+
+
+def test_erro_4xx_que_nao_e_429_nao_insiste(esperas):
+    c = Cliente(Resposta(403))
+    with pytest.raises(G.FonteIndisponivel, match="403"):
+        G.buscar_met(POLO, c, AGORA)
+    assert c.chamadas == 1 and not esperas
+
+
+def test_sem_resposta_depois_das_tres_tentativas(esperas):
+    import httpx
+    c = Cliente(httpx.ConnectError("x"), httpx.ConnectError("x"), httpx.ConnectError("x"))
+    with pytest.raises(G.FonteIndisponivel, match="sem resposta"):
+        G.buscar_met(POLO, c, AGORA)
+    assert c.chamadas == 3 and esperas == [2, 6]
+
+
+def test_previsao_guardada_ha_pouco_serve_quando_a_fonte_cai(esperas, tmp_path):
+    arq = tmp_path / "met-teste.json"
+    arq.write_text(json.dumps({"expira": AGORA.timestamp() - 60, "modificado": None, "corpo": {"velho": 1}}), encoding="utf-8")
+    import os
+    os.utime(arq, (AGORA.timestamp() - 3600, AGORA.timestamp() - 3600))  # guardada há 1 h
+    assert G.buscar_met(POLO, Cliente(Resposta(503), Resposta(503), Resposta(503)), AGORA) == {"velho": 1}
+
+
+def test_previsao_guardada_ha_muito_tempo_nao_serve(esperas, tmp_path):
+    arq = tmp_path / "met-teste.json"
+    arq.write_text(json.dumps({"expira": AGORA.timestamp() - 60, "modificado": None, "corpo": {"velho": 1}}), encoding="utf-8")
+    import os
+    os.utime(arq, (AGORA.timestamp() - 5 * 3600, AGORA.timestamp() - 5 * 3600))  # guardada há 5 h
+    with pytest.raises(G.FonteIndisponivel):
+        G.buscar_met(POLO, Cliente(Resposta(503), Resposta(503), Resposta(503)), AGORA)
+
+
+def test_polo_sem_previsao_fica_de_fora_e_o_boletim_avisa(tmp_path):
+    cfg = G.carregar_polos()
+    ausente = cfg["regioes"][0]["polos"][0]
+
+    def sem_um(polo, cliente, agora):
+        if polo["id"] == ausente:
+            raise G.FonteIndisponivel(f"MET Norway respondeu 503 para {polo['nome']}")
+        return MET
+    b = G.gerar(AGORA, buscar=sem_um, destino=tmp_path)
+    assert [p["id"] for p in b["semDados"]] == [ausente]
+    assert ausente not in [p["id"] for p in b["polos"]] and len(b["polos"]) == len(cfg["polos"]) - 1
+    assert any("Sem previsão" in c["rotulo"] for c in b["confianca"])
+    assert "1 sem previsão" in b["resumo"]
+
+
+def test_boletim_inteiro_sem_falha_nao_traz_aviso(tmp_path):
+    b = G.gerar(AGORA, buscar=amostra, destino=tmp_path)
+    assert b["semDados"] == [] and not any("Sem previsão" in c["rotulo"] for c in b["confianca"])
+
+
+def test_regiao_precisa_manter_pelo_menos_metade_dos_polos():
+    cfg = G.carregar_polos()
+    reg = next(r for r in cfg["regioes"] if len(r["polos"]) == 4)
+    por_id = {p["id"]: p for p in cfg["polos"]}
+    G.conferir_cobertura(cfg, [por_id[i] for i in reg["polos"][:2]])  # 2 de 4 ficam: é a metade, passa
+    with pytest.raises(G.FonteIndisponivel, match=reg["nome"]):
+        G.conferir_cobertura(cfg, [por_id[i] for i in reg["polos"][:3]])  # fica 1 de 4
+
+
+def test_falhas_espalhadas_em_regioes_diferentes_nao_derrubam_o_boletim(tmp_path):
+    cfg = G.carregar_polos()
+    ausentes = {r["polos"][0] for r in cfg["regioes"]}  # 1 polo de cada região, nunca 3 seguidos
+
+    def sem_alguns(polo, cliente, agora):
+        if polo["id"] in ausentes:
+            raise G.FonteIndisponivel("503")
+        return MET
+    b = G.gerar(AGORA, buscar=sem_alguns, destino=tmp_path)
+    assert {p["id"] for p in b["semDados"]} == ausentes
+
+
+def test_tres_polos_seguidos_sem_previsao_encerram_a_busca(tmp_path):
+    chamados = []
+
+    def cai(polo, cliente, agora):
+        chamados.append(polo["id"])
+        raise G.FonteIndisponivel("503")
+    with pytest.raises(G.FonteIndisponivel, match="fora do ar"):
+        G.gerar(AGORA, buscar=cai, destino=tmp_path)
+    assert len(chamados) == G.FALHAS_SEGUIDAS
+
+
+def test_indice_registra_os_dias_sem_boletim(tmp_path):
+    for dia in ("2026-11-02", "2026-11-03", "2026-11-05"):
+        (tmp_path / f"boletim-{dia}.json").write_text(json.dumps({"id": dia, "dia": dia, "geradoEm": dia + "T05:00-03:00"}), encoding="utf-8")
+    G.gravar({"id": "2026-11-06", "dia": "2026-11-06", "geradoEm": "2026-11-06T05:00-03:00"}, tmp_path)
+    indice = json.loads((tmp_path / "indice.json").read_text(encoding="utf-8"))
+    assert indice["lacunas"] == ["2026-11-04"]
+    assert [i["dia"] for i in indice["boletins"]] == ["2026-11-06", "2026-11-05", "2026-11-03", "2026-11-02"]
+
+
+def test_sem_lacunas_quando_o_arquivo_e_continuo():
+    assert G.lacunas(["2026-11-03", "2026-11-02"]) == [] and G.lacunas(["2026-11-02"]) == []

@@ -25,6 +25,8 @@
   var PUBLICOS = { transportador: 'Transportador de cargas', produtor: 'Produtor rural', mei: 'MEI', autonomo: 'Autônomo e profissional liberal',
     simples: 'Simples Nacional', servicos: 'Prestador de serviço', comercio: 'Comércio e indústria', imoveis: 'Pessoa física com imóveis' };
   Object.keys(PUBLICOS).forEach(function (p) { DESTINOS.push('publico-' + p); });
+  /* Temas do agro (campo opcional `tema` do item): agrupamento editorial para a lista recolhida da página Agro; não é texto legal. */
+  var TEMAS = { aliquotas: 'Alíquotas e reduções', produtor: 'Contribuinte ou não', credito: 'Crédito e insumos', obrigacoes: 'Obrigações e transição' };
   var OBRIGATORIOS = ['id', 'titulo', 'fato', 'status', 'consultadoEm', 'fontes', 'setores', 'tributos', 'destinos', 'revisao'];
   var DATA = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -52,6 +54,7 @@
       if (v == null || v === '' || (Array.isArray(v) && !v.length)) erros.push('campo obrigatório ausente: ' + c);
     });
     if (item.pilar != null && !PILARES[item.pilar]) erros.push('pilar inválido: ' + item.pilar);
+    if (item.tema != null && !TEMAS[item.tema]) erros.push('tema inválido: ' + item.tema);
     if (item.prazo != null && !dataValida(item.prazo)) erros.push('prazo inválido: ' + item.prazo);
     if (item.status && !STATUS[item.status]) erros.push('status inválido: ' + item.status);
     if (item.consultadoEm && !dataValida(item.consultadoEm)) erros.push('data de consulta inválida: ' + item.consultadoEm);
@@ -93,6 +96,7 @@
       if (f.tributo && it.tributos.indexOf(f.tributo) < 0) return false;
       if (f.status && it.status !== f.status) return false;
       if (f.destino && it.destinos.indexOf(f.destino) < 0) return false;
+      if (f.tema && it.tema !== f.tema) return false;
       return true;
     });
   }
@@ -125,20 +129,30 @@
   }
 
   /* HTML de um item (cartão). Item inválido gera erro: quem chama deve passar por publicaveis(). */
-  function renderItem(item, fontesPorId) {
+  function renderItem(item, fontesPorId, opcoes) {
     var erros = validarItem(item, fontesPorId);
     if (erros.length) throw new Error('item ' + (item && item.id) + ' inválido: ' + erros.join('; '));
     var st = STATUS[item.status];
     var ref = item.tributos.length ? item.tributos.map(function (t) { return TRIBUTOS[t]; }).join(' · ') : (PILARES[item.pilar] || '');
     var vig = (item.vigencia ? ' · Vigência: ' + esc(item.vigencia) : '') + (item.prazo ? ' · Prazo: ' + formatarData(item.prazo) : '');
-    return '<article class="og-cartao og-item" id="item-' + esc(item.id) + '" data-status="' + esc(item.status) + '" data-setores="' + esc(item.setores.join(' ')) + '" data-tributos="' + esc(item.tributos.join(' ')) + '">' +
-      '<span class="og-cartao-ref">' + esc(ref) + '</span>' +
-      '<h3 class="og-cartao-titulo">' + esc(item.titulo) + selo(st.tom, st.rotulo) +
-      (item.revisao.status === 'aprovada' ? '' : selo('pendente', 'em revisão técnica')) + '</h3>' +
-      '<p class="og-cartao-texto">' + esc(item.fato) + '</p>' +
+    var attrs = ' id="item-' + esc(item.id) + '" data-status="' + esc(item.status) + '" data-setores="' + esc(item.setores.join(' ')) + '" data-tributos="' + esc(item.tributos.join(' ')) + '"' +
+      (item.tema ? ' data-tema="' + esc(item.tema) + '"' : '');
+    var selos = selo(st.tom, st.rotulo) + (item.revisao.status === 'aprovada' ? '' : selo('pendente', 'em revisão técnica'));
+    var corpo = '<p class="og-cartao-texto">' + esc(item.fato) + '</p>' +
       (item.orientacao ? '<div class="og-item-orientacao"><span class="og-item-rotulo">Orientação ORGATEC (interpretação, não é texto legal)</span><p>' + esc(item.orientacao) + '</p></div>' : '') +
       '<div class="og-item-fontes">' + citacoes(item.fontes, fontesPorId) + '</div>' +
-      '<p class="og-item-meta">Consultado em ' + formatarData(item.consultadoEm) + vig + '</p>' +
+      '<p class="og-item-meta">Consultado em ' + formatarData(item.consultadoEm) + vig + '</p>';
+    if (opcoes && opcoes.recolhido) {
+      // leitura sob demanda: título, status e nº de fontes à vista; fato, orientação e fontes ao abrir (nada é omitido)
+      return '<details class="og-cartao og-item og-item-recolhivel"' + attrs + '><summary class="og-item-resumo">' +
+        '<span class="og-item-linha"><span class="og-cartao-ref">' + esc(ref) + '</span>' + selo(st.tom, st.rotulo) + '</span>' +
+        '<h3 class="og-cartao-titulo">' + esc(item.titulo) + '</h3></summary>' +
+        '<div class="og-item-corpo">' + (item.revisao.status === 'aprovada' ? '' : '<p>' + selo('pendente', 'em revisão técnica') + '</p>') + corpo + '</div></details>';
+    }
+    return '<article class="og-cartao og-item"' + attrs + '>' +
+      '<span class="og-cartao-ref">' + esc(ref) + '</span>' +
+      '<h3 class="og-cartao-titulo">' + esc(item.titulo) + selos + '</h3>' +
+      corpo +
       '</article>';
   }
 
@@ -152,7 +166,7 @@
     return anos >= 1 ? anos : null;
   }
 
-  return { STATUS: STATUS, SETORES: SETORES, TRIBUTOS: TRIBUTOS, DESTINOS: DESTINOS, PILARES: PILARES, PUBLICOS: PUBLICOS,
+  return { STATUS: STATUS, SETORES: SETORES, TRIBUTOS: TRIBUTOS, DESTINOS: DESTINOS, PILARES: PILARES, PUBLICOS: PUBLICOS, TEMAS: TEMAS,
     validarItem: validarItem, publicaveis: publicaveis, filtrar: filtrar, atrasados: atrasados, proximosPrazos: proximosPrazos,
     noticias: noticias, renderItem: renderItem, citacoes: citacoes, anosAtuacao: anosAtuacao,
     formatarData: formatarData, dataValida: dataValida, esc: esc };

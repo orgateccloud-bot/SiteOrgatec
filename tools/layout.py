@@ -17,7 +17,8 @@ from html import escape
 PORTAL_URL = "https://orgatec.athenas.online/Usuarios/login"
 INICIO = "inicio.html"
 SETORES = [("Agro e produtor rural", "setores/agro.html"), ("Transporte", "setores/transporte.html"),
-           ("Alertas regionais GO, TO e PA", "setores/regional.html"), ("Janela de Campo (tempo no agro)", "setores/janela-de-campo.html")]
+           ("Alertas regionais GO, TO e PA", "setores/regional.html"), ("Janela de Campo (tempo no agro)", "setores/janela-de-campo.html"),
+           ("Cotações e notícias do agro", "setores/agro-mercado.html")]
 FERRAMENTAS = [("Simulador tributário", "ferramentas/simulador.html"), ("Calendário fiscal", "ferramentas/calendario.html"),
                ("Calculadoras da transição", "ferramentas/index.html")]
 # Sistemas da ORGATEC (docs/plano-incorporacao-produtos.md): só páginas no site; o acesso a cada sistema é link

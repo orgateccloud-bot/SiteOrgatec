@@ -181,7 +181,7 @@
       descricao: 'Hoje o boletim é gerado no PC pelo Agendador de Tarefas do Windows (05h, 11h e 17h) e só roda com o computador ligado. Com o faturamento Blaze ativo, o mesmo script roda na nuvem.' },
     { id: 'D21', categoria: 'decisao', responsavel: 'orgatec', bloqueia: false, titulo: 'Pedir ao CEPEA autorização para usar as cotações fora do widget',
       onde: 'tools/agro_fontes.json (cepea.autorizacao) e cepea@usp.br',
-      descricao: 'Os cards Orgatec Audi Agro mostram as cotações pelo widget oficial do CEPEA, o único uso que a política de direitos autorais dele libera sem autorização (dados sob CC BY-NC 4.0). Com autorização formal, o site pode guardar o último valor válido (aviso de cache quando o CEPEA cair), usar o RSS do CEPEA nas notícias e o indicador mensal do leite.' },
+      descricao: 'Os cards de cotação por atividade mostram as cotações pelo widget oficial do CEPEA, o único uso que a política de direitos autorais dele libera sem autorização (dados sob CC BY-NC 4.0). Com autorização formal, o site pode guardar o último valor válido (aviso de cache quando o CEPEA cair), usar o RSS do CEPEA nas notícias e o indicador mensal do leite.' },
     { id: 'D22', categoria: 'decisao', responsavel: 'orgatec', bloqueia: false, titulo: 'Cotações da B3 (boi, milho, soja e café futuros)',
       onde: 'contrato de market data com a B3',
       descricao: 'A difusão das cotações da B3 exige consentimento por escrito, em contrato (política de market data em vigor desde 01/11/2026). Sem contrato, os cards não mostram B3.' },

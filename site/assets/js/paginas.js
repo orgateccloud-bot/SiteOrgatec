@@ -78,16 +78,41 @@
     var fixo = { destino: alvo.getAttribute('data-destino') || null, setor: alvo.getAttribute('data-setor') || null };
     var limite = +alvo.getAttribute('data-limite') || 0;
     var lista = $('.lista-itens', alvo) || alvo;
+    var recolher = alvo.hasAttribute('data-recolher'), temaAtivo = '', inicial = +alvo.getAttribute('data-inicial') || 0, expandido = false;
+    // Chips de tema (itens com `tema`): só os temas que têm item nesta tela; "Todos" limpa o filtro
+    var caixaTemas = $('[data-temas]', alvo);
+    if (caixaTemas) {
+      var presentes = Object.keys(K.TEMAS).filter(function (t) { return K.filtrar(base.itens, Object.assign({}, fixo, { tema: t })).length; });
+      caixaTemas.hidden = presentes.length < 2;
+      caixaTemas.innerHTML = [['', 'Todos']].concat(presentes.map(function (t) { return [t, K.TEMAS[t]]; })).map(function (t) {
+        return '<button type="button" class="campo-aba" data-tema="' + t[0] + '" aria-pressed="' + (t[0] === '') + '">' + K.esc(t[1]) + '</button>';
+      }).join('');
+      caixaTemas.addEventListener('click', function (ev) {
+        var bt = ev.target.closest('button[data-tema]');
+        if (!bt) return;
+        temaAtivo = bt.getAttribute('data-tema');
+        $$('button[data-tema]', caixaTemas).forEach(function (o) { o.setAttribute('aria-pressed', String(o === bt)); });
+        desenha();
+      });
+    }
     function desenha() {
       var f = Object.assign({}, fixo);
+      if (temaAtivo) f.tema = temaAtivo;
       $$('select[data-filtro]', alvo).forEach(function (s) { if (s.value) f[s.getAttribute('data-filtro')] = s.value; });
-      var itens = K.filtrar(base.itens, f);
+      var itens = K.filtrar(base.itens, f), total = itens.length;
       if (limite) itens = itens.slice(0, limite);
-      lista.innerHTML = itens.length ? itens.map(function (it) { return K.renderItem(it, F.porId); }).join('')
+      // `data-inicial`: sem filtro de tema, só os primeiros itens; o botão "Ver todos" mostra o resto
+      var parcial = inicial && !expandido && !temaAtivo && itens.length > inicial;
+      if (parcial) itens = itens.slice(0, inicial);
+      var mais = $('[data-ver-todos]', alvo);
+      if (mais) { mais.hidden = !parcial; mais.textContent = 'Ver todos os ' + total + ' pontos'; }
+      lista.innerHTML = itens.length ? itens.map(function (it) { return K.renderItem(it, F.porId, { recolhido: recolher }); }).join('')
         : '<p class="og-cartao-texto">Nenhum item com esses filtros.' + (C.ambiente === 'producao' ? ' Itens aguardando revisão técnica não aparecem.' : '') + '</p>';
       var n = $('[data-contagem]', alvo);
-      if (n) n.textContent = itens.length + (itens.length === 1 ? ' item' : ' itens');
+      if (n) n.textContent = parcial ? 'Mostrando ' + itens.length + ' de ' + total + ' pontos' : itens.length + (itens.length === 1 ? ' item' : ' itens');
     }
+    var botaoMais = $('[data-ver-todos]', alvo);
+    if (botaoMais) botaoMais.addEventListener('click', function () { expandido = true; desenha(); });
     $$('select[data-filtro]', alvo).forEach(function (s) { s.addEventListener('change', desenha); });
     desenha();
   });

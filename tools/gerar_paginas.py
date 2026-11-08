@@ -51,24 +51,27 @@ def pagina(caminho: str, titulo: str, descricao: str, ativo: str | None, objetiv
     print("OK", caminho)
 
 
-def hero(sobre: str, titulo: str, lead: str, ctas: str) -> str:
-    """Herói no design ORGATEC Trilha: sem faixa escura; o fundo é o da página (com brilho no estilo flutuante)."""
-    return f"""        <section class="py-16 lg:py-24" data-hero>
+def hero(sobre: str, titulo: str, lead: str, ctas: str, compacto: bool = False) -> str:
+    """Herói no design ORGATEC Trilha: sem faixa escura; o fundo é o da página (com brilho no estilo flutuante).
+    compacto: no celular, menos espaço e título menor, para páginas que precisam mostrar conteúdo útil na primeira tela."""
+    return f"""        <section class="{"py-6 sm:py-16 lg:py-24" if compacto else "py-16 lg:py-24"}" data-hero>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="max-w-3xl">
                     <p class="eyebrow">{sobre}</p>
-                    <h1 class="text-4xl sm:text-6xl font-extrabold leading-[1.05] text-ink my-6">{titulo}</h1>
-                    <p class="text-lg text-muted mb-8 leading-relaxed">{lead}</p>
+                    <h1 class="{"text-3xl sm:text-6xl my-3 sm:my-6" if compacto else "text-4xl sm:text-6xl my-6"} font-extrabold leading-[1.05] text-ink">{titulo}</h1>
+                    <p class="text-lg text-muted {"mb-5 sm:mb-8 line-clamp-3 sm:line-clamp-none" if compacto else "mb-8"} leading-relaxed">{lead}</p>
                     <div class="flex flex-col sm:flex-row gap-3">{ctas}</div>
                 </div>
             </div>
         </section>"""
 
 
-def intro(sobre: str, titulo: str, texto: str = "", depois: str = "") -> str:
-    """Abertura curta das páginas internas (ferramentas, cliente, contato)."""
-    paragrafo = f'\n                <p class="text-tinta-suave max-w-3xl">{texto}</p>' if texto else ""
-    return f"""        <section class="py-10 sm:py-14 bg-superficie border-b border-linha" data-hero>
+def intro(sobre: str, titulo: str, texto: str = "", depois: str = "", compacto: bool = False) -> str:
+    """Abertura curta das páginas internas (ferramentas, cliente, contato). compacto: no celular, sem o texto e com menos
+    espaço, para a página que precisa mostrar a decisão na primeira tela (Janela de Campo)."""
+    classe_texto = "text-tinta-suave max-w-3xl" + (" hidden sm:block" if compacto else "")
+    paragrafo = f'\n                <p class="{classe_texto}">{texto}</p>' if texto else ""
+    return f"""        <section class="{"py-4 sm:py-14" if compacto else "py-10 sm:py-14"} bg-superficie border-b border-linha" data-hero>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <p class="eyebrow">{sobre}</p>
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-tinta tracking-tight mt-2 mb-4">{titulo}</h1>{paragrafo}
@@ -77,9 +80,10 @@ def intro(sobre: str, titulo: str, texto: str = "", depois: str = "") -> str:
         </section>"""
 
 
-def secao(sobre: str, titulo: str, corpo: str, fundo: str = "bg-fundo", id_: str = "") -> str:
+def secao(sobre: str, titulo: str, corpo: str, fundo: str = "bg-fundo", id_: str = "", compacto: bool = False) -> str:
+    """Seção com título. compacto: menos espaço vertical no celular (páginas que precisam ser curtas)."""
     ident = f' id="{id_}"' if id_ else ""
-    return f"""        <section{ident} class="py-16 {fundo}">
+    return f"""        <section{ident} class="{"py-8 sm:py-16" if compacto else "py-16"} {fundo}">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <p class="eyebrow">{sobre}</p>
                 <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">{titulo}</h2>
@@ -88,9 +92,13 @@ def secao(sobre: str, titulo: str, corpo: str, fundo: str = "bg-fundo", id_: str
         </section>"""
 
 
-def itens(destino: str | None = None, setor: str | None = None, limite: int = 0, filtros: bool = False) -> str:
+def itens(destino: str | None = None, setor: str | None = None, limite: int = 0, filtros: bool = False,
+          recolher: bool = False, temas: bool = False, inicial: int = 0) -> str:
+    """Lista de itens da reforma. recolher: cada item abre sob demanda (<details>), com as fontes dentro; temas: chips por tema
+    (campo opcional `tema` dos itens; os chips são montados no navegador só com os temas que têm item)."""
     attrs = "".join([f' data-destino="{destino}"' if destino else "", f' data-setor="{setor}"' if setor else "",
-                     f' data-limite="{limite}"' if limite else ""])
+                     f' data-limite="{limite}"' if limite else "", " data-recolher" if recolher else "",
+                     f' data-inicial="{inicial}"' if inicial else ""])
     seletores = ""
     if filtros:
         seletores = """                    <div class="flex flex-wrap items-end gap-3 mb-6">
@@ -100,8 +108,14 @@ def itens(destino: str | None = None, setor: str | None = None, limite: int = 0,
                         <span class="text-sm text-tinta-fraca pb-2" data-contagem aria-live="polite"></span>
                     </div>
 """
+    if temas:
+        seletores += """                    <div class="campo-abas mb-3" role="group" aria-label="Tema" data-temas hidden></div>
+                    <p class="text-sm text-tinta-fraca mb-3" data-contagem aria-live="polite"></p>
+"""
+    mais = ('\n                    <p class="mt-4"><button type="button" class="og-btn og-btn-contorno og-btn-md" data-ver-todos hidden>Ver todos os pontos</button></p>'
+            if inicial else "")
     return f"""                <div data-itens{attrs}>
-{seletores}                    <div class="lista-itens grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+{seletores}                    <div class="lista-itens grid grid-cols-1 md:grid-cols-2 gap-4"></div>{mais}
                 </div>"""
 
 
@@ -109,13 +123,13 @@ def cartao(ref: str, titulo: str, texto: str, href: str) -> str:
     return f'<a href="{href}" class="og-cartao"><span class="og-cartao-ref">{ref}</span><h3 class="og-cartao-titulo">{titulo}</h3><p class="og-cartao-texto">{texto}</p></a>'
 
 
-def grade(cartoes: list[str], colunas: str = "md:grid-cols-2 lg:grid-cols-4") -> str:
+def grade(cartoes: list[str], colunas: str = "md:grid-cols-2 lg:grid-cols-4", base: str = "grid-cols-1") -> str:
     juntos = "\n                    ".join(cartoes)
-    return f'                <div class="grid grid-cols-1 {colunas} gap-4">\n                    {juntos}\n                </div>'
+    return f'                <div class="grid {base} {colunas} gap-4">\n                    {juntos}\n                </div>'
 
 
-def faixa_cta(titulo: str, texto: str) -> str:
-    return f"""        <section class="py-16 bg-superficie border-t border-linha">
+def faixa_cta(titulo: str, texto: str, compacto: bool = False) -> str:
+    return f"""        <section class="{"py-8 sm:py-16" if compacto else "py-16"} bg-superficie border-t border-linha">
             <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
                 <h2 class="text-2xl font-bold text-tinta mb-3">{titulo}</h2>
                 <p class="text-tinta-suave mb-6">{texto}</p>
@@ -377,8 +391,9 @@ def reforma() -> None:
 def subnav_setores(ativo: str) -> str:
     botoes = "".join(f'<a href="{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
                      for chave, rot, arq in [("agro", "Agro", "agro.html"), ("transporte", "Transporte", "transporte.html"),
-                                             ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html")])
-    return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex flex-wrap gap-3">{botoes}</div>'
+                                             ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html"),
+                                             ("mercado", "Cotações e notícias", "agro-mercado.html")])
+    return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores>{botoes}</div>'
 
 
 # Página "Por público" da área de Compliance que corresponde ao setor (só as que já estão no ar)
@@ -394,15 +409,78 @@ def compliance_do_setor(slug: str) -> str:
                  "bg-superficie", "compliance")
 
 
-def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, alertas: bool, ferramenta: str) -> None:
-    bloco_alertas = ""
-    if alertas:
-        bloco_alertas = secao("Eixo GO-TO-PA", "Alertas regionais para o agro", """                <div data-alertas="agro">
-                    <div class="og-campo max-w-xs mb-6"><label class="og-campo-rotulo" for="aUf">Estado</label>
-                        <select id="aUf" class="og-campo-controle og-campo-md"><option value="GO">Goiás</option><option value="TO">Tocantins</option><option value="PA">Pará</option></select></div>
-                    <ul class="lista-alertas grid grid-cols-1 md:grid-cols-2 gap-4"></ul>
+def caminho_agro(ref: str, titulo: str, texto: str, href: str) -> str:
+    """Cartão de um caminho do produtor rural."""
+    return (f'<article class="og-cartao" data-agro-caminho><span class="og-cartao-ref">{ref}</span>'
+            f'<h3 class="og-cartao-titulo"><a href="{href}" class="hover:text-acao">{titulo}</a></h3>'
+            f'<p class="og-cartao-texto hidden sm:block">{texto}</p></article>')
+
+
+def caminhos_agro() -> str:
+    """Entrada única do produtor rural: o que ele quer fazer, em 4 caminhos que reúnem o conteúdo antes espalhado."""
+    return secao("Para o produtor rural", "O que você quer fazer hoje?", grade([
+        caminho_agro("Tempo", "Janela de Campo", "A janela do dia por operação, os próximos 7 dias e o satélite.", "{p}setores/janela-de-campo.html"),
+        caminho_agro("Mercado", "Cotações e notícias", "Indicador do CEPEA, notícias e legislação por atividade.", "{p}setores/agro-mercado.html"),
+        caminho_agro("Tributos e obrigações", "Reforma, LCDPR e Funrural", "Os pontos da reforma, a calculadora do produtor, o compliance e os alertas do agro.", "#tributos"),
+        caminho_agro("Serviços", "Auditoria rural e diagnóstico", "As notas do produtor conferidas uma a uma, com laudo.", "{p}solucoes/auditoria-rural.html"),
+    ], "lg:grid-cols-4", "grid-cols-2"), "bg-fundo", compacto=True)
+
+
+def hoje_agro() -> str:
+    """Resumo do dia na região escolhida, preenchido por assets/js/agro-hoje.js com o boletim publicado da Janela de Campo.
+    Sem JavaScript ou sem boletim válido, fica o texto fixo e o link (nenhum número é escrito aqui)."""
+    return """        <section class="py-6" aria-labelledby="agroHojeTitulo" data-agro-hoje data-campo-dados="{p}dados/campo/">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="og-cartao grid gap-3">
+                    <div><h2 id="agroHojeTitulo" class="eyebrow">Hoje na sua região<span class="sr-only">: <span data-agro-hoje-regiao>Janela de Campo</span></span></h2></div>
+                    <div class="grid gap-3" data-agro-hoje-corpo>
+                        <p class="og-cartao-texto">Veja se hoje dá para pulverizar, plantar, colher e fazer o manejo dos animais na sua região.</p>
+                    </div>
+                    <p><a href="janela-de-campo.html" class="og-btn og-btn-primario og-btn-md" data-agro-hoje-link>Abrir a Janela de Campo</a></p>
                 </div>
-                <p class="mt-6"><a href="regional.html" class="og-link">Alertas de comércio atacadista e indústria →</a></p>""", "bg-superficie")
+            </div>
+        </section>"""
+
+
+def proximos_passos_agro() -> str:
+    """Chamadas claras: a calculadora do produtor e a auditoria rural; e, em links, o compliance e os alertas do setor."""
+    return secao("Próximos passos", "Do número ao laudo", f"""{grade([
+        cartao("Calculadora", "O produtor é contribuinte?", "Veja, pela receita do ano, se o produtor fica dentro ou fora do regime regular de IBS e CBS.", "{p}ferramentas/index.html#produtor"),
+        cartao("Serviço do escritório", "Auditoria forense rural (NFA-e)", "As notas do produtor conferidas uma a uma, com laudo.", "{p}solucoes/auditoria-rural.html"),
+    ], "md:grid-cols-2")}
+                <p class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                    <a href="{{p}}{COMPLIANCE_SETOR["agro"]}" class="og-link" data-compliance-setor>O que o produtor rural precisa cumprir (Compliance)</a>
+                    <a href="regional.html?setor=agro" class="og-link" data-alertas-agro>Alertas do agro por estado: GO, TO e PA</a>
+                    <a href="regional.html" class="og-link">Alertas de atacado e indústria</a>
+                </p>""", "bg-superficie", "proximos-passos", compacto=True)
+
+
+def setor_agro() -> None:
+    """Página Agro: entrada do produtor rural. Resumo do dia, 4 caminhos, pontos da reforma recolhidos por tema e próximos passos."""
+    titulo = "A reforma tributária no agronegócio e para o produtor rural."
+    lead = ("Redução de 60% para in natura e insumos, produtor não contribuinte até R$ 3,6 milhões, crédito presumido de quem compra e LCDPR: "
+            "o que muda no campo.")
+    porque = ("O agro tem as maiores reduções da reforma, mas também as escolhas mais difíceis: ser ou não contribuinte de IBS e CBS muda o preço negociado "
+              "com cooperativas, tradings e frigoríficos, e o fim gradual do ICMS reduz o valor dos incentivos estaduais de 2029 a 2032.")
+    corpo = "\n".join([
+        hero("Setor · Agro", titulo, lead,
+             f'<a {WHATS} data-msg="Olá! Quero falar sobre a reforma tributária no setor de agro." class="og-btn og-btn-contato og-btn-lg">Agendar Diagnóstico com Especialista</a>'
+             '<span class="hidden sm:contents"><a href="{p}ferramentas/index.html#produtor" class="og-btn og-btn-sobre-palco og-btn-lg">Usar a ferramenta do setor</a></span>', compacto=True),
+        subnav_setores("agro"),
+        hoje_agro(),
+        caminhos_agro(),
+        secao("Itens da reforma", "Pontos da reforma para o agro",
+              f'                <details class="mb-4 max-w-3xl"><summary class="font-semibold cursor-pointer py-2">Por que importa para o agro</summary>'
+              f'<p class="text-tinta-suave leading-relaxed mt-2">{porque}</p></details>\n'
+              + itens(destino="setor-agro", setor="agro", recolher=True, temas=True, inicial=5), "bg-fundo", "tributos", compacto=True),
+        proximos_passos_agro(),
+        faixa_cta("Diagnóstico para agro", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano.", compacto=True),
+    ])
+    pagina("setores/agro.html", "Reforma tributária no agro", lead, "setores", "captação + autoridade", corpo,
+           extra=["campo.js", "agro-hoje.js"], trilha=[("Setores", None), ("Agro", None)])
+
+
+def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta: str) -> None:
     corpo = "\n".join([
         hero(f"Setor · {nome}", titulo, lead,
              f'<a {WHATS} data-msg="Olá! Quero falar sobre a reforma tributária no setor de {nome.lower()}." class="og-btn og-btn-contato og-btn-lg">Agendar Diagnóstico com Especialista</a>'
@@ -411,7 +489,6 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, alertas: bo
         secao("Por que importa", f"A reforma no {nome.lower()}", f'                <p class="text-tinta-suave max-w-3xl leading-relaxed">{porque}</p>'),
         secao("Itens", f"Pontos da reforma para {nome.lower()}", itens(destino=f"setor-{slug}", setor=slug)),
         compliance_do_setor(slug),
-        bloco_alertas,
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
     ])
     pagina(f"setores/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "setores", "captação + autoridade", corpo,
@@ -420,8 +497,10 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, alertas: bo
 
 # Cards por atividade (marca Orgatec Audi Agro): configuração única em tools/agro_fontes.json
 AGRO = RAIZ / "tools" / "agro_fontes.json"
-# Cores do widget do CEPEA a partir da marca (verde #028227 medido na logo por tools/extrair_logo_audi_agro.py)
-WIDGET_CORES = {"corfundo": "e6f2e9", "cortexto": "111111", "corlinha": "f4faf5"}
+# Cores do widget do CEPEA: com a marca (verde #028227 medido na logo por tools/extrair_logo_audi_agro.py) ou neutras
+# (cinza-azulado claro), que são as de hoje: a marca está desligada em agro_fontes.json (marca.exibir)
+WIDGET_CORES_MARCA = {"corfundo": "e6f2e9", "cortexto": "111111", "corlinha": "f4faf5"}
+WIDGET_CORES_NEUTRAS = {"corfundo": "eef2f7", "cortexto": "111111", "corlinha": "f7f9fc"}
 
 
 def widgets_cepea(cfg: dict) -> None:
@@ -434,7 +513,8 @@ def widgets_cepea(cfg: dict) -> None:
     for a in cfg["atividades"]:
         if not a["cepea"]:
             continue
-        params = urlencode([("fonte", "arial"), ("tamanho", "10"), ("largura", "100%")] + list(WIDGET_CORES.items()) +
+        cores = WIDGET_CORES_MARCA if cfg.get("marca", {}).get("exibir") else WIDGET_CORES_NEUTRAS
+        params = urlencode([("fonte", "arial"), ("tamanho", "10"), ("largura", "100%")] + list(cores.items()) +
                            [("id_indicador[]", str(i)) for i in a["cepea"]])
         html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -457,9 +537,16 @@ def widgets_cepea(cfg: dict) -> None:
 
 
 def secao_agro(cfg: dict) -> str:
-    """Seção Orgatec Audi Agro: um card por atividade com a cotação (widget do CEPEA) e as notícias
-    (site/dados/agro/noticias.json, de tools/gerar_noticias_agro.py), preenchidas por assets/js/agro-cards.js."""
+    """Seção de mercado do agro: um card por atividade com a cotação (widget do CEPEA) e as notícias
+    (site/dados/agro/noticias.json, de tools/gerar_noticias_agro.py), preenchidas por assets/js/agro-cards.js.
+    A marca Orgatec Audi Agro (selo, nome e cores) só aparece com marca.exibir = true em agro_fontes.json; desligada,
+    a seção usa as cores do site."""
     from html import escape
+    marca = cfg.get("marca", {})
+    exibir_marca = bool(marca.get("exibir"))
+    selo = (f'<span class="audi-agro-selo"><img src="{{p}}{marca["logo"]}" alt="{escape(marca["nome"])}" width="480" height="293"></span>'
+            if exibir_marca else "")
+    chamada = escape(marca["nome"]) if exibir_marca else "Mercado"
     cards = []
     for a in cfg["atividades"]:
         nome = escape(a["nome"])
@@ -477,12 +564,12 @@ def secao_agro(cfg: dict) -> str:
                         <p class="audi-agro-atualizado" data-agro-atualizado></p>
                     </article>""")
     fontes = " · ".join(f'<a class="og-link" href="{escape(x["url"])}" target="_blank" rel="noopener">{escape(x["nome"])}</a>' for x in cfg["feeds"])
-    return f"""        <section class="audi-agro py-12" aria-labelledby="agroTitulo" data-agro>
+    return f"""        <section class="audi-agro{"" if exibir_marca else " audi-agro-neutro"} py-12" aria-labelledby="agroTitulo" data-agro>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6">
                 <div class="audi-agro-topo">
-                    <span class="audi-agro-selo"><img src="{{p}}assets/marca/orgatec-audi-agro.png" alt="Orgatec Audi Agro" width="480" height="293"></span>
+                    {selo}
                     <div>
-                        <p class="eyebrow">Orgatec Audi Agro</p>
+                        <p class="eyebrow">{chamada}</p>
                         <h2 id="agroTitulo" class="text-3xl font-bold text-tinta mt-2">Mercado e notícias por atividade</h2>
                         <p class="text-tinta-suave mt-2 max-w-3xl">Cotações do CEPEA/Esalq pelo widget oficial e notícias e legislação das agências da Câmara e do Senado e da Receita Federal, coletadas três vezes por dia.</p>
                     </div>
@@ -503,26 +590,47 @@ def secao_agro(cfg: dict) -> str:
 def janela_de_campo() -> None:
     """Janela de Campo: boletim agrometeorológico para o produtor rural (retenção do público agro).
     Dados em assets/js/boletins-campo.js; tela em assets/js/campo.js. Boletim vencido continua como arquivo, marcado.
-    Depois do boletim, os cards por atividade (Orgatec Audi Agro, secao_agro)."""
+    Os cards por atividade (Orgatec Audi Agro) moraram aqui; agora estão em agro_mercado()."""
     import json
-    cfg_agro = json.loads(AGRO.read_text(encoding="utf-8"))
-    widgets_cepea(cfg_agro)
+    from html import escape
+    atividades = json.loads(AGRO.read_text(encoding="utf-8"))["atividades"]
+    opcoes_atividades = "".join(f'<option value="{a["id"]}">{escape(a["nome"])}</option>' for a in atividades)
     corpo = "\n".join([
-        intro("Setor · Agro · Janela de Campo", "Janela de Campo: o tempo para o trabalho no campo",
-              "Boletim automático para o produtor rural, atualizado três vezes por dia: por região e por operação (pulverização, plantio, colheita, manejo de animais e máquinas), a janela do dia hora a hora, os próximos 7 dias e as nuvens e a chuva por satélite."),
+        intro("Setor · Agro", "Janela de Campo",
+              "Boletim automático três vezes ao dia, por região e operação.", compacto=True),
         subnav_setores("campo"),
-        """        <section class="py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8" data-campo>
+        """        <section class="py-5 sm:py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-4 sm:gap-8" data-campo>
                 <p class="og-cartao-texto">Carregando o boletim. Se nada aparecer, ative o JavaScript ou consulte os avisos do INMET em <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.</p>
             </div>
             <p class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 text-xs text-tinta-fraca font-mono">Boletim informativo gerado automaticamente a partir das fontes listadas (previsão: MET Norway, CC BY 4.0; satélite: NASA/NOAA). Não substitui os avisos oficiais do <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a> e da Defesa Civil do seu município, nem a bula dos produtos.</p>
         </section>""",
-        secao_agro(cfg_agro),
+        secao("Mercado", "Minha atividade", f"""                <p class="text-tinta-suave max-w-3xl mb-6">Escolha a sua atividade: o indicador do CEPEA, as notícias e a legislação dela estão na página de cotações e notícias.</p>
+                <div class="og-campo max-w-xs mb-6"><label class="og-campo-rotulo" for="minhaAtividade">Minha atividade</label><select id="minhaAtividade" class="og-campo-controle og-campo-md" data-minha-atividade><option value="">Todas as atividades</option>{opcoes_atividades}</select></div>
+                <a href="agro-mercado.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie"),
         faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe."),
     ])
     pagina("setores/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
            "Boletim agrometeorológico da ORGATEC para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
-           "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js", "agro-cards.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
+           "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
+
+
+def agro_mercado() -> None:
+    """Cotações e notícias por atividade: cards de secao_agro, preenchidos por assets/js/agro-cards.js.
+    Tinham sido incluídos na Janela de Campo; a página própria deixa o boletim leve e dá ao produtor um endereço para o mercado."""
+    import json
+    cfg_agro = json.loads(AGRO.read_text(encoding="utf-8"))
+    widgets_cepea(cfg_agro)
+    corpo = "\n".join([
+        intro("Setor · Agro · Mercado", "Cotações e notícias do agro por atividade",
+              "Para cada atividade, o indicador do CEPEA, as notícias e a legislação do setor, com a fonte e a data de cada item."),
+        subnav_setores("mercado"),
+        secao_agro(cfg_agro),
+        faixa_cta("O preço mexe no imposto", "Variação de preço, mudança de regime e crédito presumido do comprador alteram o resultado do produtor. Converse com a equipe."),
+    ])
+    pagina("setores/agro-mercado.html", "Cotações e notícias do agro por atividade",
+           "Cotações do CEPEA/Esalq e notícias e legislação por atividade do agro (soja, milho, boi, leite e outras), com a fonte e a data de cada item.",
+           "setores", "retenção", corpo, extra=["agro-cards.js"], trilha=[("Setores", None), ("Cotações e notícias", None)])
 
 
 def regional() -> None:
@@ -1110,6 +1218,7 @@ def abertura() -> None:
 MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("index.html", "captação: tela de abertura"), ("inicio.html", "captação"), ("tributario/index.html", "captação + autoridade"), ("reforma/index.html", "autoridade + retenção"),
     ("setores/agro.html", "captação + autoridade"), ("setores/transporte.html", "captação + autoridade"), ("setores/regional.html", "autoridade"), ("setores/janela-de-campo.html", "retenção"),
+    ("setores/agro-mercado.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
     ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),
     ("compliance/index.html", "captação + autoridade"), ("compliance/termometro.html", "captação"), ("compliance/conformidade-tributaria.html", "captação + autoridade"),
@@ -1171,16 +1280,14 @@ def main() -> None:
     abertura()
     tributario()
     reforma()
-    setor("agro", "Agro", "A reforma tributária no agronegócio e para o produtor rural.",
-          "Redução de 60% para in natura e insumos, produtor não contribuinte até R$ 3,6 milhões, crédito presumido de quem compra e LCDPR: o que muda no campo.",
-          "O agro tem as maiores reduções da reforma, mas também as escolhas mais difíceis: ser ou não contribuinte de IBS e CBS muda o preço negociado com cooperativas, tradings e frigoríficos, e o fim gradual do ICMS reduz o valor dos incentivos estaduais de 2029 a 2032.",
-          True, "{p}ferramentas/index.html#produtor")
+    setor_agro()
     setor("transporte", "Transporte", "A reforma tributária no transporte de cargas e de passageiros.",
           "CT-e com IBS e CBS desde agosto de 2026, crédito do diesel, frete de autônomo com crédito presumido e caminhões fora do Imposto Seletivo.",
           "O transporte de cargas fica na regra geral de IBS e CBS, sem redução de alíquota, mas passa a creditar o que hoje é custo, como combustível, peças e manutenção. Os documentos fiscais do setor já exigem os novos campos, e o split payment muda o caixa de quem trabalha com margem curta.",
-          False, "{p}ferramentas/simulador.html?setor=transporte")
+          "{p}ferramentas/simulador.html?setor=transporte")
     regional()
     janela_de_campo()
+    agro_mercado()
     ferramentas()
     simulador()
     calendario()

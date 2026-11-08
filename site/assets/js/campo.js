@@ -74,7 +74,14 @@
   }
   var LIMITE_HORAS = 18;
 
-  var api = { OPERACOES: OPERACOES, ESTADOS: ESTADOS, PERIODOS: PERIODOS, LIMITE_HORAS: LIMITE_HORAS, validar: validar, situacao: situacao,
+  /* Polo da seleção: o escolhido, se for da região e tiver previsão neste boletim; senão o primeiro da região que tem.
+     (Um polo sem previsão consta em regiao.polos, mas não está em polos.) */
+  function poloValido(b, regiao, escolhido) {
+    var existentes = (regiao.polos || []).filter(function (id) { return (b.polos || []).some(function (p) { return p.id === id; }); });
+    return existentes.indexOf(escolhido) >= 0 ? escolhido : existentes[0];
+  }
+
+  var api = { poloValido: poloValido, OPERACOES: OPERACOES, ESTADOS: ESTADOS, PERIODOS: PERIODOS, LIMITE_HORAS: LIMITE_HORAS, validar: validar, situacao: situacao,
     ordenar: ordenar, escolher: escolher, formatarDia: formatarDia, dataCurta: dataCurta, horasDesde: horasDesde };
 
   // ---------- Tela (só no navegador, na página que tem [data-campo])
@@ -95,33 +102,38 @@
   var params = new URLSearchParams(location.search);
   var manuais = ordenar(O.boletinsCampo || []);
   var indice = [];          // [{id, dia, geradoEm, arquivo}] dos boletins automáticos publicados
+  var lacunas = [];         // dias do arquivo em que nenhum boletim saiu (AAAA-MM-DD)
   var carregados = {};      // id -> boletim já baixado
   var lista = [], b = null;
 
   var pref = {};
   try { pref = JSON.parse(localStorage.getItem('orgatec.campo') || '{}'); } catch (e) { pref = {}; }
-  var selR = pref.r, selO = OPERACOES.some(function (o) { return o.id === pref.o; }) ? pref.o : OPERACOES[0].id, selP = pref.p;
+  var selR = pref.r, selO = OPERACOES.some(function (o) { return o.id === pref.o; }) ? pref.o : OPERACOES[0].id, selP = pref.p, selA = typeof pref.a === 'string' ? pref.a : '';  // selA: atividade do produtor
 
   function json(url) {
     return fetch(url, { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); });
   }
+
+  // O selo já diz o estado: no bloco da operação escolhida, o resumo não repete a palavra inicial
+  function resumoSemEstado(t) { return String(t).replace(/^(Favorável|Com restrição|Evitar)( · )?/, ''); }
 
   function poloDe(id) { return (b.polos || []).filter(function (p) { return p.id === id; })[0]; }
   function regiaoDe(id) { return b.regioes.filter(function (r) { return r.id === id; })[0]; }
   function ajustarSelecao() {
     if (!regiaoDe(selR)) selR = b.regioes[0].id;
     var r = regiaoDe(selR);
-    if (b.polos && (!poloDe(selP) || (r.polos || []).indexOf(selP) < 0)) selP = (r.polos || [])[0];
+    if (b.polos) selP = poloValido(b, r, selP);
   }
 
   function textoSituacao() {
     var vigente = situacao(b, HOJE) === 'vigente', horas = horasDesde(b, Date.now());
-    var inmet = 'Para os avisos oficiais do seu município, consulte <a href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.';
+    var inmet = 'Avisos oficiais: <a href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a>.';
     if (!vigente) return ['vencido', '<strong>Boletim vencido: arquivo de ' + esc(dataCurta(b.dia)) + '.</strong> Não use para decidir o trabalho de hoje. ' + inmet];
     if (horas != null && horas > LIMITE_HORAS) return ['vencido', '<strong>Boletim desatualizado:</strong> gerado há ' + Math.round(horas) + ' horas. A atualização automática pode ter falhado. ' + inmet];
     if (b.automatico) {
       var hora = b.geradoEm.slice(11, 16).replace(':', 'h');
-      return ['vigente', '<strong>Atualizado às ' + esc(hora) + ' de ' + esc(dataCurta(b.dia)) + '</strong>' + (b.proximaAtualizacao ? ' · próxima atualização ' + esc(b.proximaAtualizacao) : '') + '. ' + inmet];
+      return ['vigente', '<strong>Atualizado às ' + esc(hora) + ' de ' + esc(dataCurta(b.dia)) + '</strong>' + (b.proximaAtualizacao ? ' · próxima atualização ' + esc(b.proximaAtualizacao) : '') + '. ' +
+        (b.semDados && b.semDados.length ? 'Sem previsão neste horário: ' + esc(b.semDados.map(function (p) { return p.nome; }).join(', ')) + '. ' : '') + inmet];
     }
     return ['vigente', '<strong>Boletim em vigor</strong> para ' + esc(formatarDia(b.dia)) + '. ' + inmet];
   }
@@ -130,98 +142,155 @@
     var ids = {}, itens = [];
     indice.forEach(function (x) { ids[x.id] = true; itens.push({ id: x.id, dia: x.dia, auto: true }); });
     manuais.forEach(function (x) { if (!ids[x.id]) itens.push({ id: x.id, dia: x.dia }); });
+    lacunas.forEach(function (d) { if (!ids[d]) itens.push({ id: d, dia: d, lacuna: true }); });
     itens.sort(function (a, c) { return a.dia < c.dia ? 1 : -1; });
     if (itens.length < 2) return '';
     return '<div class="og-campo max-w-xs"><label class="og-campo-rotulo" for="campoBoletim">Boletim</label><select id="campoBoletim" class="og-campo-controle og-campo-md">' +
-      itens.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.id === b.id ? ' selected' : '') + '>' + esc(dataCurta(x.dia)) + (x.dia < HOJE ? ' (arquivo)' : '') + '</option>'; }).join('') + '</select></div>';
+      itens.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.lacuna ? ' disabled' : '') + (x.id === b.id ? ' selected' : '') + '>' + esc(dataCurta(x.dia)) + (x.lacuna ? ' (sem boletim)' : x.dia < HOJE ? ' (arquivo)' : '') + '</option>'; }).join('') + '</select></div>';
+  }
+
+  var abaAtiva = 'horas';
+  var mapaMontado = false;
+  var largo = window.matchMedia ? window.matchMedia('(min-width: 1024px)') : { matches: false };
+
+  function criteriosHtml() {
+    return b.criterios ? '<section class="grid gap-3" aria-labelledby="campoCriterios"><h3 id="campoCriterios" class="text-xl font-bold text-tinta">Critérios por operação</h3><ul class="campo-criterios">' +
+      b.criterios.map(function (c) {
+        var nome = OPERACOES.filter(function (o) { return o.id === c.op; })[0];
+        return '<li><strong>' + esc(nome ? nome.nome : c.op) + ':</strong> ' + esc(c.texto) + ' <span class="text-tinta-suave">Fonte: ' + esc(c.fonte) + '.</span>' +
+          (c.validado ? '' : ' <span class="og-selo og-selo-pendente">pendente de validação</span>') + '</li>';
+      }).join('') + '</ul></section>' : '';
+  }
+
+  function confiancaEFontesHtml() {
+    return '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">' +
+      '<section class="grid gap-3 content-start" aria-labelledby="campoConfianca"><h3 id="campoConfianca" class="text-xl font-bold text-tinta">Confiança da previsão</h3><ul class="campo-lista">' +
+        b.confianca.map(function (c) { return '<li><strong>' + esc(c.rotulo) + '</strong> ' + esc(c.texto) + '</li>'; }).join('') +
+        '<li>Confira os avisos do seu município em <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.</li></ul></section>' +
+      '<section class="grid gap-3 content-start" aria-labelledby="campoFontes"><h3 id="campoFontes" class="text-xl font-bold text-tinta">Fontes</h3><ul class="campo-lista" data-campo-fontes>' +
+        b.fontes.map(function (f) { return '<li><a class="og-link" href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.rotulo) + '</a></li>'; }).join('') + '</ul></section>' +
+    '</div>';
+  }
+
+  function matrizHtml() {
+    return '<div class="flex flex-wrap gap-3 text-sm my-3" aria-label="Legenda">' + selo('ok') + selo('atencao') + selo('evitar') + '</div>' +
+      '<div class="campo-matriz-rolagem"><table class="campo-matriz"><thead><tr><th scope="col">Região</th>' +
+      OPERACOES.map(function (o) { return '<th scope="col">' + esc(o.nome) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      b.regioes.map(function (r) {
+        return '<tr data-r="' + esc(r.id) + '"><th scope="row">' + esc(r.nome) + '<small>' + esc(r.uf.split(' · ').slice(0, 3).join(' · ')) + '</small></th>' +
+          OPERACOES.map(function (o) {
+            var s = r.ops[o.id][0];
+            return '<td><button type="button" class="campo-celula" data-r="' + esc(r.id) + '" data-o="' + o.id + '" aria-label="' + esc(r.nome + ', ' + o.nome + ': ' + ESTADOS[s].rotulo) + '">' + selo(s) + '</button></td>';
+          }).join('') + '</tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  function painelHoras() {
+    return '<div class="campo-fatos" data-campo-fatos></div>' +
+      '<div class="grid gap-2"><p class="eyebrow">Condição ao longo do dia na região (horário de Brasília)</p>' +
+        '<div class="campo-dia" role="img" data-campo-linha></div>' +
+        '<div class="campo-horas" aria-hidden="true"><span>00h</span><span>06h</span><span>10h</span><span>12h</span><span>15h</span><span><span>18h</span><span>24h</span></span></div>' +
+        '<p class="text-sm text-tinta-suave" data-campo-nota></p></div>' +
+      (b.polos ? '<div class="grid gap-2" data-campo-polo-bloco><p class="eyebrow">Hora a hora no polo escolhido</p>' +
+        '<div class="campo-horaria" role="img" data-campo-horaria></div><div class="campo-horaria-rotulos" aria-hidden="true"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>' +
+        '<p class="text-sm text-tinta-suave" data-campo-polo-txt></p></div>' : '');
+  }
+
+  function painelSemana() {
+    return (b.proximos ? proximosHtml() : '') +
+      '<section aria-labelledby="campoTendencia" class="grid gap-3"><h3 id="campoTendencia" class="text-xl font-bold text-tinta">' + (b.proximos ? 'Resumo da semana' : 'Próximos dias') + '</h3>' +
+        '<div class="campo-tendencia">' + (b.tendencia || []).map(function (t, i) {
+          return '<article' + (i === 0 ? ' class="agora"' : '') + '><p class="eyebrow font-mono">' + esc(t.quando) + '</p><h4 class="font-bold text-tinta text-lg">' + esc(t.titulo) + '</h4><p class="text-tinta-suave">' + esc(t.texto) + '</p></article>';
+        }).join('') + '</div></section>';
+  }
+
+  function painelSatelite() {
+    return '<h3 id="campoMapaTitulo" class="text-xl font-bold text-tinta">Satélite e polos agrícolas</h3>' +
+      '<p class="text-sm text-tinta-suave">Os pontos mostram a operação escolhida em cada polo; toque para abrir a região.</p>' +
+      '<div class="campo-abas" role="group" aria-label="Operação no mapa">' + OPERACOES.map(function (o) { return '<button type="button" class="campo-aba" data-o="' + o.id + '">' + esc(o.nome) + '</button>'; }).join('') + '</div>' +
+      '<div data-campo-mapa></div>';
+  }
+
+  function painelComo() {
+    return '<p class="text-tinta-suave">' + esc(b.resumo) + '</p>' + opcoesArquivo() + criteriosHtml() + confiancaEFontesHtml();
+  }
+
+  /* O mapa só é montado quando aparece (aba Satélite no celular; sempre visível no desktop): as imagens da NASA não pesam
+     na abertura da página. */
+  function garantirMapa() {
+    var pos = alvo.querySelector('[data-campo-mapa]');
+    if (mapaMontado || !pos || !b.polos || !O.campoMapa) return;
+    mapaMontado = true;
+    O.campoMapa.montar(pos, {
+      polos: b.polos,
+      estado: function (p) { return p.ops[selO] ? p.ops[selO].estado : 'ok'; },
+      rotulo: function (p) { var o = p.ops[selO]; return p.nome + ' (' + p.uf + '): ' + ESTADOS[o.estado].rotulo + (o.janela ? ', ' + (o.tipoJanela === 'ok' ? 'janela ' : 'com restrição ') + o.janela : ''); },
+      aoEscolher: function (p) {
+        selR = p.regiao; selP = p.id; desenhar();
+        var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.getElementById('campoHoje').scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });
+      }
+    });
+    O.campoMapa.atualizar();
+  }
+
+  function abrirAba(id, foco) {
+    abaAtiva = id;
+    Array.prototype.forEach.call(alvo.querySelectorAll('[data-aba]'), function (t) {
+      var on = t.getAttribute('data-aba') === id;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      if (on && foco) t.focus();
+    });
+    Array.prototype.forEach.call(alvo.querySelectorAll('[data-painel]'), function (p) { p.hidden = p.getAttribute('data-painel') !== id; });
+    if (id === 'satelite') garantirMapa();
   }
 
   function montar() {
     ajustarSelecao();
+    mapaMontado = false;
     var sit = textoSituacao(), vigente = sit[0] === 'vigente';
-    var opAbas = function (extra) { return '<div class="campo-abas" role="group" aria-label="Operação"' + (extra || '') + '>' + OPERACOES.map(function (o) { return '<button type="button" class="campo-aba" data-o="' + o.id + '">' + esc(o.nome) + '</button>'; }).join('') + '</div>'; };
-    var mapa = b.polos && O.campoMapa
-      ? '<section class="grid gap-3" aria-labelledby="campoMapaTitulo"><div class="flex flex-wrap items-baseline justify-between gap-2"><h3 id="campoMapaTitulo" class="text-2xl font-bold text-tinta">Satélite e polos agrícolas</h3>' +
-        '<p class="text-sm text-tinta-suave">Os pontos mostram a operação escolhida em cada polo; toque para abrir a região.</p></div>' + opAbas() +
-        '<div data-campo-mapa></div></section>'
-      : '';
+    var temMapa = !!(b.polos && O.campoMapa);
+    var abas = [['horas', 'Horas', painelHoras()], ['semana', b.proximos ? '7 dias' : 'Próximos dias', painelSemana()]];
+    if (temMapa) abas.push(['satelite', 'Satélite', painelSatelite()]);
+    abas.push(['como', 'Como decidimos', painelComo()]);
+    if (!abas.some(function (a) { return a[0] === abaAtiva; })) abaAtiva = 'horas';
     alvo.innerHTML =
       '<div class="campo-situacao campo-situacao-' + sit[0] + '" data-campo-situacao>' + sit[1] + '</div>' +
-      '<div class="flex flex-wrap items-end justify-between gap-4">' +
-        '<div><p class="eyebrow">Boletim agrometeorológico · ' + (b.automatico ? 'automático' : 'emitido ' + esc(dataCurta(b.emitidoEm))) + '</p>' +
-        '<h2 class="text-3xl sm:text-4xl font-extrabold text-tinta tracking-tight mt-2 first-letter:uppercase" data-campo-dia>' + esc(formatarDia(b.dia)) + '</h2>' +
-        '<p class="text-tinta-suave mt-2 max-w-3xl">' + esc(b.resumo) + '</p></div>' + opcoesArquivo() +
-      '</div>' +
+      '<div><p class="eyebrow hidden sm:block">Boletim agrometeorológico · ' + (b.automatico ? 'automático' : 'emitido ' + esc(dataCurta(b.emitidoEm))) + '</p>' +
+        '<h2 class="text-xl sm:text-4xl font-extrabold text-tinta tracking-tight sm:mt-1 first-letter:uppercase" data-campo-dia>' + esc(formatarDia(b.dia)) + '</h2></div>' +
       (b.alerta ? '<div class="campo-alerta"' + (vigente ? ' role="alert"' : '') + '><strong>' + esc(b.alerta.titulo) + '</strong><ul>' +
         b.alerta.itens.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' : '') +
-      mapa +
-      '<section aria-labelledby="campoPainelTitulo" class="grid gap-3">' +
-        '<div class="flex flex-wrap items-baseline justify-between gap-2"><h3 id="campoPainelTitulo" class="text-2xl font-bold text-tinta">Painel de decisão</h3>' +
-        '<div class="flex flex-wrap gap-3 text-sm" aria-label="Legenda">' + selo('ok') + selo('atencao') + selo('evitar') + '</div></div>' +
-        '<div class="campo-matriz-rolagem"><table class="campo-matriz"><thead><tr><th scope="col">Região</th>' +
-        OPERACOES.map(function (o) { return '<th scope="col">' + esc(o.nome) + '</th>'; }).join('') + '</tr></thead><tbody>' +
-        b.regioes.map(function (r) {
-          return '<tr data-r="' + esc(r.id) + '"><th scope="row">' + esc(r.nome) + '<small>' + esc(r.uf.split(' · ').slice(0, 3).join(' · ')) + '</small></th>' +
-            OPERACOES.map(function (o) {
-              var s = r.ops[o.id][0];
-              return '<td><button type="button" class="campo-celula" data-r="' + esc(r.id) + '" data-o="' + o.id + '" aria-label="' + esc(r.nome + ', ' + o.nome + ': ' + ESTADOS[s].rotulo) + '">' + selo(s) + '</button></td>';
-            }).join('') + '</tr>';
-        }).join('') + '</tbody></table></div>' +
-      '</section>' +
-      '<section class="og-cartao campo-detalhe" aria-labelledby="campoRegiao" id="campoDetalhe">' +
-        '<div class="campo-coluna">' +
-          '<div class="campo-abas" role="group" aria-label="Região">' + b.regioes.map(function (r) { return '<button type="button" class="campo-aba" data-r="' + esc(r.id) + '">' + esc(r.nome) + '</button>'; }).join('') + '</div>' +
-          '<div><p class="eyebrow" data-campo-uf></p><h3 id="campoRegiao" class="text-2xl font-bold text-tinta mt-1"></h3></div>' +
-          '<div class="campo-fatos" data-campo-fatos></div>' +
-          '<div class="flex flex-wrap gap-2" data-campo-alertas></div>' +
-          '<div class="grid gap-2"><p class="eyebrow">Condição ao longo do dia na região (horário de Brasília)</p>' +
-            '<div class="campo-dia" role="img" data-campo-linha></div>' +
-            '<div class="campo-horas" aria-hidden="true"><span>00h</span><span>06h</span><span>10h</span><span>12h</span><span>15h</span><span><span>18h</span><span>24h</span></span></div>' +
-            '<p class="text-sm text-tinta-suave" data-campo-nota></p></div>' +
+      '<div class="campo-grade">' +
+        '<div class="campo-esq">' +
+          '<div class="campo-seletor" data-campo-seletor>' +
+            '<div class="grid gap-1"><p class="eyebrow sr-only lg:not-sr-only">Região</p><div class="campo-abas" role="group" aria-label="Região">' +
+              b.regioes.map(function (r) { return '<button type="button" class="campo-aba" data-r="' + esc(r.id) + '">' + esc(r.nome) + '</button>'; }).join('') + '</div></div>' +
+            (b.polos ? '<div class="grid gap-1"><p class="eyebrow sr-only lg:not-sr-only">Polo</p><div class="campo-abas" role="group" aria-label="Polo" data-campo-polos></div></div>' : '') +
+          '</div>' +
+          '<section aria-labelledby="campoRegiao" id="campoHoje" class="grid gap-3">' +
+            '<div><p class="eyebrow">Hoje na minha região</p><div class="flex flex-wrap items-baseline gap-x-3"><h3 id="campoRegiao" class="text-2xl font-bold text-tinta"></h3><p class="eyebrow" data-campo-uf></p></div></div>' +
+            '<ul class="campo-hoje" data-campo-hoje></ul>' +
+            '<div class="flex flex-wrap gap-2" data-campo-alertas></div>' +
+            '<div class="campo-recomendacao" aria-live="polite" data-campo-rec></div>' +
+          '</section>' +
         '</div>' +
-        '<div class="campo-coluna">' +
-          opAbas() +
-          '<div class="campo-recomendacao" aria-live="polite" data-campo-rec></div>' +
-          (b.polos ? '<div class="grid gap-2" data-campo-polo-bloco><p class="eyebrow">Hora a hora no polo</p><div class="campo-abas" role="group" aria-label="Polo" data-campo-polos></div>' +
-            '<div class="campo-horaria" role="img" data-campo-horaria></div><div class="campo-horaria-rotulos" aria-hidden="true"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>' +
-            '<p class="text-sm text-tinta-suave" data-campo-polo-txt></p></div>' : '') +
-          '<div><p class="eyebrow">Todas as operações nesta região</p><div class="campo-todas" data-campo-todas></div></div>' +
+        '<div class="campo-dir">' +
+          '<div class="campo-abas-painel" role="tablist" aria-label="Detalhes do boletim" data-campo-abas>' +
+            abas.map(function (a) { return '<button type="button" role="tab" class="campo-aba-painel" id="campoAba-' + a[0] + '" aria-controls="campoPainel-' + a[0] + '" data-aba="' + a[0] + '" aria-selected="false" tabindex="-1">' + esc(a[1]) + '</button>'; }).join('') +
+          '</div>' +
+          '<div class="campo-paineis">' +
+            abas.map(function (a) { return '<div role="tabpanel" class="campo-painel" id="campoPainel-' + a[0] + '" aria-labelledby="campoAba-' + a[0] + '" data-painel="' + a[0] + '" tabindex="0" hidden>' + a[2] + '</div>'; }).join('') +
+          '</div>' +
         '</div>' +
-      '</section>' +
-      (b.proximos ? proximosHtml() : '') +
-      '<section aria-labelledby="campoTendencia" class="grid gap-3"><h3 id="campoTendencia" class="text-2xl font-bold text-tinta">' + (b.proximos ? 'Resumo da semana' : 'Próximos dias') + '</h3>' +
-        '<div class="campo-tendencia">' + (b.tendencia || []).map(function (t, i) {
-          return '<article' + (i === 0 ? ' class="agora"' : '') + '><p class="eyebrow font-mono">' + esc(t.quando) + '</p><h4 class="font-bold text-tinta text-lg">' + esc(t.titulo) + '</h4><p class="text-tinta-suave">' + esc(t.texto) + '</p></article>';
-        }).join('') + '</div></section>' +
-      (b.criterios ? '<section class="grid gap-3" aria-labelledby="campoCriterios"><h3 id="campoCriterios" class="text-2xl font-bold text-tinta">Critérios por operação</h3><ul class="campo-criterios">' +
-        b.criterios.map(function (c) {
-          var nome = OPERACOES.filter(function (o) { return o.id === c.op; })[0];
-          return '<li><strong>' + esc(nome ? nome.nome : c.op) + ':</strong> ' + esc(c.texto) + ' <span class="text-tinta-suave">Fonte: ' + esc(c.fonte) + '.</span>' +
-            (c.validado ? '' : ' <span class="og-selo og-selo-pendente">pendente de validação</span>') + '</li>';
-        }).join('') + '</ul></section>' : '') +
-      '<div class="grid grid-cols-1 md:grid-cols-2 gap-8">' +
-        '<section class="grid gap-3 content-start" aria-labelledby="campoConfianca"><h3 id="campoConfianca" class="text-2xl font-bold text-tinta">Confiança da previsão</h3><ul class="campo-lista">' +
-          b.confianca.map(function (c) { return '<li><strong>' + esc(c.rotulo) + '</strong> ' + esc(c.texto) + '</li>'; }).join('') +
-          '<li>Confira os avisos do seu município em <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.</li></ul></section>' +
-        '<section class="grid gap-3 content-start" aria-labelledby="campoFontes"><h3 id="campoFontes" class="text-2xl font-bold text-tinta">Fontes</h3><ul class="campo-lista" data-campo-fontes>' +
-          b.fontes.map(function (f) { return '<li><a class="og-link" href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.rotulo) + '</a></li>'; }).join('') + '</ul></section>' +
-      '</div>';
+      '</div>' +
+      '<details class="campo-comparar" data-campo-comparar' + (largo.matches ? ' open' : '') + '><summary>Comparar as regiões</summary>' + matrizHtml() + '</details>';
 
     var sel = document.getElementById('campoBoletim');
     if (sel) sel.addEventListener('change', function () { trocar(sel.value); });
-    if (b.polos && O.campoMapa) {
-      O.campoMapa.montar(alvo.querySelector('[data-campo-mapa]'), {
-        polos: b.polos,
-        estado: function (p) { return p.ops[selO] ? p.ops[selO].estado : 'ok'; },
-        rotulo: function (p) { var o = p.ops[selO]; return p.nome + ' (' + p.uf + '): ' + ESTADOS[o.estado].rotulo + (o.janela ? ', ' + (o.tipoJanela === 'ok' ? 'janela ' : 'com restrição ') + o.janela : ''); },
-        aoEscolher: function (p) {
-          selR = p.regiao; selP = p.id; desenhar();
-          var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          document.getElementById('campoDetalhe').scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });
-        }
-      });
-    }
+    abrirAba(abaAtiva);
     desenhar();
+    if (largo.matches) garantirMapa();
   }
 
   function proximosHtml() {
@@ -252,7 +321,7 @@
       c.classList.toggle('ativa', ativa);
       c.setAttribute('aria-pressed', String(ativa));
     });
-    Array.prototype.forEach.call(alvo.querySelectorAll('.campo-aba'), function (a) {
+    Array.prototype.forEach.call(alvo.querySelectorAll('.campo-aba, .campo-op'), function (a) {
       var v = a.getAttribute('data-r') || a.getAttribute('data-o') || a.getAttribute('data-p');
       var atual = a.hasAttribute('data-r') ? selR : a.hasAttribute('data-o') ? selO : selP;
       a.setAttribute('aria-pressed', String(v === atual));
@@ -270,8 +339,13 @@
     linha.setAttribute('aria-label', r.dia.map(function (s, i) { return PERIODOS[i] + ' ' + (ESTADOS[s] ? ESTADOS[s].rotulo : 'já passou'); }).join('; '));
     q('[data-campo-nota]').textContent = r.nota;
     var op = r.ops[o.id];
-    q('[data-campo-rec]').innerHTML = '<div class="flex flex-wrap items-center gap-2"><h4 class="text-lg font-bold text-tinta">' + esc(o.nome) + '</h4>' + selo(op[0]) + '</div><p>' + esc(op[1]) + '</p>';
-    q('[data-campo-todas]').innerHTML = OPERACOES.map(function (x) { return '<div>' + selo(r.ops[x.id][0], x.nome) + '<span>' + esc(r.ops[x.id][1]) + '</span></div>'; }).join('');
+    // Boletim automático: o resumo já está na linha da operação; aqui vai a orientação. Boletim manual: o texto inteiro.
+    q('[data-campo-rec]').innerHTML = '<div class="flex flex-wrap items-center gap-2"><h4 class="text-lg font-bold text-tinta">' + esc(o.nome) + '</h4>' + selo(op[0]) + '</div><p>' + esc(op[2] || op[1]) + '</p>';
+    q('[data-campo-hoje]').innerHTML = OPERACOES.map(function (x) {
+      var v = r.ops[x.id];
+      return '<li><button type="button" class="campo-op" data-o="' + x.id + '" aria-pressed="' + (x.id === selO) + '"><span class="campo-op-nome">' + esc(x.nome) + '</span>' + selo(v[0]) +
+        '<span class="campo-op-txt">' + esc(resumoSemEstado(v[1])) + '</span></button></li>';
+    }).join('');
     if (b.polos) {
       q('[data-campo-polos]').innerHTML = (r.polos || []).map(function (id) {
         var p = poloDe(id);
@@ -288,11 +362,17 @@
         h.setAttribute('aria-label', o.nome + ' em ' + p.nome + ', hora a hora: ' + celulas.length + ' horas; ' + (po.janela ? (po.tipoJanela === 'ok' ? 'janela favorável ' : 'janela com restrição ') + po.janela : 'sem janela') + '.');
         q('[data-campo-polo-txt]').textContent = p.nome + ': ' + ESTADOS[po.estado].rotulo.toLowerCase() + '. ' +
           (po.janela ? (po.tipoJanela === 'ok' ? 'Janela favorável das ' : 'Janela com restrição das ') + po.janela + '.' : 'Sem janela no dia.') +
-          (po.motivo && po.estado !== 'ok' ? ' Motivo mais frequente: ' + po.motivo + '.' : '');
+          (po.motivo && po.estado !== 'ok' ? ' Motivo mais frequente: ' + po.motivo + '.' : '') +
+          (po.horasPrevistas != null && po.horasPrevistas < 16 ? ' Previsão para ' + po.horasPrevistas + ' das 16 horas úteis (05h às 20h).' : '');
       }
     }
-    if (b.polos && O.campoMapa) O.campoMapa.atualizar();
-    try { localStorage.setItem('orgatec.campo', JSON.stringify({ r: selR, o: selO, p: selP })); } catch (e) { /* sem memória: só nesta visita */ }
+    if (mapaMontado && O.campoMapa) O.campoMapa.atualizar();
+    // nas fileiras de chips com rolagem lateral (celular), a escolha fica à vista
+    Array.prototype.forEach.call(alvo.querySelectorAll('.campo-seletor .campo-aba[aria-pressed="true"]'), function (c) {
+      var pai = c.parentNode;
+      if (pai.scrollWidth > pai.clientWidth) pai.scrollLeft = c.offsetLeft - (pai.clientWidth - c.offsetWidth) / 2;
+    });
+    try { localStorage.setItem('orgatec.campo', JSON.stringify({ r: selR, o: selO, p: selP, a: selA })); } catch (e) { /* sem memória: só nesta visita */ }
   }
 
   function trocar(id) {
@@ -316,17 +396,56 @@
     if (bt.hasAttribute('data-p')) selP = bt.getAttribute('data-p');
     ajustarSelecao();
     desenhar();
-    if (bt.classList.contains('campo-celula') && window.innerWidth < 820) {
+    if (bt.classList.contains('campo-celula') && !largo.matches) {
       var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      document.getElementById('campoDetalhe').scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });
+      document.getElementById('campoHoje').scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });
     }
   });
+
+  alvo.addEventListener('click', function (ev) {
+    var t = ev.target.closest('button[data-aba]');
+    if (t) abrirAba(t.getAttribute('data-aba'));
+  });
+  // Abas: setas, Home e End movem entre as abas visíveis (padrão WAI-ARIA de tablist)
+  alvo.addEventListener('keydown', function (ev) {
+    var t = ev.target.closest('button[data-aba]');
+    if (!t || ['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(ev.key) < 0) return;
+    var vis = Array.prototype.filter.call(alvo.querySelectorAll('button[data-aba]'), function (x) { return x.offsetParent !== null; });
+    var i = vis.indexOf(t);
+    i = ev.key === 'Home' ? 0 : ev.key === 'End' ? vis.length - 1 : (i + (ev.key === 'ArrowRight' ? 1 : -1) + vis.length) % vis.length;
+    ev.preventDefault();
+    abrirAba(vis[i].getAttribute('data-aba'), true);
+  });
+  if (largo.addEventListener) largo.addEventListener('change', function () {
+    if (!b || !largo.matches) return;
+    if (abaAtiva === 'satelite') abrirAba('horas');  // no desktop o satélite fica sempre à vista, sem aba
+    garantirMapa();
+    var d = alvo.querySelector('[data-campo-comparar]');
+    if (d) d.open = true;
+  });
+
+  // "Minha atividade": o link das cotações e notícias abre o card da atividade escolhida (a escolha fica só neste navegador,
+  // na mesma chave orgatec.campo da região e do polo)
+  (function () {
+    var selAtv = document.querySelector('[data-minha-atividade]'), lnk = document.querySelector('a[data-agro-mercado]');
+    if (!selAtv || !lnk) return;
+    var base = lnk.getAttribute('href');
+    if (selA && Array.prototype.some.call(selAtv.options, function (o) { return o.value === selA; })) selAtv.value = selA;
+    function aplicar() {
+      selA = selAtv.value;
+      lnk.setAttribute('href', selA ? base + '#agro-' + selA : base);
+      try { localStorage.setItem('orgatec.campo', JSON.stringify({ r: selR, o: selO, p: selP, a: selA })); } catch (e) { /* sem memória: só nesta visita */ }
+    }
+    selAtv.addEventListener('change', aplicar);
+    lnk.setAttribute('href', selAtv.value ? base + '#agro-' + selAtv.value : base);
+  })();
 
   // Boletim automático publicado (mesma origem); sem ele, o manual mais recente
   Promise.all([json(BASE + 'atual.json').catch(function () { return null; }), json(BASE + 'indice.json').catch(function () { return null; })])
     .then(function (r) {
       var atual = r[0] && !validar(r[0]).length ? r[0] : null;
       indice = (r[1] && r[1].boletins) || [];
+      lacunas = (r[1] && r[1].lacunas) || [];
       if (atual) carregados[atual.id] = atual;
       lista = (atual ? [atual] : []).concat(manuais);
       b = escolher(lista, params.get('boletim'));

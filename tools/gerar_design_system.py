@@ -792,9 +792,51 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .campo-matriz tbody tr.selecionada th{{box-shadow:inset 4px 0 0 var(--brand)}}
 .campo-celula{{width:100%;min-height:52px;padding:6px 8px;display:flex;align-items:center;border:0;background:transparent;font:inherit;color:inherit;cursor:pointer}}
 .campo-celula.ativa .campo-selo{{outline:2px solid var(--ink);outline-offset:1px}}
-.campo-detalhe{{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:24px}}
-@media (max-width:819px){{.campo-detalhe{{grid-template-columns:minmax(0,1fr)}}}}
-.campo-coluna{{display:grid;gap:16px;align-content:start;min-width:0}}
+/* Página Agro: resumo do dia (agro-hoje.js) e itens da reforma recolhidos (conteudo.renderItem com recolhido) */
+.campo-hoje-mini{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
+.campo-hoje-mini li{{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--line)}}
+.campo-hoje-mini li:last-child{{border-bottom:0}}
+.og-cartao.og-item-recolhivel{{display:block;padding:0}}
+.og-item-resumo{{list-style:none;cursor:pointer;display:grid;gap:6px;padding:14px 44px 14px 16px;position:relative}}
+.og-item-linha{{display:flex;flex-wrap:wrap;align-items:center;gap:8px}}
+.og-item-resumo::-webkit-details-marker{{display:none}}
+.og-item-resumo::after{{content:"+";position:absolute;right:16px;top:14px;font:600 22px/1 var(--f-mono);color:var(--muted)}}
+.og-item-recolhivel[open]>.og-item-resumo::after{{content:"\2212"}}
+.og-item-resumo:focus-visible{{outline:2px solid var(--focus);outline-offset:-2px;border-radius:var(--r)}}
+.og-item-resumo .og-cartao-titulo{{margin:0}}
+.og-item-corpo{{display:grid;gap:12px;padding:0 16px 16px}}
+/* Janela de Campo, nova ordem: seletor, "Hoje na minha região", abas e, no desktop, duas colunas com o satélite sempre à vista */
+.campo-grade{{display:grid;gap:24px;min-width:0}}
+.campo-esq,.campo-dir{{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-content:start;min-width:0}}
+@media (min-width:1024px){{
+  .campo-grade{{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start}}
+  .campo-dir{{display:flex;flex-direction:column;gap:20px}}
+  .campo-paineis{{display:contents}}
+  .campo-abas-painel{{order:1}}
+  .campo-painel{{order:2}}
+  .campo-painel[data-painel="satelite"]{{display:grid !important;order:0}}
+  .campo-aba-painel[data-aba="satelite"]{{display:none}}
+}}
+.campo-seletor{{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}}
+.campo-seletor>div{{min-width:0}}
+.campo-seletor .campo-abas{{position:relative;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:4px}}
+.campo-seletor .campo-aba{{flex:none;scroll-snap-align:start;white-space:nowrap}}
+@media (min-width:1024px){{.campo-seletor .campo-abas{{flex-wrap:wrap;overflow:visible}}}}
+.campo-hoje{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
+.campo-op{{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;width:100%;min-height:56px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}}
+.campo-op[aria-pressed="true"]{{border-color:var(--brand);box-shadow:inset 4px 0 0 var(--brand)}}
+.campo-op:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
+.campo-op-nome{{font-weight:700}}
+.campo-op-txt{{grid-column:1/-1;font-size:14px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}}
+.campo-op-txt:empty{{display:none}}
+.campo-comparar>summary{{cursor:pointer;font-weight:600;padding:10px 0}}
+.campo-comparar>summary:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
+.campo-abas-painel{{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}}
+.campo-aba-painel{{flex:none;padding:10px 14px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);font:600 15px var(--f-body);white-space:nowrap;cursor:pointer}}
+.campo-aba-painel[aria-selected="true"]{{color:var(--ink);border-bottom-color:var(--brand)}}
+.campo-aba-painel:focus-visible,.campo-painel:focus-visible{{outline:2px solid var(--focus);outline-offset:-2px}}
+.campo-painel{{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-content:start;padding-top:16px;min-width:0}}
+.campo-painel[hidden]{{display:none}}
 .campo-abas{{display:flex;flex-wrap:wrap;gap:6px}}
 .campo-aba{{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:500 14px var(--f-body);cursor:pointer}}
 .campo-aba[aria-pressed="true"]{{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}}
@@ -807,9 +849,6 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .campo-horas{{font:400 11px var(--f-mono);color:var(--muted)}}
 .campo-horas>span:last-child{{display:flex;justify-content:space-between}}
 .campo-recomendacao{{display:grid;gap:8px;padding:14px 16px;border-left:4px solid var(--brand);border-radius:0 8px 8px 0;background:var(--brand-soft)}}
-.campo-todas{{display:grid;gap:8px;margin-top:8px}}
-.campo-todas>div{{display:grid;grid-template-columns:170px minmax(0,1fr);gap:10px;align-items:start;font-size:15px}}
-@media (max-width:480px){{.campo-todas>div{{grid-template-columns:minmax(0,1fr)}}}}
 .campo-tendencia{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}}
 @media (max-width:719px){{.campo-tendencia{{grid-template-columns:minmax(0,1fr)}}}}
 .campo-tendencia article{{display:grid;gap:4px;padding-top:10px;border-top:3px solid var(--line)}}
@@ -819,6 +858,8 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 /* Cards por atividade da Janela de Campo, marca Orgatec Audi Agro. Verde e preto medidos na logo
    (tools/extrair_logo_audi_agro.py) e válidos só nesta seção; o resto segue a paleta do site. */
 .audi-agro{{--aa-verde:#028227;--aa-preto:#000000;--aa-verde-suave:color-mix(in srgb,var(--aa-verde) 12%,var(--surface))}}
+/* sem a marca (agro_fontes.json, marca.exibir = false): a seção usa as cores do site, não o verde e o preto da marca */
+.audi-agro-neutro{{--aa-verde:var(--brand);--aa-preto:var(--ink)}}
 .audi-agro-topo{{display:flex;flex-wrap:wrap;align-items:center;gap:20px}}
 .audi-agro-selo{{flex:none;display:inline-flex;padding:10px 14px;border-radius:16px;background:#fff;border:1px solid color-mix(in srgb,var(--aa-verde) 30%,transparent);box-shadow:0 8px 24px -16px rgba(0,0,0,.4)}}
 .audi-agro-selo img{{display:block;width:132px;height:auto}}
