@@ -1,0 +1,51 @@
+# EXEMPLO INATIVO. Não está em .github/workflows e não roda. Ver docs/ideias/boletim-no-actions.md.
+#
+# Esqueleto da publicação do boletim sem chave de serviço, por Workload Identity Federation.
+# NÃO CONFIRMADO: usar o firebase-tools com a credencial da federação (ADC) não consta como suportado na documentação
+# oficial. Testar primeiro numa prévia (firebase hosting:channel:deploy), nunca direto no canal ao vivo.
+# Antes de ativar: criar o pool e o provedor (restritos a este repositório e à main) e a conta de serviço só com Hosting.
+# Os valores abaixo são marcadores; ids reais só entram com autorização do usuário.
+
+name: Boletim da Janela de Campo
+
+on:
+  schedule:
+    - cron: "0 8,14,20 * * *"   # 05h, 11h e 17h de Brasília (UTC-3). O GitHub pode atrasar alguns minutos.
+  workflow_dispatch:
+
+concurrency:
+  group: boletim-campo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write   # necessário para a federação
+
+jobs:
+  boletim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install httpx defusedxml Pillow playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: python tools/restaurar_dados_do_site.py
+      - run: python tools/gerar_boletim_campo.py
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/NUMERO_DO_PROJETO/locations/global/workloadIdentityPools/POOL/providers/PROVEDOR
+          service_account: CONTA-DE-SERVICO@orgatec-site.iam.gserviceaccount.com
+
+      # Não use tools/publicar.py aqui: ele exige a suíte completa e a pasta principal. Decidir antes de ativar se o
+      # boletim publica direto (como hoje, pelo gerar_boletim_campo.py --publicar) ou se passa pela mesma suíte.
+      - run: npx --yes firebase-tools@VERSAO_FIXA deploy --only hosting --project orgatec-site
