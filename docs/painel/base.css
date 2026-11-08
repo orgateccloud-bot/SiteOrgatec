@@ -1,0 +1,44 @@
+/* Base dos modelos do painel: paletas "Azul flutuante" do design ORGATEC Trilha (tools/gerar_design_system.py → tema.js)
+   e as fontes servidas pelo próprio site. Verde fica de fora: no design system ele é exclusivo do botão de contato. */
+@import url("../../site/assets/fontes/fontes.css");
+:root,[data-tema="escuro"]{
+  --bg:#08111F;--surface:#171F2C;--surface2:#1D2737;--ink:#E6EEFB;--muted:#969EAC;--line:#2B3442;
+  --brand:#6EA8FF;--brand-ink:#08111F;--brand-soft:#12233F;--hl:#9CC3FF;--hl-soft:#293850;--warn:#FF8A4C;--warn-soft:#302426;--focus:#9CC3FF;
+}
+[data-tema="claro"]{
+  --bg:#EAF1FB;--surface:#FFFFFF;--surface2:#dae2ed;--ink:#0C1A33;--muted:#5c677b;--line:#c6cfdb;
+  --brand:#1D5FD6;--brand-ink:#F3F5F2;--brand-soft:#E3ECFB;--hl:#4B8FE0;--hl-soft:#bad4f3;--warn:#B03A0A;--warn-soft:#e1d4d4;--focus:#2B6CB0;
+}
+:root{--f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;--raio:16px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body);overflow-x:hidden}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.02em;margin:0}
+code{font-family:var(--f-mono);font-size:.9em}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font:500 14px var(--f-body);cursor:pointer;min-height:40px}
+.btn:hover{border-color:var(--brand)}
+.btn[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn:focus-visible,.cartao:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.cartao{padding:16px;border-radius:var(--raio);background:var(--surface);border:1px solid var(--line);cursor:pointer;transition:border-color .2s,transform .2s}
+.cartao:hover{border-color:var(--brand);transform:translateY(-2px)}
+.cartao h3{font-size:16px;margin:0 0 6px}
+.cartao p{margin:0;color:var(--muted);font-size:14px}
+.cartao .det{display:none;margin-top:10px}
+.cartao .det p{color:var(--ink);margin-top:6px}
+.cartao.aberto .det{display:block}
+.selo{display:inline-block;font:700 11px var(--f-mono);letter-spacing:.04em;padding:2px 8px;border-radius:999px;margin:0 6px 6px 0;border:1px solid}
+.cA{color:var(--brand);border-color:var(--brand)} .cB{color:var(--hl);border-color:var(--hl)} .cC{color:var(--muted);border-color:var(--muted)} .cX{color:var(--warn);border-color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.barra{height:10px;border-radius:999px;background:var(--surface2);overflow:hidden}
+.barra i{display:block;height:100%;background:var(--brand);border-radius:999px;transition:width .6s}
+.linha-barra{display:grid;grid-template-columns:170px 1fr 56px;gap:10px;align-items:center;margin:8px 0;font-size:14px}
+.linha-barra span:last-child{font-family:var(--f-mono);color:var(--muted)}
+.vidro{background:var(--surface);border:1px solid var(--line);border-radius:var(--raio)}
+.onda{display:grid;gap:12px}
+.onda .vidro{padding:14px 16px}
+.nota{color:var(--muted);font-size:13px}
+[hidden]{display:none!important}
+@media (max-width:640px){.linha-barra{grid-template-columns:110px 1fr 44px}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}

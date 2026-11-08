@@ -8,7 +8,8 @@ Base: `gemini-code-1793402547492.html` (mantido intacto na raiz como referência
 site/                         ← publicar esta pasta (estático)
   index.html                  RAIZ = tela de abertura (holograma se forma, cartão surge; "Entrar no site" leva a inicio.html) — tools/gerar_paginas.py abertura()
   inicio.html                 vitrine do site ("Início" do menu, layout.INICIO) em 8 blocos: herói com painel da transição, números, "qual é o seu caso?",
-                              últimas da reforma, ferramentas, perguntas e faixa de diagnóstico
+                              últimas da reforma, ferramentas, perguntas e faixa de diagnóstico; visual em vidro azul com a logo em holograma ao fundo
+                              (assets/css/vidro.css e assets/js/vidro.js), só na paleta Azul flutuante escuro: em outra paleta do botão Cores volta ao visual normal
   ferramentas/simulador.html  simulador + lead    ferramentas/calendario.html  calendário, .ics e opt-in
                               abertura: assets/js/abertura.js, abertura-intro.js (pré-pintura), holo-logos.js + assets/marca/holo/*.png (máscaras dos logotipos do holograma, geradas) e assets/css/abertura.css; destinos em config.abertura
   setores/janela-de-campo.html  Janela de Campo AUTOMÁTICA: tools/gerar_boletim_campo.py (agendado 05h/11h/17h no Windows) busca o MET Norway para os polos de
@@ -170,7 +171,8 @@ python tools/gerar_boletim_campo.py --remover-agendador
 
 - Previsão: MET Norway (CC BY 4.0, uso comercial permitido). O User-Agent identifica o site, e o cache respeita o `Expires`.
 - Não usados: CPTEC/INPE (termos proíbem uso comercial sem autorização) e a API do INMET (protegida contra robôs, sem documentação para terceiros). O site leva aos avisos oficiais do INMET.
-- Se a previsão de um polo falhar, nada é gravado nem publicado; o log fica em `tools/logs/campo.log`.
+- Se a fonte falhar, cada polo tem 3 tentativas e, depois, vale a previsão guardada há até 3 horas; polo sem previsão fica de fora e o boletim avisa (`semDados`), desde que cada região mantenha metade dos polos. Abaixo disso, nada é gravado nem publicado e o boletim anterior continua no ar; o log fica em `tools/logs/campo.log`.
+- Satélite (`assets/js/campo-mapa.js`): NASA GIBS (GOES-East e IMERG) direto para o navegador, com a hora de cada imagem, aviso quando a NASA falha e a chuva só pedida quando ligada. As divisas dos estados são do IBGE (Malha Municipal Digital 2025, CC BY 4.0), em `site/assets/img/divisas-ufs.svg`, geradas por `python tools/gerar_divisas_ufs.py` (baixa o BR_UF_2025.zip do IBGE) e simplificadas, o que o mapa informa no crédito. As escalas de cor das legendas vêm dos colormaps oficiais da NASA GIBS.
 - Critérios por operação em `site/assets/js/campo-regras.js`, marcados como pendentes de validação (V10).
 
 ### Cartão para o status do WhatsApp, os stories e o TikTok
@@ -188,14 +190,14 @@ A cada boletim gravado, `tools/cartao_campo.py` faz imagens PNG 1080 × 1920 com
 - **Boletim vencido** (dia anterior ou gerado há mais de 18 horas) não gera cartão. Se o boletim do dia não sair, os cartões do dia anterior saem dos caminhos fixos; as cópias datadas ficam.
 - Refazer os cartões do boletim atual, sem publicar: `python tools/cartao_campo.py`.
 
-## Cards por atividade (Orgatec Audi Agro)
+## Cards por atividade (cotações e notícias do agro)
 
-Ficam na Janela de Campo, depois do boletim. A configuração única está em `tools/agro_fontes.json`: atividades, códigos do widget do CEPEA, palavras-chave e feeds.
+Ficam na página `setores/agro-mercado.html` (Cotações e notícias), gerada por `agro_mercado()`; a Janela de Campo só aponta para ela. A configuração única está em `tools/agro_fontes.json`: atividades, códigos do widget do CEPEA, palavras-chave e feeds.
 
 - **Cotações:** vêm do widget oficial do CEPEA, em `site/cotacoes/<atividade>.html`, gerado por `tools/gerar_paginas.py`. A página abre num iframe com `sandbox="allow-scripts"`, e a CSP só libera o script do CEPEA em `/cotacoes/`.
   - O site não copia nem guarda os valores: a política do CEPEA só libera o widget sem autorização (pendência D21).
   - A pasta não se chama `widgets/` porque bloqueadores de anúncio barram endereços com essa palavra.
-- **Notícias:** `python tools/gerar_noticias_agro.py` grava `site/dados/agro/noticias.json`. Roda junto com o boletim às 05h, 11h e 17h, e se um feed cair, ficam os itens válidos anteriores.
+- **Notícias:** `python tools/gerar_noticias_agro.py` grava `site/dados/agro/noticias.json` (o que o visitante baixa) e `site/dados/agro/historico.json` (o acumulado de 180 dias; quem restaurar `site/dados` precisa restaurar os dois). Roda junto com o boletim às 05h, 11h e 17h, e se um feed cair, ficam os itens válidos anteriores. O card mostra os últimos 90 dias; sem notícia, mostra a última que houver e os links das fontes oficiais. O que cada fonte permite (termos lidos nas páginas oficiais), os links só-link e as fontes descartadas estão em `tools/agro_fontes.json` (`termos`, `acompanhe`, `descartadas`); o título nunca é cortado.
 - **Logo:** `python tools/extrair_logo_audi_agro.py` gera `site/assets/marca/orgatec-audi-agro.png` a partir de `fontes-marca/orgatec-audi-agro-original.jpg`. As cores da marca (#028227 e #000000) valem só na seção `.audi-agro`.
 
 ## Modelos do Instagram (marketing)

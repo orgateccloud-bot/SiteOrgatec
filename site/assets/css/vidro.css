@@ -1,0 +1,151 @@
+/* Vitrine em vidro azul, com a logo ORGATEC em holograma ao fundo (ideia/vidro-azul, modelo A "Noturno", escolhido em 07/11/2026).
+
+   Vale quando a paleta ativa é Azul flutuante escuro, a padrão do site: o vidro.js põe data-vidro no <html>. Se o visitante trocar
+   a paleta em "Cores", o atributo sai e a vitrine volta ao visual normal. Toda regra começa por html[data-vidro] ou
+   :root[data-vidro][data-float] (o segundo vence as regras de .og-cartao do estilo flutuante).
+
+   Vidro x holograma: o vidro é um objeto (borda clara, desfoque do que está atrás); o holograma é luz (transparência alta, linhas
+   de varredura, brilho nas bordas, um só tom). A logo fica fixa atrás da página para o vidro dos cartões desfocá-la enquanto se rola.
+   Seções não podem ter filter, opacity, mask nem backdrop-filter: isso isolaria o fundo dos cartões.
+
+   Desempenho: o vidro em si é barato; o que pesa é o fundo mudar a cada quadro, porque todo cartão de vidro por cima refaz o desfoque.
+   Por isso o grupo da logo não tem filter (o brilho é uma camada estática à parte), nada pisca nem usa mix-blend-mode, e a varredura de
+   luz e os anéis se mexem só numa parte do ciclo. O vidro.js desliga as animações com a página rolada e em aparelho lento
+   (html.vidro-pausa e html.vidro-leve): "pausada" custa mais que desligada. */
+
+/* ---------- Cores e fundo ---------- */
+html[data-vidro] {
+  --v-fundo: radial-gradient(900px 720px at 80% 6%, rgb(37 99 235 / .40), transparent 70%),
+             radial-gradient(820px 820px at 4% 94%, rgb(14 165 233 / .22), transparent 72%), #050C1A;
+  --v-orbe-1: 59 130 246; --v-orbe-2: 34 211 238;
+  /* Um azul bem escuro por baixo: o texto pequeno do cartão não perde contraste onde a logo passa clara atrás */
+  --v-vidro: linear-gradient(150deg, rgb(120 170 255 / .16), rgb(120 170 255 / .04) 62%), linear-gradient(rgb(4 12 30 / .30), rgb(4 12 30 / .30));
+  --v-painel: linear-gradient(150deg, rgb(120 170 255 / .14), rgb(120 170 255 / .04)), rgb(6 14 32 / .92);
+  --v-barra: rgb(8 18 40 / .52);
+  --v-borda: rgb(160 200 255 / .26);
+  --v-filtro: blur(20px) saturate(150%) brightness(.9);
+  --v-filtro-painel: blur(30px) saturate(160%);
+  --v-sombra: 0 26px 60px -30px rgb(0 0 0 / .75), inset 0 1px 0 rgb(255 255 255 / .24), inset 0 0 0 1px rgb(255 255 255 / .03);
+  --v-topo: #BAE6FD; --v-meio: #60A5FA; --v-base: #2563EB;
+  --v-brilho: 96 165 250; --v-linha: 5 12 26; --v-txt: 3 10 28;
+  background: var(--v-fundo);
+}
+html[data-vidro] body,
+html[data-vidro] .folha-escura {
+  --surface: rgb(120 170 255 / .08); --superficie: rgb(120 170 255 / .08); --surface2: rgb(120 170 255 / .06);
+  --line: rgb(160 200 255 / .24); --linha: rgb(160 200 255 / .24);
+  --muted: #BCC9E0; --tinta-suave: #BCC9E0; --tinta-fraca: #A9B8D2; --muted-rgb: 188 201 224;
+  --link: #A9CCFF;
+}
+html[data-vidro] body { background: transparent; }
+html[data-vidro] main section, html[data-vidro] main section.folha-escura { background: transparent; }
+html[data-vidro] .holo-nome { display: none; }
+html[data-vidro] .holo-vitrine { isolation: auto; overflow: visible; }
+html[data-vidro] .folha { margin-top: 0; border-radius: 0; box-shadow: none; }
+/* Halo escuro atrás das letras do herói: a varredura de luz e a inclinação mudam o fundo atrás do texto */
+html[data-vidro] .holo-vitrine h1, html[data-vidro] .holo-vitrine > div > p {
+  text-shadow: 0 0 10px rgb(var(--v-txt) / .85), 0 0 26px rgb(var(--v-txt) / .75), 0 2px 3px rgb(var(--v-txt) / .6);
+}
+html[data-vidro] .holo-vitrine p.text-muted { color: #D6E0F2; }
+
+html:not([data-vidro]) .vidro-fundo { display: none; }
+.vidro-fundo { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--v-fundo); }
+.vidro-orbe { position: absolute; border-radius: 50%; will-change: transform;
+  transform: translate(calc(var(--hx, 0) * -30px), calc(var(--hy, 0) * -22px)); transition: transform .8s ease-out; }
+.vidro-orbe.o1 { width: 52vmax; height: 52vmax; right: -14vmax; top: -18vmax; background: radial-gradient(circle, rgb(var(--v-orbe-1) / .30), transparent 66%); }
+.vidro-orbe.o2 { width: 44vmax; height: 44vmax; left: -16vmax; bottom: -20vmax; background: radial-gradient(circle, rgb(var(--v-orbe-2) / .16), transparent 66%); }
+
+/* ---------- Holograma da logo ---------- */
+.vidro-palco { position: absolute; width: min(92vmin, 800px); aspect-ratio: 314 / 347; left: 50%; top: 50%;
+  transform: translate(-50%, -52%) perspective(1100px) rotateX(calc(var(--hy, 0) * -7deg)) rotateY(calc(var(--hx, 0) * 11deg));
+  transition: transform .5s ease-out; will-change: transform; }
+.vidro-logo { position: absolute; inset: 0; }
+.vidro-logo i, .vidro-varredura { position: absolute; inset: 0;
+  -webkit-mask: url(../marca/orgatec-simbolo-branco.svg) center / contain no-repeat; mask: url(../marca/orgatec-simbolo-branco.svg) center / contain no-repeat; }
+.vidro-logo .brilho { position: absolute; inset: 0; filter: blur(22px); opacity: .5; transform: scale(1.03); }
+.vidro-logo .brilho i { background: rgb(var(--v-brilho)); }
+.vidro-logo .base { opacity: .34;
+  background: repeating-linear-gradient(to bottom, transparent 0 3px, rgb(var(--v-linha) / .4) 3px 4px), linear-gradient(180deg, var(--v-topo), var(--v-meio) 50%, var(--v-base)); }
+.vidro-logo .ciano { background: rgb(34 211 238); transform: translateX(-.9%); opacity: .14; }
+.vidro-logo .azul { background: rgb(59 130 246); transform: translateX(.9%); opacity: .2; }
+.vidro-logo::before { content: ""; position: absolute; inset: 1.5% 0; border: 1px solid rgb(var(--v-brilho) / .42); border-radius: 50%; transform: rotate(8deg); }
+.vidro-varredura { overflow: hidden; opacity: .55; }
+.vidro-varredura b { position: absolute; left: 0; right: 0; top: 0; height: 14%; opacity: 0; animation: vidro-varre 9s linear infinite;
+  background: linear-gradient(to bottom, transparent, rgb(255 255 255 / .85), transparent); }
+
+/* Feixe de projetor e anéis sob a logo */
+.vidro-feixe { position: absolute; left: 50%; bottom: -14%; width: 112%; height: 78%; transform: translateX(-50%);
+  background: conic-gradient(from 180deg at 50% 100%, transparent 152deg, rgb(96 165 250 / .14) 168deg, rgb(147 197 253 / .26) 180deg, rgb(96 165 250 / .14) 192deg, transparent 208deg); }
+.vidro-feixe::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: 0; height: 12%; background: radial-gradient(ellipse at 50% 100%, rgb(125 211 252 / .65), transparent 66%); }
+.vidro-aneis { position: absolute; left: 50%; bottom: -8%; width: 80%; height: 15%; transform: translateX(-50%); }
+.vidro-aneis i { position: absolute; inset: 0; border: 1px solid rgb(147 197 253 / .4); border-radius: 50%; animation: vidro-onda 9s ease-out infinite; }
+.vidro-aneis i:nth-child(2) { animation-delay: 1s; }
+
+/* Varre em cerca de 2 s e descansa o resto do ciclo: sem mudança no fundo, os cartões de vidro não refazem o desfoque */
+@keyframes vidro-varre { 0% { transform: translateY(-120%); opacity: 0; } 2% { opacity: 1; } 22% { transform: translateY(780%); opacity: 1; } 24%, 100% { transform: translateY(780%); opacity: 0; } }
+@keyframes vidro-onda { 0% { transform: scale(.6); opacity: .9; } 25%, 100% { transform: scale(1.35); opacity: 0; } }
+
+/* ---------- Vidro ---------- */
+:root[data-vidro][data-float] .og-cartao,
+:root[data-vidro][data-float] .numero,
+:root[data-vidro][data-float] .faq details,
+:root[data-vidro][data-float] .caixa-sim,
+:root[data-vidro][data-float] .carrossel-botao,
+:root[data-vidro][data-float] .faixa-pausa,
+:root[data-vidro][data-float] footer,
+:root[data-vidro][data-float] body > header.sticky,
+:root[data-vidro][data-float] .barra-movel {
+  background: var(--v-vidro); border: 1px solid var(--v-borda); color: var(--ink);
+  -webkit-backdrop-filter: var(--v-filtro); backdrop-filter: var(--v-filtro);
+  box-shadow: var(--v-sombra);
+}
+:root[data-vidro][data-float] body > header.sticky { background: var(--v-barra); border-width: 0 0 1px; box-shadow: none; }
+:root[data-vidro][data-float] footer { border-width: 1px 0 0; border-radius: 0; box-shadow: none; background: var(--v-barra); }
+:root[data-vidro][data-float] .barra-movel { background: var(--v-barra); border-width: 1px 0 0; box-shadow: none; }
+:root[data-vidro][data-float] a.og-cartao:hover { border-color: rgb(255 255 255 / .62); transform: translateY(-3px); box-shadow: var(--v-sombra), 0 0 32px -8px rgb(var(--v-brilho) / .5); }
+/* Painéis que flutuam sobre a página (submenus, seletor de cores, menu do celular): vidro mais denso, para o texto de trás não aparecer.
+   Os submenus e o menu do celular ficam dentro do cabeçalho, que já desfoca; ali só o tom escuro segura a leitura. */
+:root[data-vidro][data-float] .nav-sub,
+:root[data-vidro][data-float] .tema-pop,
+:root[data-vidro][data-float] #menuMobile {
+  background: var(--v-painel); border: 1px solid var(--v-borda); color: var(--ink);
+  -webkit-backdrop-filter: var(--v-filtro-painel); backdrop-filter: var(--v-filtro-painel);
+  box-shadow: 0 30px 70px -22px rgb(0 0 0 / .6), inset 0 1px 0 rgb(255 255 255 / .24);
+}
+:root[data-vidro][data-float] #menuMobile { border-width: 1px 0 0; border-radius: 0; }
+html[data-vidro] .nav-sub a:hover, html[data-vidro] .nav-sub a[aria-current] { background: rgb(255 255 255 / .12); }
+
+html[data-vidro] .faixa-trilho a { background: rgb(255 255 255 / .09); border-color: var(--v-borda); color: var(--ink); }
+html[data-vidro] .previa { background: rgb(255 255 255 / .07); }
+html[data-vidro] .eyebrow, html[data-vidro] .numero b { color: var(--hl); }
+/* Simulador: o cartão era claro com texto escuro; vira vidro com campos translúcidos */
+html[data-vidro] .caixa-sim { color: var(--ink); }
+html[data-vidro] .caixa-campo select, html[data-vidro] .caixa-campo input { background: rgb(255 255 255 / .09); border-color: rgb(255 255 255 / .28); color: var(--ink); }
+html[data-vidro] .caixa-campo input::placeholder { color: color-mix(in srgb, var(--ink) 58%, transparent); }
+html[data-vidro] .caixa-sim-enviar { background: var(--hl); color: var(--hl-ink); }
+
+@media (max-width: 760px) {
+  .vidro-palco { width: 132vw; top: 40%; }
+  .vidro-orbe.o1 { width: 90vw; height: 90vw; }
+  .vidro-orbe.o2 { width: 80vw; height: 80vw; }
+}
+
+/* Animações desligadas com a página rolada (a logo fica atrás dos cartões) e em aparelho lento */
+html.vidro-pausa .vidro-fundo *, html.vidro-pausa .vidro-fundo ::before, html.vidro-pausa .vidro-fundo ::after,
+html.vidro-leve .vidro-fundo *, html.vidro-leve .vidro-fundo ::before, html.vidro-leve .vidro-fundo ::after { animation: none !important; }
+html.vidro-leve .vidro-varredura { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vidro-varredura b, .vidro-aneis i { animation: none !important; }
+  .vidro-palco, .vidro-orbe { transition: none; }
+  .vidro-palco { transform: translate(-50%, -52%); }
+  .vidro-orbe { transform: none; }
+}
+
+/* Sem desfoque (navegador antigo) ou com "reduzir transparência" no sistema: painéis e cartões sólidos, sem ver o que passa atrás */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-vidro] { --v-vidro: rgb(14 28 58 / .92); --v-painel: rgb(6 14 32); --v-barra: rgb(8 18 40 / .94); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-vidro] { --v-vidro: rgb(14 28 58); --v-painel: rgb(6 14 32); --v-barra: rgb(8 18 40); --v-filtro: none; --v-filtro-painel: none; }
+}

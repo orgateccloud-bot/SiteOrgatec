@@ -137,3 +137,44 @@ test('configuração atual não exibe anos de atuação (falta comprovação)', 
   assert.match(src, /inicioAtuacao: null/);
   assert.match(src, /comprovacao: null/);
 });
+
+
+// ---- Página Agro: tema, filtro por tema e item recolhível
+
+test('tema: opcional, mas se vier precisa existir; filtro por tema', () => {
+  assert.deepEqual(K.validarItem(base({ tema: 'aliquotas' }), F.porId), []);
+  assert.ok(K.validarItem(base({ tema: 'inventado' }), F.porId).some((e) => /tema inválido/.test(e)));
+  const lista = [base({ id: 'a', tema: 'aliquotas' }), base({ id: 'b', tema: 'produtor' }), base({ id: 'c' })];
+  assert.deepEqual(K.filtrar(lista, { tema: 'produtor' }).map((i) => i.id), ['b']);
+  assert.equal(K.filtrar(lista, {}).length, 3);
+  assert.ok(Object.keys(K.TEMAS).length >= 2);
+});
+
+test('todo item do agro tem tema válido (a lista recolhida do agro se agrupa por tema)', () => {
+  const doAgro = ITENS.filter((i) => i.destinos.includes('setor-agro'));
+  assert.ok(doAgro.length >= 6);
+  doAgro.forEach((i) => assert.ok(K.TEMAS[i.tema], `${i.id} sem tema válido`));
+  assert.ok(new Set(doAgro.map((i) => i.tema)).size >= 3);
+});
+
+test('item recolhido: título, status e referência à vista; fato, orientação e fontes dentro, sem perder nada', () => {
+  const item = base({ tema: 'aliquotas', orientacao: 'Leitura da ORGATEC.', vigencia: '2029–2032', status: 'vigencia_futura' });
+  const html = K.renderItem(item, F.porId, { recolhido: true });
+  assert.match(html, /^<details class="og-cartao og-item og-item-recolhivel"/);
+  assert.match(html, /data-tema="aliquotas"/);
+  const [resumo, corpo] = html.split('</summary>');
+  assert.match(resumo, /<h3 class="og-cartao-titulo">/);
+  assert.match(resumo, /og-selo-futuro">Aprovado, vigência futura/);
+  assert.doesNotMatch(resumo, /og-item-fontes|Leitura da ORGATEC/);  // o detalhe fica para depois do clique
+  assert.match(corpo, /em revisão técnica/);
+  assert.match(corpo, new RegExp(item.fato.slice(0, 20)));
+  assert.match(corpo, /Orientação ORGATEC \(interpretação, não é texto legal\)/);
+  assert.match(corpo, /href="https:\/\/www\.planalto\.gov\.br\//);
+  assert.match(corpo, /Consultado em 31\/10\/2026 · Vigência: 2029–2032/);
+  // sem a opção, o HTML continua o de sempre (um <article>, sem <details>)
+  const normal = K.renderItem(item, F.porId);
+  assert.match(normal, /^<article class="og-cartao og-item"/);
+  assert.doesNotMatch(normal, /<details/);
+  const aprovado = K.renderItem(base({ revisao: { status: 'aprovada', por: 'RT', em: '2026-11-01' } }), F.porId, { recolhido: true });
+  assert.doesNotMatch(aprovado, /em revisão técnica/);
+});

@@ -13,7 +13,12 @@ Uso:
 Regras da fonte (api.met.no, termos conferidos em 02/11/2026): identificar o site no User-Agent, respeitar o
 cabeçalho Expires (cache em tools/cache/campo) e não consultar com frequência. Licença CC BY 4.0: o site cita
 "MET Norway". O CPTEC/INPE não é usado: os termos dele proíbem reproduzir os dados em site comercial sem
-autorização. Se a previsão de algum polo falhar, nada é gravado nem publicado e o boletim anterior continua no ar.
+autorização.
+
+Falhas da fonte (o MET Norway devolveu 502 e 503 em 04 e 05/11/2026): cada polo tem 3 tentativas com espera; se ainda
+assim falhar, vale a previsão guardada há até 3 horas. Polo sem previsão fica de fora do boletim, que avisa quais são
+(campo "semDados"), desde que cada região mantenha pelo menos metade dos polos. Abaixo disso, ou com a fonte fora do ar,
+nada é gravado nem publicado e o boletim anterior continua no ar (a tela o marca como desatualizado depois de 18 horas).
 """
 
 from __future__ import annotations
@@ -44,6 +49,11 @@ USER_AGENT = "orgatec.io contato@orgatec.io"
 BRASILIA = timezone(timedelta(hours=-3))  # o Brasil não tem horário de verão desde 2019
 HORARIOS = (5, 11, 17)
 ARQUIVO_DIAS = 30
+ESPERAS = (2, 6)  # segundos entre as 3 tentativas por polo
+ESPERA_MAXIMA = 30  # teto para o Retry-After da fonte
+STATUS_TENTAR_DE_NOVO = {429, 500, 502, 503, 504}
+CACHE_VELHO_HORAS = 3  # previsão guardada que ainda serve quando a fonte falha
+FALHAS_SEGUIDAS = 3  # polos seguidos sem previsão: a fonte está fora do ar, para de insistir
 TAREFA = "ORGATEC\\JanelaCampo{h:02d}h"
 
 log = logging.getLogger("orgatec.campo")
@@ -67,8 +77,31 @@ def carregar_polos() -> dict:
     return cfg
 
 
+def _pedir_met(polo: dict, cliente: httpx.Client, cab: dict, params: dict) -> httpx.Response:
+    """Pede a previsão com até 3 tentativas (erro de rede, 429 ou 5xx). Devolve a resposta ou levanta FonteIndisponivel."""
+    ultima: httpx.Response | None = None
+    erro: httpx.HTTPError | None = None
+    for tentativa in range(len(ESPERAS) + 1):
+        try:
+            ultima, erro = cliente.get(URL_MET, params=params, headers=cab, timeout=30), None
+        except httpx.HTTPError as e:
+            ultima, erro = None, e
+        if ultima is not None and ultima.status_code not in STATUS_TENTAR_DE_NOVO:
+            return ultima
+        if tentativa < len(ESPERAS):
+            espera = ESPERAS[tentativa]
+            retry = ultima.headers.get("retry-after", "") if ultima is not None else ""
+            if retry.isdigit():
+                espera = min(int(retry), ESPERA_MAXIMA)
+            time.sleep(espera)
+    if ultima is not None:
+        raise FonteIndisponivel(f"MET Norway respondeu {ultima.status_code} para {polo['nome']}")
+    raise FonteIndisponivel(f"MET Norway sem resposta para {polo['nome']}: {erro}")
+
+
 def buscar_met(polo: dict, cliente: httpx.Client, agora: datetime) -> dict:
-    """Previsão do polo com cache: dentro do Expires usa o arquivo; depois, pergunta com If-Modified-Since."""
+    """Previsão do polo com cache: dentro do Expires usa o arquivo; depois, pergunta com If-Modified-Since.
+    Se a fonte falhar mesmo com as tentativas, vale o arquivo guardado há até CACHE_VELHO_HORAS horas."""
     CACHE.mkdir(parents=True, exist_ok=True)
     arq = CACHE / f"met-{polo['id']}.json"
     guardado = json.loads(arq.read_text(encoding="utf-8")) if arq.exists() else None
@@ -80,15 +113,18 @@ def buscar_met(polo: dict, cliente: httpx.Client, agora: datetime) -> dict:
     # 4 casas decimais no máximo: pedido dos termos (coordenadas mais precisas não mudam a previsão e quebram o cache deles)
     params = {"lat": f"{polo['lat']:.4f}", "lon": f"{polo['lon']:.4f}"}
     try:
-        r = cliente.get(URL_MET, params=params, headers=cab, timeout=30)
-    except httpx.HTTPError as erro:
-        raise FonteIndisponivel(f"MET Norway sem resposta para {polo['nome']}: {erro}") from erro
-    if r.status_code == 304 and guardado:
-        corpo = guardado["corpo"]
-    elif r.status_code == 200:
-        corpo = r.json()
-    else:
-        raise FonteIndisponivel(f"MET Norway respondeu {r.status_code} para {polo['nome']}")
+        r = _pedir_met(polo, cliente, cab, params)
+        if r.status_code == 304 and guardado:
+            corpo = guardado["corpo"]
+        elif r.status_code == 200:
+            corpo = r.json()
+        else:
+            raise FonteIndisponivel(f"MET Norway respondeu {r.status_code} para {polo['nome']}")
+    except FonteIndisponivel as falha:
+        if guardado and agora.timestamp() - arq.stat().st_mtime <= CACHE_VELHO_HORAS * 3600:
+            log.warning("%s; usando a previsão guardada há menos de %d h", falha, CACHE_VELHO_HORAS)
+            return guardado["corpo"]
+        raise
     expira = agora.timestamp() + 1800
     if r.headers.get("expires"):
         try:
@@ -122,18 +158,38 @@ def gerar(agora: datetime | None = None, buscar=buscar_met, destino: Path = DADO
     agora = (agora or datetime.now(BRASILIA)).astimezone(BRASILIA)
     dia = agora.date().isoformat()
     cfg = carregar_polos()
-    polos = []
+    polos, sem_dados, seguidas = [], [], 0
     with httpx.Client() as cliente:
         for p in cfg["polos"]:
-            polos.append({**p, "met": buscar(p, cliente, agora)})
+            try:
+                polos.append({**p, "met": buscar(p, cliente, agora)})
+                seguidas = 0
+            except FonteIndisponivel as falha:
+                log.warning("polo sem previsão: %s", falha)
+                sem_dados.append(p)
+                seguidas += 1
+                if seguidas >= FALHAS_SEGUIDAS:
+                    raise FonteIndisponivel(f"{falha} (e mais {seguidas - 1} polos seguidos: fonte fora do ar)") from falha
             time.sleep(0.2)  # sem rajada de pedidos à fonte
+    conferir_cobertura(cfg, sem_dados)
     anterior_arq = destino / f"boletim-{dia}.json"
     anterior = json.loads(anterior_arq.read_text(encoding="utf-8")) if anterior_arq.exists() else None
     boletim = montar({"dia": dia, "geradoEm": agora.isoformat(timespec="minutes"), "regioes": cfg["regioes"],
-                      "polos": polos, "anterior": anterior, "proximaAtualizacao": proxima_atualizacao(agora)})
+                      "polos": polos, "anterior": anterior, "proximaAtualizacao": proxima_atualizacao(agora),
+                      "semDados": [{"id": p["id"], "nome": p["nome"], "uf": p["uf"], "regiao": p["regiao"]} for p in sem_dados]})
     gravar(boletim, destino)
-    log.info("boletim %s gerado às %s (%d polos)", dia, boletim["geradoEm"], len(polos))
+    log.info("boletim %s gerado às %s (%d polos, %d sem previsão)", dia, boletim["geradoEm"], len(polos), len(sem_dados))
     return boletim
+
+
+def conferir_cobertura(cfg: dict, sem_dados: list[dict]) -> None:
+    """Cada região precisa manter pelo menos metade dos polos; senão o boletim não sai (vale o anterior, marcado)."""
+    ausentes = {p["id"] for p in sem_dados}
+    for r in cfg["regioes"]:
+        total = len(r["polos"])
+        com = sum(1 for pid in r["polos"] if pid not in ausentes)
+        if com * 2 < total:
+            raise FonteIndisponivel(f"região {r['nome']} ficaria com {com} de {total} polos")
 
 
 def gravar(boletim: dict, destino: Path) -> None:
@@ -146,7 +202,18 @@ def gravar(boletim: dict, destino: Path) -> None:
     for arq in sorted(destino.glob("boletim-*.json"), reverse=True)[:ARQUIVO_DIAS]:
         b = json.loads(arq.read_text(encoding="utf-8"))
         itens.append({"id": b["id"], "dia": b["dia"], "geradoEm": b.get("geradoEm"), "arquivo": arq.name})
-    (destino / "indice.json").write_text(json.dumps({"boletins": itens}, ensure_ascii=False, indent=1), encoding="utf-8")
+    indice = {"boletins": itens, "lacunas": lacunas([i["dia"] for i in itens])}
+    (destino / "indice.json").write_text(json.dumps(indice, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def lacunas(dias: list[str]) -> list[str]:
+    """Dias sem boletim entre o mais antigo e o mais recente do índice (registro da falha; nada é inventado para eles)."""
+    if len(dias) < 2:
+        return []
+    ini, fim = datetime.fromisoformat(min(dias)).date(), datetime.fromisoformat(max(dias)).date()
+    existentes = set(dias)
+    todos = (ini + timedelta(days=n) for n in range((fim - ini).days + 1))
+    return [d.isoformat() for d in todos if d.isoformat() not in existentes]
 
 
 def publicar() -> None:

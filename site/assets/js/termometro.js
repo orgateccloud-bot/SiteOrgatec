@@ -102,6 +102,19 @@
     { id: 'i-contrato-publico', pilar: 'integridade', peso: 2, item: 'integridade-contratos-publicos', fontes: ['lei14133_integridade'],
       texto: 'Se a empresa tem ou disputa contratos públicos de grande vulto, está preparada para implantar programa de integridade em até 6 meses da celebração do contrato?',
       corrigir: 'Planejar o programa de integridade para cumprir o prazo de 6 meses dos contratos de grande vulto.' },
+    // Cultura e relatos (estudo do compliance moderno, frente 3.3): parâmetros do art. 57 do Decreto nº 11.129/2022
+    { id: 'i-alta-direcao', pilar: 'integridade', peso: 2, item: 'integridade-programa', fontes: ['dec11129_2022'], cultura: true,
+      texto: 'A direção apoia o programa de forma visível e reserva tempo e recursos para ele (art. 57, I)?',
+      corrigir: 'Registrar o apoio da direção ao programa e definir quem cuida dele, com tempo e recursos.' },
+    { id: 'i-relatos-tratados', pilar: 'integridade', peso: 2, item: 'integridade-programa', fontes: ['dec11129_2022'], cultura: true,
+      texto: 'O último relato recebido pelo canal teve resposta e registro da apuração, com proteção a quem relatou de boa-fé (art. 57, X)?',
+      corrigir: 'Definir prazo de resposta, registro da apuração e proteção a quem relata de boa-fé.' },
+    { id: 'i-remediacao', pilar: 'integridade', peso: 2, item: 'integridade-programa', fontes: ['dec11129_2022'], cultura: true,
+      texto: 'Quando uma irregularidade é confirmada, a empresa interrompe, corrige o dano e aplica a medida disciplinar prevista (art. 57, XI e XII)?',
+      corrigir: 'Escrever o procedimento de interrupção, remediação e medida disciplinar, e registrar cada caso.' },
+    { id: 'i-monitoramento', pilar: 'integridade', peso: 2, item: 'integridade-programa', fontes: ['dec11129_2022'], cultura: true,
+      texto: 'O programa é revisto periodicamente, com mudanças registradas a partir dos riscos e dos casos (art. 57, V e XV)?',
+      corrigir: 'Agendar a revisão periódica do programa e registrar o que mudou e por quê.' },
     // Obrigações do transportador (perfil "Transportador de cargas")
     { id: 'tr-rntrc', pilar: 'transporte', peso: 3, item: 'transporte-rntrc', fontes: ['lei11442'],
       texto: 'A inscrição da empresa (ou do autônomo) no RNTRC da ANTT está ativa e revalidada neste ano?',
@@ -190,6 +203,73 @@
       corrigir: 'Aplicar a redução de 70% da locação e o redutor social residencial no cálculo do IBS e da CBS.' }
   ];
 
+  /* Camadas de prova (docs/estudo-compliance-moderno.md, seção 3.1): nas perguntas de peso 3, quem responde "sim"
+     diz também se o controle funcionou no período e se há registro que mostre. Não muda o percentual, que continua
+     medindo declarações: vira um indicador à parte. */
+  var CAMADAS = {
+    't-docs-fiscais': { funciona: 'Nos últimos 3 meses, alguma nota saiu sem os campos de IBS e CBS?', prova: 'Dá para mostrar o XML de notas recentes com os campos preenchidos?', invertida: true },
+    't-obrigacoes-2026': { funciona: 'As obrigações de 2026 foram entregues dentro do prazo até agora?', prova: 'Há recibos ou protocolos das entregas?' },
+    't-inconsistencias': { funciona: 'Os apontamentos já corrigidos sumiram da consulta do programa?', prova: 'Há registro do que foi corrigido e quando?' },
+    'p-cadastro': { funciona: 'Os cadastros dos clientes do último ano estão completos?', prova: 'Uma amostra de cadastros e registros pode ser mostrada?' },
+    'p-comunicacao': { funciona: 'O procedimento foi usado ou testado no último ano?', prova: 'Há registro das comunicações ou da declaração de não ocorrência?' },
+    'l-seguranca': { funciona: 'Acessos, senhas e cópias de segurança foram revisados no último ano?', prova: 'Há registro dessa revisão?' },
+    'tr-rntrc': { funciona: 'A revalidação deste ano já foi feita?', prova: 'Há o comprovante da ANTT?' },
+    'tr-ciot': { funciona: 'Nos últimos 3 meses, algum frete contratado saiu sem CIOT?', prova: 'Dá para listar os CIOT do período pela instituição de pagamento?', invertida: true },
+    'ru-car': { funciona: 'Os dados do CAR batem com a área e os documentos atuais do imóvel?', prova: 'Há os recibos de inscrição de cada imóvel?' },
+    'ru-itr': { funciona: 'Algum dos últimos 5 exercícios ficou sem entrega ou sem pagamento?', prova: 'Os recibos dos 5 exercícios estão guardados?', invertida: true },
+    'pq-mei-limite': { funciona: 'A receita está sendo somada mês a mês?', prova: 'Há o controle mensal de receitas?' },
+    'pq-nanoempreendedor': { funciona: 'A receita do ano está sendo somada mês a mês?', prova: 'Há extratos ou um controle que mostre a receita?' },
+    'pq-simples-opcao': { funciona: 'A comparação foi feita com números da própria empresa?', prova: 'Há a simulação guardada?' },
+    'pq-simples-docs-2027': { funciona: 'Já saiu nota de teste com os campos de IBS e CBS?', prova: 'Há o XML de teste validado?' },
+    'im-enquadramento': { funciona: 'A conta usou a receita e os imóveis do ano anterior completos?', prova: 'Há os contratos e recibos que sustentam a conta?' }
+  };
+
+  /* Quantas respostas "sim" nas perguntas com camada foram confirmadas na prática e com registro.
+     Resposta de "funciona": 'sim' confirma; em pergunta `invertida` (ex.: "alguma nota saiu sem..."), confirma o 'nao'. */
+  /* Pesos por perfil (estudo, frente 3.2). Cada ajuste traz justificativa e fonte; enquanto `status` não for
+     'aprovada', o peso padrão da pergunta continua valendo. O julgamento fica escrito para o responsável técnico revisar. */
+  var PESOS_PERFIL = {
+    status: 'proposta', por: null, em: null,
+    ajustes: {
+      simples: {
+        'i-codigo': { peso: 1, fontes: ['dec11129_2022'], justificativa: 'O art. 57, § 1º, I e II, manda considerar o porte: número de empregados, faturamento e o fato de ser ME ou EPP.' },
+        'i-riscos': { peso: 1, fontes: ['dec11129_2022'], justificativa: 'O art. 57, § 1º, manda considerar o porte; diligência proporcional ao tamanho da empresa.' }
+      },
+      transportador: {
+        'i-riscos': { peso: 3, fontes: ['dec11129_2022'], justificativa: 'O art. 57, § 1º, VII, manda considerar o grau de interação com o setor público, inclusive autorizações e licenças, frequentes no transporte (RNTRC, fiscalização).' }
+      }
+    }
+  };
+  function pesoDe(p, perfil, pesos) {
+    pesos = pesos || PESOS_PERFIL;
+    if (pesos.status !== 'aprovada' || !perfil) return p.peso;
+    var a = (pesos.ajustes[perfil] || {})[p.id];
+    return a ? a.peso : p.peso;
+  }
+
+  function evidencia(respostas, perguntas) {
+    respostas = respostas || {};
+    var r = { declaradas: 0, funcionam: 0, comProva: 0, semProva: [] };
+    (perguntas || PERGUNTAS).forEach(function (p) {
+      var c = CAMADAS[p.id];
+      if (!c || respostas[p.id] !== 'sim') return;
+      r.declaradas++;
+      var f = respostas[p.id + '__funciona'], ok = c.invertida ? f === 'nao' : f === 'sim';
+      if (ok) r.funcionam++;
+      if (ok && respostas[p.id + '__prova'] === 'sim') r.comProva++;
+      else r.semProva.push(p);
+    });
+    return r;
+  }
+
+  /* Plano de ação: pendências cujo item tem prazo de hoje em diante, em ordem de data (para o .ics). */
+  function planoDeAcao(pendencias, itensPorId, hoje) {
+    return (pendencias || []).map(function (pd) {
+      var it = itensPorId[pd.pergunta.item];
+      return it && it.prazo && it.prazo >= hoje ? { id: 'termometro-' + pd.pergunta.id, data: it.prazo, titulo: 'ORGATEC: ' + pd.pergunta.corrigir } : null;
+    }).filter(Boolean).sort(function (a, b) { return a.data < b.data ? -1 : a.data > b.data ? 1 : 0; });
+  }
+
   function faixa(percentual) {
     if (percentual == null) return null;
     for (var i = 0; i < FAIXAS.length; i++) if (percentual >= FAIXAS[i].minimo) return FAIXAS[i];
@@ -206,7 +286,7 @@
   }
 
   /* respostas: { idPergunta: 'sim'|'nao'|'nao_sei'|'na' }; pilares: frentes consideradas (todas por padrão); perfil: filtra as perguntas por público. */
-  function avaliar(respostas, pilares, perfil) {
+  function avaliar(respostas, pilares, perfil, pesos) {
     respostas = respostas || {};
     pilares = pilares && pilares.length ? pilares : PILARES;
     var consideradas = PERGUNTAS.filter(function (p) { return pilares.indexOf(p.pilar) >= 0 && perguntaVale(p, perfil); });
@@ -217,8 +297,9 @@
       if (!RESPOSTAS[r]) return;
       respondidas++;
       if (r === 'na') return;
-      maximo += p.peso; porPilar[p.pilar].maximo += p.peso;
-      if (r === 'sim') { pontos += p.peso; porPilar[p.pilar].pontos += p.peso; return; }
+      var peso = pesoDe(p, perfil, pesos);
+      maximo += peso; porPilar[p.pilar].maximo += peso;
+      if (r === 'sim') { pontos += peso; porPilar[p.pilar].pontos += peso; return; }
       pendencias.push({ pergunta: p, tipo: r === 'nao' ? 'corrigir' : 'verificar', ordem: ordem });
     });
     pendencias.sort(function (a, b) { return b.pergunta.peso - a.pergunta.peso || a.ordem - b.ordem; });
@@ -253,6 +334,22 @@
       PERFIS[k].pilares.forEach(function (p) { if (PILARES.indexOf(p) < 0) erros.push('perfil ' + k + ': frente inválida ' + p); });
     });
     PILARES.forEach(function (p) { if (!REGRA[p] && !PERGUNTAS.every(function (q) { return q.pilar !== p || q.publicos; })) erros.push(p + ': frente sem página'); });
+    Object.keys(PESOS_PERFIL.ajustes).forEach(function (perfil) {
+      if (!PERFIS[perfil]) erros.push('peso de perfil inexistente: ' + perfil);
+      Object.keys(PESOS_PERFIL.ajustes[perfil]).forEach(function (id) {
+        var a = PESOS_PERFIL.ajustes[perfil][id], q = PERGUNTAS.filter(function (p) { return p.id === id; })[0];
+        if (!q) erros.push(perfil + ': peso de pergunta inexistente ' + id);
+        if (!(a.peso >= 1 && a.peso <= 3)) erros.push(perfil + '/' + id + ': peso fora de 1 a 3');
+        if (!a.justificativa || !a.fontes || !a.fontes.length) erros.push(perfil + '/' + id + ': peso sem justificativa ou fonte');
+        (a.fontes || []).forEach(function (f) { if (!fontesPorId[f]) erros.push(perfil + '/' + id + ': fonte inexistente ' + f); });
+      });
+    });
+    Object.keys(CAMADAS).forEach(function (id) {
+      var q = PERGUNTAS.filter(function (p) { return p.id === id; })[0];
+      if (!q) erros.push('camada sem pergunta: ' + id);
+      else if (q.peso !== 3) erros.push(id + ': camada só nas perguntas de peso 3');
+      if (!CAMADAS[id].funciona || !CAMADAS[id].prova) erros.push(id + ': camada incompleta');
+    });
     return erros;
   }
 
@@ -264,5 +361,6 @@
 
   return { PERGUNTAS: PERGUNTAS, FAIXAS: FAIXAS, RESPOSTAS: RESPOSTAS, PILARES: PILARES, REVISAO: REVISAO, REGRA: REGRA, PERFIS: PERFIS, PAGINA_PUBLICO: PAGINA_PUBLICO,
     avaliar: avaliar, faixa: faixa, validar: validar, publicavel: publicavel, pilaresDoPerfil: pilaresDoPerfil,
-    perguntaVale: perguntaVale, regraDe: regraDe };
+    perguntaVale: perguntaVale, regraDe: regraDe, CAMADAS: CAMADAS, evidencia: evidencia, planoDeAcao: planoDeAcao,
+    PESOS_PERFIL: PESOS_PERFIL, pesoDe: pesoDe };
 });

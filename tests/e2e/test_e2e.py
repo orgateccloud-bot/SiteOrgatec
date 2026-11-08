@@ -264,7 +264,7 @@ def test_design_system_html(navegador, servidor, tema):
 PAGINAS_NOVAS = ["compliance/index.html", "compliance/conformidade-tributaria.html", "compliance/prevencao-lavagem.html",
                  "compliance/protecao-de-dados.html", "compliance/integridade.html", "compliance/termometro.html",
                  "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "tributario/index.html", "reforma/index.html", "setores/agro.html", "setores/transporte.html", "setores/regional.html",
-                 "setores/janela-de-campo.html",
+                 "setores/janela-de-campo.html", "setores/agro-mercado.html",
                  "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "cliente/locar.html", "escritorio/index.html", CONTATO]
 
 
@@ -367,13 +367,34 @@ def test_calculadoras(navegador, servidor):
     assert not erros, erros
 
 
-def test_setor_agro_alertas_regionais(navegador, servidor):
+def test_setor_agro_e_a_entrada_do_produtor_rural(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "setores/agro.html")
-    assert pg.locator("[data-itens] .og-item").count() >= 6
-    for uf in ["GO", "TO", "PA"]:
-        pg.select_option("#aUf", uf)
-        assert pg.locator(".lista-alertas li").count() >= 1, uf
+    pg.wait_for_selector("#tributos .og-item")
+    caminhos = pg.locator("[data-agro-caminho]")
+    assert caminhos.count() == 4
+    hrefs = caminhos.evaluate_all("els => els.flatMap(e => [...e.querySelectorAll('a')].map(a => a.getAttribute('href')))")
+    assert hrefs == ["../setores/janela-de-campo.html", "../setores/agro-mercado.html", "#tributos", "../solucoes/auditoria-rural.html"]
+    # chamadas claras: a calculadora e a auditoria rural, mais o compliance e os alertas do setor
+    passos = pg.locator("#proximos-passos a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    for esperado in ["../ferramentas/index.html#produtor", "../solucoes/auditoria-rural.html", "../compliance/publico/produtor-rural.html",
+                     "regional.html?setor=agro"]:
+        assert esperado in passos, esperado
+    assert pg.locator("#tributos [data-itens]").count() == 1  # o caminho "Tributos" leva à lista de pontos da reforma
+    # os alertas ficam numa página só: aqui não há mais a lista nem o seletor de estado
+    assert pg.locator("#aUf, .lista-alertas").count() == 0
+    expect(pg.locator("a[data-alertas-agro]")).to_have_attribute("href", "regional.html?setor=agro")
     assert not erros, erros
+
+
+def test_alertas_regionais_abrem_no_setor_e_estado_do_link(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/regional.html?setor=agro&uf=TO")
+    expect(pg.locator("#tabsSetor button.tab-ativa")).to_have_text("Agronegócio")
+    expect(pg.locator("#tabsUf button.tab-ativa")).to_have_text("Tocantins")
+    assert pg.locator("#listaRegional li").count() >= 1
+    pg2, erros2 = _abrir(navegador, servidor, "setores/regional.html?setor=inexistente&uf=XX")  # valor inválido: volta ao padrão
+    expect(pg2.locator("#tabsUf button.tab-ativa")).to_have_text("Goiás")
+    assert pg2.locator("#listaRegional li").count() >= 1
+    assert not erros and not erros2, (erros, erros2)
 
 
 def test_home_ultimas_da_reforma_e_simulador_pre_selecionado(navegador, servidor):
@@ -407,7 +428,7 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg.select_option("#pdStatus", "")
     pg.uncheck("#pdBloqueia")
     assert pg.locator("[data-pendencias] article").count() > abertas  # inclui as resolvidas (V8)
-    assert pg.locator("tbody a.og-link").count() == 38  # mapa de páginas
+    assert pg.locator("tbody a.og-link").count() == 39  # mapa de páginas
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
 
@@ -732,7 +753,11 @@ def test_painel_de_fontes_oficiais(navegador, servidor):
     planalto = pg.evaluate("window.Orgatec.fontes.lista.filter(f => f.url && /planalto\.gov\.br/.test(f.url)).length")
     expect(orgaos.first).to_contain_text(f"{planalto} dispositivos citados")
     expect(pg.locator("#fontes")).to_contain_text("não indica parceria")
-    # painel escuro: fundo da seção diferente do fundo da página na paleta clara padrão
+    # No vidro azul (paleta padrão) a seção é transparente de propósito: os cartões de vidro desfocam a logo que passa atrás
+    assert pg.locator("#fontes [data-orgao]").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter") != "none"
+    # Em outra paleta, volta o painel escuro: fundo da seção diferente do fundo da página
+    pg.click("#btnCores")
+    pg.click("#temaPop [data-tema-id=verde]")
     fundo = pg.evaluate("getComputedStyle(document.getElementById('fontes')).backgroundColor")
     assert fundo != pg.evaluate("getComputedStyle(document.body).backgroundColor")
     assert not erros, erros
@@ -872,7 +897,7 @@ def test_janela_de_campo(navegador, servidor, vp):
     # sem o boletim automático publicado, a página usa o manual mais recente (28/10/2026, já vencido)
     sem_auto = {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
     pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=sem_auto)
-    pg.wait_for_selector(".campo-celula")
+    pg.wait_for_selector(".campo-celula", state="attached")
     regioes = pg.evaluate("window.Orgatec.boletinsCampo[0].regioes.length")
     assert pg.locator(".campo-celula").count() == regioes * 5
     # boletim de 28/10/2026 já passou: aparece como arquivo, com o aviso para consultar o INMET, e sem role=alert
@@ -880,12 +905,14 @@ def test_janela_de_campo(navegador, servidor, vp):
     expect(pg.locator("[data-campo-situacao] a[href='https://alertas2.inmet.gov.br']")).to_be_visible()
     assert pg.locator(".campo-alerta[role=alert]").count() == 0
     expect(pg.locator("[data-campo-dia]")).to_contain_text("28 de outubro de 2026")
-    # célula da matriz escolhe região e operação
+    # célula da matriz escolhe região e operação (no celular a comparação vem recolhida)
+    if not pg.locator("[data-campo-comparar]").evaluate("e => e.open"):
+        pg.click("[data-campo-comparar] summary")
     pg.click(".campo-celula[data-r=sul][data-o=colheita]")
     expect(pg.locator("#campoRegiao")).to_have_text("Sul")
     expect(pg.locator("[data-campo-rec]")).to_contain_text("Colheita")
     expect(pg.locator("[data-campo-rec]")).to_contain_text("trigo")
-    expect(pg.locator(".campo-aba[data-o=colheita]")).to_have_attribute("aria-pressed", "true")
+    expect(pg.locator(".campo-op[data-o=colheita]")).to_have_attribute("aria-pressed", "true")
     assert pg.locator("[data-campo-linha] > div").count() == 6
     assert pg.locator("[data-campo-fontes] a[href^='https://']").count() >= 1
     # a escolha fica lembrada
@@ -909,6 +936,21 @@ def test_solucoes_sem_link_para_sistemas_e_sem_codigo_externo():
         assert "<iframe" not in html, caminho
         assert not re.search(r"railway\.app|onrender\.com|vercel\.app|supabase\.co", html), caminho
         assert not re.search(r'<script[^>]+src="https?://', html), caminho
+
+
+def test_conciliacao_bloco_de_confianca_so_afirma_o_conferido():
+    """Cada controle tem selo de situação e evidência em docs/conciliacao-confianca-evidencias.md.
+    Frases que o código do OrgConc não sustenta (conferido em 07/11/2026) não podem voltar."""
+    html = (RAIZ / "site" / "solucoes" / "conciliacao.html").read_text(encoding="utf-8")
+    bloco = html[html.index('id="confianca"'):]
+    bloco = bloco[:bloco.index("</section>")]
+    selos = re.findall(r'data-controle><span class="og-selo og-selo-\w+ mb-3">([^<]+)</span>', bloco)
+    assert len(selos) == 6 and set(selos) <= {"no sistema", "em parte", "a definir"}, selos
+    for proibida in ("aplicado pelo próprio banco de dados, não só pela tela", "ISO 27001 e", "certificad", "São Paulo",
+                     "treina", "à prova de adulteração", "nomes são substituídos"):
+        assert proibida not in bloco, proibida
+    assert "não tem certificação ISO 27001 nem SOC 2" in bloco
+    assert (RAIZ / "docs" / "conciliacao-confianca-evidencias.md").exists()
 
 
 def test_solucoes_entrar_obedece_config(navegador, servidor):
@@ -1030,7 +1072,6 @@ def test_item_inicio_no_menu(navegador, servidor, vp):
     seletor = "nav[aria-label=Principal] a[title='Início']" if vp == "desktop" else "#menuMobile a[href='inicio.html']"
     assert pg2.locator(seletor).first.get_attribute("aria-current") == "page"
     assert not erros, erros
-
 
 
 # ---------- Compliance, fases B a D: termômetro, frentes PLD/LGPD/integridade e calendário
@@ -1174,7 +1215,6 @@ def test_escritorio_obrigacoes_proprias_e_canal_do_dpo(navegador, servidor):
     assert not erros and not erros2, erros + erros2
 
 
-
 # ---------- Janela de Campo automática (boletim gerado por tools/gerar_boletim_campo.py)
 
 PNG_1PX = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000000"
@@ -1215,6 +1255,8 @@ def test_janela_de_campo_automatica(navegador, servidor, vp):
     pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=_rotas_campo(b))
     expect(pg.locator("[data-campo-situacao]")).to_contain_text("Atualizado às")
     expect(pg.locator("[data-campo-situacao]")).not_to_contain_text("vencido")
+    if vp == "mobile":
+        pg.click("[data-aba=satelite]")  # no desktop o satélite fica sempre à vista
     # mapa de satélite: imagens da NASA (aqui servidas pelo teste), 20 polos coloridos e horário do infravermelho
     expect(pg.locator(".mapa-polo")).to_have_count(len(b["polos"]))
     expect(pg.locator("[data-mapa-hora]")).to_contain_text("Infravermelho")
@@ -1226,7 +1268,7 @@ def test_janela_de_campo_automatica(navegador, servidor, vp):
     assert pg.locator("[data-campo-horaria] > div").count() == 24
     expect(pg.locator("[data-campo-polo-txt]")).to_contain_text("Palmas")
     # trocar a operação recolore o mapa
-    pg.locator(".campo-aba[data-o=animais]").first.click()
+    pg.locator(".campo-op[data-o=animais]").click()
     expect(pg.locator("[data-polo='palmas']")).to_have_attribute("aria-label", re.compile("Palmas"))
     # próximos 7 dias, critérios pendentes e fontes com o MET Norway
     assert pg.locator(".campo-semana tbody tr").count() == len(b["regioes"])
@@ -1345,7 +1387,7 @@ def test_setor_transporte_aponta_para_o_compliance_do_setor(navegador, servidor)
     assert not erros, erros
 
 
-# ---------- Cards por atividade (Orgatec Audi Agro) na Janela de Campo
+# ---------- Cards por atividade na página de cotações e notícias (setores/agro-mercado.html)
 
 # Só no teste: substitui o script do CEPEA por uma tabela marcada como exemplo (nenhum valor real nem inventado no site)
 WIDGET_TESTE = ("document.write('<table class=\"imagenet-widget-tabela\"><tr><td>EXEMPLO DE TESTE</td></tr>"
@@ -1355,14 +1397,21 @@ CEPEA_FORA = {"https://www.cepea.org.br/**": lambda rota: rota.abort()}
 
 
 # site/dados fica fora do git (regravado pelo agendador): os testes usam esta amostra, em vez do arquivo gerado.
-NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "fontes": [{"id": "senado", "nome": "Agência Senado", "ok": True}],
-                    "atividades": {}, "tributacao": [], "itens": []}
+NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "janelaDias": 90, "fontes": [{"id": "senado", "nome": "Agência Senado", "ok": True}],
+                    "atividades": {"soja": [{"titulo": "Governo anuncia nova regra para a soja", "link": "https://www12.senado.leg.br/noticias/materias/1",
+                                             "data": "2026-11-01T09:00-03:00", "fonte": "senado", "fonteNome": "Agência Senado", "coletadoEm": "2026-11-02T12:40-03:00"}]},
+                    "tributacao": [],
+                    "ultimas": {"cafe": {"titulo": "Regras da safra de café", "link": "https://www.camara.leg.br/noticias/2", "data": "2026-07-06T09:00-03:00",
+                                         "fonte": "camara-agro", "fonteNome": "Agência Câmara · Agropecuária", "coletadoEm": "2026-11-02T12:40-03:00"},
+                                "tributacao": None},
+                    "acompanhe": [{"nome": "Conab", "url": "https://www.gov.br/conab/pt-br/assuntos/noticias"},
+                                  {"nome": "Embrapa", "url": "https://www.embrapa.br/busca-de-noticias"}]}
 
 
 def _cards(navegador, servidor, vp="desktop", rotas=None):
     import json
     noticias = {"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=200, content_type="application/json", body=json.dumps(NOTICIAS_EXEMPLO))}
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas={**_rotas_campo(_boletim_automatico()), **noticias, **(rotas or {})})
+    pg, erros = _abrir(navegador, servidor, "setores/agro-mercado.html", vp, rotas={**noticias, **(rotas or {})})
     pg.locator("[data-agro]").scroll_into_view_if_needed()
     return pg, erros
 
@@ -1382,8 +1431,21 @@ def test_cards_por_atividade(navegador, servidor, vp):
     expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")
     expect(pg.locator("[data-agro-situacao]")).to_contain_text("Notícias coletadas em")
     assert pg.locator("[data-agro-noticias] li").count() >= 11  # uma notícia ou o aviso de "sem notícia" em cada card
-    logo = pg.locator(".audi-agro-selo img")
-    assert logo.evaluate("i => i.complete && i.naturalWidth > 0")
+    # tema com notícia recente: só a lista; tema sem: aviso, a última que houver (com a data completa) e os links oficiais
+    soja = pg.locator("[data-agro-atividade=soja] [data-agro-noticias]")
+    expect(soja).to_contain_text("Governo anuncia nova regra para a soja")
+    assert soja.locator(".audi-agro-ultima, .audi-agro-acompanhe").count() == 0
+    cafe = pg.locator("[data-agro-atividade=cafe] [data-agro-noticias]")
+    expect(cafe).to_contain_text("Sem notícia sobre o tema nos últimos 90 dias")
+    expect(cafe.locator(".audi-agro-ultima")).to_contain_text("Última encontrada, de 06/07/2026")
+    expect(cafe.locator(".audi-agro-ultima a")).to_have_attribute("href", "https://www.camara.leg.br/noticias/2")
+    assert cafe.locator(".audi-agro-acompanhe a").evaluate_all("els => els.map(a => a.getAttribute('href'))") == [
+        "https://www.gov.br/conab/pt-br/assuntos/noticias", "https://www.embrapa.br/busca-de-noticias"]
+    milho = pg.locator("[data-agro-atividade=milho] [data-agro-noticias]")  # sem última: só o aviso e os links, nada inventado
+    assert milho.locator(".audi-agro-ultima").count() == 0 and milho.locator(".audi-agro-acompanhe").count() == 1
+    assert pg.locator(".audi-agro-selo, .audi-agro-selo img").count() == 0  # a marca está desligada (agro_fontes.json, marca.exibir)
+    expect(pg.locator("[data-agro] .eyebrow").first).to_have_text("Mercado")
+    assert "Audi Agro" not in pg.locator("[data-agro]").inner_text()
     assert pg.locator("[data-agro-aviso]:not([hidden])").count() == 0
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
@@ -1574,3 +1636,480 @@ def test_emails_institucionais_ativos(navegador, servidor):
     pg2, erros2 = _abrir(navegador, servidor, "privacidade.html")
     expect(pg2.locator("#dpoLinha a[href='mailto:dpo@orgatec.io']")).to_be_visible()
     assert not erros and not erros2, erros + erros2
+
+
+# ---------- Vitrine em vidro azul com a logo em holograma (ideia/vidro-azul, modelo A "Noturno")
+
+@pytest.mark.parametrize("vp", ["mobile", "desktop"])
+def test_vitrine_em_vidro_azul(navegador, servidor, vp):
+    pg, erros = _abrir(navegador, servidor, "inicio.html", vp)
+    assert pg.get_attribute("html", "data-tema") == "azul-fl-esc"  # o vidro vale na paleta padrão
+    assert pg.evaluate("document.documentElement.hasAttribute('data-vidro')")
+    fundo = pg.locator(".vidro-fundo")
+    assert fundo.get_attribute("aria-hidden") == "true"  # decorativo: leitor de tela ignora
+    assert fundo.evaluate("e => getComputedStyle(e).pointerEvents") == "none"  # não atrapalha cliques
+    assert pg.locator(".vidro-fundo .vidro-logo > i").count() == 3  # base e as duas franjas de cor; o brilho fica numa camada à parte
+    assert pg.locator(".vidro-fundo .vidro-logo .brilho").count() == 1
+    mascara = pg.locator(".vidro-logo .base").evaluate("e => getComputedStyle(e).maskImage || getComputedStyle(e).webkitMaskImage")
+    assert "orgatec-simbolo-branco.svg" in mascara  # a logo é o símbolo ORGATEC, não um desenho refeito
+    assert pg.request.get(f"{servidor}/assets/marca/orgatec-simbolo-branco.svg").ok
+    filtro = pg.locator("main .og-cartao").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter")
+    assert filtro and filtro != "none"  # os cartões são de vidro: desfocam o que passa atrás
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
+    assert not erros, erros
+
+
+def test_vidro_so_na_paleta_padrao(navegador, servidor):
+    """Quem troca a paleta em "Cores" vê a vitrine normal; ao voltar para a padrão, o vidro volta."""
+    pg, erros = _abrir(navegador, servidor, "inicio.html")
+    html = pg.locator("html")
+    expect(html).to_have_attribute("data-vidro", "")
+    pg.click("#btnCores")
+    pg.click("#temaPop [data-tema-id=verde]")
+    expect(html).not_to_have_attribute("data-vidro", "")
+    assert pg.locator(".vidro-fundo").evaluate("e => getComputedStyle(e).display") == "none"
+    assert pg.locator("main .og-cartao").first.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter") in ("none", "", None)
+    pg.click("#temaPop [data-tema-id=azul-fl-esc]")
+    expect(html).to_have_attribute("data-vidro", "")
+    assert pg.locator(".vidro-fundo").evaluate("e => getComputedStyle(e).display") != "none"
+    assert not erros, erros
+
+
+def test_vidro_nao_aparece_com_outra_paleta_salva(navegador, servidor):
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    ctx.add_init_script("try { localStorage.setItem('orgatec.tema', 'verde'); } catch (e) {}")
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/inicio.html")
+    pg.wait_for_load_state("load")
+    assert pg.get_attribute("html", "data-tema") == "verde"
+    assert not pg.evaluate("document.documentElement.hasAttribute('data-vidro')")
+    assert pg.locator(".vidro-fundo").count() == 0  # nem chega a montar o fundo
+
+
+@pytest.mark.parametrize("calmo", [False, True])
+def test_vidro_holograma_segue_o_ponteiro_e_para_com_movimento_reduzido(navegador, servidor, calmo):
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce" if calmo else "no-preference")
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/inicio.html")
+    pg.wait_for_load_state("load")
+    fundo = pg.locator(".vidro-fundo")
+    pg.mouse.move(1180, 200)
+    pg.wait_for_timeout(150)
+    hx = fundo.evaluate("e => e.style.getPropertyValue('--hx')")
+    animacao = pg.locator(".vidro-varredura b").evaluate("e => getComputedStyle(e).animationName")
+    if calmo:
+        assert hx == "" and animacao == "none"
+    else:
+        assert float(hx) > 0.5 and animacao != "none"
+
+
+def test_vidro_desliga_as_animacoes_com_a_pagina_rolada(navegador, servidor):
+    """Com a logo atrás dos cartões, qualquer animação faria todo cartão de vidro refazer o desfoque a cada quadro."""
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx.new_page()
+    pg.add_init_script("window.__vidroSemSonda = true")
+    pg.goto(f"{servidor}/inicio.html")
+    pg.wait_for_load_state("load")
+    html, varredura = pg.locator("html"), pg.locator(".vidro-varredura b")
+    expect(varredura).not_to_have_css("animation-name", "none")
+    pg.evaluate("window.scrollTo(0, 1200)")  # a rolagem da página é suave: as verificações esperam o fim
+    expect(html).to_have_class(re.compile("vidro-pausa"))
+    expect(varredura).to_have_css("animation-name", "none")
+    pg.evaluate("window.scrollTo(0, 0)")
+    expect(html).not_to_have_class(re.compile("vidro-pausa"))
+    expect(varredura).not_to_have_css("animation-name", "none")
+
+
+@pytest.mark.skipif(NAVEGADOR != "chromium", reason="a CPU lenta é emulada pelo protocolo do Chromium")
+def test_vidro_aparelho_lento_desliga_as_animacoes(navegador, servidor):
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx.new_page()
+    pg.goto(f"{servidor}/inicio.html")
+    pg.wait_for_load_state("load")
+    ctx.new_cdp_session(pg).send("Emulation.setCPUThrottlingRate", {"rate": 25})
+    for _ in range(60):  # a sonda mede duas vezes seguidas: leva uns 5 s com a CPU limitada
+        if pg.evaluate("document.documentElement.classList.contains('vidro-leve')"):
+            break
+        pg.wait_for_timeout(500)
+    assert pg.evaluate("document.documentElement.classList.contains('vidro-leve')")
+    assert pg.locator(".vidro-varredura b").evaluate("e => getComputedStyle(e).animationName") == "none"
+    assert pg.locator(".vidro-aneis i").first.evaluate("e => getComputedStyle(e).animationName") == "none"
+
+
+# ---------- Onda 1 do estudo de compliance moderno: camadas de prova e plano de ação em .ics
+
+def test_termometro_camadas_de_prova_e_plano_ics(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "compliance/termometro.html#perfil-transportador", "mobile")
+    pedidos = []
+    pg.on("request", lambda r: pedidos.append(r.url))
+    camada = pg.locator("[data-camadas=tr-ciot]")
+    expect(camada).to_be_hidden()  # só aparece depois de um "sim"
+    pg.check("[data-pergunta=tr-ciot] input[value=sim]", force=True)
+    expect(camada).to_be_visible()
+    expect(pg.locator("[data-evidencia-resumo]")).to_contain_text("0 de 1")
+    pg.check("input[name=tr-ciot__funciona][value=nao]", force=True)  # pergunta invertida: "nenhum frete sem CIOT"
+    pg.check("input[name=tr-ciot__prova][value=sim]", force=True)
+    expect(pg.locator("[data-evidencia-resumo]")).to_contain_text("1 de 1")
+    expect(pg.locator("[data-termometro-ics]")).to_be_hidden()  # nenhuma pendência com prazo ainda
+    pg2, erros2 = _abrir(navegador, servidor, "compliance/termometro.html#perfil-produtor")
+    pg2.check("[data-pergunta=ru-eudr] input[value=nao]", force=True)
+    botao = pg2.locator("[data-termometro-ics]")
+    expect(botao).to_be_visible()
+    with pg2.expect_download() as d:
+        botao.click()
+    caminho = d.value.path()
+    texto = open(caminho, encoding="utf-8").read()
+    assert d.value.suggested_filename == "orgatec-plano-de-acao.ics"
+    assert "BEGIN:VCALENDAR" in texto and "DTSTART;VALUE=DATE:20261230" in texto
+    assert pedidos == [], pedidos
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros and not erros2, erros + erros2
+
+
+def test_janela_de_campo_sem_os_cards_e_com_caminho_para_o_mercado(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    assert pg.locator("[data-agro], [data-agro-atividade], iframe").count() == 0
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html")
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros, erros
+
+
+def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
+    for caminho in ["setores/agro.html", "setores/janela-de-campo.html", "setores/agro-mercado.html", "setores/regional.html", "setores/transporte.html"]:
+        pg, erros = _abrir(navegador, servidor, caminho)
+        expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../setores/agro-mercado.html']").first).to_be_visible()
+        assert not erros, (caminho, erros)
+
+
+# ---------- Janela de Campo: nova ordem (Fase 3 do plano de modernização do agro)
+
+def test_janela_primeira_decisao_na_primeira_tela_do_celular(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    pg.wait_for_selector(".campo-op")
+    assert pg.locator(".campo-op").count() == 5
+    topo = pg.evaluate("document.querySelector('.campo-op').getBoundingClientRect().top + scrollY")
+    assert topo <= 812, topo
+    assert pg.evaluate("document.documentElement.scrollHeight") <= 5000
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    # resumo curto por operação e comparação das regiões recolhida
+    assert all(len(t) <= 90 for t in pg.locator(".campo-op-txt").all_inner_texts())
+    assert not pg.locator("[data-campo-comparar]").evaluate("e => e.open")
+    # o satélite só carrega quando a aba é aberta
+    assert pg.locator(".mapa-satelite").count() == 0 and pg.locator(".mapa-palco img").count() == 0
+    assert not erros, erros
+
+
+def test_janela_abas_com_teclado_e_satelite_sob_demanda(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    assert pg.locator("[data-aba]").evaluate_all("els => els.map(e => e.getAttribute('data-aba'))") == ["horas", "semana", "satelite", "como"]
+    expect(pg.locator("[data-aba=horas]")).to_have_attribute("aria-selected", "true")
+    expect(pg.locator("[data-painel=horas]")).to_be_visible()
+    expect(pg.locator("[data-painel=semana]")).to_be_hidden()
+    pg.focus("[data-aba=horas]")
+    pg.keyboard.press("ArrowRight")
+    expect(pg.locator("[data-aba=semana]")).to_have_attribute("aria-selected", "true")
+    expect(pg.locator("[data-painel=semana]")).to_be_visible()
+    pg.keyboard.press("End")
+    expect(pg.locator("[data-aba=como]")).to_have_attribute("aria-selected", "true")
+    expect(pg.locator("[data-painel=como] .campo-criterios")).to_be_visible()
+    pg.keyboard.press("Home")
+    expect(pg.locator("[data-aba=horas]")).to_have_attribute("aria-selected", "true")
+    pg.click("[data-aba=satelite]")
+    expect(pg.locator(".mapa-polo")).to_have_count(len(b["polos"]))
+    assert not erros, erros
+
+
+def test_janela_desktop_duas_colunas_com_satelite_sempre_a_vista(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-painel=satelite]")).to_be_visible()
+    expect(pg.locator("[data-aba=satelite]")).to_be_hidden()
+    expect(pg.locator(".mapa-polo")).to_have_count(len(b["polos"]))
+    expect(pg.locator("[data-campo-comparar]")).to_have_attribute("open", "")
+    esq, dir_ = pg.locator(".campo-esq").bounding_box(), pg.locator(".campo-dir").bounding_box()
+    assert esq["x"] + esq["width"] <= dir_["x"] + 1 and abs(esq["y"] - dir_["y"]) < 40  # lado a lado
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS["desktop"][0]
+    assert not erros, erros
+
+
+def test_janela_avisa_polo_sem_previsao_e_mantem_um_polo_escolhido(navegador, servidor):
+    b = _boletim_automatico()
+    ausente = b["polos"].pop()
+    b["semDados"] = [{"id": ausente["id"], "nome": ausente["nome"], "uf": ausente["uf"], "regiao": ausente["regiao"]}]
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-campo-situacao]")).to_contain_text("Sem previsão neste horário: " + ausente["nome"])
+    pg.click(f".campo-aba[data-r={ausente['regiao']}]")
+    regiao = next(r for r in b["regioes"] if r["id"] == ausente["regiao"])
+    assert pg.locator("[data-campo-polos] .campo-aba").count() == len(regiao["polos"]) - 1
+    assert pg.locator("[data-campo-polos] .campo-aba[aria-pressed=true]").count() == 1
+    assert pg.locator("[data-campo-horaria] > div").count() == 24
+    assert not erros, erros
+
+
+def test_janela_minha_atividade_leva_ao_card_e_fica_lembrada(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", rotas=_rotas_campo(_boletim_automatico()))
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html")
+    pg.select_option("[data-minha-atividade]", "soja")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    pg.reload()
+    pg.wait_for_load_state("load")
+    expect(pg.locator("[data-minha-atividade]")).to_have_value("soja")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    assert not erros, erros
+
+
+# ---------- Página Agro: resumo do dia, pontos da reforma recolhidos por tema (Fase 4)
+
+def _agro(navegador, servidor, vp="desktop", boletim=None, rotas=None):
+    todas = _rotas_campo(boletim) if boletim is not None else {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
+    return _abrir(navegador, servidor, "setores/agro.html", vp, rotas={**todas, **(rotas or {})})
+
+
+def test_agro_resumo_do_dia_na_regiao_escolhida(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _agro(navegador, servidor, boletim=b)
+    pg.wait_for_selector("[data-agro-hoje-lista] li")
+    assert pg.locator("[data-agro-hoje-lista] li").count() == 5
+    nomes = pg.locator("[data-agro-hoje-lista] li > span:first-child").all_inner_texts()
+    assert nomes == ["Pulverização", "Plantio", "Colheita", "Manejo de animais", "Máquinas e insumos"]
+    assert pg.locator("[data-agro-hoje-lista] .campo-selo").count() == 5  # estado com ícone, texto e cor
+    # trocar a região grava a escolha na mesma chave da Janela de Campo, que abre na mesma região
+    alvo = b["regioes"][2]
+    pg.select_option("#agroHojeRegiao", alvo["id"])
+    assert pg.evaluate("JSON.parse(localStorage.getItem('orgatec.campo')).r") == alvo["id"]
+    pg2 = pg.context.new_page()
+    for padrao, f in _rotas_campo(b).items():
+        pg2.route(padrao, f)
+    pg2.goto(f"{servidor}/setores/janela-de-campo.html")
+    expect(pg2.locator("#campoRegiao")).to_have_text(alvo["nome"])
+    assert not erros, erros
+
+
+def test_agro_resumo_do_dia_sem_boletim_valido_fica_so_o_link(navegador, servidor):
+    for boletim in (None, _boletim_automatico(horas_atras=20)):
+        pg, erros = _agro(navegador, servidor, boletim=boletim)
+        pg.wait_for_timeout(800)
+        assert pg.locator("[data-agro-hoje-lista]").count() == 0  # nenhum número sem boletim vigente
+        expect(pg.locator("a[data-agro-hoje-link]")).to_have_attribute("href", "janela-de-campo.html")
+        assert not [e for e in erros if "404" not in e], erros
+
+
+def test_agro_pontos_da_reforma_recolhidos_por_tema_com_fontes(navegador, servidor):
+    pg, erros = _agro(navegador, servidor)
+    pg.wait_for_selector("#tributos .og-item")
+    total = pg.evaluate("window.Orgatec.reformaItens.filter(i => i.destinos.includes('setor-agro')).length")
+    assert pg.locator("#tributos details.og-item").count() == 5 and pg.locator("#tributos details[open]").count() == 0
+    expect(pg.locator("#tributos [data-contagem]")).to_have_text(f"Mostrando 5 de {total} pontos")
+    pg.click("[data-ver-todos]")
+    assert pg.locator("#tributos details.og-item").count() == total
+    expect(pg.locator("[data-ver-todos]")).to_be_hidden()
+    # leitura sob demanda, com o teclado: fato, orientação e fontes só depois de abrir; nada é omitido
+    primeiro = pg.locator("#tributos details.og-item").first
+    expect(primeiro.locator(".og-item-fontes a").first).to_be_hidden()
+    primeiro.locator("summary").focus()
+    pg.keyboard.press("Enter")
+    expect(primeiro).to_have_attribute("open", "")
+    expect(primeiro.locator(".og-item-fontes a").first).to_be_visible()
+    expect(primeiro.locator(".og-item-meta")).to_contain_text("Consultado em")
+    # chips de tema: só os temas que têm item; o filtro mostra todos os itens do tema
+    chips = pg.locator("[data-temas] button")
+    rotulos = chips.all_inner_texts()
+    assert rotulos[0] == "Todos" and len(rotulos) >= 3
+    chips.nth(1).click()
+    tema = pg.evaluate("window.Orgatec.reformaItens.find(i => i.destinos.includes('setor-agro')).tema")
+    esperado = pg.evaluate("t => window.Orgatec.reformaItens.filter(i => i.destinos.includes('setor-agro') && i.tema === t).length", pg.locator("#tributos details.og-item").first.get_attribute("data-tema"))
+    assert pg.locator("#tributos details.og-item").count() == esperado and tema
+    expect(chips.nth(1)).to_have_attribute("aria-pressed", "true")
+    assert not erros, erros
+
+
+def test_agro_celular_curto_e_sem_rolagem_horizontal(navegador, servidor):
+    pg, erros = _agro(navegador, servidor, "mobile", boletim=_boletim_automatico())
+    pg.wait_for_selector("[data-agro-hoje-lista] li")
+    assert pg.evaluate("document.documentElement.scrollHeight") <= 5000
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    # o resumo do dia vem antes dos caminhos, e estes antes dos pontos da reforma
+    ys = pg.evaluate("['[data-agro-hoje]', '[data-agro-caminho]', '#tributos', '#proximos-passos'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
+    assert ys == sorted(ys)
+    assert not erros, erros
+
+
+# ---------- Satélite da Janela de Campo: divisas, hora de cada imagem, falha da NASA, carga sob demanda (Fase 5)
+
+GIBS = "https://gibs.earthdata.nasa.gov/**"
+
+
+def _png(rota):
+    rota.fulfill(status=200, content_type="image/png", body=PNG_1PX)
+
+
+def _satelite(navegador, servidor, vp="desktop", gibs=_png):
+    b = _boletim_automatico()
+    rotas = {**_rotas_campo(b), GIBS: gibs}
+    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=rotas)
+    pg.wait_for_selector(".campo-op")
+    if vp == "mobile":
+        pg.click("[data-aba=satelite]")
+    return pg, erros
+
+
+def test_satelite_divisas_dos_estados_com_credito_do_ibge(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor)
+    divisas = pg.locator("img[data-mapa-divisas]")
+    expect(divisas).to_be_visible()
+    assert divisas.get_attribute("src").endswith("assets/img/divisas-ufs.svg")
+    assert divisas.evaluate("i => i.complete && i.naturalWidth > 0"), "o SVG das divisas não carregou"
+    chave = pg.locator("[data-mapa-divisas-chave]")
+    expect(chave).to_be_checked()
+    chave.uncheck()
+    expect(divisas).to_be_hidden()
+    chave.check()
+    expect(divisas).to_be_visible()
+    creditos = pg.locator(".mapa-creditos")
+    creditos.locator("summary").click()
+    for texto in ("IBGE", "Malha Municipal Digital", "CC BY 4.0", "simplificadas"):
+        expect(creditos).to_contain_text(texto)
+    assert not erros, erros
+
+
+def test_satelite_hora_de_cada_imagem_e_legendas(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor)
+    hora = pg.locator("[data-mapa-hora]")
+    expect(hora).to_contain_text(re.compile(r"Infravermelho · \d{2}h\d{2} \(Brasília\)"))
+    # a faixa de tempo mostra as horas das pontas e a da imagem escolhida
+    expect(pg.locator("[data-mapa-inicio]")).to_have_text(re.compile(r"\d{2}h\d{2}"))
+    expect(pg.locator("[data-mapa-faixa-hora]")).to_have_text(re.compile(r"\d{2}h\d{2}"))
+    pg.locator("[data-mapa-quadro]").fill("0")
+    expect(pg.locator("[data-mapa-faixa-hora]")).to_have_text(pg.locator("[data-mapa-inicio]").inner_text())
+    assert "Brasília" in pg.locator("[data-mapa-quadro]").get_attribute("aria-valuetext")
+    # legenda de cores do infravermelho, a partir da escala oficial da NASA (°C)
+    expect(pg.locator(".mapa-escala-titulo").first).to_have_text("Temperatura do topo da nuvem (°C)")
+    assert pg.locator(".mapa-escala-barra").first.evaluate("e => getComputedStyle(e).backgroundImage").startswith("linear-gradient")
+    # cor real: a hora também aparece
+    pg.click("[data-camada=cor]")
+    expect(hora).to_contain_text(re.compile(r"Cor real · \d{2}h\d{2} \(Brasília\)"))
+    expect(pg.locator("[data-mapa-tempo]")).to_be_hidden()
+    # chuva: só é pedida quando ligada; traz o dia e a escala em mm/h
+    pedidas = []
+    pg.on("request", lambda r: pedidas.append(r.url) if "IMERG" in r.url else None)
+    assert not pedidas
+    pg.check("[data-mapa-chuva]")
+    expect(pg.locator(".mapa-chuva")).to_be_visible()
+    expect(hora).to_contain_text(re.compile(r"chuva IMERG de \d{2}/\d{2}"))
+    expect(pg.locator(".mapa-escala-titulo").last).to_contain_text("mm/h")
+    assert pedidas and all("/IMERG_Precipitation_Rate/default/20" in u for u in pedidas)  # com o dia na URL
+    pg.uncheck("[data-mapa-chuva]")
+    expect(pg.locator(".mapa-chuva")).to_be_hidden()
+    assert not erros, erros
+
+
+def test_satelite_aviso_claro_quando_a_nasa_nao_responde_e_tentar_de_novo(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor, gibs=lambda rota: rota.abort())
+    aviso = pg.locator("[data-mapa-aviso]")
+    expect(aviso).to_be_visible(timeout=15000)
+    expect(aviso).to_contain_text("NASA")
+    expect(aviso).to_contain_text("previsão e os polos continuam valendo")
+    expect(pg.locator("[data-mapa-hora]")).to_have_text("Imagem de satélite indisponível agora")
+    # a previsão não depende do satélite: os polos seguem no mapa e a decisão do dia segue na tela
+    assert pg.locator(".mapa-polo").count() == 20 and pg.locator(".campo-op").count() == 5
+    # a NASA volta: o botão tenta de novo e o aviso some
+    pg.unroute(GIBS)
+    pg.route(GIBS, _png)
+    pg.click("[data-mapa-tentar]")
+    expect(aviso).to_be_hidden(timeout=15000)
+    expect(pg.locator("[data-mapa-hora]")).to_contain_text("Infravermelho ·")
+    assert not [e for e in erros if "ERR_FAILED" not in e and "net::" not in e], erros
+
+
+def test_satelite_aviso_de_imagem_parcial(navegador, servidor):
+    import re as _re
+    # o quadrado do canto do recorte (não o central, que a sondagem usa) falha na primeira e na segunda tentativa
+    pg0, _ = _abrir(navegador, servidor, "setores/janela-de-campo.html", "desktop", rotas=_rotas_campo(_boletim_automatico()))
+    tx, ty = pg0.evaluate("Orgatec.campoMapa.TILES[0]")
+    pg0.close()
+
+    def falha_quadrado(rota):
+        if _re.search(rf"Band13.*/4/{ty}/{tx}\.png", rota.request.url):
+            rota.fulfill(status=404, body="")
+        else:
+            _png(rota)
+    pg, erros = _satelite(navegador, servidor, gibs=falha_quadrado)
+    aviso = pg.locator("[data-mapa-aviso]")
+    expect(aviso).to_be_visible(timeout=15000)
+    expect(aviso).to_contain_text("Parte da imagem de satélite não carregou")
+    assert pg.locator(".mapa-polo").count() == 20
+
+
+def test_satelite_so_carrega_quando_aparece_na_tela(navegador, servidor):
+    b = _boletim_automatico()
+    # desktop com janela baixa: o painel do satélite começa bem abaixo da dobra; nada é pedido à NASA até a rolagem chegar perto
+    ctx = navegador.new_context(viewport={"width": 1440, "height": 300})
+    pg = ctx.new_page()
+    pedidas = []
+    pg.on("request", lambda r: pedidas.append(r.url) if "gibs.earthdata.nasa.gov" in r.url else None)
+    for padrao, f in {**_rotas_campo(b), GIBS: _png}.items():
+        pg.route(padrao, f)
+    pg.goto(f"{servidor}/setores/janela-de-campo.html")
+    pg.wait_for_selector(".campo-op")
+    pg.wait_for_timeout(800)
+    assert pg.locator(".mapa-satelite").count() == 0 and not pedidas
+    pg.evaluate("window.scrollTo(0, 700)")
+    expect(pg.locator(".mapa-satelite")).to_be_attached(timeout=10000)
+    expect(pg.locator("[data-mapa-hora]")).to_contain_text("Infravermelho")
+    assert pedidas
+    # celular: nada é pedido até a aba Satélite ser aberta
+    ctx2 = navegador.new_context(viewport={"width": 375, "height": 812})
+    pm = ctx2.new_page()
+    pedidas_m = []
+    pm.on("request", lambda r: pedidas_m.append(r.url) if "gibs.earthdata.nasa.gov" in r.url else None)
+    for padrao, f in {**_rotas_campo(b), GIBS: _png}.items():
+        pm.route(padrao, f)
+    pm.goto(f"{servidor}/setores/janela-de-campo.html")
+    pm.wait_for_selector(".campo-op")
+    pm.wait_for_timeout(800)
+    assert not pedidas_m
+    pm.click("[data-aba=satelite]")
+    expect(pm.locator("[data-mapa-hora]")).to_contain_text("Infravermelho")
+    assert pedidas_m
+
+
+def test_satelite_celular_controle_de_tempo_facil_de_tocar_e_sem_rolagem_lateral(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor, "mobile")
+    pg.wait_for_selector("[data-mapa-quadro]", state="attached")
+    expect(pg.locator("[data-mapa-tempo]")).to_be_visible()
+    assert pg.locator("[data-mapa-quadro]").bounding_box()["height"] >= 40  # área de toque confortável
+    assert pg.locator("[data-mapa-play]").bounding_box()["height"] >= 40
+    for seletor in ("[data-mapa-inicio]", "[data-mapa-faixa-hora]", "[data-mapa-fim]", ".mapa-escala-barra"):
+        expect(pg.locator(seletor).first).to_be_visible()
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros, erros
+def test_cards_creditos_com_portais_termos_e_fontes_oficiais_fixas(navegador, servidor):
+    """O crédito leva ao portal de cada fonte e aos termos conferidos; a linha das fontes oficiais não depende de JavaScript."""
+    import json
+    cfg = json.loads((RAIZ / "tools" / "agro_fontes.json").read_text(encoding="utf-8"))
+    pg, erros = _cards(navegador, servidor, "desktop", CEPEA_EXEMPLO)
+    credito = pg.locator("[data-agro-situacao] + p")
+    termos = credito.locator("a", has_text="termos").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    assert termos == [cfg["termos"][k]["url"] for k in ("camara", "senado", "govbr")]  # um link de termos por grupo de fontes
+    portais = credito.locator("a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    assert all(f["portal"] in portais for f in cfg["feeds"])  # o nome leva ao portal da fonte, não ao arquivo do feed
+    assert not any(f["url"] in portais for f in cfg["feeds"])
+    expect(credito).to_contain_text("conferidos em 07/11/2026")
+    expect(credito).to_contain_text("A B3 não entra")  # nenhuma cotação da B3 (pendência D22)
+    oficiais = pg.locator("[data-agro-oficiais] a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    assert oficiais == [a["url"] for a in cfg["acompanhe"]]
+    assert "www.conab.gov.br" not in " ".join(oficiais)
+    assert not erros, erros
+
+
+def test_cards_sem_o_arquivo_de_noticias_mantem_o_aviso_e_as_fontes_oficiais(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/agro-mercado.html", "desktop",
+                       rotas={"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=404, body=""), **CEPEA_EXEMPLO})
+    pg.locator("[data-agro]").scroll_into_view_if_needed()
+    expect(pg.locator("[data-agro-noticias]").first).to_contain_text("Notícias indisponíveis agora")
+    assert pg.locator("[data-agro-oficiais] a").count() == 4
+    expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")  # leite segue sem cotação

@@ -1,5 +1,11 @@
 {
   "_comentario": "Cards por atividade da Janela de Campo (marca Orgatec Audi Agro). Uma fonte única: tools/gerar_paginas.py gera os cards e os widgets a partir daqui, e tools/gerar_noticias_agro.py usa os feeds e as palavras-chave. Códigos do CEPEA conferidos na página oficial do widget (cepea.org.br/br/widget.aspx) em 02/11/2026.",
+  "marca": {
+    "exibir": false,
+    "nome": "Orgatec Audi Agro",
+    "logo": "assets/marca/orgatec-audi-agro.png",
+    "_comentario": "Decisão de 07/11/2026: a marca sai das páginas por enquanto; a realocação fica para depois. Com exibir = true e python tools/gerar_paginas.py, o selo, o nome e as cores da marca voltam à página de cotações e notícias."
+  },
   "cepea": {
     "_comentario": "Cotações pelo widget oficial do CEPEA, a única forma de exibição que a política de direitos autorais do CEPEA libera sem autorização (licença dos dados: CC BY-NC 4.0). Para guardar o último valor e mostrar sem o widget, é preciso autorização formal: preencha 'autorizacao' com a referência do documento e peça a mudança da coleta para o servidor.",
     "widget": "https://www.cepea.org.br/br/widgetproduto.js.php",
@@ -37,8 +43,119 @@
     "palavras": ["lcdpr", "produtor rural", "funrural", "itr", "imposto territorial", "reforma tributária", "ibs", "cbs", "crédito rural", "plano safra", "imposto de renda rural", "nota fiscal do produtor"]
   },
   "feeds": [
-    { "id": "camara-agro", "nome": "Agência Câmara · Agropecuária", "url": "https://www.camara.leg.br/noticias/rss/dinamico/AGROPECUARIA", "geral": false },
-    { "id": "senado", "nome": "Agência Senado", "url": "https://www12.senado.leg.br/noticias/rss.xml", "geral": true },
-    { "id": "receita", "nome": "Receita Federal", "url": "https://www.gov.br/receitafederal/pt-br/assuntos/noticias/rss.xml", "geral": true }
+    {
+      "id": "camara-agro",
+      "nome": "Agência Câmara · Agropecuária",
+      "url": "https://www.camara.leg.br/noticias/rss/dinamico/AGROPECUARIA",
+      "portal": "https://www.camara.leg.br/noticias/",
+      "termos": "camara",
+      "geral": false
+    },
+    {
+      "id": "senado",
+      "nome": "Agência Senado",
+      "url": "https://www12.senado.leg.br/noticias/rss.xml",
+      "portal": "https://www12.senado.leg.br/noticias/",
+      "termos": "senado",
+      "geral": true
+    },
+    {
+      "id": "receita",
+      "nome": "Receita Federal",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/noticias/rss.xml",
+      "portal": "https://www.gov.br/receitafederal/pt-br/assuntos/noticias",
+      "termos": "govbr",
+      "geral": true
+    },
+    {
+      "id": "camara-economia",
+      "nome": "Agência Câmara · Economia",
+      "url": "https://www.camara.leg.br/noticias/rss/dinamico/ECONOMIA",
+      "portal": "https://www.camara.leg.br/noticias/",
+      "termos": "camara",
+      "geral": true
+    },
+    {
+      "id": "camara-meio-ambiente",
+      "nome": "Agência Câmara · Meio ambiente",
+      "url": "https://www.camara.leg.br/noticias/rss/dinamico/MEIO-AMBIENTE",
+      "portal": "https://www.camara.leg.br/noticias/",
+      "termos": "camara",
+      "geral": true
+    }
+  ],
+  "termos": {
+    "_comentario": "O que cada fonte permite, com o texto do termo, a página onde foi lido e a data da conferência. 'uso' é o que o site faz de fato. Pendência D23: a decisão final sobre as ressalvas é do usuário.",
+    "camara": {
+      "rotulo": "Agência Câmara",
+      "conferidoEm": "2026-11-07",
+      "url": "https://www2.camara.leg.br/comunicacao/assessoria-de-imprensa/guia-para-jornalistas/noticias-e-fotografias",
+      "permite": "As notícias disponíveis no portal e nas mídias digitais da Câmara podem ser reproduzidas pelos meios de comunicação, desde que citada a fonte.",
+      "uso": "Só título, data e link para a matéria na Agência Câmara, com o nome da fonte; nenhum texto da matéria.",
+      "cuidado": "A regra fala em reprodução pelos meios de comunicação; a lista do site só aponta para a matéria original."
+    },
+    "senado": {
+      "rotulo": "Agência Senado",
+      "conferidoEm": "2026-11-07",
+      "url": "https://www12.senado.leg.br/noticias/politica-de-uso",
+      "permite": "A reprodução de matérias e fotografias é livre, desde que não haja descaracterização de conteúdo e mediante a citação da Agência Senado e do autor.",
+      "uso": "Só o título sem alteração, a data e o link para a matéria na Agência Senado, com o nome da fonte.",
+      "cuidado": "O feed não informa o autor, então o item não o mostra (a matéria original traz). Decidir, na pendência D23, se isso basta ou se vale pedir confirmação à Agência Senado."
+    },
+    "govbr": {
+      "rotulo": "Receita Federal (gov.br)",
+      "conferidoEm": "2026-11-07",
+      "url": "https://www.gov.br/receitafederal/pt-br/assuntos/noticias",
+      "licenca": "CC BY-ND 3.0",
+      "permite": "O conteúdo do portal está sob a licença Creative Commons Atribuição-SemDerivações 3.0 Não Adaptada (declarada no rodapé da página).",
+      "uso": "Título sem alteração, data e link para a matéria, com o nome da fonte.",
+      "cuidado": "SemDerivações: o título não pode ser adaptado. Título com mais de 300 caracteres não é listado, em vez de ser cortado."
+    }
+  },
+  "acompanhe": [
+    {
+      "nome": "Ministério da Agricultura",
+      "url": "https://www.gov.br/agricultura/pt-br/assuntos/noticias",
+      "conferidoEm": "2026-11-07",
+      "motivo": "O portal não oferece feed de notícias; só o link."
+    },
+    {
+      "nome": "Conab",
+      "url": "https://www.gov.br/conab/pt-br/assuntos/noticias",
+      "conferidoEm": "2026-11-07",
+      "motivo": "Sem feed no portal gov.br (404); só o link. O endereço antigo, www.conab.gov.br, tem certificado inválido e não é usado."
+    },
+    {
+      "nome": "Embrapa",
+      "url": "https://www.embrapa.br/busca-de-noticias",
+      "conferidoEm": "2026-11-07",
+      "motivo": "Não foi encontrado um feed oficial; só o link."
+    },
+    {
+      "nome": "IBGE",
+      "url": "https://agenciadenoticias.ibge.gov.br/",
+      "conferidoEm": "2026-11-07",
+      "motivo": "O site exige verificação anti-robô (403 para programas); não é coletado, só o link para pessoas."
+    }
+  ],
+  "descartadas": [
+    {
+      "nome": "Agência Brasil (EBC)",
+      "url": "https://www.ebc.com.br/sobre/sala-de-imprensa",
+      "conferidoEm": "2026-11-07",
+      "motivo": "A reprodução gratuita vale para fins não comerciais, desde que citada a fonte; o uso comercial exige contato com o licenciamento da EBC. O site da ORGATEC é comercial."
+    },
+    {
+      "nome": "CEPEA fora do widget (valores guardados, RSS, indicador mensal do leite)",
+      "url": "https://cepea.org.br/br/politica-de-direitos-autorais-1.aspx",
+      "conferidoEm": "2026-11-07",
+      "motivo": "Só o widget oficial é liberado sem autorização formal (pendência D21)."
+    },
+    {
+      "nome": "B3 (cotações de boi, milho, soja e café)",
+      "url": null,
+      "conferidoEm": "2026-11-07",
+      "motivo": "A difusão das cotações exige consentimento por escrito, em contrato (pendência D22)."
+    }
   ]
 }

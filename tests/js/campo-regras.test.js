@@ -103,3 +103,78 @@ test('vigência do boletim automático: desatualizado depois de 18 h', () => {
   assert.equal(C.horasDesde({}, ger), null);
   assert.equal(C.LIMITE_HORAS, 18);
 });
+
+test('polos sem previsão ficam de fora, e o boletim avisa quais são (validação continua passando)', () => {
+  const todos = CFG.polos.map((p) => Object.assign({}, p, { regiao: CFG.regioes.find((r) => r.polos.includes(p.id)).id, met: MET }));
+  const ausente = todos[0];
+  const b = R.montar({ dia: '2026-11-02', geradoEm: '2026-11-02T11:02-03:00', regioes: CFG.regioes, polos: todos.slice(1),
+    semDados: [{ id: ausente.id, nome: ausente.nome, uf: ausente.uf, regiao: ausente.regiao }] });
+  assert.deepEqual(C.validar(b), []);
+  assert.deepEqual(b.semDados.map((p) => p.id), [ausente.id]);
+  assert.equal(b.polos.length, CFG.polos.length - 1);
+  assert.ok(b.polos.every((p) => p.id !== ausente.id));
+  assert.match(b.resumo, /1 sem previsão/);
+  assert.match(b.confianca[0].rotulo, /Sem previsão/);
+  assert.ok(b.confianca[0].texto.includes(ausente.nome));
+});
+
+test('sem falha da fonte, semDados é vazio e a confiança começa pela previsão por ponto', () => {
+  const polos = CFG.polos.map((p) => Object.assign({}, p, { regiao: CFG.regioes.find((r) => r.polos.includes(p.id)).id, met: MET }));
+  const b = R.montar({ dia: '2026-11-02', geradoEm: '2026-11-02T11:02-03:00', regioes: CFG.regioes, polos });
+  assert.deepEqual(b.semDados, []);
+  assert.match(b.confianca[0].rotulo, /Previsão por ponto/);
+});
+
+// ---- Fase 1: resumo curto da região e "sem previsão" separado de "atenção"
+
+const polosDe = (dia) => CFG.polos.map((p) => Object.assign({}, p, { regiao: CFG.regioes.find((r) => r.polos.includes(p.id)).id, met: MET }));
+
+test('resumo de cada operação na região cabe em 90 caracteres e a orientação vem à parte', () => {
+  const b = R.montar({ dia: '2026-11-02', geradoEm: '2026-11-02T11:02-03:00', regioes: CFG.regioes, polos: polosDe() });
+  b.regioes.forEach((r) => R.OPERACOES.forEach((op) => {
+    const [estado, resumo, orientacao] = r.ops[op];
+    assert.ok(resumo.length <= R.MAX_RESUMO, `${r.id}/${op}: ${resumo.length} caracteres`);
+    assert.match(resumo, /^(Favorável|Com restrição|Evitar)/);
+    assert.ok(orientacao && orientacao.length > 10, `${r.id}/${op} sem orientação`);
+    assert.ok(C.ESTADOS[estado]);
+  }));
+  assert.deepEqual(C.validar(b), []);
+});
+
+test('resumo cita o fator decisivo e os polos que fogem do padrão, sem passar de 90', () => {
+  const op = (estado, motivo, janela, horas) => ({ estado, motivo, janela, horasPrevistas: horas == null ? 16 : horas, tipoJanela: janela ? 'ok' : null });
+  const ps = [
+    { cfg: { nome: 'Sorriso' }, ops: { pulv: op('atencao', 'vento forte (deriva)', { de: 5, ate: 10 }) } },
+    { cfg: { nome: 'Rio Verde' }, ops: { pulv: op('atencao', 'vento forte (deriva)', { de: 6, ate: 11 }) } },
+    { cfg: { nome: 'Dourados' }, ops: { pulv: op('ok', null, { de: 5, ate: 20 }) } }
+  ];
+  const t = R.resumoRegiao('pulv', 'atencao', ps);
+  assert.match(t, /^Com restrição · janela comum 06h às 10h · vento forte \(deriva\) · exceção: Dourados$/);
+  const longos = ps.map((p, i) => Object.assign({}, p, { cfg: { nome: 'Município com nome bastante comprido ' + i } }));
+  const curto = R.resumoRegiao('pulv', 'atencao', longos);
+  assert.ok(curto.length <= R.MAX_RESUMO && curto.startsWith('Com restrição'), curto);
+});
+
+test('previsão parcial do dia aparece no resumo e nas horas previstas do polo', () => {
+  const op = { estado: 'ok', motivo: null, janela: { de: 10, ate: 20 }, horasPrevistas: 11, tipoJanela: 'ok' };
+  assert.match(R.resumoRegiao('plantio', 'ok', [{ cfg: { nome: 'A' }, ops: { plantio: op } }]), /previsão parcial do dia/);
+  const b = R.montar({ dia: '2026-11-02', geradoEm: '2026-11-02T11:02-03:00', regioes: CFG.regioes, polos: polosDe() });
+  b.polos.forEach((p) => R.OPERACOES.forEach((o) => assert.ok(p.ops[o].horasPrevistas > 0 && p.ops[o].horasPrevistas <= R.HORAS_UTEIS)));
+});
+
+test('sem nenhuma hora útil com previsão é "sem previsão", não "evitar"', () => {
+  R.OPERACOES.forEach((op) => {
+    const r = R.diaOperacao(op, []);
+    assert.equal(r.estado, 'atencao');
+    assert.equal(r.horasPrevistas, 0);
+    assert.match(r.motivo, /sem previsão/);
+    assert.equal(r.janela, null);
+  });
+  const b = R.montar({ dia: '2030-01-01', geradoEm: '2030-01-01T22:00-03:00', regioes: CFG.regioes, polos: polosDe() });
+  b.regioes.forEach((r) => R.OPERACOES.forEach((op) => {
+    assert.equal(r.ops[op][0], 'atencao');
+    assert.match(r.ops[op][1], /^Sem previsão para as horas úteis/);
+    assert.match(r.ops[op][2], /próximo boletim/);
+  }));
+  assert.deepEqual(C.validar(b), []);
+});
