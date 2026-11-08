@@ -1,8 +1,8 @@
 """Vigia do boletim da Janela de Campo: confere o boletim que está NO AR e acusa quando ele ficou velho ou ilegível.
 
 Existe porque o boletim pode falhar sem ninguém saber (entre 04 e 08/11/2026, 4 rodadas foram geradas e não publicadas por
-credencial vencida) e porque execuções agendadas podem atrasar ou ser descartadas. Quem roda o vigia (hoje, nada: o workflow
-de exemplo está em docs/ideias/boletim-vigia.yml.exemplo) usa o código de saída como alerta.
+credencial vencida) e porque execuções agendadas podem atrasar ou ser descartadas. Quem roda o vigia (o workflow é
+.github/workflows/boletim-vigia.yml) usa o código de saída como alerta.
 
 Uso:
     python tools/vigiar_boletim.py                          confere https://orgatec.io/dados/campo/atual.json

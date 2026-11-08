@@ -1,12 +1,9 @@
-# EXEMPLO INATIVO. Não está em .github/workflows e não roda. Plano: docs/plano-ativacao-boletim-actions.md.
-#
 # Vigia do boletim da Janela de Campo: a cada 2 horas confere o boletim que está NO AR (tools/vigiar_boletim.py) e falha
 # quando ele tem mais de 14 horas, está ilegível ou o site não responde. A falha da execução é o alerta: o GitHub avisa por
 # e-mail quem criou o workflow ou editou o cron, conforme as preferências de notificação dessa pessoa.
 # Não usa credencial do Google nem segredo nenhum: lê só um arquivo público do orgatec.io.
-#
-# Para ativar: copiar para .github/workflows/boletim-vigia.yml na main (execuções agendadas só valem na branch padrão),
-# com autorização do usuário. O vigia também roda no agendador do GitHub: se o GitHub falhar, os dois param juntos.
+# Execuções agendadas só valem na branch padrão (main). O vigia roda no mesmo agendador do GitHub: se o GitHub falhar,
+# os dois param juntos. Plano: docs/plano-ativacao-boletim-actions.md. Para desligar: Actions > Disable workflow.
 
 name: Vigia do boletim
 
