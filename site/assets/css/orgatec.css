@@ -280,6 +280,8 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 /* Cards por atividade da Janela de Campo, marca Orgatec Audi Agro. Verde e preto medidos na logo
    (tools/extrair_logo_audi_agro.py) e válidos só nesta seção; o resto segue a paleta do site. */
 .audi-agro{--aa-verde:#028227;--aa-preto:#000000;--aa-verde-suave:color-mix(in srgb,var(--aa-verde) 12%,var(--surface))}
+/* sem a marca (agro_fontes.json, marca.exibir = false): a seção usa as cores do site, não o verde e o preto da marca */
+.audi-agro-neutro{--aa-verde:var(--brand);--aa-preto:var(--ink)}
 .audi-agro-topo{display:flex;flex-wrap:wrap;align-items:center;gap:20px}
 .audi-agro-selo{flex:none;display:inline-flex;padding:10px 14px;border-radius:16px;background:#fff;border:1px solid color-mix(in srgb,var(--aa-verde) 30%,transparent);box-shadow:0 8px 24px -16px rgba(0,0,0,.4)}
 .audi-agro-selo img{display:block;width:132px;height:auto}

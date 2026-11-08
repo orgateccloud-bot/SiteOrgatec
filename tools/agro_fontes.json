@@ -1,5 +1,11 @@
 {
   "_comentario": "Cards por atividade da Janela de Campo (marca Orgatec Audi Agro). Uma fonte única: tools/gerar_paginas.py gera os cards e os widgets a partir daqui, e tools/gerar_noticias_agro.py usa os feeds e as palavras-chave. Códigos do CEPEA conferidos na página oficial do widget (cepea.org.br/br/widget.aspx) em 02/11/2026.",
+  "marca": {
+    "exibir": false,
+    "nome": "Orgatec Audi Agro",
+    "logo": "assets/marca/orgatec-audi-agro.png",
+    "_comentario": "Decisão de 07/11/2026: a marca sai das páginas por enquanto; a realocação fica para depois. Com exibir = true e python tools/gerar_paginas.py, o selo, o nome e as cores da marca voltam à página de cotações e notícias."
+  },
   "cepea": {
     "_comentario": "Cotações pelo widget oficial do CEPEA, a única forma de exibição que a política de direitos autorais do CEPEA libera sem autorização (licença dos dados: CC BY-NC 4.0). Para guardar o último valor e mostrar sem o widget, é preciso autorização formal: preencha 'autorizacao' com a referência do documento e peça a mudança da coleta para o servidor.",
     "widget": "https://www.cepea.org.br/br/widgetproduto.js.php",

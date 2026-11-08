@@ -1389,7 +1389,7 @@ def test_setor_transporte_aponta_para_o_compliance_do_setor(navegador, servidor)
     assert not erros, erros
 
 
-# ---------- Cards por atividade (Orgatec Audi Agro) na página de cotações e notícias (setores/agro-mercado.html)
+# ---------- Cards por atividade na página de cotações e notícias (setores/agro-mercado.html)
 
 # Só no teste: substitui o script do CEPEA por uma tabela marcada como exemplo (nenhum valor real nem inventado no site)
 WIDGET_TESTE = ("document.write('<table class=\"imagenet-widget-tabela\"><tr><td>EXEMPLO DE TESTE</td></tr>"
@@ -1426,8 +1426,9 @@ def test_cards_por_atividade(navegador, servidor, vp):
     expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")
     expect(pg.locator("[data-agro-situacao]")).to_contain_text("Notícias coletadas em")
     assert pg.locator("[data-agro-noticias] li").count() >= 11  # uma notícia ou o aviso de "sem notícia" em cada card
-    logo = pg.locator(".audi-agro-selo img")
-    assert logo.evaluate("i => i.complete && i.naturalWidth > 0")
+    assert pg.locator(".audi-agro-selo, .audi-agro-selo img").count() == 0  # a marca está desligada (agro_fontes.json, marca.exibir)
+    expect(pg.locator("[data-agro] .eyebrow").first).to_have_text("Mercado")
+    assert "Audi Agro" not in pg.locator("[data-agro]").inner_text()
     assert pg.locator("[data-agro-aviso]:not([hidden])").count() == 0
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros

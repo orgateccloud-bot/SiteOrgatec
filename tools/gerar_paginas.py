@@ -497,8 +497,10 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta:
 
 # Cards por atividade (marca Orgatec Audi Agro): configuração única em tools/agro_fontes.json
 AGRO = RAIZ / "tools" / "agro_fontes.json"
-# Cores do widget do CEPEA a partir da marca (verde #028227 medido na logo por tools/extrair_logo_audi_agro.py)
-WIDGET_CORES = {"corfundo": "e6f2e9", "cortexto": "111111", "corlinha": "f4faf5"}
+# Cores do widget do CEPEA: com a marca (verde #028227 medido na logo por tools/extrair_logo_audi_agro.py) ou neutras
+# (cinza-azulado claro), que são as de hoje: a marca está desligada em agro_fontes.json (marca.exibir)
+WIDGET_CORES_MARCA = {"corfundo": "e6f2e9", "cortexto": "111111", "corlinha": "f4faf5"}
+WIDGET_CORES_NEUTRAS = {"corfundo": "eef2f7", "cortexto": "111111", "corlinha": "f7f9fc"}
 
 
 def widgets_cepea(cfg: dict) -> None:
@@ -511,7 +513,8 @@ def widgets_cepea(cfg: dict) -> None:
     for a in cfg["atividades"]:
         if not a["cepea"]:
             continue
-        params = urlencode([("fonte", "arial"), ("tamanho", "10"), ("largura", "100%")] + list(WIDGET_CORES.items()) +
+        cores = WIDGET_CORES_MARCA if cfg.get("marca", {}).get("exibir") else WIDGET_CORES_NEUTRAS
+        params = urlencode([("fonte", "arial"), ("tamanho", "10"), ("largura", "100%")] + list(cores.items()) +
                            [("id_indicador[]", str(i)) for i in a["cepea"]])
         html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
@@ -534,9 +537,16 @@ def widgets_cepea(cfg: dict) -> None:
 
 
 def secao_agro(cfg: dict) -> str:
-    """Seção Orgatec Audi Agro: um card por atividade com a cotação (widget do CEPEA) e as notícias
-    (site/dados/agro/noticias.json, de tools/gerar_noticias_agro.py), preenchidas por assets/js/agro-cards.js."""
+    """Seção de mercado do agro: um card por atividade com a cotação (widget do CEPEA) e as notícias
+    (site/dados/agro/noticias.json, de tools/gerar_noticias_agro.py), preenchidas por assets/js/agro-cards.js.
+    A marca Orgatec Audi Agro (selo, nome e cores) só aparece com marca.exibir = true em agro_fontes.json; desligada,
+    a seção usa as cores do site."""
     from html import escape
+    marca = cfg.get("marca", {})
+    exibir_marca = bool(marca.get("exibir"))
+    selo = (f'<span class="audi-agro-selo"><img src="{{p}}{marca["logo"]}" alt="{escape(marca["nome"])}" width="480" height="293"></span>'
+            if exibir_marca else "")
+    chamada = escape(marca["nome"]) if exibir_marca else "Mercado"
     cards = []
     for a in cfg["atividades"]:
         nome = escape(a["nome"])
@@ -554,12 +564,12 @@ def secao_agro(cfg: dict) -> str:
                         <p class="audi-agro-atualizado" data-agro-atualizado></p>
                     </article>""")
     fontes = " · ".join(f'<a class="og-link" href="{escape(x["url"])}" target="_blank" rel="noopener">{escape(x["nome"])}</a>' for x in cfg["feeds"])
-    return f"""        <section class="audi-agro py-12" aria-labelledby="agroTitulo" data-agro>
+    return f"""        <section class="audi-agro{"" if exibir_marca else " audi-agro-neutro"} py-12" aria-labelledby="agroTitulo" data-agro>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6">
                 <div class="audi-agro-topo">
-                    <span class="audi-agro-selo"><img src="{{p}}assets/marca/orgatec-audi-agro.png" alt="Orgatec Audi Agro" width="480" height="293"></span>
+                    {selo}
                     <div>
-                        <p class="eyebrow">Orgatec Audi Agro</p>
+                        <p class="eyebrow">{chamada}</p>
                         <h2 id="agroTitulo" class="text-3xl font-bold text-tinta mt-2">Mercado e notícias por atividade</h2>
                         <p class="text-tinta-suave mt-2 max-w-3xl">Cotações do CEPEA/Esalq pelo widget oficial e notícias e legislação das agências da Câmara e do Senado e da Receita Federal, coletadas três vezes por dia.</p>
                     </div>
@@ -606,7 +616,7 @@ def janela_de_campo() -> None:
 
 
 def agro_mercado() -> None:
-    """Cotações e notícias por atividade (Orgatec Audi Agro): cards de secao_agro, preenchidos por assets/js/agro-cards.js.
+    """Cotações e notícias por atividade: cards de secao_agro, preenchidos por assets/js/agro-cards.js.
     Tinham sido incluídos na Janela de Campo; a página própria deixa o boletim leve e dá ao produtor um endereço para o mercado."""
     import json
     cfg_agro = json.loads(AGRO.read_text(encoding="utf-8"))

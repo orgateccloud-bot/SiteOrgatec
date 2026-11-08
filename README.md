@@ -189,7 +189,7 @@ A cada boletim gravado, `tools/cartao_campo.py` faz imagens PNG 1080 × 1920 com
 - **Boletim vencido** (dia anterior ou gerado há mais de 18 horas) não gera cartão. Se o boletim do dia não sair, os cartões do dia anterior saem dos caminhos fixos; as cópias datadas ficam.
 - Refazer os cartões do boletim atual, sem publicar: `python tools/cartao_campo.py`.
 
-## Cards por atividade (Orgatec Audi Agro)
+## Cards por atividade (cotações e notícias do agro)
 
 Ficam na página `setores/agro-mercado.html` (Cotações e notícias), gerada por `agro_mercado()`; a Janela de Campo só aponta para ela. A configuração única está em `tools/agro_fontes.json`: atividades, códigos do widget do CEPEA, palavras-chave e feeds.
 

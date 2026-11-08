@@ -45,7 +45,7 @@ Com 10 itens do agro e o boletim do dia; com o botão "Ver todos os 10 pontos" a
 
 ## Fora desta fase
 
-Fases 5 e 6 (satélite, notícias e cotações), a busca por município e a marca Audi Agro (decisão sua, na Fase 2).
+Fases 5 e 6 (satélite, notícias e cotações), a busca por município e a volta da marca Audi Agro, que você pediu para tirar por enquanto (interruptor `marca.exibir` em `tools/agro_fontes.json`).
 
 ## Fontes e validação
 
