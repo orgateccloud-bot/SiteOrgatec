@@ -51,3 +51,7 @@ Rodar o mesmo gerador num runner do GitHub, com a publicação feita sem chave d
 ## Federação criada (07/11/2026)
 
 Projeto `orgatec-site`: pool `github-actions`, provedor `github-orgatec` (aceita só o repositório `orgateccloud-bot/SiteOrgatec` e a branch `ideia/boletim-actions`) e conta de serviço `boletim-deploy` sem chave, com `firebasehosting.admin` e `serviceusage.serviceUsageConsumer`. Para ativar no ar seria preciso ampliar a condição do provedor para a `main`, criar o agendamento e decidir onde fica `site/dados/`. Para reverter: apagar a conta de serviço, o provedor e o pool.
+
+## Reteste com a main atualizada (08/11/2026)
+
+A `main` passou a ter um rewrite do Hosting para o Cloud Run `orgatec-api` (`firebase.json`). O deploy falhou com 403 (`run.services.get`) até a `boletim-deploy` receber `roles/run.viewer` **só nesse serviço**. Depois disso a prévia `teste-actions` saiu com o boletim de 08/11, 6 boletins de histórico, cartão e a página da Janela de Campo; o `orgatec.io` não mudou. Consequência: se a `main` ganhar outros destinos de rewrite, a conta de serviço precisa de leitura neles também.
