@@ -33,14 +33,38 @@ O histórico fica no git e no GitHub (`orgateccloud-bot/SiteOrgatec`, privado).
 
 ## Lançar no site
 
-Na pasta `SiteOrgatec`:
+Primeiro, confira o que falta publicar e se há outra publicação rodando:
 
 ```bash
-git merge desenvolvimento
-python tools/publicar.py
+python tools/publicar.py --estado
 ```
 
-O `publicar.py` só publica da `main`, sem alterações pendentes e com JS, bandit e pytest passando. Depois marca a versão com uma tag `publicado-AAAAMMDD-HHMM` e envia ao GitHub.
+Depois, na pasta `SiteOrgatec`, um comando só:
+
+```bash
+python tools/publicar.py --com-desenvolvimento
+```
+
+O que o comando faz, nesta ordem:
+
+1. **Confere a pasta:** só publica da `main` e sem alterações pendentes.
+2. **Confere o GitHub:** para se a `main` local estiver atrás de `origin/main`.
+3. **Confere o Firebase:** para logo se a credencial estiver vencida.
+4. **Pega a trava** `.publicando.lock`. Se outra sessão ou o agendador estiver publicando, recusa e mostra quem é.
+5. **Avança a `main` até a `desenvolvimento`** por avanço direto. Se não der, para e manda integrar na `desenvolvimento` primeiro.
+6. **Roda JS, bandit e pytest.**
+7. **Confere se a `main` mudou** durante a suíte. Se mudou, não publica.
+8. **Publica,** marca a tag `publicado-AAAAMMDD-HHMM` e envia `main` e tag ao GitHub.
+
+### Regras para várias sessões
+
+- **Ideias:** só entram na `main` passando pela `desenvolvimento`.
+- **Pasta principal:** nunca faça `git merge` à mão nela. Use `--com-desenvolvimento`, que faz o avanço já com a trava.
+- **Agendador do boletim** (05h, 11h e 17h):
+  - usa a mesma trava;
+  - **só publica quando a `main` é exatamente a última tag `publicado-*`**, porque não roda a suíte. Assim, código que ainda não passou pela suíte nunca vai ao ar por ele;
+  - enquanto houver commit novo sem publicação, ele gera o boletim e não publica. A próxima publicação leva os dados mais recentes.
+- **Suíte falhou:** nada vai ao ar e a trava é liberada. Corrija na `desenvolvimento` e rode de novo.
 
 ## Conflitos em páginas geradas
 

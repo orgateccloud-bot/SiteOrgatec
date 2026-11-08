@@ -88,6 +88,99 @@ def test_credencial_vencida_para_antes_da_suite(monkeypatch, capsys):
     assert "firebase login --reauth" in capsys.readouterr().out
 
 
+def test_trava_impede_duas_publicacoes_e_some_no_fim(tmp_path):
+    with P.trava("sessão A", tmp_path):
+        assert (tmp_path / P.TRAVA).exists()
+        with pytest.raises(P.PublicacaoEmAndamento, match="sessão A"):
+            with P.trava("sessão B", tmp_path):
+                pass
+    assert not (tmp_path / P.TRAVA).exists()
+
+
+def test_trava_some_mesmo_com_erro(tmp_path):
+    with pytest.raises(ValueError):
+        with P.trava("sessão A", tmp_path):
+            raise ValueError
+    assert not (tmp_path / P.TRAVA).exists()
+
+
+def test_trava_vencida_e_substituida(tmp_path):
+    import os
+    import time
+    arq = tmp_path / P.TRAVA
+    arq.write_text("processo morto", encoding="utf-8")
+    velho = time.time() - P.TRAVA_VALIDADE_S - 10
+    os.utime(arq, (velho, velho))
+    with P.trava("sessão nova", tmp_path):
+        assert "sessão nova" in arq.read_text(encoding="utf-8")
+
+
+def test_codigo_novo_na_main_bloqueia_o_agendador(repo):
+    assert "nenhuma versão publicada" in P.motivo_codigo_nao_publicado(repo)
+    _git(repo, "tag", "publicado-20260101-0000")
+    assert P.motivo_codigo_nao_publicado(repo) is None
+    (repo / "b.txt").write_text("b", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "b")
+    assert "1 commit(s) depois de publicado-20260101-0000" in P.motivo_codigo_nao_publicado(repo)
+
+
+def test_estado_lista_o_que_falta(repo):
+    _git(repo, "tag", "publicado-20260101-0000")
+    _git(repo, "branch", "desenvolvimento")
+    _git(repo, "checkout", "-q", "-b", "ideia/x")
+    (repo / "c.txt").write_text("c", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "c")
+    _git(repo, "checkout", "-q", "main")
+    texto = "\n".join(P.estado(repo))
+    assert "publicado-20260101-0000; main com 0" in texto
+    assert "desenvolvimento: 0" in texto and "ideia/x: 1 commit(s)" in texto
+
+
+def test_com_desenvolvimento_so_avanca_direto(repo):
+    _git(repo, "checkout", "-q", "-b", "desenvolvimento")
+    (repo / "d.txt").write_text("d", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "d")
+    _git(repo, "checkout", "-q", "main")
+    assert P.trazer_desenvolvimento(repo) == P.commit_atual(repo)
+    assert (repo / "d.txt").exists()
+    (repo / "e.txt").write_text("e", encoding="utf-8")  # main diverge da desenvolvimento
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "e")
+    _git(repo, "checkout", "-q", "desenvolvimento")
+    (repo / "f.txt").write_text("f", encoding="utf-8")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "f")
+    _git(repo, "checkout", "-q", "main")
+    with pytest.raises(RuntimeError, match="não avança direto"):
+        P.trazer_desenvolvimento(repo)
+
+
+def test_main_mudou_durante_a_suite_nao_publica(monkeypatch, tmp_path, capsys):
+    commits = iter(["aaa", "bbb"])
+    monkeypatch.setattr(P, "RAIZ", tmp_path)
+    for nome in ("motivo_para_nao_publicar", "motivo_remoto", "conferir_acesso"):
+        monkeypatch.setattr(P, nome, lambda: None)
+    monkeypatch.setattr(P, "commit_atual", lambda: next(commits))
+    monkeypatch.setattr(P, "rodar_suite", lambda: None)
+    trava_original = P.trava
+    monkeypatch.setattr(P, "trava", lambda quem: trava_original(quem, tmp_path))
+    monkeypatch.setattr(P, "implantar", lambda: pytest.fail("não deveria implantar"))
+    assert P.main([]) == 1
+    assert "mudou durante a suíte" in capsys.readouterr().out
+
+
+def test_boletim_nao_publica_codigo_sem_suite(monkeypatch):
+    import gerar_boletim_campo as G
+    monkeypatch.setattr(P, "motivo_para_nao_publicar", lambda: None)
+    monkeypatch.setattr(P, "motivo_codigo_nao_publicado", lambda: "a main tem 2 commit(s) depois de publicado-x")
+    monkeypatch.setattr(P, "implantar", lambda: pytest.fail("não deveria implantar"))
+    with pytest.raises(RuntimeError, match="2 commit"):
+        G.publicar()
+
+
 def test_boletim_nao_publica_com_a_pasta_travada(monkeypatch):
     import gerar_boletim_campo as G
     implantou = []

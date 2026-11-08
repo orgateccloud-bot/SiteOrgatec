@@ -416,6 +416,9 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg, erros = _abrir(navegador, servidor, "testes/index.html", vp)
     assert pg.locator("meta[name=robots][content=noindex]").count() == 1
     casos = pg.locator("[data-autoteste] li")
+    # O autoteste preenche a lista depois do carregamento: espera o 12º caso antes de contar (no celular, numa
+    # máquina ocupada pela suíte, a contagem imediata já deu 0 e barrou uma publicação em 08/11/2026).
+    expect(casos.nth(11)).to_be_attached(timeout=15000)
     assert casos.count() >= 12
     assert pg.locator("[data-autoteste] li[data-ok=false]").count() == 0, pg.inner_text("[data-autoteste]")
     expect(pg.locator("[data-resumo=ambiente]")).to_have_text("Homologação")

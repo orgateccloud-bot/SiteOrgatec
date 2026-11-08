@@ -37,3 +37,6 @@ docs/_arquivo/
 
 # Mapeamentos de segurança: descrevem fragilidades reais, ficam só no disco
 docs/mapeamento-seguranca-*
+
+# trava de publicação (tools/publicar.py e agendador do boletim)
+.publicando.lock

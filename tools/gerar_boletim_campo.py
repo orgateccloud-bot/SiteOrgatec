@@ -217,12 +217,15 @@ def lacunas(dias: list[str]) -> list[str]:
 
 
 def publicar() -> None:
-    """Mesma trava da publicação manual: só da main e sem alterações pendentes, para não levar trabalho pela metade."""
+    """Mesmas travas da publicação manual: só da main, sem alterações pendentes, uma publicação por vez e só com o
+    código da última versão publicada (o agendador não roda a suíte; código novo vai ao ar por tools/publicar.py).
+    Os dados novos de site/dados não se perdem: a próxima publicação, manual ou agendada, leva os mais recentes."""
     import publicar as P
-    motivo = P.motivo_para_nao_publicar()
+    motivo = P.motivo_para_nao_publicar() or P.motivo_codigo_nao_publicado()
     if motivo:
         raise RuntimeError(f"publicação bloqueada: {motivo}")
-    P.implantar()
+    with P.trava("agendador do boletim"):
+        P.implantar()
     log.info("publicado no Firebase Hosting")
 
 
