@@ -39,3 +39,35 @@ test('situação das fontes: data da coleta e falhas com o último dado válido'
   assert.match(A.situacao(falha), /Agência Senado \(mostrando itens de 02\/11\/2026 às 12h40\)/);
   assert.match(A.situacao(falha), /Receita Federal \(sem itens anteriores\)/);
 });
+
+// ---- Fase 6: tema sem notícia recente mostra a última que houver e os links das fontes oficiais
+
+const oficiais = [{ nome: 'Conab', url: 'https://www.gov.br/conab/pt-br/assuntos/noticias' }, { nome: 'Ruim', url: 'javascript:alert(1)' }];
+
+test('data longa, para a notícia que pode ser antiga', () => {
+  assert.equal(A.dataLonga('2026-07-06T09:00-03:00'), '06/07/2026');
+  assert.equal(A.dataLonga(null), '');
+});
+
+test('tema sem notícia recente: aviso, última encontrada com a data completa e links das fontes oficiais', () => {
+  const h = A.listaHtml([], {}, 'Sem notícia sobre o tema nos últimos 90 dias.', item, oficiais);
+  assert.match(h, /Sem notícia sobre o tema nos últimos 90 dias\./);
+  assert.match(h, /Última encontrada, de 27\/10\/2026:/);
+  assert.match(h, /href="https:\/\/www\.camara\.leg\.br\/noticias\/1" target="_blank" rel="noopener"/);
+  assert.match(h, /Acompanhe nas fontes oficiais: <a class="og-link" href="https:\/\/www\.gov\.br\/conab\/pt-br\/assuntos\/noticias"/);
+  assert.doesNotMatch(h, /javascript:/);  // link que não é http(s) nunca vai para a tela
+  assert.match(A.listaHtml([], { 'camara-agro': true }, 'x', item, []), /coletado em 02\/11\/2026 às 12h40/);
+});
+
+test('sem última nem links, só o aviso: nada é inventado', () => {
+  const h = A.listaHtml([], {}, 'Sem notícia sobre o tema nos últimos 90 dias.', null, []);
+  assert.equal((h.match(/<li/g) || []).length, 1);
+  assert.equal(A.ultimaHtml({ titulo: 'x', link: 'ftp://x' }, {}), '');
+  assert.equal(A.acompanheHtml(undefined), '');
+});
+
+test('com notícia recente a lista não mostra a última nem os links', () => {
+  const h = A.listaHtml([item], {}, 'vazio', Object.assign({}, item, { titulo: 'Outra' }), oficiais);
+  assert.doesNotMatch(h, /Última encontrada|Acompanhe|vazio/);
+  assert.match(h, /rastreabilidade bovina/);
+});

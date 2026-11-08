@@ -878,6 +878,9 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .audi-agro-item a{{color:var(--ink);font-weight:600;text-decoration:none}}
 .audi-agro-item a:hover{{color:var(--aa-verde);text-decoration:underline}}
 .audi-agro-meta{{display:block;font-size:12px;color:var(--muted)}}
+.audi-agro-ultima{{padding-top:8px;border-top:1px dashed var(--line)}}
+.audi-agro-ultima .audi-agro-meta:first-child{{font-weight:600}}
+.audi-agro-acompanhe{{font-size:13px;color:var(--muted)}}
 .audi-agro-tributacao{{border-left:4px solid var(--aa-preto)}}
 :root[data-float="dark"] .audi-agro-tributacao,:root[data-tema$="esc"] .audi-agro-tributacao{{border-left-color:var(--aa-verde)}}
 .campo-horaria{{display:grid;grid-template-columns:repeat(24,minmax(0,1fr));gap:2px;height:28px}}

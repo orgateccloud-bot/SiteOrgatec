@@ -563,7 +563,17 @@ def secao_agro(cfg: dict) -> str:
                         <div class="audi-agro-noticias"><p class="eyebrow">Notícias e legislação</p><ul data-agro-noticias><li class="og-cartao-texto">Carregando…</li></ul></div>
                         <p class="audi-agro-atualizado" data-agro-atualizado></p>
                     </article>""")
-    fontes = " · ".join(f'<a class="og-link" href="{escape(x["url"])}" target="_blank" rel="noopener">{escape(x["nome"])}</a>' for x in cfg["feeds"])
+    # Fontes das notícias, agrupadas pelos termos que valem para elas (tools/agro_fontes.json): o nome leva ao portal e
+    # "termos" leva à página onde a regra de reprodução foi lida
+    grupos: dict[str, dict] = {}
+    for x in cfg["feeds"]:
+        grupos.setdefault(x["termos"], x)
+    fontes = ", ".join(
+        f'<a class="og-link" href="{escape(f["portal"])}" target="_blank" rel="noopener">{escape(cfg["termos"][k]["rotulo"])}</a> '
+        f'(<a class="og-link" href="{escape(cfg["termos"][k]["url"])}" target="_blank" rel="noopener">termos</a>)' for k, f in grupos.items())
+    conferido = max(t["conferidoEm"] for k, t in cfg["termos"].items() if not k.startswith("_"))
+    conferido_br = "/".join(reversed(conferido.split("-")))
+    oficiais = " · ".join(f'<a class="og-link" href="{escape(a["url"])}" target="_blank" rel="noopener">{escape(a["nome"])}</a>' for a in cfg["acompanhe"])
     return f"""        <section class="audi-agro{"" if exibir_marca else " audi-agro-neutro"} py-12" aria-labelledby="agroTitulo" data-agro>
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-6">
                 <div class="audi-agro-topo">
@@ -582,7 +592,8 @@ def secao_agro(cfg: dict) -> str:
 {chr(10).join(cards)}
                 </div>
                 <p class="text-xs text-tinta-fraca" data-agro-situacao></p>
-                <p class="text-xs text-tinta-fraca">Cotações: CEPEA/Esalq (licença de uso dos dados CC BY-NC 4.0), exibidas pelo widget oficial, sem cópia pelo site; quando o CEPEA está fora do ar, o card avisa. Notícias: só título, data e link, de {fontes}. A B3 não entra: a difusão das cotações dela exige contrato.</p>
+                <p class="text-xs text-tinta-fraca">Cotações: CEPEA/Esalq (licença de uso dos dados CC BY-NC 4.0), exibidas pelo widget oficial, sem cópia pelo site; quando o CEPEA está fora do ar, o card avisa. Notícias: só título, data e link, de {fontes}, com os termos de reprodução conferidos em {conferido_br}; o histórico guarda 180 dias e o card mostra os últimos 90. A B3 não entra: a difusão das cotações dela exige contrato.</p>
+                <p class="text-xs text-tinta-fraca" data-agro-oficiais>Para ver mais, acompanhe direto nas fontes oficiais: {oficiais}. O site não coleta nem copia essas páginas.</p>
             </div>
         </section>"""
 

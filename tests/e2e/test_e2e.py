@@ -1399,8 +1399,15 @@ CEPEA_FORA = {"https://www.cepea.org.br/**": lambda rota: rota.abort()}
 
 
 # site/dados fica fora do git (regravado pelo agendador): os testes usam esta amostra, em vez do arquivo gerado.
-NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "fontes": [{"id": "senado", "nome": "Agência Senado", "ok": True}],
-                    "atividades": {}, "tributacao": [], "itens": []}
+NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "janelaDias": 90, "fontes": [{"id": "senado", "nome": "Agência Senado", "ok": True}],
+                    "atividades": {"soja": [{"titulo": "Governo anuncia nova regra para a soja", "link": "https://www12.senado.leg.br/noticias/materias/1",
+                                             "data": "2026-11-01T09:00-03:00", "fonte": "senado", "fonteNome": "Agência Senado", "coletadoEm": "2026-11-02T12:40-03:00"}]},
+                    "tributacao": [],
+                    "ultimas": {"cafe": {"titulo": "Regras da safra de café", "link": "https://www.camara.leg.br/noticias/2", "data": "2026-07-06T09:00-03:00",
+                                         "fonte": "camara-agro", "fonteNome": "Agência Câmara · Agropecuária", "coletadoEm": "2026-11-02T12:40-03:00"},
+                                "tributacao": None},
+                    "acompanhe": [{"nome": "Conab", "url": "https://www.gov.br/conab/pt-br/assuntos/noticias"},
+                                  {"nome": "Embrapa", "url": "https://www.embrapa.br/busca-de-noticias"}]}
 
 
 def _cards(navegador, servidor, vp="desktop", rotas=None):
@@ -1426,6 +1433,18 @@ def test_cards_por_atividade(navegador, servidor, vp):
     expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")
     expect(pg.locator("[data-agro-situacao]")).to_contain_text("Notícias coletadas em")
     assert pg.locator("[data-agro-noticias] li").count() >= 11  # uma notícia ou o aviso de "sem notícia" em cada card
+    # tema com notícia recente: só a lista; tema sem: aviso, a última que houver (com a data completa) e os links oficiais
+    soja = pg.locator("[data-agro-atividade=soja] [data-agro-noticias]")
+    expect(soja).to_contain_text("Governo anuncia nova regra para a soja")
+    assert soja.locator(".audi-agro-ultima, .audi-agro-acompanhe").count() == 0
+    cafe = pg.locator("[data-agro-atividade=cafe] [data-agro-noticias]")
+    expect(cafe).to_contain_text("Sem notícia sobre o tema nos últimos 90 dias")
+    expect(cafe.locator(".audi-agro-ultima")).to_contain_text("Última encontrada, de 06/07/2026")
+    expect(cafe.locator(".audi-agro-ultima a")).to_have_attribute("href", "https://www.camara.leg.br/noticias/2")
+    assert cafe.locator(".audi-agro-acompanhe a").evaluate_all("els => els.map(a => a.getAttribute('href'))") == [
+        "https://www.gov.br/conab/pt-br/assuntos/noticias", "https://www.embrapa.br/busca-de-noticias"]
+    milho = pg.locator("[data-agro-atividade=milho] [data-agro-noticias]")  # sem última: só o aviso e os links, nada inventado
+    assert milho.locator(".audi-agro-ultima").count() == 0 and milho.locator(".audi-agro-acompanhe").count() == 1
     assert pg.locator(".audi-agro-selo, .audi-agro-selo img").count() == 0  # a marca está desligada (agro_fontes.json, marca.exibir)
     expect(pg.locator("[data-agro] .eyebrow").first).to_have_text("Mercado")
     assert "Audi Agro" not in pg.locator("[data-agro]").inner_text()
@@ -1919,3 +1938,31 @@ def test_agro_celular_curto_e_sem_rolagem_horizontal(navegador, servidor):
     ys = pg.evaluate("['[data-agro-hoje]', '[data-agro-caminho]', '#tributos', '#proximos-passos'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY)")
     assert ys == sorted(ys)
     assert not erros, erros
+
+
+def test_cards_creditos_com_portais_termos_e_fontes_oficiais_fixas(navegador, servidor):
+    """O crédito leva ao portal de cada fonte e aos termos conferidos; a linha das fontes oficiais não depende de JavaScript."""
+    import json
+    cfg = json.loads((RAIZ / "tools" / "agro_fontes.json").read_text(encoding="utf-8"))
+    pg, erros = _cards(navegador, servidor, "desktop", CEPEA_EXEMPLO)
+    credito = pg.locator("[data-agro-situacao] + p")
+    termos = credito.locator("a", has_text="termos").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    assert termos == [cfg["termos"][k]["url"] for k in ("camara", "senado", "govbr")]  # um link de termos por grupo de fontes
+    portais = credito.locator("a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    assert all(f["portal"] in portais for f in cfg["feeds"])  # o nome leva ao portal da fonte, não ao arquivo do feed
+    assert not any(f["url"] in portais for f in cfg["feeds"])
+    expect(credito).to_contain_text("conferidos em 07/11/2026")
+    expect(credito).to_contain_text("A B3 não entra")  # nenhuma cotação da B3 (pendência D22)
+    oficiais = pg.locator("[data-agro-oficiais] a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
+    assert oficiais == [a["url"] for a in cfg["acompanhe"]]
+    assert "www.conab.gov.br" not in " ".join(oficiais)
+    assert not erros, erros
+
+
+def test_cards_sem_o_arquivo_de_noticias_mantem_o_aviso_e_as_fontes_oficiais(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/agro-mercado.html", "desktop",
+                       rotas={"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=404, body=""), **CEPEA_EXEMPLO})
+    pg.locator("[data-agro]").scroll_into_view_if_needed()
+    expect(pg.locator("[data-agro-noticias]").first).to_contain_text("Notícias indisponíveis agora")
+    assert pg.locator("[data-agro-oficiais] a").count() == 4
+    expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")  # leite segue sem cotação
