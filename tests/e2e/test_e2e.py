@@ -1729,14 +1729,19 @@ def test_vidro_desliga_as_animacoes_com_a_pagina_rolada(navegador, servidor):
     expect(varredura).not_to_have_css("animation-name", "none")
 
 
-@pytest.mark.skipif(NAVEGADOR != "chromium", reason="a CPU lenta é emulada pelo protocolo do Chromium")
 def test_vidro_aparelho_lento_desliga_as_animacoes(navegador, servidor):
+    """Aparelho lento = quadros a cada 80 ms (12 por segundo). É simulado no próprio quadro, não por limitação de CPU:
+    no runner do GitHub a CPU limitada 25 vezes ainda dava quadros de 33 ms (a mediana ficava abaixo do corte de 34 ms)
+    e o resultado dependia da máquina que rodava o teste."""
     ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
     pg = ctx.new_page()
+    pg.add_init_script("""
+        window.requestAnimationFrame = function (cb) { return window.setTimeout(function () { cb(window.performance.now()); }, 80); };
+        window.cancelAnimationFrame = window.clearTimeout;
+    """)
     pg.goto(f"{servidor}/inicio.html")
     pg.wait_for_load_state("load")
-    ctx.new_cdp_session(pg).send("Emulation.setCPUThrottlingRate", {"rate": 25})
-    for _ in range(60):  # a sonda mede duas vezes seguidas: leva uns 5 s com a CPU limitada
+    for _ in range(60):  # a sonda mede duas vezes seguidas, 1,5 s cada, depois de 1,5 s de espera: leva uns 5 s
         if pg.evaluate("document.documentElement.classList.contains('vidro-leve')"):
             break
         pg.wait_for_timeout(500)
