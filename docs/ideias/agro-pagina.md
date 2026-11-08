@@ -41,7 +41,7 @@ Mudanças de código:
 | Página Agro no desktop | 5.601 px | 3.498 px |
 | Rolagem horizontal | nenhuma | nenhuma |
 
-Com 10 itens do agro e o boletim do dia; com o botão "Ver todos os 10 pontos" apertado, a página cresce em cerca de 600 px. Em produção só aparecem os itens com revisão técnica aprovada; hoje nenhum está aprovado, então a lista fica vazia lá, como já acontecia.
+Com 10 itens do agro e o boletim do dia; com o botão "Ver todos os 10 pontos" apertado, a página cresce em cerca de 600 px. Em modo produção (`config.ambiente = 'producao'`) só aparecem os itens com revisão técnica aprovada, e hoje nenhum está aprovado. O `orgatec.io` ainda está em modo homologação e mostra todos, com o selo "em revisão técnica"; a lista só esvazia na virada para produção (ver `docs/decisoes-agro-2026-11.md`).
 
 ## Fora desta fase
 
