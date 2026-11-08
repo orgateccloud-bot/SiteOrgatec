@@ -2,7 +2,7 @@
 
 - **Situação:** em prévia (pedido do usuário em 08/11/2026)
 - **Branch:** `ideia/vidro-logo-cristal`
-- **Prévia:** a gerar com `python tools/previa.py`
+- **Prévia:** https://orgatec-site--ideia-vidro-logo-cristal-ka2ny2mm.web.app/inicio.html (expira em 08/12/2026)
 
 ## Problema
 
