@@ -1,5 +1,6 @@
 name: Boletim da Janela de Campo (teste de deploy em prévia)
 
+# Reexecutado em 08/11/2026 depois de atualizar a branch com a main.
 # TESTE: gera o boletim, entra no Google por federação de identidade (sem chave) e publica SÓ num canal de prévia
 # (teste-actions, expira em 1 dia). Não toca no canal ao vivo (orgatec.io), não tem cron e não substitui o agendador
 # do Windows. A federação só aceita este repositório e esta branch. Plano: docs/ideias/boletim-no-actions.md
