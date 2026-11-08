@@ -2,7 +2,7 @@
 
 - **Situação:** em desenvolvimento (código e testes prontos; falta a prévia e a sua aprovação)
 - **Branch:** `ideia/agro-noticias` (parte de `desenvolvimento`, que já tem as Fases 0 a 4)
-- **Prévia:** ainda não gerada
+- **Prévia:** [link](https://orgatec-site--ideia-agro-noticias-lmm935s0.web.app/setores/agro-mercado.html) (expira em 07/12/2026). Conferida em 375 px e 1280 px com dados reais em 07/11/2026 às 23h: 11 cards, 5 com notícia, 6 sem notícia e com os links oficiais, leite sem cotação, 10 de 10 widgets do CEPEA respondendo, sem erro nem rolagem lateral.
 
 ## Problema
 
