@@ -197,7 +197,7 @@ Ficam na página `setores/agro-mercado.html` (Cotações e notícias), gerada po
 - **Cotações:** vêm do widget oficial do CEPEA, em `site/cotacoes/<atividade>.html`, gerado por `tools/gerar_paginas.py`. A página abre num iframe com `sandbox="allow-scripts"`, e a CSP só libera o script do CEPEA em `/cotacoes/`.
   - O site não copia nem guarda os valores: a política do CEPEA só libera o widget sem autorização (pendência D21).
   - A pasta não se chama `widgets/` porque bloqueadores de anúncio barram endereços com essa palavra.
-- **Notícias:** `python tools/gerar_noticias_agro.py` grava `site/dados/agro/noticias.json`. Roda junto com o boletim às 05h, 11h e 17h, e se um feed cair, ficam os itens válidos anteriores.
+- **Notícias:** `python tools/gerar_noticias_agro.py` grava `site/dados/agro/noticias.json` (o que o visitante baixa) e `site/dados/agro/historico.json` (o acumulado de 180 dias; quem restaurar `site/dados` precisa restaurar os dois). Roda junto com o boletim às 05h, 11h e 17h, e se um feed cair, ficam os itens válidos anteriores. O card mostra os últimos 90 dias; sem notícia, mostra a última que houver e os links das fontes oficiais. O que cada fonte permite (termos lidos nas páginas oficiais), os links só-link e as fontes descartadas estão em `tools/agro_fontes.json` (`termos`, `acompanhe`, `descartadas`); o título nunca é cortado.
 - **Logo:** `python tools/extrair_logo_audi_agro.py` gera `site/assets/marca/orgatec-audi-agro.png` a partir de `fontes-marca/orgatec-audi-agro-original.jpg`. As cores da marca (#028227 e #000000) valem só na seção `.audi-agro`.
 
 ## Modelos do Instagram (marketing)

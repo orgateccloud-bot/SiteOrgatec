@@ -15,6 +15,7 @@
     return m ? m[3] + '/' + m[2] + '/' + m[1] + ' às ' + m[4] + 'h' + m[5] : '';
   }
   function dataCurta(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? m[3] + '/' + m[2] : ''; }
+  function dataLonga(iso) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
 
   /* Uma manchete: título com link para a fonte, nome da fonte e data; item de fonte que falhou leva a data da coleta. */
   function itemHtml(it, fontesComFalha) {
@@ -25,9 +26,26 @@
       (velho ? ' · coletado em ' + esc(dataHora(it.coletadoEm)) : '') + '</span></li>';
   }
 
-  function listaHtml(itens, fontesComFalha, vazio) {
+  /* Tema sem notícia recente: a mais recente que o histórico tem (com a data completa, porque pode ser antiga) e os links das
+     fontes oficiais. Nada é inventado: sem "ultima", só o aviso e os links. */
+  function ultimaHtml(it, fontesComFalha) {
+    if (!it || !/^https?:\/\//.test(it.link || '')) return '';
+    var velho = fontesComFalha && fontesComFalha[it.fonte];
+    return '<li class="audi-agro-item audi-agro-ultima"><span class="audi-agro-meta">Última encontrada' + (it.data ? ', de ' + esc(dataLonga(it.data)) : '') + ':</span>' +
+      '<a href="' + esc(it.link) + '" target="_blank" rel="noopener">' + esc(it.titulo) + '</a>' +
+      '<span class="audi-agro-meta">' + esc(it.fonteNome) + (velho ? ' · coletado em ' + esc(dataHora(it.coletadoEm)) : '') + '</span></li>';
+  }
+  function acompanheHtml(fontes) {
+    var links = (fontes || []).filter(function (f) { return /^https?:\/\//.test(f.url || ''); }).map(function (f) {
+      return '<a class="og-link" href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.nome) + '</a>';
+    });
+    return links.length ? '<li class="audi-agro-acompanhe">Acompanhe nas fontes oficiais: ' + links.join(' · ') + '</li>' : '';
+  }
+
+  function listaHtml(itens, fontesComFalha, vazio, ultima, acompanhe) {
     var h = (itens || []).map(function (it) { return itemHtml(it, fontesComFalha); }).join('');
-    return h || '<li class="og-cartao-texto">' + esc(vazio) + '</li>';
+    if (h) return h;
+    return '<li class="og-cartao-texto">' + esc(vazio) + '</li>' + ultimaHtml(ultima, fontesComFalha) + acompanheHtml(acompanhe);
   }
 
   /* Aviso das fontes que falharam na última coleta (o site mostra os itens válidos anteriores delas). */
@@ -40,11 +58,11 @@
     }).join('; ') + '.';
   }
 
-  var api = { esc: esc, dataHora: dataHora, dataCurta: dataCurta, itemHtml: itemHtml, listaHtml: listaHtml, situacao: situacao, ESPERA_WIDGET_MS: ESPERA_WIDGET_MS };
+  var api = { esc: esc, dataHora: dataHora, dataCurta: dataCurta, dataLonga: dataLonga, itemHtml: itemHtml, ultimaHtml: ultimaHtml, acompanheHtml: acompanheHtml,
+    listaHtml: listaHtml, situacao: situacao, ESPERA_WIDGET_MS: ESPERA_WIDGET_MS };
   if (typeof document === 'undefined') return api;
   var secao = document.querySelector('[data-agro]');
   if (!secao) return api;
-  var VAZIO = 'Sem notícia recente sobre o tema nas fontes acompanhadas (últimos 90 dias).';
 
   // ---------- Notícias
   fetch(secao.getAttribute('data-agro-dados') || '../dados/agro/noticias.json', { cache: 'no-cache' })
@@ -52,12 +70,13 @@
     .then(function (d) {
       var falha = {};
       (d.fontes || []).forEach(function (f) { if (!f.ok) falha[f.id] = true; });
+      var vazio = 'Sem notícia sobre o tema nos últimos ' + (d.janelaDias || 90) + ' dias nas fontes acompanhadas.', ultimas = d.ultimas || {};
       Array.prototype.forEach.call(secao.querySelectorAll('[data-agro-atividade]'), function (card) {
         var id = card.getAttribute('data-agro-atividade');
-        card.querySelector('[data-agro-noticias]').innerHTML = listaHtml((d.atividades || {})[id], falha, VAZIO);
+        card.querySelector('[data-agro-noticias]').innerHTML = listaHtml((d.atividades || {})[id], falha, vazio, ultimas[id], d.acompanhe);
         card.querySelector('[data-agro-atualizado]').textContent = 'Notícias atualizadas em ' + dataHora(d.geradoEm);
       });
-      secao.querySelector('[data-agro-tributacao]').innerHTML = listaHtml(d.tributacao, falha, VAZIO);
+      secao.querySelector('[data-agro-tributacao]').innerHTML = listaHtml(d.tributacao, falha, vazio, ultimas.tributacao, d.acompanhe);
       secao.querySelector('[data-agro-situacao]').textContent = situacao(d);
     })
     .catch(function () {
