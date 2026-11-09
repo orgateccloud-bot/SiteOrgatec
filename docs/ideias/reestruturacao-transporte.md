@@ -1,8 +1,8 @@
 # Reestruturação do site: áreas Rural e Empresarial, Janelas do Transporte e Empresarial e Central de Viagem
 
-- **Situação:** ideia (plano aprovado para desenvolvimento em fases; cada fase vai à prévia antes de seguir)
+- **Situação:** em desenvolvimento (09/11/2026). Fases 0, 1, 3 e 4 feitas; Fase 2 preparada e **não executada** (precisa de aprovação); Fase 5 feita atrás de flag, só em memória. Detalhes: [fase 2](reestruturacao-transporte-fase2.md), [fase 5](reestruturacao-transporte-fase5.md), [pré-renderização](reestruturacao-transporte-prerenderizacao.md)
 - **Branch:** `ideia/reestruturacao-transporte`
-- **Prévia:**
+- **Prévia:** ainda não gerada (`python tools/previa.py`, só com autorização para criar o canal)
 - **Autoria:** Warley Moreira Veloso
 - **Prompt de execução:** [reestruturacao-transporte-prompt.md](reestruturacao-transporte-prompt.md)
 
