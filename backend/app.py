@@ -276,5 +276,11 @@ def criar_contato(dados: ContatoIn, ip: str = Depends(limitar)) -> dict:
     return repo.inserir("contato", "novo", dados.model_dump(exclude={"website"}), ip)
 
 
+# Central de Viagem (docs/ideias/reestruturacao-transporte.md, Fase 5): só existe com ORGATEC_TRANSPORTE=1 (padrão: desligada).
+# Antes do mount do site, para as rotas /api/transporte e /api/telemetria valerem.
+from .transporte import api as _transporte  # noqa: E402
+
+_transporte.instalar(app, limite_ip=limitar)
+
 if os.environ.get("ORGATEC_SERVIR_SITE", "1") == "1":
     app.mount("/", StaticFiles(directory=RAIZ / "site", html=True), name="site")
