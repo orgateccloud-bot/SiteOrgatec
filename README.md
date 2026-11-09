@@ -97,6 +97,7 @@ python tools/gerar_holo_logos.py   # só quando mudar um logotipo em fontes-marc
 python tools/gerar_imagens_compartilhar.py   # og:image por página; antes das páginas, que só apontam para imagem já gerada
 python tools/gerar_paginas.py
 python tools/gerar_hub.py
+node tools/prerenderizar_itens.js   # escreve os itens no HTML (sem JavaScript o buscador também lê); depois das páginas
 python tools/compilar_css.py
 ```
 
