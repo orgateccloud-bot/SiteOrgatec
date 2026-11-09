@@ -27,3 +27,18 @@ def test_sitemap_xml_valido(tmp_path):
     gerar_mapa.main(destino)
     doc = xml.dom.minidom.parse(str(destino))
     assert len(doc.getElementsByTagName("url")) == len(gerar_mapa.paginas())
+
+
+def test_robots_txt_aponta_o_sitemap_e_nao_bloqueia(tmp_path):
+    gerar_mapa.main(tmp_path / "sitemap.xml")
+    texto = (tmp_path / "robots.txt").read_text(encoding="utf-8")
+    assert "Sitemap: https://orgatec.io/sitemap.xml" in texto
+    assert "Disallow" not in texto
+    assert "User-agent: *" in texto
+
+
+def test_lastmod_vem_do_ultimo_commit_e_nao_da_gravacao(tmp_path, monkeypatch):
+    arquivo = tmp_path / "x.html"
+    arquivo.write_text("<html></html>", encoding="utf-8")
+    monkeypatch.setattr(gerar_mapa.shutil, "which", lambda _n: None)  # sem git: cai na data do arquivo, ainda no formato AAAA-MM-DD
+    assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", gerar_mapa.data_da_pagina(arquivo))

@@ -1,0 +1,5 @@
+# Gerado por tools/gerar_mapa.py. Não edite à mão.
+User-agent: *
+Allow: /
+
+Sitemap: https://orgatec.io/sitemap.xml

@@ -60,6 +60,15 @@ def main(destino: Path = SITE / "sitemap.xml") -> None:
 """
     destino.write_text(xml, encoding="utf-8", newline="\n")
     print(f"gerado: {destino.name} ({len(lista)} páginas)")
+    robots(destino.parent / "robots.txt")
+
+
+def robots(destino: Path = SITE / "robots.txt") -> None:
+    """robots.txt com a linha Sitemap. Libera o rastreio: quem impede a indexação, enquanto o site está em homologação,
+    é o cabeçalho X-Robots-Tag (noindex), que o buscador só lê se puder abrir a página. O noindex sai na virada (T9)."""
+    destino.write_text("# Gerado por tools/gerar_mapa.py. Não edite à mão.\nUser-agent: *\nAllow: /\n\nSitemap: https://orgatec.io/sitemap.xml\n",
+                       encoding="utf-8", newline="\n")
+    print(f"gerado: {destino.name}")
 
 
 if __name__ == "__main__":
