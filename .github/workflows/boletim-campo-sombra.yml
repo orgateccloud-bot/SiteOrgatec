@@ -1,0 +1,61 @@
+name: Boletim da Janela de Campo (sombra)
+
+# FASE SOMBRA: gera o boletim num runner limpo, 20 minutos depois de cada rodada do Windows (05h, 11h e 17h de Brasília),
+# e compara com o que está no ar. NÃO publica, NÃO usa credencial do Google e NÃO substitui o agendador do Windows
+# (ORGATEC\JanelaCampo05h/11h/17h). Se a estrutura divergir do boletim no ar, a execução falha e o GitHub avisa por e-mail.
+# Plano e fases: docs/ideias/boletim-no-actions.md
+
+on:
+  schedule:
+    - cron: "20 8,14,20 * * *"   # UTC; Brasília = UTC-3. O GitHub pode atrasar alguns minutos.
+  workflow_dispatch:
+  push:
+    branches: [ideia/boletim-actions]   # só para testar enquanto o arquivo não está na main
+    paths:
+      - .github/workflows/boletim-campo-sombra.yml
+      - tools/comparar_boletim.py
+      - tools/restaurar_dados_do_site.py
+
+concurrency:
+  group: boletim-campo-sombra
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sombra:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install httpx defusedxml Pillow playwright
+      - run: python -m playwright install --with-deps chromium
+
+      - name: Restaurar o histórico que está no ar
+        run: |
+          python tools/restaurar_dados_do_site.py
+          cp site/dados/campo/atual.json "$RUNNER_TEMP/ao-vivo-atual.json"
+
+      - name: Gerar o boletim (sem publicar)
+        run: python tools/gerar_boletim_campo.py
+
+      - name: Comparar com o boletim no ar
+        shell: bash   # com -o pipefail: a divergência do comparador não pode ser escondida pelo tee
+        run: python tools/comparar_boletim.py "$RUNNER_TEMP/ao-vivo-atual.json" site/dados/campo/atual.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: boletim-sombra-${{ github.run_id }}
+          path: site/dados
+          retention-days: 3
+          if-no-files-found: ignore
