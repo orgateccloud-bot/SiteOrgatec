@@ -1,7 +1,8 @@
 """Escolhe os provedores. Padrão: simulados. Cada tipo real liga por flag e exige a sua configuração; se faltar, a API recusa
 (RecursoDesligado) em vez de cair em dado simulado sem aviso.
 
-  ORGATEC_TRANSPORTE_ROTA_REAL=1         exige ORGATEC_TRANSPORTE_ORS_CHAVE (opcional: ORGATEC_TRANSPORTE_ORS_URL)
+  ORGATEC_TRANSPORTE_ROTA_REAL=1         exige ORGATEC_TRANSPORTE_ORS_CHAVE (opcional: ORGATEC_TRANSPORTE_ORS_URL), ou, com
+                                         ORGATEC_TRANSPORTE_ROTA_FONTE=google, ORGATEC_TRANSPORTE_GOOGLE_CHAVE (Routes API + Geocoding API)
   ORGATEC_TRANSPORTE_CLIMA_REAL=1        exige ORGATEC_TRANSPORTE_METNO_CONTATO (e-mail ou site, vai no User-Agent)
   ORGATEC_TRANSPORTE_COMBUSTIVEL_REAL=1  exige ORGATEC_TRANSPORTE_ANP_ARQUIVO (CSV da ANP)
   ORGATEC_TRANSPORTE_PEDAGIO_REAL=1      exige ORGATEC_TRANSPORTE_ANTT_ARQUIVO (CSV da ANTT)
@@ -22,7 +23,7 @@ from backend.transporte.provedores.base import (
 )
 from backend.transporte.provedores.cache import Cache
 from backend.transporte.provedores.http import ClienteHttp
-from backend.transporte.provedores.reais import ClimaMetNo, CombustivelANP, PedagioANTT, RotaORS
+from backend.transporte.provedores.reais import ClimaMetNo, CombustivelANP, PedagioANTT, RotaGoogle, RotaORS
 from backend.transporte.provedores.simulados import (
     BloqueioSimulado,
     ClimaSimulado,
@@ -72,8 +73,13 @@ def provedores_do_ambiente(env: dict[str, str], cache: Cache | None = None, tran
         return env.get(f"ORGATEC_TRANSPORTE_{nome}_REAL", "0") == "1"
 
     if ligado("ROTA"):
-        chave = _exigir(env, "ORGATEC_TRANSPORTE_ORS_CHAVE", "rota real")
-        p.rota = RotaORS(ClienteHttp("openrouteservice", transporte=transporte), env.get("ORGATEC_TRANSPORTE_ORS_URL", ORS_URL), chave, cache, 86400)
+        if env.get("ORGATEC_TRANSPORTE_ROTA_FONTE", "ors").strip().lower() == "google":
+            chave = _exigir(env, "ORGATEC_TRANSPORTE_GOOGLE_CHAVE", "rota real (Google)")
+            p.rota = RotaGoogle(ClienteHttp("google_routes", transporte=transporte), chave, cache, 86400)
+        else:
+            chave = _exigir(env, "ORGATEC_TRANSPORTE_ORS_CHAVE", "rota real")
+            p.rota = RotaORS(ClienteHttp("openrouteservice", transporte=transporte),
+                             env.get("ORGATEC_TRANSPORTE_ORS_URL", ORS_URL), chave, cache, 86400)
     if ligado("CLIMA"):
         contato = _exigir(env, "ORGATEC_TRANSPORTE_METNO_CONTATO", "clima real")
         p.clima = ClimaMetNo(ClienteHttp("met_norway", transporte=transporte, cabecalhos={"User-Agent": f"orgatec.io/1.0 ({contato})"}),

@@ -5,6 +5,7 @@ Fontes (verificadas em 09/11/2026; ver docs/ideias/reestruturacao-transporte-fas
 - Rota: OpenRouteService, perfil driving-hgv. Gratuito: 2.000 rotas/dia e 40/min. ATENÇÃO: os termos do plano gratuito são ambíguos
   quanto a uso comercial; confirmar em openrouteservice.org/plans antes de ligar para clientes (alternativa: instância própria,
   basta trocar ORGATEC_TRANSPORTE_ORS_URL).
+- Rota alternativa: Google Routes API + Geocoding API (RotaGoogle), licença comercial, sem perfil de caminhão; ORGATEC_TRANSPORTE_ROTA_FONTE=google.
 - Clima: MET Norway Locationforecast 2.0 (CC BY 4.0, uso comercial permitido). Exige User-Agent com nome do app e contato.
 - Combustível: ANP, "Série histórica de preços de combustíveis" (dados abertos), arquivos mensais precos-diesel-gnv-MM.csv.
 - Pedágio: ANTT, dados abertos "Praça de Pedágio" (CC BY): localização das praças. NÃO traz tarifa; o custo usa o parâmetro da transportadora.
@@ -73,6 +74,89 @@ class RotaORS:
             duracao_h=round(bruto["s"] / 3600, 2),
             geometria=simplificar(bruto["g"], 2000),
             fonte="OpenRouteService (driving-hgv), dados OpenStreetMap, sem trânsito em tempo real",
+        )
+
+
+def _decodificar_polilinha(codigo: str) -> list[Coord]:
+    """Polilinha codificada do Google (precisão 1e-5)."""
+    pontos: list[Coord] = []
+    i = lat = lon = 0
+    try:
+        while i < len(codigo):
+            for eixo in (0, 1):
+                resultado = deslocamento = 0
+                while True:
+                    b = ord(codigo[i]) - 63
+                    i += 1
+                    resultado |= (b & 0x1F) << deslocamento
+                    deslocamento += 5
+                    if b < 0x20:
+                        break
+                delta = ~(resultado >> 1) if resultado & 1 else resultado >> 1
+                if eixo == 0:
+                    lat += delta
+                else:
+                    lon += delta
+            pontos.append((lat / 1e5, lon / 1e5))
+    except IndexError as exc:
+        raise ValueError("polilinha truncada") from exc
+    return pontos
+
+
+class RotaGoogle:
+    """Google Maps Platform: Routes API (computeRoutes, sem trânsito em tempo real) e Geocoding API.
+    Licença comercial, cobrança no projeto Google Cloud. Não há perfil de caminhão com peso e dimensões: a rota é de veículo
+    pesado só no sentido de `DRIVE`; o texto da fonte avisa. As duas APIs precisam estar ativadas e a chave restrita a elas."""
+
+    nome = "google_routes"
+
+    def __init__(self, cliente: ClienteHttp, chave: str, cache: Cache, ttl: int,
+                 url_rotas: str = "https://routes.googleapis.com/directions/v2:computeRoutes",
+                 url_geo: str = "https://maps.googleapis.com/maps/api/geocode/json") -> None:
+        self._http, self._chave, self._cache, self._ttl, self._url_rotas, self._url_geo = cliente, chave, cache, ttl, url_rotas, url_geo
+
+    def geocodificar(self, texto: str, uf: str | None) -> Coord:
+        consulta = f"{texto}, {uf}" if uf else texto
+
+        def buscar() -> Coord:
+            dados = self._http.requisitar(
+                "GET", self._url_geo, params={"address": consulta, "components": "country:BR", "region": "br", "key": self._chave})
+            if isinstance(dados, dict) and dados.get("status") == "ZERO_RESULTS":
+                raise EntradaInvalida(f"Local não encontrado: {texto}")
+            try:
+                loc = dados["results"][0]["geometry"]["location"]
+                return (float(loc["lat"]), float(loc["lng"]))
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                raise ProvedorRespostaInvalida(self.nome, "formato de geocodificação inesperado") from exc
+
+        return tuple(self._cache.obter_ou_calcular(Cache.chave("ggeo", consulta), self._ttl, buscar))  # type: ignore[return-value]
+
+    def calcular(self, pontos: list[Coord], eixos: int) -> RotaCalculada:
+        def ponto(c: Coord) -> dict[str, Any]:
+            return {"location": {"latLng": {"latitude": c[0], "longitude": c[1]}}}
+
+        def buscar() -> dict[str, Any]:
+            corpo: dict[str, Any] = {"origin": ponto(pontos[0]), "destination": ponto(pontos[-1]), "travelMode": "DRIVE",
+                                     "routingPreference": "TRAFFIC_UNAWARE", "regionCode": "BR", "languageCode": "pt-BR"}
+            if len(pontos) > 2:
+                corpo["intermediates"] = [ponto(c) for c in pontos[1:-1]]
+            dados = self._http.requisitar(
+                "POST", self._url_rotas, json=corpo,
+                headers={"X-Goog-Api-Key": self._chave,
+                         "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline"})
+            try:
+                rota = dados["routes"][0]
+                return {"m": float(rota["distanceMeters"]), "s": float(str(rota["duration"]).rstrip("s")),
+                        "g": _decodificar_polilinha(rota["polyline"]["encodedPolyline"])}
+            except (KeyError, IndexError, TypeError, ValueError) as exc:
+                raise ProvedorRespostaInvalida(self.nome, "formato de rota inesperado") from exc
+
+        bruto = self._cache.obter_ou_calcular(Cache.chave("grota", pontos), self._ttl, buscar)
+        return RotaCalculada(
+            distancia_km=round(bruto["m"] / 1000, 1),
+            duracao_h=round(bruto["s"] / 3600, 2),
+            geometria=simplificar([tuple(c) for c in bruto["g"]], 2000),
+            fonte="Google Routes API (veículo de passeio, sem restrição de carga nem trânsito em tempo real)",
         )
 
 
