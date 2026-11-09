@@ -135,3 +135,54 @@ def test_registro_exige_configuracao_e_monta_reais(tmp_path):
                                 "ORGATEC_TRANSPORTE_METNO_CONTATO": "contato@orgatec.io", "ORGATEC_TRANSPORTE_COMBUSTIVEL_REAL": "1",
                                 "ORGATEC_TRANSPORTE_ANP_ARQUIVO": str(a)}, cache=Cache())
     assert p.reais() == ["rota", "combustivel", "clima"]
+
+
+# --- Google Routes API (alternativa licenciada ao OpenRouteService) ---
+def test_polilinha_do_google_decodifica():
+    from backend.transporte.provedores.reais import _decodificar_polilinha
+
+    pts = _decodificar_polilinha("_p~iF~ps|U_ulLnnqC_mqNvxq`@")  # exemplo da documentação do Google
+    assert [(round(a, 5), round(b, 5)) for a, b in pts] == [(38.5, -120.2), (40.7, -120.95), (43.252, -126.453)]
+    with pytest.raises(ValueError):
+        _decodificar_polilinha("_p~iF~ps|U_ulLnnqC_mqNvxq`")  # truncada
+
+
+def test_google_calcula_rota_com_chave_no_cabecalho_e_cache():
+    from backend.transporte.provedores.reais import RotaGoogle
+
+    chamadas = []
+
+    def h(req):
+        chamadas.append(req)
+        return httpx.Response(200, json={"routes": [{"distanceMeters": 934000, "duration": "41000s",
+                                                     "polyline": {"encodedPolyline": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"}}]})
+
+    r = RotaGoogle(_http(h), "CHAVE-G", Cache(), 60)
+    a, b = r.calcular([GOI, PMW], 6), r.calcular([GOI, PMW], 6)
+    assert a.distancia_km == 934.0 and a.duracao_h == 11.39 and "Google" in a.fonte and a == b
+    assert len(chamadas) == 1 and chamadas[0].headers["X-Goog-Api-Key"] == "CHAVE-G" and "CHAVE-G" not in str(chamadas[0].url)
+    assert "routes.polyline" in chamadas[0].headers["X-Goog-FieldMask"]
+
+
+def test_google_geocodifica_recusa_e_formato_invalido():
+    from backend.transporte.provedores.reais import RotaGoogle
+
+    def h(req):
+        if "Goiânia" in req.url.params["address"]:
+            return httpx.Response(200, json={"status": "OK", "results": [{"geometry": {"location": {"lat": -16.68, "lng": -49.26}}}]})
+        return httpx.Response(200, json={"status": "ZERO_RESULTS", "results": []})
+
+    r = RotaGoogle(_http(h), "k", Cache(), 60)
+    assert r.geocodificar("Goiânia", "GO") == (-16.68, -49.26)
+    with pytest.raises(EntradaInvalida):
+        r.geocodificar("Lugar Nenhum", None)
+    with pytest.raises(ProvedorRespostaInvalida):
+        RotaGoogle(_http(lambda q: httpx.Response(200, json={"routes": []})), "k", Cache(), 1).calcular([GOI, PMW], 6)
+
+
+def test_registro_escolhe_google_so_com_flag_e_chave():
+    with pytest.raises(RecursoDesligado):
+        provedores_do_ambiente({"ORGATEC_TRANSPORTE_ROTA_REAL": "1", "ORGATEC_TRANSPORTE_ROTA_FONTE": "google"})
+    p = provedores_do_ambiente({"ORGATEC_TRANSPORTE_ROTA_REAL": "1", "ORGATEC_TRANSPORTE_ROTA_FONTE": "google",
+                                "ORGATEC_TRANSPORTE_GOOGLE_CHAVE": "k"}, cache=Cache())
+    assert type(p.rota).__name__ == "RotaGoogle" and p.reais() == ["rota"]
