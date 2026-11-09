@@ -55,3 +55,13 @@ Projeto `orgatec-site`: pool `github-actions`, provedor `github-orgatec` (aceita
 ## Reteste com a main atualizada (08/11/2026)
 
 A `main` passou a ter um rewrite do Hosting para o Cloud Run `orgatec-api` (`firebase.json`). O deploy falhou com 403 (`run.services.get`) até a `boletim-deploy` receber `roles/run.viewer` **só nesse serviço**. Depois disso a prévia `teste-actions` saiu com o boletim de 08/11, 6 boletins de histórico, cartão e a página da Janela de Campo; o `orgatec.io` não mudou. Consequência: se a `main` ganhar outros destinos de rewrite, a conta de serviço precisa de leitura neles também.
+
+## Fase 1: sombra (preparada em 09/11/2026)
+
+`.github/workflows/boletim-campo-sombra.yml` (substitui o protótipo) roda às 08:20, 14:20 e 20:20 UTC (05:20, 11:20 e 17:20 de Brasília, 20 minutos depois do Windows, para o boletim ao vivo já ser o do dia). Restaura o histórico, gera o boletim e compara com o que está no ar usando `tools/comparar_boletim.py`: a execução fica vermelha (e o GitHub avisa por e-mail) se o dia, os polos ou os campos do painel divergirem, ou se houver mais polos sem previsão que no ar. Diferenças de previsão e de horário só aparecem no relatório da execução. Não publica e não usa credencial do Google. Execução de teste na branch (42614697438): estrutura equivalente. O gatilho de `push` na branch só serve para testar e é inofensivo na `main`.
+
+O teste de deploy em prévia foi guardado em `boletim-no-actions-teste-deploy.yml.exemplo` (a federação só aceita a branch `ideia/boletim-actions`; para repetir, devolva o arquivo a `.github/workflows`).
+
+**Critério para passar à fase 2:** 7 dias seguidos (21 execuções) sem divergência estrutural, sem falha da geração e com atraso de início do agendamento aceitável.
+
+**Como entra na `main`:** pelo fluxo normal (`desenvolvimento` e depois a publicação com `tools/publicar.py`, com as outras sessões ociosas). O agendamento só vale depois de o arquivo estar na `main`, e nada do site muda.

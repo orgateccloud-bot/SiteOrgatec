@@ -4,7 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Boletim no GitHub Actions](boletim-no-actions.md) | em desenvolvimento (gera e publica em prévia, sem chave; ativação pendente) | `ideia/boletim-actions` | não se aplica |
+| [Boletim no GitHub Actions](boletim-no-actions.md) | em desenvolvimento (fase sombra pronta; ativação pendente) | `ideia/boletim-actions` | não se aplica |
 | [Janela de Campo: satélite com divisas, hora em cada imagem e aviso de falha (Fase 5)](campo-satelite.md) | aprovada em 07/11/2026; falta lançar | `ideia/campo-satelite` | [link](https://orgatec-site--ideia-campo-satelite-20z856ne.web.app/setores/janela-de-campo.html) |
 | [Cotações e notícias do agro: fontes com termos conferidos e card que nunca fica mudo (Fase 6)](agro-noticias.md) | aprovada em 07/11/2026; falta lançar | `ideia/agro-noticias` | [link](https://orgatec-site--ideia-agro-noticias-lmm935s0.web.app/setores/agro-mercado.html) |
 | [Página Agro: o dia do produtor e os pontos da reforma sob demanda (Fase 4)](agro-pagina.md) | aprovada em 07/11/2026; falta lançar | `ideia/agro-pagina` | [link](https://orgatec-site--ideia-agro-pagina-85dosbz7.web.app/setores/agro.html) |
