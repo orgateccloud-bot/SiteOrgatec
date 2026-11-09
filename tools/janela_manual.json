@@ -1,0 +1,4 @@
+{
+  "_comentario": "Dados que só entram depois de revisão humana (piso de frete e alertas normativos). Enquanto 'pisoFrete' for nulo, o cartão T1 fica indisponível e só linka a calculadora oficial da ANTT. Preencha: { resolucao, publicadaEm, vigenciaEm, url, revisadoPor, revisadoEm }.",
+  "pisoFrete": null
+}

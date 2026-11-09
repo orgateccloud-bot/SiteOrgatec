@@ -16,9 +16,9 @@ from html import escape
 # e o certificado estiverem no ar (pendência T5); config.js → portal.url faz o mesmo no navegador.
 PORTAL_URL = "https://orgatec.athenas.online/Usuarios/login"
 INICIO = "inicio.html"
-SETORES = [("Agro e produtor rural", "setores/agro.html"), ("Transporte", "setores/transporte.html"),
-           ("Alertas regionais GO, TO e PA", "setores/regional.html"), ("Janela de Campo (tempo no agro)", "setores/janela-de-campo.html"),
-           ("Cotações e notícias do agro", "setores/agro-mercado.html")]
+SETORES = [("Agro e produtor rural", "rural/index.html"), ("Transporte", "empresarial/transporte.html"),
+           ("Alertas regionais GO, TO e PA", "reforma/alertas-regionais.html"), ("Janela de Campo (tempo no agro)", "rural/janela-de-campo.html"),
+           ("Cotações e notícias do agro", "rural/cotacoes.html")]
 FERRAMENTAS = [("Simulador tributário", "ferramentas/simulador.html"), ("Calendário fiscal", "ferramentas/calendario.html"),
                ("Calculadoras da transição", "ferramentas/index.html")]
 # Sistemas da ORGATEC (docs/plano-incorporacao-produtos.md): só páginas no site; o acesso a cada sistema é link
@@ -30,10 +30,13 @@ COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de confor
               ("Por público", "compliance/publicos.html"),
               ("Conformidade tributária", "compliance/conformidade-tributaria.html"), ("Prevenção à lavagem de dinheiro", "compliance/prevencao-lavagem.html"),
               ("Proteção de dados (LGPD)", "compliance/protecao-de-dados.html"), ("Integridade e anticorrupção", "compliance/integridade.html")]
+EMPRESARIAL = [("Visão geral", "empresarial/index.html"), ("Transporte", "empresarial/transporte.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
+               ("Simples Nacional", "reforma/simples-hibrido.html")]
 NAV = [
-    ("tributario", "Consultoria", "tributario/index.html", []),
+    ("tributario", "Consultoria", "consultoria-tributaria.html", []),
     ("reforma", "Reforma", "reforma/index.html", []),
-    ("setores", "Setores", "setores/agro.html", SETORES),
+    ("setores", "Setores", "rural/index.html", SETORES),
+    ("empresarial", "Empresarial", "empresarial/index.html", EMPRESARIAL),
     ("ferramentas", "Ferramentas", "ferramentas/index.html", FERRAMENTAS),
     ("solucoes", "Soluções", "solucoes/index.html", SOLUCOES),
     ("compliance", "Compliance", "compliance/index.html", COMPLIANCE),
@@ -149,7 +152,7 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
             <div class="px-4 py-3 grid gap-1 text-sm font-medium text-tinta-texto">
                 {nav_movel}
                 <p class="nav-titulo">Atendimento</p>
-                <a href="{p}escritorio/index.html" class="py-2 pl-3">O escritório</a>
+                <a href="{p}quem-somos.html" class="py-2 pl-3">O escritório</a>
                 <a href="{p}cliente/index.html" class="py-2 pl-3">Área do cliente</a>
                 <a href="{p}contato/index.html" class="py-2 pl-3">Contato</a>
                 {ITEM_CORES}
@@ -158,10 +161,10 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
     </header>"""
 
 
-RODAPE_CONSULTORIA = [("Consultoria tributária", "tributario/index.html"), ("Simulador tributário", "ferramentas/simulador.html"),
-                      ("Calendário fiscal", "ferramentas/calendario.html"), ("Agro e produtor rural", "setores/agro.html"),
-                      ("Transporte", "setores/transporte.html"), ("Soluções do escritório", "solucoes/index.html"),
-                      ("O escritório", "escritorio/index.html")]
+RODAPE_CONSULTORIA = [("Consultoria tributária", "consultoria-tributaria.html"), ("Simulador tributário", "ferramentas/simulador.html"),
+                      ("Calendário fiscal", "ferramentas/calendario.html"), ("Agro e produtor rural", "rural/index.html"),
+                      ("Transporte", "empresarial/transporte.html"), ("Soluções do escritório", "solucoes/index.html"),
+                      ("O escritório", "quem-somos.html")]
 RODAPE_REFORMA = [("Central da Reforma", "reforma/index.html"), ("LC nº 214/2025", "reforma/lc-214-2025.html"), ("IBS", "reforma/ibs.html"),
                   ("CBS", "reforma/cbs.html"), ("Split payment", "reforma/split-payment.html"), ("Fontes legais", "reforma/fontes.html")]
 
@@ -196,6 +199,35 @@ def rodape(p: str) -> str:
             <p>© 2026 ORGATEC. Todos os direitos reservados. Em conformidade com a LGPD e o Código de Ética do CFC (NBC PG 01).</p>
         </div>
     </footer>"""
+
+
+BASE_URL = "https://orgatec.io/"
+# Primeiro passo da trilha sem endereço próprio: a migalha estruturada precisa de um destino (hoje, a primeira página do grupo).
+MIGALHA_GRUPO = {"Setores": "rural/index.html", "Consultoria": "consultoria-tributaria.html", "Reforma": "reforma/index.html",
+                 "Soluções": "solucoes/index.html", "Compliance": "compliance/index.html", "Empresarial": "empresarial/index.html", "Ferramentas": "ferramentas/index.html"}
+
+
+def breadcrumb(passos: list, caminho: str) -> str:
+    """JSON-LD BreadcrumbList da trilha: Início e cada passo. A última migalha é a própria página."""
+    import json
+    lista = [{"@type": "ListItem", "position": 1, "name": "Início", "item": BASE_URL + INICIO}]
+    for i, (rotulo, url) in enumerate(passos, start=2):
+        ultimo = i == len(passos) + 1
+        destino = url or (caminho if ultimo else MIGALHA_GRUPO.get(rotulo))
+        item = {"@type": "ListItem", "position": i, "name": rotulo}
+        if destino:
+            item["item"] = BASE_URL + destino
+        lista.append(item)
+    dados = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": lista}
+    return '\n    <script type="application/ld+json">' + json.dumps(dados, ensure_ascii=False) + "</script>"
+
+
+def servico_jsonld(nome: str, descricao: str, caminho: str) -> str:
+    """JSON-LD Service (consultoria e soluções) com o prestador ORGATEC."""
+    import json
+    dados = {"@context": "https://schema.org", "@type": "Service", "name": nome, "description": descricao, "areaServed": "BR",
+             "url": BASE_URL + caminho, "provider": {"@type": "AccountingService", "name": "ORGATEC", "url": BASE_URL.rstrip("/")}}
+    return '\n    <script type="application/ld+json">' + json.dumps(dados, ensure_ascii=False) + "</script>"
 
 
 def trilha(p: str, passos: list, largura: str = "max-w-7xl") -> str:

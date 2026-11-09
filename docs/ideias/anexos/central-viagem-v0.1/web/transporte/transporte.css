@@ -1,0 +1,64 @@
+/* Central de Viagem — ORGATEC. Paleta institucional (#003365, #3f88d5); sem fontes externas (CSP font-src 'self'). */
+:root {
+  --navy: #003365; --ciano: #3f88d5; --fundo: #f4f6fa; --texto: #1b2433; --mudo: #5d6879; --linha: #dbe2ec;
+  --ok: #1d6b3a; --ok-f: #e3f4ea; --aviso: #7a4b00; --aviso-f: #fff1d6; --erro: #9b1c1c; --erro-f: #fde4e4;
+  --sim: #2a4a9b; --sim-f: #e8eefc; --raio: 8px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--texto); background: var(--fundo); }
+h1, h2, h3 { font-family: "Playfair Display", Georgia, serif; color: var(--navy); margin: 0; }
+h1 { font-size: 20px; } h2 { font-size: 16px; margin-bottom: 8px; } h3 { font-size: 14px; }
+.topo { display: flex; align-items: center; gap: 14px; padding: 10px 18px; background: #fff; border-bottom: 3px solid var(--navy); flex-wrap: wrap; }
+.topo .sub { color: var(--ciano); font-size: 12px; font-weight: 600; }
+.topo nav { margin-left: auto; display: flex; gap: 6px; }
+.topo nav a { color: var(--navy); text-decoration: none; padding: 6px 10px; border-radius: 6px; font-weight: 600; }
+.topo nav a[aria-current="page"] { background: var(--navy); color: #fff; }
+main { padding: 12px 18px 28px; max-width: 1400px; margin: 0 auto; }
+.grade { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 12px; align-items: start; }
+.cartao { background: #fff; border: 1px solid var(--linha); border-radius: var(--raio); padding: 12px 14px; margin-bottom: 12px; }
+label { display: block; font-size: 12px; color: var(--mudo); margin: 6px 0 2px; font-weight: 600; }
+input, select, button { font: inherit; }
+input, select { width: 100%; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; }
+input:focus, select:focus, button:focus-visible { outline: 2px solid var(--ciano); outline-offset: 1px; }
+.linha { display: flex; gap: 6px; align-items: end; } .linha > * { flex: 1; } .linha .estreito { flex: 0 0 64px; }
+button { background: var(--navy); color: #fff; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-weight: 600; }
+button.sec { background: #eaf1fa; color: var(--navy); } button.mini { padding: 3px 8px; font-size: 12px; }
+button:disabled { opacity: .55; cursor: wait; }
+.acoes { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.msg { padding: 8px 10px; border-radius: 6px; margin: 8px 0; font-size: 13px; }
+.msg.erro { background: var(--erro-f); color: var(--erro); } .msg.ok { background: var(--ok-f); color: var(--ok); }
+.msg.aviso { background: var(--aviso-f); color: var(--aviso); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.kpi { background: #fff; border: 1px solid var(--linha); border-top: 3px solid var(--ciano); border-radius: var(--raio); padding: 8px 10px; }
+.kpi b { display: block; font-size: 20px; color: var(--navy); } .kpi span { color: var(--mudo); font-size: 12px; }
+.duas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.rolagem { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--navy); background: #eef3fa; padding: 6px 8px; font-size: 12px; }
+td { padding: 5px 8px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+td.num, th.num { text-align: right; white-space: nowrap; } tfoot td { font-weight: 700; border-top: 2px solid var(--navy); }
+td input.ajuste { width: 96px; text-align: right; padding: 3px 6px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+.t-ok { background: var(--ok-f); color: var(--ok); } .t-simulado { background: var(--sim-f); color: var(--sim); }
+.t-parametro, .t-aviso { background: var(--aviso-f); color: var(--aviso); } .t-erro { background: var(--erro-f); color: var(--erro); }
+.fonte { color: var(--mudo); font-size: 11.5px; }
+.mapa { width: 100%; height: 320px; background: #f8fafd; border: 1px solid var(--linha); border-radius: 6px; }
+.legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--mudo); margin-top: 6px; }
+.legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.tempo { list-style: none; margin: 0; padding: 0; } .tempo li { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--linha); }
+.tempo time { flex: 0 0 104px; color: var(--mudo); font-variant-numeric: tabular-nums; }
+.lista-viagens { list-style: none; margin: 0; padding: 0; } .lista-viagens li { padding: 7px 8px; border-bottom: 1px solid var(--linha); cursor: pointer; border-radius: 6px; }
+.lista-viagens li:hover, .lista-viagens li[aria-selected="true"] { background: #eef3fa; }
+.lista-viagens small { display: block; color: var(--mudo); }
+.vazio { color: var(--mudo); padding: 18px; text-align: center; }
+.carregando { color: var(--mudo); padding: 18px; text-align: center; }
+.ao-vivo { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ok); }
+.ao-vivo::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: pulso 1.4s infinite; }
+@keyframes pulso { 50% { opacity: .3; } }
+.segredo { font-family: ui-monospace, Consolas, monospace; background: #fff8e1; padding: 8px; border-radius: 6px; word-break: break-all; }
+details summary { cursor: pointer; font-weight: 700; color: var(--navy); }
+.dev { font-size: 12px; background: var(--aviso-f); border-bottom: 1px solid #f0d9a6; padding: 6px 18px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.dev input, .dev select { width: auto; max-width: 100%; padding: 3px 6px; }
+footer { text-align: center; color: var(--mudo); font-size: 11.5px; padding: 10px; }
+@media (max-width: 960px) { .grade, .duas { grid-template-columns: minmax(0, 1fr); } .topo nav { margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .ao-vivo::before { animation: none; } }

@@ -56,7 +56,7 @@ def test_firebase_json_versionado_esta_em_homologacao_sem_api():
 def test_modo_cloud_run_encaminha_api_em_sao_paulo_com_regras_fechadas():
     cfg = pf.firebase_json(None, indexar=False, cloud_run="orgatec-api")
     assert cfg["hosting"]["rewrites"] == [{"source": "/api/**", "run": {"serviceId": "orgatec-api", "region": "southamerica-east1"}}]
-    assert cfg["firestore"] == {"rules": "firestore.rules"}
+    assert cfg["firestore"] == {"rules": "firestore.rules", "indexes": "firestore.indexes.json"}
     cab = {c["key"]: c["value"] for c in cfg["hosting"]["headers"][0]["headers"]}
     assert "connect-src 'self';" in cab["Content-Security-Policy"]  # mesma origem: nada além de 'self'
     assert "rewrites" not in pf.firebase_json(None, indexar=False)["hosting"]
@@ -80,3 +80,25 @@ def test_respostas_da_api_sem_cache(tmp_path, monkeypatch):
     import backend.app as app
     app = importlib.reload(app)
     assert TestClient(app.app).get("/api/saude").headers["cache-control"] == "no-store"
+
+
+def test_paginas_movidas_respondem_301_direto_para_o_destino():
+    cfg = pf.firebase_json(None, False, "orgatec-api", pf.REGIAO_PADRAO)
+    r = {x["source"]: x for x in cfg["hosting"]["redirects"]}
+    assert r["/setores/transporte.html"] == {"source": "/setores/transporte.html", "destination": "/empresarial/transporte.html", "type": 301}
+    destinos = {x["destination"] for x in r.values()}
+    assert not destinos & set(r), "redirecionamento em cadeia"
+    assert cfg["hosting"]["rewrites"][0]["source"] == "/api/**"
+
+
+def test_nenhum_link_do_site_aponta_para_pagina_antiga():
+    """Nada some sem 301, mas o próprio site não deve mais apontar para os endereços antigos (Fase 2)."""
+    antigos = [de.lstrip("/") for de, _ in pf.REDIRECIONAMENTOS]
+    achados = []
+    for f in (RAIZ / "site").rglob("*"):
+        if f.suffix in (".html", ".js", ".xml", ".txt") and "dados" not in f.parts and "homologacao.js" != f.name:
+            texto = f.read_text(encoding="utf-8", errors="ignore")
+            achados += [(f.name, a) for a in antigos if a in texto]
+    assert not achados, achados[:5]
+    for de, _ in pf.REDIRECIONAMENTOS:
+        assert not (RAIZ / "site" / de.lstrip("/")).exists(), f"{de} ainda existe em site/"

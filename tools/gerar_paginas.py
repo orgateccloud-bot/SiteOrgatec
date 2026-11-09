@@ -23,10 +23,19 @@ WHATS = 'href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank"
 MSG_DIAGNOSTICO = "Olá! Quero agendar um diagnóstico tributário da reforma com a ORGATEC."
 
 
+# Páginas que descrevem um serviço da ORGATEC: ganham JSON-LD Service (nome do serviço)
+SERVICOS_SCHEMA = {"consultoria-tributaria.html": "Consultoria tributária e reforma", "solucoes/index.html": "Soluções do escritório",
+                   "solucoes/conciliacao.html": "Conciliação bancária", "solucoes/auditoria-rural.html": "Auditoria forense rural de NFA-e"}
+
+
 def pagina(caminho: str, titulo: str, descricao: str, ativo: str | None, objetivo: str, corpo: str,
            indexar: bool = True, extra: list[str] | None = None, trilha: list | None = None,
            head_extra: str = "", barra: bool = True) -> None:
     p = "../" * caminho.count("/")
+    if trilha:
+        head_extra += layout.breadcrumb(trilha, caminho)
+    if caminho in SERVICOS_SCHEMA:
+        head_extra += layout.servico_jsonld(SERVICOS_SCHEMA[caminho], descricao, caminho)
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -154,8 +163,8 @@ PROVA = """        <section class="bg-superficie border-b border-linha">
 # Cartões reaproveitados em mais de uma página (mesmo texto = mesma afirmação conferida)
 C_SIMPLES = cartao("LC 214/2025, art. 41", "Simples Nacional: IBS e CBS fora do DAS", "Quando vale apurar IBS e CBS no regime regular para não perder o cliente PJ.", "{p}reforma/simples-hibrido.html")
 C_REAL = cartao("Lucro real e presumido", "CBS no lugar de PIS e Cofins", "A CBS substitui PIS e Cofins a partir de 2027: o impacto no lucro presumido e no lucro real.", "{p}reforma/cbs.html")
-C_AGRO = cartao("LC 214/2025, arts. 137, 138 e 164 a 168", "Agro e produtor rural", "Redução de 60%, produtor não contribuinte, crédito presumido de quem compra e LCDPR.", "{p}setores/agro.html")
-C_TRANSPORTE = cartao("LC 214/2025, arts. 169, 172 a 180 e 284 a 287", "Transporte", "CT-e com IBS e CBS, crédito do diesel, frete de autônomo e passageiros.", "{p}setores/transporte.html")
+C_AGRO = cartao("LC 214/2025, arts. 137, 138 e 164 a 168", "Agro e produtor rural", "Redução de 60%, produtor não contribuinte, crédito presumido de quem compra e LCDPR.", "{p}rural/index.html")
+C_TRANSPORTE = cartao("LC 214/2025, arts. 169, 172 a 180 e 284 a 287", "Transporte", "CT-e com IBS e CBS, crédito do diesel, frete de autônomo e passageiros.", "{p}empresarial/transporte.html")
 C_SIMULADOR = cartao("27 UFs · setor · regime", "Simulador tributário", "Compare o cenário atual com o pós-reforma e receba o diagnóstico.", "{p}ferramentas/simulador.html")
 C_CALENDARIO = cartao("Federal · trabalhista · estadual", "Calendário fiscal", "Vencimentos do mês por UF, com download para a agenda e alerta por e-mail.", "{p}ferramentas/calendario.html")
 C_TRANSICAO = cartao("ADCT, arts. 125 a 129", "Transição ano a ano", "O que vale de CBS, IBS, PIS/Cofins, ICMS e ISS em cada ano de 2026 a 2033.", "{p}ferramentas/index.html#transicao")
@@ -320,10 +329,10 @@ def inicio() -> None:
         faixa_cta("Comece pelo diagnóstico", "Em uma conversa, levantamos regime, setor e fornecedores e indicamos o que precisa de decisão ainda em 2026."),
     ])
     pagina(layout.INICIO, "Contabilidade Consultiva e Inteligência Tributária",
-           "Contabilidade estratégica e transição para a Reforma Tributária (IBS, CBS e Split Payment) em todo o Brasil, com força no eixo GO, TO e PA. Resp. Técnico: Robson Veloso - CRC-TO 002032/O-5 T-GO.",
+           "Contabilidade consultiva e transição para a Reforma Tributária (IBS, CBS e split payment), em GO, TO e PA. Resp. técnico: Robson Veloso, CRC-TO 002032/O-5.",
            None, "captação", corpo, extra=["inicio.js"],
            # Vitrine em vidro azul com a logo em holograma (ideia/vidro-azul): vale só na paleta Azul flutuante escuro
-           head_extra=VIDRO_HEAD)
+           head_extra=VIDRO_HEAD + JSONLD)
 
 
 def tributario() -> None:
@@ -332,7 +341,7 @@ def tributario() -> None:
         C_SIMPLES,
         cartao("LC 214/2025, arts. 378 a 383", "Créditos de PIS e Cofins antes da extinção", "Levantamento e uso dos saldos que continuam válidos depois de 2027.", "{p}reforma/index.html#item-saldo-piscofins"),
         cartao("Lucro real", "Lucro real na transição", "Crédito amplo de IBS e CBS, estoque de 1º/01/2027 e margem no período de convivência.", "{p}reforma/index.html#item-nao-cumulatividade"),
-        cartao("LC 214/2025, arts. 164 a 168", "Produtor rural e LCDPR", "Contribuinte ou não contribuinte, crédito presumido do comprador e o LCDPR do IRPF.", "{p}setores/agro.html"),
+        cartao("LC 214/2025, arts. 164 a 168", "Produtor rural e LCDPR", "Contribuinte ou não contribuinte, crédito presumido do comprador e o LCDPR do IRPF.", "{p}rural/index.html"),
         cartao("LC 214/2025, arts. 31 a 35", "Split payment e capital de giro", "Preparar caixa, conciliação e cadastros para o recolhimento na liquidação.", "{p}reforma/split-payment.html"),
     ]
     corpo = "\n".join([
@@ -347,7 +356,7 @@ def tributario() -> None:
               '\n                <p class="mt-6"><a href="{p}reforma/index.html" class="og-link">Ver todos os itens na Central da Reforma →</a></p>'),
         faixa_cta("Comece pelo diagnóstico", "Em uma conversa, levantamos regime, setor e fornecedores e indicamos o que precisa de decisão ainda em 2026."),
     ])
-    pagina("tributario/index.html", "Consultoria tributária e reforma", "Consultoria tributária da ORGATEC para a reforma (EC 132/2023, LC 214/2025): diagnóstico, Simples Nacional, créditos de PIS/Cofins, lucro real, produtor rural e split payment.",
+    pagina("consultoria-tributaria.html", "Consultoria tributária e reforma", "Consultoria tributária para a reforma (EC 132/2023, LC 214/2025): diagnóstico, Simples, créditos de PIS/Cofins, lucro real, produtor rural e split payment.",
            "tributario", "captação + autoridade", corpo, extra=["inicio.js"], trilha=[("Consultoria", None)])
 
 
@@ -384,15 +393,17 @@ def reforma() -> None:
         secao("Perguntas frequentes", "O que mais perguntam sobre a reforma", '                <div class="faq max-w-3xl" data-faq-itens="reforma"></div>', id_="perguntas"),
         faixa_cta("A reforma muda o preço do seu produto", "Transforme estes itens em decisões: regime, fornecedores, contratos e caixa."),
     ])
-    pagina("reforma/index.html", "Central da Reforma Tributária", "Itens da reforma tributária com fonte oficial, data de consulta e status: em vigor, vigência futura, pendente de regulamentação. Linha do tempo 2026–2033 e notícias.",
+    pagina("reforma/index.html", "Central da Reforma Tributária", "Itens da reforma tributária com fonte oficial, data de consulta e status (em vigor, futuro, pendente). Linha do tempo 2026 a 2033 e notícias.",
            "reforma", "autoridade + retenção", corpo, trilha=[("Reforma", None)])
 
 
 def subnav_setores(ativo: str) -> str:
-    botoes = "".join(f'<a href="{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
-                     for chave, rot, arq in [("agro", "Agro", "agro.html"), ("transporte", "Transporte", "transporte.html"),
-                                             ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html"),
-                                             ("mercado", "Cotações e notícias", "agro-mercado.html")])
+    botoes = "".join(f'<a href="{{p}}{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
+                     for chave, rot, arq in [("agro", "Agro", "rural/index.html"), ("transporte", "Transporte", "empresarial/transporte.html"),
+                                             ("regional", "Alertas regionais", "reforma/alertas-regionais.html"), ("campo", "Janela de Campo", "rural/janela-de-campo.html"),
+                                             ("mercado", "Cotações e notícias", "rural/cotacoes.html")]
+                     # Sem alertas do setor, o botão leva a uma página vazia para o transporte (SETORES_REGIONAIS em regras.js)
+                     if not (chave == "regional" and ativo == "transporte"))
     return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores>{botoes}</div>'
 
 
@@ -419,8 +430,8 @@ def caminho_agro(ref: str, titulo: str, texto: str, href: str) -> str:
 def caminhos_agro() -> str:
     """Entrada única do produtor rural: o que ele quer fazer, em 4 caminhos que reúnem o conteúdo antes espalhado."""
     return secao("Para o produtor rural", "O que você quer fazer hoje?", grade([
-        caminho_agro("Tempo", "Janela de Campo", "A janela do dia por operação, os próximos 7 dias e o satélite.", "{p}setores/janela-de-campo.html"),
-        caminho_agro("Mercado", "Cotações e notícias", "Indicador do CEPEA, notícias e legislação por atividade.", "{p}setores/agro-mercado.html"),
+        caminho_agro("Tempo", "Janela de Campo", "A janela do dia por operação, os próximos 7 dias e o satélite.", "{p}rural/janela-de-campo.html"),
+        caminho_agro("Mercado", "Cotações e notícias", "Indicador do CEPEA, notícias e legislação por atividade.", "{p}rural/cotacoes.html"),
         caminho_agro("Tributos e obrigações", "Reforma, LCDPR e Funrural", "Os pontos da reforma, a calculadora do produtor, o compliance e os alertas do agro.", "#tributos"),
         caminho_agro("Serviços", "Auditoria rural e diagnóstico", "As notas do produtor conferidas uma a uma, com laudo.", "{p}solucoes/auditoria-rural.html"),
     ], "lg:grid-cols-4", "grid-cols-2"), "bg-fundo", compacto=True)
@@ -436,7 +447,7 @@ def hoje_agro() -> str:
                     <div class="grid gap-3" data-agro-hoje-corpo>
                         <p class="og-cartao-texto">Veja se hoje dá para pulverizar, plantar, colher e fazer o manejo dos animais na sua região.</p>
                     </div>
-                    <p><a href="janela-de-campo.html" class="og-btn og-btn-primario og-btn-md" data-agro-hoje-link>Abrir a Janela de Campo</a></p>
+                    <p><a href="{p}rural/janela-de-campo.html" class="og-btn og-btn-primario og-btn-md" data-agro-hoje-link>Abrir a Janela de Campo</a></p>
                 </div>
             </div>
         </section>"""
@@ -450,8 +461,8 @@ def proximos_passos_agro() -> str:
     ], "md:grid-cols-2")}
                 <p class="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                     <a href="{{p}}{COMPLIANCE_SETOR["agro"]}" class="og-link" data-compliance-setor>O que o produtor rural precisa cumprir (Compliance)</a>
-                    <a href="regional.html?setor=agro" class="og-link" data-alertas-agro>Alertas do agro por estado: GO, TO e PA</a>
-                    <a href="regional.html" class="og-link">Alertas de atacado e indústria</a>
+                    <a href="{{p}}reforma/alertas-regionais.html?setor=agro" class="og-link" data-alertas-agro>Alertas do agro por estado: GO, TO e PA</a>
+                    <a href="{{p}}reforma/alertas-regionais.html" class="og-link">Alertas de atacado e indústria</a>
                 </p>""", "bg-superficie", "proximos-passos", compacto=True)
 
 
@@ -476,7 +487,7 @@ def setor_agro() -> None:
         proximos_passos_agro(),
         faixa_cta("Diagnóstico para agro", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano.", compacto=True),
     ])
-    pagina("setores/agro.html", "Reforma tributária no agro", lead, "setores", "captação + autoridade", corpo,
+    pagina("rural/index.html", "Reforma tributária no agro", lead, "setores", "captação + autoridade", corpo,
            extra=["campo.js", "agro-hoje.js"], trilha=[("Setores", None), ("Agro", None)])
 
 
@@ -489,10 +500,14 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta:
         secao("Por que importa", f"A reforma no {nome.lower()}", f'                <p class="text-tinta-suave max-w-3xl leading-relaxed">{porque}</p>'),
         secao("Itens", f"Pontos da reforma para {nome.lower()}", itens(destino=f"setor-{slug}", setor=slug)),
         compliance_do_setor(slug),
+        # Transporte: as obrigações do transportador (tabela 3.6 de docs/relatorio-publicos-reforma-compliance.md) aparecem aqui, com fonte e revisão
+        (secao("Obrigações do transportador", "RNTRC, CIOT, piso de frete e vale-pedágio",
+               '                <p class="text-tinta-suave max-w-3xl mb-6">Cada ponto traz a norma, a data de consulta e o status da revisão técnica. Não substitui a ANTT nem o parecer do contador.</p>\n'
+               + itens(destino="publico-transportador", recolher=True, inicial=6), "bg-superficie", "obrigacoes") if slug == "transporte" else ""),
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
     ])
-    pagina(f"setores/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "setores", "captação + autoridade", corpo,
-           trilha=[("Setores", None), (nome, None)])
+    pagina(f"{'empresarial' if slug == 'transporte' else 'setores'}/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "empresarial" if slug == "transporte" else "setores", "captação + autoridade", corpo,
+           extra=["compliance-itens.js"] if slug == "transporte" else None, trilha=[("Empresarial", "empresarial/index.html"), (nome, None)] if slug == "transporte" else [("Setores", None), (nome, None)])
 
 
 # Cards por atividade (marca Orgatec Audi Agro): configuração única em tools/agro_fontes.json
@@ -618,11 +633,11 @@ def janela_de_campo() -> None:
         </section>""",
         secao("Mercado", "Minha atividade", f"""                <p class="text-tinta-suave max-w-3xl mb-6">Escolha a sua atividade: o indicador do CEPEA, as notícias e a legislação dela estão na página de cotações e notícias.</p>
                 <div class="og-campo max-w-xs mb-6"><label class="og-campo-rotulo" for="minhaAtividade">Minha atividade</label><select id="minhaAtividade" class="og-campo-controle og-campo-md" data-minha-atividade><option value="">Todas as atividades</option>{opcoes_atividades}</select></div>
-                <a href="agro-mercado.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie"),
+                <a href="{{p}}rural/cotacoes.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie"),
         faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe."),
     ])
-    pagina("setores/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
-           "Boletim agrometeorológico da ORGATEC para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
+    pagina("rural/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
+           "Boletim agrometeorológico para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
            "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
 
 
@@ -639,7 +654,7 @@ def agro_mercado() -> None:
         secao_agro(cfg_agro),
         faixa_cta("O preço mexe no imposto", "Variação de preço, mudança de regime e crédito presumido do comprador alteram o resultado do produtor. Converse com a equipe."),
     ])
-    pagina("setores/agro-mercado.html", "Cotações e notícias do agro por atividade",
+    pagina("rural/cotacoes.html", "Cotações e notícias do agro por atividade",
            "Cotações do CEPEA/Esalq e notícias e legislação por atividade do agro (soja, milho, boi, leite e outras), com a fonte e a data de cada item.",
            "setores", "retenção", corpo, extra=["agro-cards.js"], trilha=[("Setores", None), ("Cotações e notícias", None)])
 
@@ -659,7 +674,7 @@ def regional() -> None:
         </section>""",
         faixa_cta("O alerta vale para a sua operação?", "No diagnóstico, cruzamos os alertas do estado com as suas notas, os seus fornecedores e os benefícios que você usa hoje."),
     ])
-    pagina("setores/regional.html", "Alertas regionais da reforma em GO, TO e PA", "Alertas da reforma tributária por setor (agro, atacado, indústria) em Goiás, Tocantins e Pará, com a fonte legal de cada ponto.",
+    pagina("reforma/alertas-regionais.html", "Alertas regionais da reforma em GO, TO e PA", "Alertas da reforma tributária por setor (agro, atacado, indústria) em Goiás, Tocantins e Pará, com a fonte legal de cada ponto.",
            "setores", "autoridade", corpo, extra=["app.js"], trilha=[("Setores", None), ("Alertas regionais", None)])
 
 
@@ -889,7 +904,7 @@ def escritorio() -> None:
                     <div class="og-cartao"><h3 class="og-cartao-titulo">Fiscal</h3><p class="og-cartao-texto">Apuração, obrigações acessórias e documentos fiscais com IBS e CBS.</p></div>
                     <div class="og-cartao"><h3 class="og-cartao-titulo">Pessoal</h3><p class="og-cartao-texto">Folha, eSocial e obrigações trabalhistas.</p></div>
                 </div>
-                <p class="mt-6"><a href="{p}tributario/index.html" class="og-link">Conheça a consultoria tributária →</a></p>
+                <p class="mt-6"><a href="{p}consultoria-tributaria.html" class="og-link">Conheça a consultoria tributária →</a></p>
                 <p class="mt-2"><a href="{p}compliance/index.html" class="og-link">Conheça a área de compliance: conformidade tributária, lavagem de dinheiro, LGPD e integridade →</a></p>""", "bg-superficie"),
         secao("Conformidade", "Como a ORGATEC cumpre as próprias obrigações", """                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" data-obrigacoes-proprias>
                     <div class="og-cartao"><span class="og-cartao-ref">Res. CFC nº 1.721/2024</span><h3 class="og-cartao-titulo">Prevenção à lavagem de dinheiro</h3>
@@ -902,7 +917,7 @@ def escritorio() -> None:
                         <p class="og-cartao-texto">Atuação conforme o Código de Ética Profissional do Contador. O escritório faz o diagnóstico e organiza documentos e rotinas; não emite parecer jurídico.</p></div>
                 </div>"""),
     ])
-    pagina("escritorio/index.html", "O escritório", "ORGATEC: contabilidade consultiva com experiência no agro e no transporte, responsável técnico com CRC e foco em reforma tributária.",
+    pagina("quem-somos.html", "O escritório", "ORGATEC: contabilidade consultiva com experiência no agro e no transporte, responsável técnico com CRC e foco em reforma tributária.",
            "escritorio", "autoridade", corpo, trilha=[("O escritório", None)])
 
 
@@ -1173,7 +1188,7 @@ def abertura() -> None:
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-{layout.head("Reforma tributária com base legal", "ORGATEC: consultoria tributária para lucro real, transporte e produtores rurais com LCDPR, com a fonte oficial em cada orientação sobre a reforma (EC 132/2023, LC 214/2025).", "", "index.html", extra=JSONLD)}
+{layout.head("Reforma tributária com base legal", "Consultoria tributária para lucro real, transporte e produtor rural, com a fonte oficial em cada orientação sobre a reforma (EC 132/2023, LC 214/2025).", "", "index.html", extra=JSONLD)}
     <link rel="stylesheet" href="assets/css/abertura.css">
     <script src="assets/js/abertura-intro.js"></script>
 </head>
@@ -1196,7 +1211,7 @@ def abertura() -> None:
             <a class="holo-entrar" href="{layout.INICIO}" data-destino="entrada" data-entrar>Entrar no site {seta}</a>
             <p class="holo-rt">Responsável técnico: <b>Robson Alain Veloso</b> · <span class="font-mono">CRC-TO 002032/O-5 T-GO</span></p>
             <nav class="holo-atalhos" aria-label="Atalhos">
-                <a href="tributario/index.html" data-destino="tributario">Área tributária</a>
+                <a href="consultoria-tributaria.html" data-destino="tributario">Área tributária</a>
                 <a href="cliente/index.html" data-destino="areaCliente">Área do cliente</a>
                 <a href="cliente/locar.html" data-destino="locar">Módulo LOCAR</a>
                 <a href="ferramentas/index.html" data-destino="simuladores">Simuladores</a>
@@ -1227,9 +1242,9 @@ def abertura() -> None:
 
 
 MAPA = [  # (página, objetivo) — conferido pelo painel de testes
-    ("index.html", "captação: tela de abertura"), ("inicio.html", "captação"), ("tributario/index.html", "captação + autoridade"), ("reforma/index.html", "autoridade + retenção"),
-    ("setores/agro.html", "captação + autoridade"), ("setores/transporte.html", "captação + autoridade"), ("setores/regional.html", "autoridade"), ("setores/janela-de-campo.html", "retenção"),
-    ("setores/agro-mercado.html", "retenção"),
+    ("index.html", "captação: tela de abertura"), ("inicio.html", "captação"), ("consultoria-tributaria.html", "captação + autoridade"), ("reforma/index.html", "autoridade + retenção"),
+    ("rural/index.html", "captação + autoridade"), ("empresarial/transporte.html", "captação + autoridade"), ("reforma/alertas-regionais.html", "autoridade"), ("rural/janela-de-campo.html", "retenção"),
+    ("rural/cotacoes.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
     ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),
     ("compliance/index.html", "captação + autoridade"), ("compliance/termometro.html", "captação"), ("compliance/conformidade-tributaria.html", "captação + autoridade"),
@@ -1239,7 +1254,7 @@ MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("compliance/publico/autonomo.html", "captação + autoridade"), ("compliance/publico/simples.html", "captação + autoridade"),
     ("compliance/publico/comercio-industria.html", "captação + autoridade"), ("compliance/publico/servicos.html", "captação + autoridade"),
     ("compliance/publico/imoveis.html", "captação + autoridade"),
-    ("cliente/index.html", "retenção"), ("cliente/locar.html", "retenção"), ("escritorio/index.html", "autoridade"),
+    ("cliente/index.html", "retenção"), ("cliente/locar.html", "retenção"), ("quem-somos.html", "autoridade"),
     ("contato/index.html", "captação"), ("reforma/fontes.html", "autoridade"), ("privacidade.html", "conformidade (LGPD)"),
     ("marca.html", "interno: marca"), ("orgatec-template2.html", "interno: design system atual"),
     ("orgatec-trilha.html", "interno: design ORGATEC Trilha (demonstração)"),
@@ -1311,6 +1326,10 @@ def main() -> None:
     contato()
     import paginas_compliance  # área de Compliance, gerada à parte (docs/plano-area-compliance.md)
     paginas_compliance.gerar()
+    import paginas_empresarial  # área Empresarial (Fase 3 de docs/ideias/reestruturacao-transporte.md)
+    paginas_empresarial.gerar()
+    import paginas_transporte  # Central de Viagem e portal (noindex, fora do menu)
+    paginas_transporte.gerar()
     testes()
 
 

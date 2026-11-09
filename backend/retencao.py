@@ -15,6 +15,7 @@ class Prazos:
     lead_dias: int = 730  # 24 meses
     contato_dias: int = 730
     optin_pendente_dias: int = 30  # também é a validade do link de confirmação
+    telemetria_dias: int = 30  # leituras de sensores da Central de Viagem (proposta; ver docs/lgpd/transporte-monitoramento.md)
 
     def dias(self, tipo: str, status: str) -> int | None:
         """Prazo em dias de um registro; None = sem prazo automático."""
@@ -38,4 +39,5 @@ def prazos_do_ambiente() -> Prazos:
         lead_dias=dias("ORGATEC_RETENCAO_LEAD_DIAS", Prazos.lead_dias),
         contato_dias=dias("ORGATEC_RETENCAO_CONTATO_DIAS", Prazos.contato_dias),
         optin_pendente_dias=dias("ORGATEC_RETENCAO_OPTIN_PENDENTE_DIAS", Prazos.optin_pendente_dias),
+        telemetria_dias=dias("ORGATEC_RETENCAO_TELEMETRIA_DIAS", Prazos.telemetria_dias),
     )

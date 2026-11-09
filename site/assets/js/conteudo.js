@@ -13,10 +13,10 @@
     pendente_regulamentacao: { rotulo: 'Pendente de regulamentação', tom: 'pendente' },
     incerto: { rotulo: 'Incerto: não verificado', tom: 'pendente' }
   };
-  var SETORES = { todos: 'Todos os setores', agro: 'Agro', transporte: 'Transporte' };
+  var SETORES = { todos: 'Todos os setores', agro: 'Agro', transporte: 'Transporte', comercio: 'Comércio', industria: 'Indústria', servicos: 'Serviços' };
   var TRIBUTOS = { cbs: 'CBS', ibs: 'IBS', is: 'Imposto Seletivo', piscofins: 'PIS/Cofins', ipi: 'IPI', icms: 'ICMS', iss: 'ISS', irpf: 'IRPF' };
   var DESTINOS = ['home', 'tributario', 'reforma', 'noticias', 'setor-agro', 'setor-transporte', 'ferramentas', 'cliente',
-    'compliance', 'compliance-tributario', 'compliance-pld', 'compliance-lgpd', 'compliance-integridade'];
+    'compliance', 'compliance-tributario', 'compliance-pld', 'compliance-lgpd', 'compliance-integridade', 'empresarial-lucro-real'];
   /* Frentes da área de Compliance (compliance-itens.js). Item com `pilar` pode ter `tributos` vazio.
      'transporte' reúne as obrigações setoriais do transportador (ANTT, jornada); aparece na página do público. */
   var PILARES = { tributario: 'Conformidade tributária', pld: 'Prevenção à lavagem de dinheiro', lgpd: 'Proteção de dados (LGPD)', integridade: 'Integridade e anticorrupção',

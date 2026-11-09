@@ -3,6 +3,7 @@
 Executar:  python -m pytest tests/e2e -q   (sobe o uvicorn numa porta livre automaticamente)
 """
 
+import json
 import os
 import re
 import socket
@@ -218,7 +219,7 @@ def test_demos_homologacao_e_pendencias(navegador, servidor):
     expect(pg.locator("#rodapeEmails a[href='mailto:dpo@orgatec.io']")).to_be_visible()  # canal do encarregado no rodapé
 
 
-@pytest.mark.parametrize("pagina", ["inicio.html", "privacidade.html", "marca.html", "orgatec-template2.html", "reforma/simples-hibrido.html", "reforma/index.html", "tributario/index.html"])
+@pytest.mark.parametrize("pagina", ["inicio.html", "privacidade.html", "marca.html", "orgatec-template2.html", "reforma/simples-hibrido.html", "reforma/index.html", "consultoria-tributaria.html"])
 @pytest.mark.parametrize("vp", ["mobile", "desktop"])
 def test_logotipo_e_nome_orgatec(navegador, servidor, pagina, vp):
     w, h = VIEWPORTS[vp]
@@ -263,9 +264,9 @@ def test_design_system_html(navegador, servidor, tema):
 
 PAGINAS_NOVAS = ["compliance/index.html", "compliance/conformidade-tributaria.html", "compliance/prevencao-lavagem.html",
                  "compliance/protecao-de-dados.html", "compliance/integridade.html", "compliance/termometro.html",
-                 "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "tributario/index.html", "reforma/index.html", "setores/agro.html", "setores/transporte.html", "setores/regional.html",
-                 "setores/janela-de-campo.html", "setores/agro-mercado.html",
-                 "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "cliente/locar.html", "escritorio/index.html", CONTATO]
+                 "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "consultoria-tributaria.html", "reforma/index.html", "rural/index.html", "empresarial/transporte.html", "reforma/alertas-regionais.html",
+                 "rural/janela-de-campo.html", "rural/cotacoes.html",
+                 "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "cliente/locar.html", "quem-somos.html", CONTATO]
 
 
 def _abrir(navegador, servidor, caminho, vp="desktop", rotas=None):
@@ -333,11 +334,11 @@ def test_producao_esconde_itens_sem_revisao(navegador, servidor):
 
 
 def test_anos_de_atuacao_so_com_comprovacao(navegador, servidor):
-    pg, _ = _abrir(navegador, servidor, "escritorio/index.html")
+    pg, _ = _abrir(navegador, servidor, "quem-somos.html")
     expect(pg.locator("[data-prova-anos]").first).to_be_hidden()
     assert "51 anos" not in pg.inner_text("body")
     rota = _config_alterada([("inicioAtuacao: null", "inicioAtuacao: '1975-01-02'"), ("comprovacao: null", "comprovacao: 'teste e2e'")])
-    pg2, erros = _abrir(navegador, servidor, "escritorio/index.html", rotas={"**/assets/js/config.js": rota})
+    pg2, erros = _abrir(navegador, servidor, "quem-somos.html", rotas={"**/assets/js/config.js": rota})
     expect(pg2.locator("[data-prova-anos]").first).to_be_visible()
     assert re.search(r"\d+ anos de atuação", pg2.inner_text("main"))
     assert not erros, erros
@@ -368,30 +369,30 @@ def test_calculadoras(navegador, servidor):
 
 
 def test_setor_agro_e_a_entrada_do_produtor_rural(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/agro.html")
+    pg, erros = _abrir(navegador, servidor, "rural/index.html")
     pg.wait_for_selector("#tributos .og-item")
     caminhos = pg.locator("[data-agro-caminho]")
     assert caminhos.count() == 4
     hrefs = caminhos.evaluate_all("els => els.flatMap(e => [...e.querySelectorAll('a')].map(a => a.getAttribute('href')))")
-    assert hrefs == ["../setores/janela-de-campo.html", "../setores/agro-mercado.html", "#tributos", "../solucoes/auditoria-rural.html"]
+    assert hrefs == ["../rural/janela-de-campo.html", "../rural/cotacoes.html", "#tributos", "../solucoes/auditoria-rural.html"]
     # chamadas claras: a calculadora e a auditoria rural, mais o compliance e os alertas do setor
     passos = pg.locator("#proximos-passos a").evaluate_all("els => els.map(a => a.getAttribute('href'))")
     for esperado in ["../ferramentas/index.html#produtor", "../solucoes/auditoria-rural.html", "../compliance/publico/produtor-rural.html",
-                     "regional.html?setor=agro"]:
+                     "../reforma/alertas-regionais.html?setor=agro"]:
         assert esperado in passos, esperado
     assert pg.locator("#tributos [data-itens]").count() == 1  # o caminho "Tributos" leva à lista de pontos da reforma
     # os alertas ficam numa página só: aqui não há mais a lista nem o seletor de estado
     assert pg.locator("#aUf, .lista-alertas").count() == 0
-    expect(pg.locator("a[data-alertas-agro]")).to_have_attribute("href", "regional.html?setor=agro")
+    expect(pg.locator("a[data-alertas-agro]")).to_have_attribute("href", "../reforma/alertas-regionais.html?setor=agro")
     assert not erros, erros
 
 
 def test_alertas_regionais_abrem_no_setor_e_estado_do_link(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/regional.html?setor=agro&uf=TO")
+    pg, erros = _abrir(navegador, servidor, "reforma/alertas-regionais.html?setor=agro&uf=TO")
     expect(pg.locator("#tabsSetor button.tab-ativa")).to_have_text("Agronegócio")
     expect(pg.locator("#tabsUf button.tab-ativa")).to_have_text("Tocantins")
     assert pg.locator("#listaRegional li").count() >= 1
-    pg2, erros2 = _abrir(navegador, servidor, "setores/regional.html?setor=inexistente&uf=XX")  # valor inválido: volta ao padrão
+    pg2, erros2 = _abrir(navegador, servidor, "reforma/alertas-regionais.html?setor=inexistente&uf=XX")  # valor inválido: volta ao padrão
     expect(pg2.locator("#tabsUf button.tab-ativa")).to_have_text("Goiás")
     assert pg2.locator("#listaRegional li").count() >= 1
     assert not erros and not erros2, (erros, erros2)
@@ -446,7 +447,7 @@ def test_painel_reflete_configuracao(navegador, servidor):
 
 
 def test_faixa_de_homologacao_leva_ao_painel(navegador, servidor):
-    pg, _ = _abrir(navegador, servidor, "tributario/index.html")
+    pg, _ = _abrir(navegador, servidor, "consultoria-tributaria.html")
     expect(pg.locator("#faixaHomologacao a[href$='testes/index.html']")).to_be_visible()
 
 
@@ -472,7 +473,7 @@ def test_design_orgatec_trilha(navegador, servidor, vp):
     assert not erros, erros
 
 
-@pytest.mark.parametrize("caminho", ["inicio.html", "tributario/index.html", "reforma/ibs.html", "privacidade.html"])
+@pytest.mark.parametrize("caminho", ["inicio.html", "consultoria-tributaria.html", "reforma/ibs.html", "privacidade.html"])
 def test_seletor_de_cores_do_design_trilha(navegador, servidor, caminho):
     ctx = navegador.new_context(viewport={"width": 375, "height": 812})
     pg = ctx.new_page()
@@ -553,8 +554,8 @@ def test_perguntas_somem_em_producao_sem_revisao(navegador, servidor):
     assert not erros, erros
 
 
-@pytest.mark.parametrize("caminho", ["inicio.html", "tributario/index.html", "reforma/index.html", "reforma/ibs.html",
-                                     "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, CONTATO, "setores/regional.html",
+@pytest.mark.parametrize("caminho", ["inicio.html", "consultoria-tributaria.html", "reforma/index.html", "reforma/ibs.html",
+                                     "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, CONTATO, "reforma/alertas-regionais.html",
                                      "testes/index.html", "privacidade.html", "marca.html", "index.html",
                                      "orgatec-trilha.html", "orgatec-template2.html"])
 def test_css_compilado_e_csp_sem_script_embutido(navegador, servidor, caminho):
@@ -619,7 +620,7 @@ def test_home_curta_no_celular(navegador, servidor):
 
 def test_menu_com_grupos_desktop_e_celular(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "reforma/index.html")
-    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(1)  # Ferramentas
+    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(2)  # Setores, Empresarial, Ferramentas
     grupo.locator("summary").click()
     expect(grupo.locator(".nav-sub a[href$='simulador.html']")).to_be_visible()
     pg.keyboard.press("Escape")
@@ -646,7 +647,7 @@ def test_barra_fixa_do_celular(navegador, servidor):
 
 
 def test_alertas_regionais_em_pagina_propria(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/regional.html", "mobile")
+    pg, erros = _abrir(navegador, servidor, "reforma/alertas-regionais.html", "mobile")
     for uf in ["Goiás", "Tocantins", "Pará"]:
         pg.click(f"#tabsUf button:has-text('{uf}')")
         assert pg.locator("#listaRegional li").count() >= 1, uf
@@ -666,7 +667,7 @@ def test_rodape_dpo_aponta_para_o_contato(navegador, servidor):
 
 
 def test_marcos_do_metodo_na_consultoria(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "tributario/index.html")
+    pg, erros = _abrir(navegador, servidor, "consultoria-tributaria.html")
     pg.locator("[data-marcos]").scroll_into_view_if_needed()
     expect(pg.locator("[data-marcos] .marco.aceso")).to_have_count(4)
     assert not erros, erros
@@ -893,13 +894,13 @@ def test_abertura_botao_fixo_e_producao(navegador, servidor):
     assert not erros and not erros2, erros + erros2
 
 
-# ---------- Janela de Campo (setores/janela-de-campo.html)
+# ---------- Janela de Campo (rural/janela-de-campo.html)
 
 @pytest.mark.parametrize("vp", ["mobile", "desktop"])
 def test_janela_de_campo(navegador, servidor, vp):
     # sem o boletim automático publicado, a página usa o manual mais recente (28/10/2026, já vencido)
     sem_auto = {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=sem_auto)
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", vp, rotas=sem_auto)
     pg.wait_for_selector(".campo-celula", state="attached")
     regioes = pg.evaluate("window.Orgatec.boletinsCampo[0].regioes.length")
     assert pg.locator(".campo-celula").count() == regioes * 5
@@ -991,7 +992,7 @@ def test_auditoria_rural_laudo_de_exemplo_ficticio(navegador, servidor, vp):
 
 def test_menu_tem_solucoes_e_atalhos_levam_as_solucoes(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "inicio.html")
-    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(2)  # Setores, Ferramentas, Soluções
+    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(3)  # Setores, Empresarial, Ferramentas, Soluções
     expect(grupo.locator("summary")).to_have_text("Soluções")
     grupo.locator("summary").click()
     expect(grupo.locator(".nav-sub a[href='solucoes/auditoria-rural.html']")).to_be_visible()
@@ -1042,8 +1043,8 @@ def test_menu_com_compliance_e_escritorio_no_rodape(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "inicio.html")  # desktop 1440
     nav = pg.locator("nav[aria-label=Principal]")
     expect(nav.locator("[data-nav-grupo] summary", has_text="Compliance")).to_be_visible()
-    assert nav.locator("a[href='escritorio/index.html']").count() == 0
-    expect(pg.locator("footer a[href='escritorio/index.html']")).to_be_visible()
+    assert nav.locator("a[href='quem-somos.html']").count() == 0
+    expect(pg.locator("footer a[href='quem-somos.html']")).to_be_visible()
     # 1280 px (menor largura com o menu completo): o menu não encosta no logotipo nem nos botões
     pg2 = navegador.new_context(viewport={"width": 1280, "height": 860}).new_page()
     pg2.goto(f"{servidor}/compliance/index.html")
@@ -1056,21 +1057,21 @@ def test_menu_com_compliance_e_escritorio_no_rodape(navegador, servidor):
     assert marca <= inicio_menu, (marca, inicio_menu)  # a linha "Inteligência Tributária" não passa por baixo do menu
     pg3, erros3 = _abrir(navegador, servidor, "inicio.html", "mobile")
     pg3.click("#btnMenu")
-    expect(pg3.locator("#menuMobile a[href='escritorio/index.html']")).to_be_visible()
+    expect(pg3.locator("#menuMobile a[href='quem-somos.html']")).to_be_visible()
     assert not erros and not erros3, erros + erros3
 
 
 @pytest.mark.parametrize("vp", ["mobile", "desktop"])
 def test_item_inicio_no_menu(navegador, servidor, vp):
-    pg, erros = _abrir(navegador, servidor, "tributario/index.html", vp)
+    pg, erros = _abrir(navegador, servidor, "consultoria-tributaria.html", vp)
     if vp == "desktop":
         link = pg.locator("nav[aria-label=Principal] a[title='Início']")
         expect(link).to_be_visible()
-        assert link.get_attribute("href") == "../inicio.html"
+        assert link.get_attribute("href") == "inicio.html"
         assert link.inner_text().strip() == "Início"  # nome acessível, mesmo com só o ícone visível em 1440 px
     else:
         pg.click("#btnMenu")
-        expect(pg.locator("#menuMobile a[href='../inicio.html']").first).to_have_text("Início")
+        expect(pg.locator("#menuMobile a[href='inicio.html']").first).to_have_text("Início")
     pg2, _ = _abrir(navegador, servidor, "inicio.html", vp)
     seletor = "nav[aria-label=Principal] a[title='Início']" if vp == "desktop" else "#menuMobile a[href='inicio.html']"
     assert pg2.locator(seletor).first.get_attribute("aria-current") == "page"
@@ -1198,21 +1199,21 @@ def test_ligacoes_para_o_compliance(navegador, servidor):
     expect(pg.locator("#ferramentas a[href='compliance/termometro.html']")).to_be_visible()
     pg2, erros2 = _abrir(navegador, servidor, "ferramentas/index.html")
     expect(pg2.locator("main a.og-cartao[href='../compliance/termometro.html']")).to_be_visible()
-    pg3, erros3 = _abrir(navegador, servidor, "escritorio/index.html")
-    expect(pg3.locator("main a[href='../compliance/index.html']")).to_be_visible()
+    pg3, erros3 = _abrir(navegador, servidor, "quem-somos.html")
+    expect(pg3.locator("main a[href='compliance/index.html']")).to_be_visible()
     assert not erros and not erros2 and not erros3, erros + erros2 + erros3
 
 
 def test_escritorio_obrigacoes_proprias_e_canal_do_dpo(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "escritorio/index.html", "mobile")
+    pg, erros = _abrir(navegador, servidor, "quem-somos.html", "mobile")
     bloco = pg.locator("[data-obrigacoes-proprias]")
     expect(bloco).to_contain_text("não ocorrência ao CFC até 31 de janeiro")
     expect(bloco).to_contain_text("não emite parecer jurídico")
-    expect(bloco.locator("a[href='../compliance/prevencao-lavagem.html#item-pld-profissionais-contabilidade']")).to_be_visible()
+    expect(bloco.locator("a[href='compliance/prevencao-lavagem.html#item-pld-profissionais-contabilidade']")).to_be_visible()
     expect(pg.locator("[data-dpo] a[href='mailto:dpo@orgatec.io']")).to_be_visible()
     # com o canal desligado em config.js, o endereço some e volta o aviso
     rota = _config_alterada([("dpo: { endereco: 'dpo@orgatec.io', ativo: true }", "dpo: { endereco: 'dpo@orgatec.io', ativo: false }")])
-    pg2, erros2 = _abrir(navegador, servidor, "escritorio/index.html", rotas={"**/assets/js/config.js": rota})
+    pg2, erros2 = _abrir(navegador, servidor, "quem-somos.html", rotas={"**/assets/js/config.js": rota})
     expect(pg2.locator("[data-dpo]")).to_contain_text("canal em ativação")
     assert pg2.locator("[data-dpo] a[href^='mailto:']").count() == 0
     assert not erros and not erros2, erros + erros2
@@ -1255,7 +1256,7 @@ def _rotas_campo(boletim):
 @pytest.mark.parametrize("vp", ["mobile", "desktop"])
 def test_janela_de_campo_automatica(navegador, servidor, vp):
     b = _boletim_automatico()
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=_rotas_campo(b))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", vp, rotas=_rotas_campo(b))
     expect(pg.locator("[data-campo-situacao]")).to_contain_text("Atualizado às")
     expect(pg.locator("[data-campo-situacao]")).not_to_contain_text("vencido")
     if vp == "mobile":
@@ -1284,7 +1285,7 @@ def test_janela_de_campo_automatica(navegador, servidor, vp):
 
 def test_janela_de_campo_animacao_e_movimento_reduzido(navegador, servidor):
     b = _boletim_automatico()
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", rotas=_rotas_campo(b))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", rotas=_rotas_campo(b))
     play = pg.locator("[data-mapa-play]")
     expect(play).to_be_visible()
     play.click()
@@ -1298,7 +1299,7 @@ def test_janela_de_campo_animacao_e_movimento_reduzido(navegador, servidor):
     pg2 = ctx.new_page()
     for padrao, f in _rotas_campo(b).items():
         pg2.route(padrao, f)
-    pg2.goto(f"{servidor}/setores/janela-de-campo.html")
+    pg2.goto(f"{servidor}/rural/janela-de-campo.html")
     pg2.wait_for_selector("[data-mapa-quadro]", state="attached")
     expect(pg2.locator("[data-mapa-play]")).to_be_hidden()  # sem animação automática; o controle de horário continua
     assert not erros, erros
@@ -1309,7 +1310,7 @@ def test_janela_de_campo_desatualizada(navegador, servidor):
     if b["dia"] < __import__("datetime").datetime.now().date().isoformat():
         b = _boletim_automatico(horas_atras=0)  # perto da meia-noite: força só a idade de geração
         b["geradoEm"] = "2000-01-01T05:00-03:00"
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", rotas=_rotas_campo(b))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", rotas=_rotas_campo(b))
     expect(pg.locator("[data-campo-situacao]")).to_contain_text(re.compile("desatualizado|vencido"))
     assert not erros, erros
 
@@ -1383,14 +1384,14 @@ def test_termometro_relatorio_so_na_impressao(navegador, servidor):
 
 
 def test_setor_transporte_aponta_para_o_compliance_do_setor(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/transporte.html")
+    pg, erros = _abrir(navegador, servidor, "empresarial/transporte.html")
     expect(pg.locator("a[data-compliance-setor]")).to_have_attribute("href", "../compliance/publico/transportador.html")
-    pg2, _ = _abrir(navegador, servidor, "setores/agro.html")
+    pg2, _ = _abrir(navegador, servidor, "rural/index.html")
     expect(pg2.locator("a[data-compliance-setor]")).to_have_attribute("href", "../compliance/publico/produtor-rural.html")
     assert not erros, erros
 
 
-# ---------- Cards por atividade na página de cotações e notícias (setores/agro-mercado.html)
+# ---------- Cards por atividade na página de cotações e notícias (rural/cotacoes.html)
 
 # Só no teste: substitui o script do CEPEA por uma tabela marcada como exemplo (nenhum valor real nem inventado no site)
 WIDGET_TESTE = ("document.write('<table class=\"imagenet-widget-tabela\"><tr><td>EXEMPLO DE TESTE</td></tr>"
@@ -1414,7 +1415,7 @@ NOTICIAS_EXEMPLO = {"geradoEm": "2026-11-02T12:40-03:00", "janelaDias": 90, "fon
 def _cards(navegador, servidor, vp="desktop", rotas=None):
     import json
     noticias = {"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=200, content_type="application/json", body=json.dumps(NOTICIAS_EXEMPLO))}
-    pg, erros = _abrir(navegador, servidor, "setores/agro-mercado.html", vp, rotas={**noticias, **(rotas or {})})
+    pg, erros = _abrir(navegador, servidor, "rural/cotacoes.html", vp, rotas={**noticias, **(rotas or {})})
     pg.locator("[data-agro]").scroll_into_view_if_needed()
     return pg, erros
 
@@ -1476,7 +1477,7 @@ def test_csp_so_libera_o_cepea_nas_paginas_de_cotacao(servidor):
     assert cot.status_code == 200
     assert "script-src 'self' https://www.cepea.org.br" in cot.headers["content-security-policy"]
     assert cot.headers["x-frame-options"] == "SAMEORIGIN"
-    pagina = httpx.get(f"{servidor}/setores/janela-de-campo.html")
+    pagina = httpx.get(f"{servidor}/rural/janela-de-campo.html")
     assert "cepea" not in pagina.headers["content-security-policy"]  # no resto do site, só scripts próprios
     assert pagina.headers["x-frame-options"] == "DENY"
 
@@ -1781,24 +1782,24 @@ def test_termometro_camadas_de_prova_e_plano_ics(navegador, servidor):
 
 
 def test_janela_de_campo_sem_os_cards_e_com_caminho_para_o_mercado(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
     assert pg.locator("[data-agro], [data-agro-atividade], iframe").count() == 0
-    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "../rural/cotacoes.html")
     assert pg.evaluate("document.documentElement.scrollWidth") <= 375
     assert not erros, erros
 
 
 def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
-    for caminho in ["setores/agro.html", "setores/janela-de-campo.html", "setores/agro-mercado.html", "setores/regional.html", "setores/transporte.html"]:
+    for caminho in ["rural/index.html", "rural/janela-de-campo.html", "rural/cotacoes.html", "reforma/alertas-regionais.html", "empresarial/transporte.html"]:
         pg, erros = _abrir(navegador, servidor, caminho)
-        expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../setores/agro-mercado.html']").first).to_be_visible()
+        expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../rural/cotacoes.html']").first).to_be_visible()
         assert not erros, (caminho, erros)
 
 
 # ---------- Janela de Campo: nova ordem (Fase 3 do plano de modernização do agro)
 
 def test_janela_primeira_decisao_na_primeira_tela_do_celular(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
     pg.wait_for_selector(".campo-op")
     assert pg.locator(".campo-op").count() == 5
     topo = pg.evaluate("document.querySelector('.campo-op').getBoundingClientRect().top + scrollY")
@@ -1815,7 +1816,7 @@ def test_janela_primeira_decisao_na_primeira_tela_do_celular(navegador, servidor
 
 def test_janela_abas_com_teclado_e_satelite_sob_demanda(navegador, servidor):
     b = _boletim_automatico()
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
     pg.wait_for_selector(".campo-op")
     assert pg.locator("[data-aba]").evaluate_all("els => els.map(e => e.getAttribute('data-aba'))") == ["horas", "semana", "satelite", "como"]
     expect(pg.locator("[data-aba=horas]")).to_have_attribute("aria-selected", "true")
@@ -1837,7 +1838,7 @@ def test_janela_abas_com_teclado_e_satelite_sob_demanda(navegador, servidor):
 
 def test_janela_desktop_duas_colunas_com_satelite_sempre_a_vista(navegador, servidor):
     b = _boletim_automatico()
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
     pg.wait_for_selector(".campo-op")
     expect(pg.locator("[data-painel=satelite]")).to_be_visible()
     expect(pg.locator("[data-aba=satelite]")).to_be_hidden()
@@ -1853,7 +1854,7 @@ def test_janela_avisa_polo_sem_previsao_e_mantem_um_polo_escolhido(navegador, se
     b = _boletim_automatico()
     ausente = b["polos"].pop()
     b["semDados"] = [{"id": ausente["id"], "nome": ausente["nome"], "uf": ausente["uf"], "regiao": ausente["regiao"]}]
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
     pg.wait_for_selector(".campo-op")
     expect(pg.locator("[data-campo-situacao]")).to_contain_text("Sem previsão neste horário: " + ausente["nome"])
     pg.click(f".campo-aba[data-r={ausente['regiao']}]")
@@ -1865,14 +1866,14 @@ def test_janela_avisa_polo_sem_previsao_e_mantem_um_polo_escolhido(navegador, se
 
 
 def test_janela_minha_atividade_leva_ao_card_e_fica_lembrada(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", rotas=_rotas_campo(_boletim_automatico()))
-    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html")
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", rotas=_rotas_campo(_boletim_automatico()))
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "../rural/cotacoes.html")
     pg.select_option("[data-minha-atividade]", "soja")
-    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "../rural/cotacoes.html#agro-soja")
     pg.reload()
     pg.wait_for_load_state("load")
     expect(pg.locator("[data-minha-atividade]")).to_have_value("soja")
-    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "agro-mercado.html#agro-soja")
+    expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "../rural/cotacoes.html#agro-soja")
     assert not erros, erros
 
 
@@ -1880,7 +1881,7 @@ def test_janela_minha_atividade_leva_ao_card_e_fica_lembrada(navegador, servidor
 
 def _agro(navegador, servidor, vp="desktop", boletim=None, rotas=None):
     todas = _rotas_campo(boletim) if boletim is not None else {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
-    return _abrir(navegador, servidor, "setores/agro.html", vp, rotas={**todas, **(rotas or {})})
+    return _abrir(navegador, servidor, "rural/index.html", vp, rotas={**todas, **(rotas or {})})
 
 
 def test_agro_resumo_do_dia_na_regiao_escolhida(navegador, servidor):
@@ -1898,7 +1899,7 @@ def test_agro_resumo_do_dia_na_regiao_escolhida(navegador, servidor):
     pg2 = pg.context.new_page()
     for padrao, f in _rotas_campo(b).items():
         pg2.route(padrao, f)
-    pg2.goto(f"{servidor}/setores/janela-de-campo.html")
+    pg2.goto(f"{servidor}/rural/janela-de-campo.html")
     expect(pg2.locator("#campoRegiao")).to_have_text(alvo["nome"])
     assert not erros, erros
 
@@ -1908,7 +1909,7 @@ def test_agro_resumo_do_dia_sem_boletim_valido_fica_so_o_link(navegador, servido
         pg, erros = _agro(navegador, servidor, boletim=boletim)
         pg.wait_for_timeout(800)
         assert pg.locator("[data-agro-hoje-lista]").count() == 0  # nenhum número sem boletim vigente
-        expect(pg.locator("a[data-agro-hoje-link]")).to_have_attribute("href", "janela-de-campo.html")
+        expect(pg.locator("a[data-agro-hoje-link]")).to_have_attribute("href", "../rural/janela-de-campo.html")
         assert not [e for e in erros if "404" not in e], erros
 
 
@@ -1964,7 +1965,7 @@ def _png(rota):
 def _satelite(navegador, servidor, vp="desktop", gibs=_png):
     b = _boletim_automatico()
     rotas = {**_rotas_campo(b), GIBS: gibs}
-    pg, erros = _abrir(navegador, servidor, "setores/janela-de-campo.html", vp, rotas=rotas)
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", vp, rotas=rotas)
     pg.wait_for_selector(".campo-op")
     if vp == "mobile":
         pg.click("[data-aba=satelite]")
@@ -2042,7 +2043,7 @@ def test_satelite_aviso_claro_quando_a_nasa_nao_responde_e_tentar_de_novo(navega
 def test_satelite_aviso_de_imagem_parcial(navegador, servidor):
     import re as _re
     # o quadrado do canto do recorte (não o central, que a sondagem usa) falha na primeira e na segunda tentativa
-    pg0, _ = _abrir(navegador, servidor, "setores/janela-de-campo.html", "desktop", rotas=_rotas_campo(_boletim_automatico()))
+    pg0, _ = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=_rotas_campo(_boletim_automatico()))
     tx, ty = pg0.evaluate("Orgatec.campoMapa.TILES[0]")
     pg0.close()
 
@@ -2067,7 +2068,7 @@ def test_satelite_so_carrega_quando_aparece_na_tela(navegador, servidor):
     pg.on("request", lambda r: pedidas.append(r.url) if "gibs.earthdata.nasa.gov" in r.url else None)
     for padrao, f in {**_rotas_campo(b), GIBS: _png}.items():
         pg.route(padrao, f)
-    pg.goto(f"{servidor}/setores/janela-de-campo.html")
+    pg.goto(f"{servidor}/rural/janela-de-campo.html")
     pg.wait_for_selector(".campo-op")
     pg.wait_for_timeout(800)
     assert pg.locator(".mapa-satelite").count() == 0 and not pedidas
@@ -2082,7 +2083,7 @@ def test_satelite_so_carrega_quando_aparece_na_tela(navegador, servidor):
     pm.on("request", lambda r: pedidas_m.append(r.url) if "gibs.earthdata.nasa.gov" in r.url else None)
     for padrao, f in {**_rotas_campo(b), GIBS: _png}.items():
         pm.route(padrao, f)
-    pm.goto(f"{servidor}/setores/janela-de-campo.html")
+    pm.goto(f"{servidor}/rural/janela-de-campo.html")
     pm.wait_for_selector(".campo-op")
     pm.wait_for_timeout(800)
     assert not pedidas_m
@@ -2121,9 +2122,80 @@ def test_cards_creditos_com_portais_termos_e_fontes_oficiais_fixas(navegador, se
 
 
 def test_cards_sem_o_arquivo_de_noticias_mantem_o_aviso_e_as_fontes_oficiais(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/agro-mercado.html", "desktop",
+    pg, erros = _abrir(navegador, servidor, "rural/cotacoes.html", "desktop",
                        rotas={"**/dados/agro/noticias.json": lambda rota: rota.fulfill(status=404, body=""), **CEPEA_EXEMPLO})
     pg.locator("[data-agro]").scroll_into_view_if_needed()
     expect(pg.locator("[data-agro-noticias]").first).to_contain_text("Notícias indisponíveis agora")
     assert pg.locator("[data-agro-oficiais] a").count() == 4
     expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")  # leite segue sem cotação
+
+
+def test_area_empresarial_hub_e_lucro_real(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "empresarial/index.html")
+    for href in ("../empresarial/transporte.html", "../empresarial/lucro-real.html", "../reforma/simples-hibrido.html", "../compliance/publicos.html"):
+        expect(pg.locator(f"main a.og-cartao[href='{href}']")).to_be_visible()
+    pg2, erros2 = _abrir(navegador, servidor, "empresarial/lucro-real.html")
+    expect(pg2.locator("[data-itens] .og-item, [data-itens] details").first).to_be_visible()  # itens da reforma com destino empresarial-lucro-real
+    expect(pg2.locator("#item-cbs-2027")).to_have_count(1)
+    assert not erros and not erros2, erros + erros2
+
+
+def test_transporte_mostra_as_obrigacoes_do_transportador_e_sem_link_de_alertas(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "empresarial/transporte.html")
+    expect(pg.locator("#obrigacoes")).to_be_visible()
+    expect(pg.locator("#obrigacoes .lista-itens > *").first).to_be_visible()  # itens do transportador (RNTRC, CIOT, piso, vale-pedágio)
+    expect(pg.locator("[data-subnav-setores] a[href$='alertas-regionais.html']")).to_have_count(0)
+    assert not erros, erros
+
+
+def test_janela_empresarial_marca_atrasado_e_indisponivel(navegador, servidor):
+    janela = {"geradoEm": "2026-01-01T05:00-03:00", "proximaAtualizacao": "hoje às 11h", "aviso": "Não substitui a SEFAZ, a ANTT nem o contador.",
+              "perfis": [], "cartoes": [
+                  {"id": "E1", "modulo": "Prazos", "fonte": "Calendário", "url": "", "estado": "ok", "validadeHoras": 36, "coletadoEm": "2026-01-01T05:00-03:00",
+                   "dados": {"porPerfil": {"real-GO": []}}},
+                  {"id": "E2", "modulo": "Selic", "fonte": "BCB", "url": "", "estado": "indisponivel", "validadeHoras": 36, "coletadoEm": None, "motivo": "termos não conferidos"}]}
+    pg, erros = _abrir(navegador, servidor, "empresarial/janela.html",
+                       rotas={"**/dados/empresarial/atual.json": lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(janela))})
+    expect(pg.locator("[data-cartao=E1][data-estado=atrasado]")).to_be_visible()
+    expect(pg.locator("[data-cartao=E2][data-estado=indisponivel]")).to_contain_text("termos não conferidos")
+    expect(pg.locator("[data-cartao=T1]")).to_have_count(0)
+    pg.select_option("#jAtividade", "transportador")
+    assert not [e for e in erros if "atual.json" not in e], erros
+
+
+def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, servidor):
+    """Login Firebase na Central: a tela pede e-mail e senha, entra no Google (simulado) e passa a enviar Authorization: Bearer."""
+    vistos = {"auth": [], "google": 0}
+
+    def entrada(rota):
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps({"modo": "firebase", "chave_web": "CHAVE-WEB-TESTE"}))
+
+    def contexto(rota):
+        cab = rota.request.headers.get("authorization")
+        vistos["auth"].append(cab)
+        if cab == "Bearer ID-TOKEN-TESTE":
+            rota.fulfill(status=200, content_type="application/json", body=json.dumps(
+                {"papel": "leitura", "ambiente": "producao", "entrada": "firebase", "flags": {"provedores_reais": [], "sensores_ativo": False}}))
+        else:
+            rota.fulfill(status=403, content_type="application/json", body=json.dumps({"detail": "acesso negado"}))
+
+    def google(rota):
+        vistos["google"] += 1
+        assert "CHAVE-WEB-TESTE" in rota.request.url
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps(
+            {"idToken": "ID-TOKEN-TESTE", "refreshToken": "R", "expiresIn": "3600"}))
+
+    def vazio(rota):
+        rota.fulfill(status=200, content_type="application/json", body="[]")
+
+    pg, erros = _abrir(navegador, servidor, "transporte/portal.html", rotas={
+        "**/api/transporte/entrada": entrada, "**/api/transporte/contexto": contexto, "**/api/transporte/viagens*": vazio,
+        "https://identitytoolkit.googleapis.com/**": google})
+    form = pg.locator("#dev form.entrar")
+    expect(form).to_be_visible()
+    form.locator("input[name=email]").fill("gestor@cliente.com")
+    form.locator("input[name=senha]").fill("senha-de-teste")
+    form.locator("button[type=submit]").click()
+    expect(pg.locator("#dev")).to_be_hidden()
+    assert vistos["google"] == 1 and vistos["auth"][-1] == "Bearer ID-TOKEN-TESTE" and vistos["auth"][0] is None
+    assert not erros, erros

@@ -54,6 +54,19 @@ def servico_valido(nome: str | None) -> str | None:
     return nome
 
 
+# Páginas movidas: 301 direto para o destino final, sem cadeia (Fase 2, docs/ideias/reestruturacao-transporte-fase2.md).
+# R1: o site segue com .html (cleanUrls desligado); por isso só a forma com .html existe.
+REDIRECIONAMENTOS = [
+    ("/setores/transporte.html", "/empresarial/transporte.html"),
+    ("/setores/agro.html", "/rural/index.html"),
+    ("/setores/janela-de-campo.html", "/rural/janela-de-campo.html"),
+    ("/setores/agro-mercado.html", "/rural/cotacoes.html"),
+    ("/setores/regional.html", "/reforma/alertas-regionais.html"),  # o navegador mantém ?setor= e ?uf= no 301
+    ("/tributario/index.html", "/consultoria-tributaria.html"),
+    ("/escritorio/index.html", "/quem-somos.html"),
+]
+
+
 def csp(api: str | None) -> str:
     """Mesma política do backend (backend/app.py); uma API em outro domínio entra em connect-src."""
     return "; ".join([
@@ -68,6 +81,14 @@ def csp(api: str | None) -> str:
         "form-action 'self'",
         "object-src 'none'",
     ])
+
+
+GOOGLE_AUTH = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"  # Firebase Authentication: entrar e renovar o token da Central de Viagem
+
+
+def csp_transporte(api: str | None) -> str:
+    """Só as páginas de /transporte/ falam com o Google (login); o resto do site mantém connect-src 'self'."""
+    return csp(api).replace("connect-src 'self'", f"connect-src 'self' {GOOGLE_AUTH}")
 
 
 CSP_WIDGET = "; ".join([  # mesma do backend (backend/app.py): widget do CEPEA em /cotacoes/, dentro de iframe isolado
@@ -100,6 +121,7 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
         "headers": [
             {"source": "**", "headers": seguranca},
             # Depois da regra geral, para valer por cima dela nas páginas do widget do CEPEA
+            {"source": "/transporte/**", "headers": [{"key": "Content-Security-Policy", "value": csp_transporte(api)}]},
             {"source": "/cotacoes/**", "headers": [{"key": "Content-Security-Policy", "value": CSP_WIDGET},
                                                   {"key": "X-Frame-Options", "value": "SAMEORIGIN"}]},
             # Arquivos gerados não levam hash no nome: na homologação, o navegador sempre revalida.
@@ -110,12 +132,13 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
             {"source": "/dados/**", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
         ],
     }
+    hosting["redirects"] = [{"source": de, "destination": para, "type": 301} for de, para in REDIRECIONAMENTOS]
     if cloud_run:
         hosting["rewrites"] = [{"source": "/api/**", "run": {"serviceId": cloud_run, "region": regiao}}]
     return {
         "hosting": hosting,
         # Regras: nenhum acesso pelo navegador (só a API, com conta de serviço)
-        "firestore": {"rules": "firestore.rules"},
+        "firestore": {"rules": "firestore.rules", "indexes": "firestore.indexes.json"},
         "emulators": {"firestore": {"port": 8085}, "ui": {"enabled": False}, "singleProjectMode": True},
     }
 

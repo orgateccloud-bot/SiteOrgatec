@@ -102,6 +102,8 @@ CSP = "; ".join([
     "form-action 'self'",
     "object-src 'none'",
 ])
+# Páginas da Central de Viagem (/transporte/): além do próprio site, falam com o Firebase Authentication para entrar e renovar o token.
+CSP_TRANSPORTE = CSP.replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
 # Widget oficial do CEPEA (cotações dos cards Orgatec Audi Agro): só em /cotacoes/, aberto pelos cards num iframe com
 # sandbox="allow-scripts" (origem opaca). É a única página que aceita script de fora, e só o do CEPEA.
 CSP_WIDGET = "; ".join([
@@ -135,6 +137,8 @@ async def cabecalhos_seguranca(request: Request, call_next):
     if request.url.path.startswith("/cotacoes/"):
         h["Content-Security-Policy"] = CSP_WIDGET
         h["X-Frame-Options"] = "SAMEORIGIN"
+    if request.url.path.startswith("/transporte/"):
+        h["Content-Security-Policy"] = CSP_TRANSPORTE
     h.setdefault("Content-Security-Policy", CSP)
     h.setdefault("X-Content-Type-Options", "nosniff")
     h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -275,6 +279,12 @@ def descadastrar(token: str) -> str:
 def criar_contato(dados: ContatoIn, ip: str = Depends(limitar)) -> dict:
     return repo.inserir("contato", "novo", dados.model_dump(exclude={"website"}), ip)
 
+
+# Central de Viagem (docs/ideias/reestruturacao-transporte.md, Fase 5): só existe com ORGATEC_TRANSPORTE=1 (padrão: desligada).
+# Antes do mount do site, para as rotas /api/transporte e /api/telemetria valerem.
+from .transporte import api as _transporte  # noqa: E402
+
+_transporte.instalar(app, limite_ip=limitar)
 
 if os.environ.get("ORGATEC_SERVIR_SITE", "1") == "1":
     app.mount("/", StaticFiles(directory=RAIZ / "site", html=True), name="site")

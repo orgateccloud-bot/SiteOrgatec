@@ -134,7 +134,7 @@ def frente(pilar: str, arquivo: str, titulo_pagina: str, descricao: str, rotulo:
 
 def frentes() -> None:
     frente("tributario", "conformidade-tributaria.html", "Conformidade tributária: IBS, CBS e programas da Receita",
-           "Conformidade tributária com a ORGATEC: Programa Nacional de Conformidade de 2026, documentos fiscais com IBS e CBS e programas de conformidade da Receita Federal, com a fonte oficial.",
+           "Conformidade tributária: programa nacional de 2026, documentos fiscais com IBS e CBS e programas da Receita Federal, com a fonte oficial.",
            "conformidade tributária", 'A empresa em dia com as <mark class="marca-texto">regras novas</mark> de IBS e CBS.',
            "Programa Nacional de Conformidade de 2026, documentos fiscais com os campos de IBS e CBS e programas de conformidade da Receita: o que vale, para quem e até quando, com a fonte oficial.",
            [("Lucro real", "Obrigações acessórias de IBS e CBS já em 2026 e a escrituração que sustenta os créditos."),
@@ -196,7 +196,7 @@ def publicos() -> None:
         gp.faixa_solucao("Não achou o seu caso?", "Em uma conversa, o escritório identifica o que vale para a sua empresa ou atividade.", MSG, "Falar com o escritório"),
     ])
     gp.pagina("compliance/publicos.html", "Compliance por público",
-              "O que cada público atingido pela reforma tributária precisa cumprir: transportador, produtor rural, MEI, autônomo, Simples Nacional, serviços, comércio e indústria e pessoa física com imóveis.",
+              "O que cada público da reforma tributária precisa cumprir: transportador, produtor rural, MEI, autônomo, Simples, serviços, comércio, indústria e imóveis.",
               "compliance", "captação", corpo, extra=SCRIPTS, trilha=[("Compliance", "compliance/index.html"), ("Por público", None)])
 
 
@@ -260,7 +260,7 @@ CALC_IMOVEIS = f"""                <form id="formImoveisPF" class="og-cartao gri
 
 def publicos_paginas() -> None:
     publico("transportador", "Compliance do transportador de cargas",
-            "O que o transportador de cargas e quem contrata frete precisam cumprir: RNTRC, CIOT, piso mínimo de frete, vale-pedágio, jornada e exame toxicológico do motorista e o IBS e a CBS do frete, com a fonte oficial.",
+            "O que o transportador e quem contrata frete precisam cumprir: RNTRC, CIOT, piso de frete, vale-pedágio, jornada e IBS e CBS do frete, com a fonte oficial.",
             'O frete em dia com a <mark class="marca-texto">ANTT</mark> e com a reforma.',
             "RNTRC revalidado todo ano, CIOT antes de cada operação, piso mínimo de frete, vale-pedágio, jornada do motorista e os campos de IBS e CBS no CT-e e no MDF-e: o que vale para quem transporta e para quem contrata, com a fonte oficial.",
             [("Empresa de transporte (ETC)", "Pessoa jurídica que tem no transporte rodoviário de cargas a sua atividade principal."),
@@ -271,11 +271,11 @@ def publicos_paginas() -> None:
              ("Conferência", "Fretes contra o piso da ANTT, pagamentos ao autônomo, vale-pedágio no DT-e e IBS e CBS nos documentos fiscais."),
              ("Rotina", "Prazos de revalidação, de exames e de atualização dos pisos acompanhados no calendário."),
              REVISAO_JURIDICA],
-            [gp.cartao("Setor", "Reforma tributária no transporte", "IBS e CBS no frete, crédito do autônomo e combustíveis.", "{p}setores/transporte.html"),
+            [gp.cartao("Setor", "Reforma tributária no transporte", "IBS e CBS no frete, crédito do autônomo e combustíveis.", "{p}empresarial/transporte.html"),
              gp.C_CALENDARIO,
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do transportador, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-transportador")])
     publico("produtor", "Compliance do produtor rural",
-            "O que o produtor rural precisa cumprir: CAR, ITR, Funrural, NR-31, CNPJ e documento fiscal em 2027, IBS e CBS do produtor e o regulamento europeu contra o desmatamento, com a fonte oficial.",
+            "O que o produtor rural precisa cumprir: CAR, ITR, Funrural, NR-31, documento fiscal em 2027, IBS e CBS e regulamento europeu do desmatamento, com a fonte.",
             'A fazenda em dia com o <mark class="marca-texto">fisco</mark>, o crédito e o comprador.',
             "CAR e ITR em dia para não travar o crédito rural, a escolha do Funrural, a segurança no trabalho do campo, o CNPJ do produtor pessoa física em 2027, o IBS e a CBS na venda da produção e as exigências da União Europeia para soja, gado, café e madeira, com a fonte oficial.",
             [("Produtor pessoa física", "Com ou sem empregados; CNPJ e documento fiscal obrigatórios a partir de 01/01/2027."),
@@ -286,11 +286,11 @@ def publicos_paginas() -> None:
              ("Conferência", "Notas e livro-caixa (LCDPR) conferidos entre si, com os sistemas do escritório, e o enquadramento em IBS e CBS."),
              ("Rotina", "Prazos do ITR, da opção do Funrural e do CNPJ de 2027 acompanhados no calendário."),
              REVISAO_JURIDICA],
-            [gp.cartao("Setor", "Reforma tributária no agro", "Produtor não contribuinte, redução de 60%, diferimento e crédito presumido.", "{p}setores/agro.html"),
+            [gp.cartao("Setor", "Reforma tributária no agro", "Produtor não contribuinte, redução de 60%, diferimento e crédito presumido.", "{p}rural/index.html"),
              gp.cartao("Serviço do escritório", "Auditoria forense rural (NFA-e)", "As notas do produtor rural conferidas uma a uma, com laudo.", "{p}solucoes/auditoria-rural.html"),
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do produtor rural, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-produtor")])
     publico("mei", "Compliance do MEI",
-            "O que o MEI precisa cumprir com a reforma: limite de R$ 110 mil em 2027 e R$ 140 mil em 2028, IBS e CBS no valor fixo mensal, remissão de débitos e quando a pessoa física vira contribuinte, com a fonte oficial.",
+            "O que o MEI precisa cumprir na reforma: limite de R$ 110 mil em 2027 e R$ 140 mil em 2028, IBS e CBS no valor fixo mensal e remissão, com a fonte oficial.",
             'O MEI em dia com o <mark class="marca-texto">novo limite</mark> e com o IBS e a CBS.',
             "O limite do MEI muda em 2027 e em 2028, o IBS e a CBS entram no valor fixo mensal e há perdão de débitos da contribuição até 13/10/2026, com contrapartida. Veja o que vale, desde quando e o que fazer, com a fonte oficial.",
             [("MEI que cresce", "Receita perto do limite: em 2027 ele é de R$ 110 mil; a partir de 2028, R$ 140 mil."),
@@ -305,7 +305,7 @@ def publicos_paginas() -> None:
              gp.C_CALENDARIO,
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do MEI, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-mei")])
     publico("autonomo", "Compliance do autônomo e do profissional liberal",
-            "Quando o autônomo e o profissional liberal pessoa física passam a ser contribuintes de IBS e CBS: habitualidade, nanoempreendedor, regra de 25% para motorista e entregador de aplicativo e a redução de 30% das profissões com conselho, com a fonte oficial.",
+            "Quando o autônomo e o profissional liberal passam a ser contribuintes de IBS e CBS: habitualidade, nanoempreendedor e redução de 30%, com a fonte oficial.",
             'Saber se a reforma <mark class="marca-texto">alcança</mark> você como pessoa física.',
             "Quem trabalha por conta própria pode passar a ser contribuinte de IBS e CBS. A lei usa a habitualidade, a atividade profissional e um limite de receita. Veja quando isso acontece, a regra dos aplicativos e a redução de 30% das profissões fiscalizadas por conselho, com a fonte oficial.",
             [("Profissional liberal", "Contador, advogado, engenheiro, arquiteto e outras profissões com conselho: redução de 30% ligada à habilitação."),
@@ -320,7 +320,7 @@ def publicos_paginas() -> None:
              gp.cartao("Ferramenta", "Simulador de impacto", "IBS e CBS da atividade, com a redução das profissões.", "{p}ferramentas/simulador.html"),
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do autônomo, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-autonomo")])
     publico("simples", "Compliance da empresa do Simples Nacional",
-            "O que a empresa do Simples Nacional precisa cumprir com a reforma: IBS e CBS dentro ou fora do DAS, janelas de setembro e março, documentos fiscais em 2027 e a vedação da locação de imóveis próprios, com a fonte oficial.",
+            "O que a empresa do Simples Nacional precisa cumprir na reforma: IBS e CBS dentro ou fora do DAS, janelas de setembro e março e documentos fiscais.",
             'Simples Nacional: IBS e CBS <mark class="marca-texto">dentro ou fora</mark> do DAS.',
             "A empresa do Simples pode continuar pagando IBS e CBS no DAS ou apurá-los por fora, no regime regular, escolhendo a cada semestre. Veja as janelas de opção, o que muda nos documentos fiscais em 2027 e quem não pode ficar no Simples, com a fonte oficial.",
             [("Quem vende para empresas", "O cliente do regime regular só aproveita, como crédito, o IBS e a CBS cobrados no Simples; por fora, o crédito é integral."),
@@ -335,7 +335,7 @@ def publicos_paginas() -> None:
              gp.C_CALENDARIO,
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do Simples, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-simples")])
     publico("comercio", "Compliance do comércio e da indústria",
-            "O que o comércio atacadista e a indústria precisam cumprir com a reforma: crédito amplo de IBS e CBS, estoque de 2027, IPI, Imposto Seletivo, documentos fiscais, saldos de ICMS e o programa de conformidade de 2026, com a fonte oficial.",
+            "O que o comércio atacadista e a indústria precisam cumprir na reforma: crédito de IBS e CBS, estoque, IPI, Imposto Seletivo e ICMS, com a fonte oficial.",
             'Crédito, estoque e ICMS: a <mark class="marca-texto">transição</mark> sem perder dinheiro.',
             "Crédito amplo de IBS e CBS, crédito presumido sobre o estoque de 01/01/2027, IPI com alíquota zero, Imposto Seletivo, documentos fiscais e os saldos credores de ICMS que só serão compensados se estiverem homologados. Veja o que vale e desde quando, com a fonte oficial.",
             [("Comércio atacadista", "Crédito amplo nas compras e o estoque de 01/01/2027 com crédito presumido de CBS."),
@@ -346,11 +346,11 @@ def publicos_paginas() -> None:
              ("Conformidade", "Documentos fiscais com IBS e CBS e as inconsistências do programa de 2026 corrigidas."),
              ("Transição", "Plano ano a ano até 2033, com o efeito no preço e no caixa."),
              REVISAO_JURIDICA],
-            [gp.cartao("Setor", "Alertas regionais", "Comércio atacadista e indústria em Goiás, Tocantins e Pará.", "{p}setores/regional.html"),
+            [gp.cartao("Setor", "Alertas regionais", "Comércio atacadista e indústria em Goiás, Tocantins e Pará.", "{p}reforma/alertas-regionais.html"),
              gp.cartao("Ferramenta", "Simulador de impacto", "Comércio atacadista e indústria com IBS e CBS.", "{p}ferramentas/simulador.html"),
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do comércio e da indústria, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-comercio")])
     publico("servicos", "Compliance do prestador de serviço",
-            "O que o prestador de serviço no lucro presumido ou real precisa cumprir com a reforma: crédito amplo, reduções de 60% para saúde e educação e de 30% para profissões com conselho, split payment, ISS até 2032 e o programa de conformidade de 2026, com a fonte oficial.",
+            "O que o prestador de serviço no lucro presumido ou real precisa cumprir na reforma: crédito, reduções setoriais, split payment e ISS até 2032, com a fonte.",
             'Serviços: o fim do ISS e as <mark class="marca-texto">reduções</mark> que dependem de enquadramento.',
             "O ISS diminui de 2029 a 2032 e acaba em 2033; o IBS e a CBS chegam com crédito amplo e com reduções de 60% para os serviços de saúde e educação dos anexos e de 30% para as profissões fiscalizadas por conselho. Veja o que vale e o que conferir, com a fonte oficial.",
             [("Saúde e educação", "Redução de 60% só para os serviços listados nos anexos, com a classificação na NBS."),
@@ -365,7 +365,7 @@ def publicos_paginas() -> None:
              gp.cartao("Ferramenta", "Simulador de impacto", "Serviços, saúde, educação e profissões com IBS e CBS.", "{p}ferramentas/simulador.html"),
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do prestador de serviço, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-servicos")])
     publico("imoveis", "Compliance da pessoa física com imóveis",
-            "Quando quem aluga ou vende imóveis como pessoa física passa a ser contribuinte de IBS e CBS: limites de receita e de imóveis, locação por temporada, reduções de 50% e 70% e redutores sociais, com a fonte oficial e uma calculadora de enquadramento.",
+            "Quando quem aluga ou vende imóveis como pessoa física vira contribuinte de IBS e CBS: limites, temporada e reduções, com fonte oficial e calculadora.",
             'Aluguel e venda de imóveis: quando a pessoa física <mark class="marca-texto">entra</mark> no IBS e na CBS.',
             "Quem aluga mais de 3 imóveis com receita acima de R$ 240 mil no ano, ou vende imóveis com frequência, passa a ser contribuinte de IBS e CBS mesmo como pessoa física. Veja os limites, as reduções de 50% e 70%, os redutores sociais e faça a conta na calculadora, com a fonte oficial.",
             [("Quem vive de aluguel", "Mais de 3 imóveis alugados e receita acima de R$ 240 mil no ano anterior."),
@@ -411,7 +411,7 @@ def termometro() -> None:
         </section>""",
     ])
     gp.pagina("compliance/termometro.html", "Termômetro de conformidade",
-              "Termômetro de conformidade da ORGATEC: perguntas sobre conformidade tributária, prevenção à lavagem de dinheiro, LGPD e integridade, com a fonte legal de cada uma. Roda só no seu navegador.",
+              "Termômetro de conformidade: perguntas sobre tributos, lavagem de dinheiro, LGPD e integridade, cada uma com a fonte legal. Roda só no seu navegador.",
               "compliance", "captação", corpo, extra=["compliance-itens.js", "calendario.js", "termometro.js", "compliance.js"], barra=False,
               trilha=[("Compliance", "compliance/index.html"), ("Termômetro", None)])
 

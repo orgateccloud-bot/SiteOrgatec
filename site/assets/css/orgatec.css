@@ -190,7 +190,7 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 .carrossel-botao{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
 .carrossel-botao:hover{border-color:var(--brand);color:var(--brand)}
 .carrossel-botao:disabled{opacity:.4;cursor:default}
-/* Janela de Campo (setores/janela-de-campo.html, campo.js): três estados com cor, ícone e texto.
+/* Janela de Campo (rural/janela-de-campo.html, campo.js): três estados com cor, ícone e texto.
    Sem verde/vermelho próprios: o verde é reservado ao WhatsApp; "evitar" usa o tom de aviso cheio. */
 .campo-selo{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap;border:1px solid transparent}
 .campo-selo i{font-style:normal;font-family:var(--f-mono);width:1.1em;text-align:center}
