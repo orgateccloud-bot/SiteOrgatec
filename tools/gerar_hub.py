@@ -202,7 +202,7 @@ ARTIGOS = [
         "arquivo": "simples-hibrido.html",
         "selo": "LC 214/2025, art. 41",
         "titulo": "Simples Híbrido: IBS e CBS fora do DAS",
-        "descricao": "Quando vale para a empresa do Simples Nacional apurar IBS e CBS no regime regular (LC 214/2025, art. 41): crédito ao cliente, janelas de opção em setembro e março e riscos.",
+        "descricao": "Quando vale ao Simples Nacional apurar IBS e CBS no regime regular (LC 214/2025, art. 41): crédito ao cliente, janelas de opção em setembro e março e riscos.",
         "fontes": "lc214_art41,lc214_credito_simples,cf_146_simples,lc123_sublimite,cgsn_opcao",
         "corpo": f"""
             <p>"Simples Híbrido" é o nome dado no mercado à faculdade que a LC nº 214/2025 dá ao optante do Simples Nacional: continuar recolhendo IRPJ, CSLL, contribuição previdenciária e demais tributos pelo DAS, mas apurar IBS e CBS pelo regime regular, com débitos e créditos. A expressão não está na lei.</p>
@@ -259,7 +259,7 @@ def main() -> None:
             f'            <a href="{o["arquivo"]}" class="text-brandBlue hover:underline">{o["titulo"]}</a>'
             for o in ARTIGOS if o["arquivo"] != p["arquivo"]
         )
-        html = MODELO.format(outros=outros, tema=layout.tema("../"), cabecalho=layout.cabecalho("../", "reforma", "reforma/" + p["arquivo"]), rodape=layout.rodape("../"),
+        html = MODELO.format(outros=outros, tema=layout.tema("../") + layout.breadcrumb([("Reforma", "reforma/index.html"), (p["titulo"], None)], "reforma/" + p["arquivo"]), cabecalho=layout.cabecalho("../", "reforma", "reforma/" + p["arquivo"]), rodape=layout.rodape("../"),
                              trilha=layout.trilha("../", [("Reforma", "reforma/index.html"), (p["titulo"], None)], "max-w-3xl"), barra=layout.barra_movel("../"),
                              scripts=layout.scripts("../", ["artigo.js"]), **p)
         (DESTINO / p["arquivo"]).write_text(html, encoding="utf-8", newline="\n")

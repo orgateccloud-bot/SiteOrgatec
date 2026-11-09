@@ -198,6 +198,35 @@ def rodape(p: str) -> str:
     </footer>"""
 
 
+BASE_URL = "https://orgatec.io/"
+# Primeiro passo da trilha sem endereço próprio: a migalha estruturada precisa de um destino (hoje, a primeira página do grupo).
+MIGALHA_GRUPO = {"Setores": "setores/agro.html", "Consultoria": "tributario/index.html", "Reforma": "reforma/index.html",
+                 "Soluções": "solucoes/index.html", "Compliance": "compliance/index.html", "Ferramentas": "ferramentas/index.html"}
+
+
+def breadcrumb(passos: list, caminho: str) -> str:
+    """JSON-LD BreadcrumbList da trilha: Início e cada passo. A última migalha é a própria página."""
+    import json
+    lista = [{"@type": "ListItem", "position": 1, "name": "Início", "item": BASE_URL + INICIO}]
+    for i, (rotulo, url) in enumerate(passos, start=2):
+        ultimo = i == len(passos) + 1
+        destino = url or (caminho if ultimo else MIGALHA_GRUPO.get(rotulo))
+        item = {"@type": "ListItem", "position": i, "name": rotulo}
+        if destino:
+            item["item"] = BASE_URL + destino
+        lista.append(item)
+    dados = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": lista}
+    return '\n    <script type="application/ld+json">' + json.dumps(dados, ensure_ascii=False) + "</script>"
+
+
+def servico_jsonld(nome: str, descricao: str, caminho: str) -> str:
+    """JSON-LD Service (consultoria e soluções) com o prestador ORGATEC."""
+    import json
+    dados = {"@context": "https://schema.org", "@type": "Service", "name": nome, "description": descricao, "areaServed": "BR",
+             "url": BASE_URL + caminho, "provider": {"@type": "AccountingService", "name": "ORGATEC", "url": BASE_URL.rstrip("/")}}
+    return '\n    <script type="application/ld+json">' + json.dumps(dados, ensure_ascii=False) + "</script>"
+
+
 def trilha(p: str, passos: list, largura: str = "max-w-7xl") -> str:
     """Trilha de navegação das páginas internas: [(rótulo, caminho ou None para a página atual)]."""
     itens = [f'<li><a href="{p}{INICIO}">Início</a></li>'] + [

@@ -23,10 +23,19 @@ WHATS = 'href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank"
 MSG_DIAGNOSTICO = "Olá! Quero agendar um diagnóstico tributário da reforma com a ORGATEC."
 
 
+# Páginas que descrevem um serviço da ORGATEC: ganham JSON-LD Service (nome do serviço)
+SERVICOS_SCHEMA = {"tributario/index.html": "Consultoria tributária e reforma", "solucoes/index.html": "Soluções do escritório",
+                   "solucoes/conciliacao.html": "Conciliação bancária", "solucoes/auditoria-rural.html": "Auditoria forense rural de NFA-e"}
+
+
 def pagina(caminho: str, titulo: str, descricao: str, ativo: str | None, objetivo: str, corpo: str,
            indexar: bool = True, extra: list[str] | None = None, trilha: list | None = None,
            head_extra: str = "", barra: bool = True) -> None:
     p = "../" * caminho.count("/")
+    if trilha:
+        head_extra += layout.breadcrumb(trilha, caminho)
+    if caminho in SERVICOS_SCHEMA:
+        head_extra += layout.servico_jsonld(SERVICOS_SCHEMA[caminho], descricao, caminho)
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -320,10 +329,10 @@ def inicio() -> None:
         faixa_cta("Comece pelo diagnóstico", "Em uma conversa, levantamos regime, setor e fornecedores e indicamos o que precisa de decisão ainda em 2026."),
     ])
     pagina(layout.INICIO, "Contabilidade Consultiva e Inteligência Tributária",
-           "Contabilidade estratégica e transição para a Reforma Tributária (IBS, CBS e Split Payment) em todo o Brasil, com força no eixo GO, TO e PA. Resp. Técnico: Robson Veloso - CRC-TO 002032/O-5 T-GO.",
+           "Contabilidade consultiva e transição para a Reforma Tributária (IBS, CBS e split payment), em GO, TO e PA. Resp. técnico: Robson Veloso, CRC-TO 002032/O-5.",
            None, "captação", corpo, extra=["inicio.js"],
            # Vitrine em vidro azul com a logo em holograma (ideia/vidro-azul): vale só na paleta Azul flutuante escuro
-           head_extra=VIDRO_HEAD)
+           head_extra=VIDRO_HEAD + JSONLD)
 
 
 def tributario() -> None:
@@ -347,7 +356,7 @@ def tributario() -> None:
               '\n                <p class="mt-6"><a href="{p}reforma/index.html" class="og-link">Ver todos os itens na Central da Reforma →</a></p>'),
         faixa_cta("Comece pelo diagnóstico", "Em uma conversa, levantamos regime, setor e fornecedores e indicamos o que precisa de decisão ainda em 2026."),
     ])
-    pagina("tributario/index.html", "Consultoria tributária e reforma", "Consultoria tributária da ORGATEC para a reforma (EC 132/2023, LC 214/2025): diagnóstico, Simples Nacional, créditos de PIS/Cofins, lucro real, produtor rural e split payment.",
+    pagina("tributario/index.html", "Consultoria tributária e reforma", "Consultoria tributária para a reforma (EC 132/2023, LC 214/2025): diagnóstico, Simples, créditos de PIS/Cofins, lucro real, produtor rural e split payment.",
            "tributario", "captação + autoridade", corpo, extra=["inicio.js"], trilha=[("Consultoria", None)])
 
 
@@ -384,7 +393,7 @@ def reforma() -> None:
         secao("Perguntas frequentes", "O que mais perguntam sobre a reforma", '                <div class="faq max-w-3xl" data-faq-itens="reforma"></div>', id_="perguntas"),
         faixa_cta("A reforma muda o preço do seu produto", "Transforme estes itens em decisões: regime, fornecedores, contratos e caixa."),
     ])
-    pagina("reforma/index.html", "Central da Reforma Tributária", "Itens da reforma tributária com fonte oficial, data de consulta e status: em vigor, vigência futura, pendente de regulamentação. Linha do tempo 2026–2033 e notícias.",
+    pagina("reforma/index.html", "Central da Reforma Tributária", "Itens da reforma tributária com fonte oficial, data de consulta e status (em vigor, futuro, pendente). Linha do tempo 2026 a 2033 e notícias.",
            "reforma", "autoridade + retenção", corpo, trilha=[("Reforma", None)])
 
 
@@ -392,7 +401,9 @@ def subnav_setores(ativo: str) -> str:
     botoes = "".join(f'<a href="{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
                      for chave, rot, arq in [("agro", "Agro", "agro.html"), ("transporte", "Transporte", "transporte.html"),
                                              ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html"),
-                                             ("mercado", "Cotações e notícias", "agro-mercado.html")])
+                                             ("mercado", "Cotações e notícias", "agro-mercado.html")]
+                     # Sem alertas do setor, o botão leva a uma página vazia para o transporte (SETORES_REGIONAIS em regras.js)
+                     if not (chave == "regional" and ativo == "transporte"))
     return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores>{botoes}</div>'
 
 
@@ -622,7 +633,7 @@ def janela_de_campo() -> None:
         faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe."),
     ])
     pagina("setores/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
-           "Boletim agrometeorológico da ORGATEC para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
+           "Boletim agrometeorológico para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
            "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
 
 
@@ -1173,7 +1184,7 @@ def abertura() -> None:
     html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-{layout.head("Reforma tributária com base legal", "ORGATEC: consultoria tributária para lucro real, transporte e produtores rurais com LCDPR, com a fonte oficial em cada orientação sobre a reforma (EC 132/2023, LC 214/2025).", "", "index.html", extra=JSONLD)}
+{layout.head("Reforma tributária com base legal", "Consultoria tributária para lucro real, transporte e produtor rural, com a fonte oficial em cada orientação sobre a reforma (EC 132/2023, LC 214/2025).", "", "index.html", extra=JSONLD)}
     <link rel="stylesheet" href="assets/css/abertura.css">
     <script src="assets/js/abertura-intro.js"></script>
 </head>
