@@ -55,3 +55,7 @@ Projeto `orgatec-site`: pool `github-actions`, provedor `github-orgatec` (aceita
 ## Reteste com a main atualizada (08/11/2026)
 
 A `main` passou a ter um rewrite do Hosting para o Cloud Run `orgatec-api` (`firebase.json`). O deploy falhou com 403 (`run.services.get`) até a `boletim-deploy` receber `roles/run.viewer` **só nesse serviço**. Depois disso a prévia `teste-actions` saiu com o boletim de 08/11, 6 boletins de histórico, cartão e a página da Janela de Campo; o `orgatec.io` não mudou. Consequência: se a `main` ganhar outros destinos de rewrite, a conta de serviço precisa de leitura neles também.
+
+## Workflow de teste do deploy guardado como exemplo (09/11/2026)
+
+`boletim-campo-teste-deploy.yml` saiu de `.github/workflows` e está em `boletim-no-actions-teste-deploy.yml.exemplo`: a federação com o Google só aceita a branch `ideia/boletim-actions`, então na `main` o arquivo só poderia falhar na autenticação. Para repetir o teste, devolva o arquivo a `.github/workflows` numa branch que a condição do provedor aceite.
