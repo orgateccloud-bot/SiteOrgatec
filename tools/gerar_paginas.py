@@ -1328,6 +1328,8 @@ def main() -> None:
     paginas_compliance.gerar()
     import paginas_empresarial  # área Empresarial (Fase 3 de docs/ideias/reestruturacao-transporte.md)
     paginas_empresarial.gerar()
+    import paginas_transporte  # Central de Viagem e portal (noindex, fora do menu)
+    paginas_transporte.gerar()
     testes()
 
 

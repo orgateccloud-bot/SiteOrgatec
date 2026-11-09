@@ -1,0 +1,50 @@
+/* Central de Viagem e portal do cliente (site/transporte/). Escopo .ot; cores pelos tokens do design system (orgatec.css), então
+   acompanham o tema claro e escuro. Cores de estado (ok, aviso, erro, simulado) ficam fixas, em etiquetas com fundo e texto próprios. */
+.ot { --ok: #1d6b3a; --ok-f: #e3f4ea; --er: #9b1c1c; --er-f: #fde4e4; --si: #2a4a9b; --si-f: #e8eefc; --av: #7a4b00; --av-f: #fff1d6; --r8: 8px;
+  --cartao: var(--superficie, #fff); --suave: color-mix(in srgb, var(--acao, #003365) 8%, var(--superficie, #fff)); }
+.ot { font-size: 14px; line-height: 1.45; color: var(--tinta); }
+.ot h2 { font-size: 16px; margin: 0 0 8px; color: var(--tinta); } .ot h3 { font-size: 14px; margin: 0; color: var(--tinta); }
+.ot .grade { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 12px; align-items: start; }
+.ot .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--r8); padding: 12px 14px; margin-bottom: 12px; }
+.ot label { display: block; font-size: 12px; color: var(--tinta-suave); margin: 6px 0 2px; font-weight: 600; }
+.ot input, .ot select { width: 100%; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: var(--cartao); color: var(--tinta); font: inherit; }
+.ot input:focus-visible, .ot select:focus-visible, .ot button:focus-visible { outline: 2px solid var(--acao); outline-offset: 1px; }
+.ot .linha { display: flex; gap: 6px; align-items: end; } .ot .linha > * { flex: 1; } .ot .linha .estreito { flex: 0 0 64px; }
+.ot button { background: var(--acao); color: #fff; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; font: inherit; font-weight: 600; }
+.ot button.sec { background: var(--suave); color: var(--acao); } .ot button.mini { padding: 3px 8px; font-size: 12px; }
+.ot button:disabled { opacity: .55; cursor: wait; }
+.ot .acoes { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.ot .msg { padding: 8px 10px; border-radius: 6px; margin: 8px 0; font-size: 13px; }
+.ot .msg.erro { background: var(--er-f); color: var(--er); } .ot .msg.ok { background: var(--ok-f); color: var(--ok); } .ot .msg.aviso { background: var(--av-f); color: var(--av); }
+.ot .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.ot .kpi { background: var(--cartao); border: 1px solid var(--linha); border-top: 3px solid var(--acao); border-radius: var(--r8); padding: 8px 10px; }
+.ot .kpi b { display: block; font-size: 20px; color: var(--tinta); } .ot .kpi span { color: var(--tinta-suave); font-size: 12px; }
+.ot .duas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+.ot .rolagem { overflow-x: auto; }
+.ot table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ot th { text-align: left; color: var(--tinta); background: var(--suave); padding: 6px 8px; font-size: 12px; }
+.ot td { padding: 5px 8px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+.ot td.num, .ot th.num { text-align: right; white-space: nowrap; } .ot tfoot td { font-weight: 700; border-top: 2px solid var(--acao); }
+.ot td input.ajuste { width: 96px; text-align: right; padding: 3px 6px; }
+.ot .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; white-space: nowrap; }
+.ot .t-ok { background: var(--ok-f); color: var(--ok); } .ot .t-simulado { background: var(--si-f); color: var(--si); }
+.ot .t-parametro, .ot .t-aviso { background: var(--av-f); color: var(--av); } .ot .t-erro { background: var(--er-f); color: var(--er); }
+.ot .fonte { color: var(--tinta-suave); font-size: 11.5px; }
+.ot .mapa { width: 100%; height: 320px; background: var(--suave); border: 1px solid var(--linha); border-radius: 6px; }
+.ot .legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--tinta-suave); margin-top: 6px; }
+.ot .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+.ot .tempo { list-style: none; margin: 0; padding: 0; } .ot .tempo li { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--linha); }
+.ot .tempo time { flex: 0 0 104px; color: var(--tinta-suave); font-variant-numeric: tabular-nums; }
+.ot .lista-viagens { list-style: none; margin: 0; padding: 0; } .ot .lista-viagens li { padding: 7px 8px; border-bottom: 1px solid var(--linha); cursor: pointer; border-radius: 6px; }
+.ot .lista-viagens li:hover, .ot .lista-viagens li[aria-selected="true"] { background: var(--suave); }
+.ot .lista-viagens small { display: block; color: var(--tinta-suave); }
+.ot .vazio, .ot .carregando { color: var(--tinta-suave); padding: 18px; text-align: center; }
+.ot .ao-vivo { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ok); }
+.ot .ao-vivo::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); animation: ot-pulso 1.4s infinite; }
+@keyframes ot-pulso { 50% { opacity: .3; } }
+.ot .segredo { font-family: ui-monospace, Consolas, monospace; background: var(--av-f); color: var(--av); padding: 8px; border-radius: 6px; word-break: break-all; }
+.ot details summary { cursor: pointer; font-weight: 700; color: var(--tinta); }
+.ot .dev { font-size: 12px; background: var(--av-f); color: var(--av); border: 1px solid var(--linha); border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ot .dev input, .ot .dev select { width: auto; max-width: 100%; padding: 3px 6px; }
+@media (max-width: 960px) { .ot .grade, .ot .duas { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .ot .ao-vivo::before { animation: none; } }
