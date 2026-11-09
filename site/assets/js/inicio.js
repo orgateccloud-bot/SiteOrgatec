@@ -12,7 +12,7 @@
   function nf(n) { return n.toLocaleString('pt-BR'); }
   // Endereços antigos da página inicial (/#simulador, /?setor=agro#simulador...) levam às páginas próprias
   var MUDOU = { '#simulador': 'ferramentas/simulador.html', '#calendario': 'ferramentas/calendario.html', '#contato': 'contato/index.html',
-    '#regional': 'setores/regional.html', '#servicos': 'cliente/index.html', '#reforma': 'reforma/index.html', '#setores': 'setores/agro.html' };
+    '#regional': 'reforma/alertas-regionais.html', '#servicos': 'cliente/index.html', '#reforma': 'reforma/index.html', '#setores': 'rural/index.html' };
   if ($('[data-painel-transicao]') && MUDOU[location.hash]) { location.replace(MUDOU[location.hash] + location.search); return; }
   function quandoVisivel(el, fn, limiar) {
     if (calmo || !('IntersectionObserver' in window)) { fn(); return; }
@@ -116,7 +116,7 @@
   var CASOS = {
     simples: { rotulo: 'Simples Nacional', itens: ['simples-hibrido', 'teste-2026', 'split-payment'], guia: 'reforma/simples-hibrido.html', sim: '?regime=simples' },
     real: { rotulo: 'Lucro real e presumido', itens: ['cbs-2027', 'nao-cumulatividade', 'saldo-piscofins'], guia: 'reforma/cbs.html', sim: '?regime=real' },
-    agro: { rotulo: 'Agro e produtor rural', itens: ['produtor-nao-contribuinte', 'agro-reducao-60', 'credito-presumido-produtor'], guia: 'setores/agro.html', sim: '?setor=agro' },
+    agro: { rotulo: 'Agro e produtor rural', itens: ['produtor-nao-contribuinte', 'agro-reducao-60', 'credito-presumido-produtor'], guia: 'rural/index.html', sim: '?setor=agro' },
     transporte: { rotulo: 'Transporte', itens: ['transporte-carga', 'documentos-fiscais', 'tac-credito-presumido'], guia: 'empresarial/transporte.html', sim: '' }
   };
   var painelCaso = $('[data-caso-painel]'), cartoesCaso = $$('a[data-caso]');

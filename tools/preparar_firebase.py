@@ -56,7 +56,15 @@ def servico_valido(nome: str | None) -> str | None:
 
 # Páginas movidas: 301 direto para o destino final, sem cadeia (Fase 2, docs/ideias/reestruturacao-transporte-fase2.md).
 # R1: o site segue com .html (cleanUrls desligado); por isso só a forma com .html existe.
-REDIRECIONAMENTOS = [("/setores/transporte.html", "/empresarial/transporte.html")]
+REDIRECIONAMENTOS = [
+    ("/setores/transporte.html", "/empresarial/transporte.html"),
+    ("/setores/agro.html", "/rural/index.html"),
+    ("/setores/janela-de-campo.html", "/rural/janela-de-campo.html"),
+    ("/setores/agro-mercado.html", "/rural/cotacoes.html"),
+    ("/setores/regional.html", "/reforma/alertas-regionais.html"),  # o navegador mantém ?setor= e ?uf= no 301
+    ("/tributario/index.html", "/consultoria-tributaria.html"),
+    ("/escritorio/index.html", "/quem-somos.html"),
+]
 
 
 def csp(api: str | None) -> str:

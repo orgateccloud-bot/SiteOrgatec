@@ -1,5 +1,5 @@
 /* Janela de Campo: validação e vigência dos boletins (puro, testável no Node) e a tela de
-   site/setores/janela-de-campo.html (só no navegador, em [data-campo]). Lê o boletim automático publicado em
+   site/rural/janela-de-campo.html (só no navegador, em [data-campo]). Lê o boletim automático publicado em
    site/dados/campo/ (tools/gerar_boletim_campo.py); sem ele, usa os boletins manuais de boletins-campo.js. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();

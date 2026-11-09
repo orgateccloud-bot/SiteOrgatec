@@ -105,7 +105,7 @@
        as demais chaves são os atalhos do cartão. */
     abertura: {
       entrada: 'inicio.html',
-      tributario: 'tributario/index.html',
+      tributario: 'consultoria-tributaria.html',
       solucoes: 'solucoes/index.html',
       areaCliente: 'cliente/index.html',
       locar: 'cliente/locar.html',

@@ -37,7 +37,7 @@ PC = RAIZ / "cartoes-status"
 ARQUIVO = "arquivo"
 DIAS_ARQUIVO = 7
 LARGURA, ALTURA = 1080, 1920
-PAGINA = "orgatec.io/setores/janela-de-campo.html"
+PAGINA = "orgatec.io/rural/janela-de-campo.html"
 
 # margens = (alto, direita, baixo, esquerda) em px: faixas que a interface de cada rede cobre. escala = tamanho do
 # cartão dentro da área livre (o desenho é o mesmo). site = nome publicado em site/dados/campo/; pc = nome em PC.

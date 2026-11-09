@@ -1,5 +1,5 @@
 /* Janela de Campo: boletins agrometeorológicos para o produtor rural (renderizados por campo.js em
-   site/setores/janela-de-campo.html). Um registro por boletim; o mais recente vai primeiro.
+   site/rural/janela-de-campo.html). Um registro por boletim; o mais recente vai primeiro.
 
    Campos de cada boletim:
    - id (AAAA-MM-DD do dia previsto), dia (o mesmo), emitidoEm (AAAA-MM-DD), resumo.

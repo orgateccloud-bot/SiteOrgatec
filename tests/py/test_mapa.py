@@ -17,7 +17,7 @@ def test_mapa_tem_as_paginas_indexaveis_e_nenhuma_interna():
     assert len(enderecos) == len(set(enderecos))
     for interna in ("testes/index.html", "marca.html", "orgatec-template2.html", "orgatec-trilha.html"):
         assert f"https://orgatec.io/{interna}" not in enderecos
-    for pagina in ("inicio.html", "tributario/index.html", "reforma/index.html", "ferramentas/simulador.html"):
+    for pagina in ("inicio.html", "consultoria-tributaria.html", "reforma/index.html", "ferramentas/simulador.html"):
         assert f"https://orgatec.io/{pagina}" in enderecos
     assert all(re.fullmatch(r"\d{4}-\d{2}-\d{2}", d) for _, d in lista)
 

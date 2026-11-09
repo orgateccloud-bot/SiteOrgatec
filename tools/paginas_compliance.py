@@ -286,7 +286,7 @@ def publicos_paginas() -> None:
              ("Conferência", "Notas e livro-caixa (LCDPR) conferidos entre si, com os sistemas do escritório, e o enquadramento em IBS e CBS."),
              ("Rotina", "Prazos do ITR, da opção do Funrural e do CNPJ de 2027 acompanhados no calendário."),
              REVISAO_JURIDICA],
-            [gp.cartao("Setor", "Reforma tributária no agro", "Produtor não contribuinte, redução de 60%, diferimento e crédito presumido.", "{p}setores/agro.html"),
+            [gp.cartao("Setor", "Reforma tributária no agro", "Produtor não contribuinte, redução de 60%, diferimento e crédito presumido.", "{p}rural/index.html"),
              gp.cartao("Serviço do escritório", "Auditoria forense rural (NFA-e)", "As notas do produtor rural conferidas uma a uma, com laudo.", "{p}solucoes/auditoria-rural.html"),
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do produtor rural, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-produtor")])
     publico("mei", "Compliance do MEI",
@@ -346,7 +346,7 @@ def publicos_paginas() -> None:
              ("Conformidade", "Documentos fiscais com IBS e CBS e as inconsistências do programa de 2026 corrigidas."),
              ("Transição", "Plano ano a ano até 2033, com o efeito no preço e no caixa."),
              REVISAO_JURIDICA],
-            [gp.cartao("Setor", "Alertas regionais", "Comércio atacadista e indústria em Goiás, Tocantins e Pará.", "{p}setores/regional.html"),
+            [gp.cartao("Setor", "Alertas regionais", "Comércio atacadista e indústria em Goiás, Tocantins e Pará.", "{p}reforma/alertas-regionais.html"),
              gp.cartao("Ferramenta", "Simulador de impacto", "Comércio atacadista e indústria com IBS e CBS.", "{p}ferramentas/simulador.html"),
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do comércio e da indústria, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-comercio")])
     publico("servicos", "Compliance do prestador de serviço",

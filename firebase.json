@@ -96,6 +96,36 @@
         "source": "/setores/transporte.html",
         "destination": "/empresarial/transporte.html",
         "type": 301
+      },
+      {
+        "source": "/setores/agro.html",
+        "destination": "/rural/index.html",
+        "type": 301
+      },
+      {
+        "source": "/setores/janela-de-campo.html",
+        "destination": "/rural/janela-de-campo.html",
+        "type": 301
+      },
+      {
+        "source": "/setores/agro-mercado.html",
+        "destination": "/rural/cotacoes.html",
+        "type": 301
+      },
+      {
+        "source": "/setores/regional.html",
+        "destination": "/reforma/alertas-regionais.html",
+        "type": 301
+      },
+      {
+        "source": "/tributario/index.html",
+        "destination": "/consultoria-tributaria.html",
+        "type": 301
+      },
+      {
+        "source": "/escritorio/index.html",
+        "destination": "/quem-somos.html",
+        "type": 301
       }
     ],
     "rewrites": [

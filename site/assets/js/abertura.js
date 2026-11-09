@@ -16,7 +16,7 @@
   // ---------- Endereços antigos da raiz (/#simulador, /?setor=agro#simulador...): a raiz agora é esta tela,
   // então cada seção que mudou de lugar leva à página própria; as da vitrine, a inicio.html
   var MUDOU = { '#simulador': 'ferramentas/simulador.html', '#calendario': 'ferramentas/calendario.html', '#contato': 'contato/index.html',
-    '#regional': 'setores/regional.html', '#servicos': 'cliente/index.html', '#reforma': 'reforma/index.html', '#setores': 'setores/agro.html' };
+    '#regional': 'reforma/alertas-regionais.html', '#servicos': 'cliente/index.html', '#reforma': 'reforma/index.html', '#setores': 'rural/index.html' };
   var VITRINE = ['#agora', '#casos', '#ultimas', '#ferramentas', '#fontes', '#perguntas', '#como-funciona'];
   if (MUDOU[location.hash]) { location.replace(MUDOU[location.hash] + location.search); return; }
   if (VITRINE.indexOf(location.hash) >= 0) { location.replace('inicio.html' + location.hash); return; }

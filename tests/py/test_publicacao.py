@@ -89,3 +89,16 @@ def test_paginas_movidas_respondem_301_direto_para_o_destino():
     destinos = {x["destination"] for x in r.values()}
     assert not destinos & set(r), "redirecionamento em cadeia"
     assert cfg["hosting"]["rewrites"][0]["source"] == "/api/**"
+
+
+def test_nenhum_link_do_site_aponta_para_pagina_antiga():
+    """Nada some sem 301, mas o próprio site não deve mais apontar para os endereços antigos (Fase 2)."""
+    antigos = [de.lstrip("/") for de, _ in pf.REDIRECIONAMENTOS]
+    achados = []
+    for f in (RAIZ / "site").rglob("*"):
+        if f.suffix in (".html", ".js", ".xml", ".txt") and "dados" not in f.parts and "homologacao.js" != f.name:
+            texto = f.read_text(encoding="utf-8", errors="ignore")
+            achados += [(f.name, a) for a in antigos if a in texto]
+    assert not achados, achados[:5]
+    for de, _ in pf.REDIRECIONAMENTOS:
+        assert not (RAIZ / "site" / de.lstrip("/")).exists(), f"{de} ainda existe em site/"
