@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Reestruturação: áreas Rural e Empresarial, Janelas do Transporte e Empresarial e Central de Viagem](reestruturacao-transporte.md) | ideia; prompt de execução em fases pronto em 09/11/2026 | `ideia/reestruturacao-transporte` | — |
 | [Logo do Noturno igual à do Cristal](vidro-logo-cristal.md) | integrada na desenvolvimento em 08/11/2026; falta lançar | `ideia/vidro-logo-cristal` | [link](https://orgatec-site--ideia-vidro-logo-cristal-ka2ny2mm.web.app/inicio.html) |
 | [Boletim no GitHub Actions](boletim-no-actions.md) | semana de sombra autorizada em 08/11/2026 (gera e compara, sem publicar); ativação no ar pendente da sombra | `ideia/boletim-actions` e `ideia/boletim-sombra` | não se aplica |
 | [Janela de Campo: satélite com divisas, hora em cada imagem e aviso de falha (Fase 5)](campo-satelite.md) | aprovada em 07/11/2026; falta lançar | `ideia/campo-satelite` | [link](https://orgatec-site--ideia-campo-satelite-20z856ne.web.app/setores/janela-de-campo.html) |

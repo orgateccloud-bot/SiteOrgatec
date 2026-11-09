@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Portal do cliente · Viagens | ORGATEC</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="transporte.css">
+</head>
+<body>
+<header class="topo">
+  <div><div class="sub">ORGATEC · Contabilidade e Engenharia Tributária</div><h1>Portal do cliente · Viagens</h1></div>
+  <nav aria-label="Seções"><a href="central.html">Central</a><a href="portal.html" aria-current="page">Portal do cliente</a></nav>
+</header>
+<div class="dev" id="dev" hidden></div>
+<main>
+  <div id="aviso"></div>
+  <div class="grade">
+    <div>
+      <div class="cartao"><h2>Viagens</h2><ul class="lista-viagens" id="lista"><li class="carregando">Carregando…</li></ul></div>
+      <div class="cartao" id="boxSensores" hidden>
+        <h2>Sensores e rastreadores</h2>
+        <div id="listaSensores"></div>
+        <details><summary>Conectar sensor via API</summary>
+          <form id="formSensor" novalidate>
+            <label for="sVeiculo">Veículo</label><select id="sVeiculo"></select>
+            <label for="sNome">Nome</label><input id="sNome" placeholder="Rastreador cavalo" required>
+            <div class="linha"><div><label for="sTipo">Tipo</label><select id="sTipo"><option value="rastreador">Rastreador</option><option value="telemetria">Telemetria</option><option value="temperatura">Temperatura</option><option value="outro">Outro</option></select></div>
+            <div><label for="sForn">Formato</label><select id="sForn"><option value="generico">Genérico (JSON da Central)</option></select></div></div>
+            <div id="msgSensor"></div>
+            <div class="acoes"><button type="submit">Gerar credencial</button></div>
+          </form>
+        </details>
+      </div>
+    </div>
+    <section id="detalhe" aria-live="polite"><div class="cartao vazio">Escolha uma viagem para ver previsão, alertas e posição em tempo real.</div></section>
+  </div>
+</main>
+<footer>ORGATEC · Portal do cliente · Autoria: Warley Moreira Veloso · Posição de veículo é dado pessoal do motorista: acesso restrito à transportadora.</footer>
+<script src="comum.js"></script>
+<script src="viagem-view.js"></script>
+<script src="portal.js"></script>
+</body>
+</html>
