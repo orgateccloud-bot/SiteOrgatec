@@ -78,6 +78,29 @@ Um único serviço, montado pelo `Dockerfile`:
    - Depois, desligue o diagnóstico com `ORGATEC_DIAGNOSTICO_IP=0`.
 8. **Conferir.** Abra `https://<id>.web.app/testes/index.html`: o autoteste deve passar. Envie um contato e confira se ele recebe protocolo.
 
+### Ligar a Central de Viagem na API já publicada (módulo `backend/transporte/`)
+
+O módulo nasce desligado. Para ligar no `orgatec-api`, **use `--update-env-vars`** (e não `--set-env-vars`, que apagaria as variáveis dos formulários):
+
+```bash
+firebase deploy --only firestore:indexes --project <id>
+gcloud run deploy orgatec-api --source . --region southamerica-east1 --max-instances 1 --update-env-vars ORGATEC_TRANSPORTE=1,ORGATEC_TRANSPORTE_AUTH=firebase,ORGATEC_FIREBASE_PROJETO=<id>,ORGATEC_TRANSPORTE_BANCO=firestore,ORGATEC_TRANSPORTE_FIREBASE_WEB_KEY=<chave web>
+gcloud run jobs update orgatec-retencao --region southamerica-east1 --image <imagem da API> --update-env-vars ORGATEC_TRANSPORTE_BANCO=firestore
+```
+
+- Antes: autorize o domínio do site em Authentication → Configurações → Domínios autorizados e restrinja a chave web ao referenciador `https://<domínio>/*`.
+- Confira: `/api/transporte/contexto` deve sair de 404 para 200 e `/api/saude` seguir em 200.
+- **Primeiro cliente:** crie a transportadora e dê acesso ao usuário (criado antes no Firebase Authentication).
+
+  ```bash
+  gcloud auth application-default login
+  python tools/transporte_transportadora.py --projeto <id>
+  python tools/transporte_usuario.py --projeto <id> --email <email> --transportadora <uuid impresso> --papel gestor
+  ```
+
+  O acesso vale no próximo login (até 1 hora). Para retirar: `transporte_usuario.py ... --revogar`.
+- Sensores, rota, clima, combustível e pedágio reais seguem desligados até haver as flags `ORGATEC_TRANSPORTE_*` correspondentes. Combustível e pedágio dependem de arquivos em `backend/dados/`, que a imagem não leva.
+
 ### Testar localmente com o emulador
 
 ```bash

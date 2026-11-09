@@ -58,3 +58,41 @@ def test_so_transporte_fala_com_o_google_no_firebase_json():
 def test_so_transporte_fala_com_o_google_no_servidor():
     from backend import app as servidor
     assert "securetoken.googleapis.com" in servidor.CSP_TRANSPORTE and "googleapis" not in servidor.CSP
+
+
+# ---- criação da transportadora (tools/transporte_transportadora.py) ----
+transportadora = _carregar("transporte_transportadora")
+
+
+def _repo():
+    from backend.transporte.repositorio_transporte import RepositorioMemoria
+
+    return RepositorioMemoria()
+
+
+def test_cria_transportadora_com_uuid_novo(capsys):
+    repo = _repo()
+    assert transportadora.main(["--projeto", "x"], repo=repo) == 0
+    tid = capsys.readouterr().out.split(":")[0]
+    assert transportadora.UUID.fullmatch(tid) and repo.existe_transportadora(tid)
+
+
+def test_criar_com_uuid_e_idempotente(capsys):
+    repo = _repo()
+    transportadora.main(["--projeto", "x", "--uuid", TID], repo=repo)
+    assert "criada" in capsys.readouterr().out
+    transportadora.main(["--projeto", "x", "--uuid", TID], repo=repo)
+    assert "já existia" in capsys.readouterr().out
+
+
+def test_conferir_devolve_codigo_de_saida(capsys):
+    repo = _repo()
+    assert transportadora.main(["--projeto", "x", "--conferir", TID], repo=repo) == 1
+    repo.criar_transportadora(TID)
+    assert transportadora.main(["--projeto", "x", "--conferir", TID], repo=repo) == 0
+    capsys.readouterr()
+
+
+def test_uuid_invalido_e_recusado():
+    with pytest.raises(SystemExit):
+        transportadora.main(["--projeto", "x", "--uuid", "nao-e-uuid"], repo=_repo())
