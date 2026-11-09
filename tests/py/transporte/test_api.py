@@ -63,7 +63,7 @@ def test_producao_sem_login_real_responde_403_em_tudo():
     assert r.status_code == 403
 
 
-def test_provedor_real_e_recusado_enquanto_nao_existe():
+def test_provedor_real_sem_configuracao_e_recusado():
     with pytest.raises(RecursoDesligado):
         api.criar_servicos({**ENV, "ORGATEC_TRANSPORTE_ROTA_REAL": "1"})
 

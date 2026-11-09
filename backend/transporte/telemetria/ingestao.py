@@ -10,7 +10,7 @@ import json
 import threading
 import time
 from collections import defaultdict, deque
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from backend.transporte.dominio import utc
@@ -48,6 +48,24 @@ class Limitador:
             h.append(agora)
 
 
+ULTIMO_SINAL_INTERVALO_S = 30
+VIAGEM_ATIVA_TTL_S = 15.0
+_VIAGEM_ATIVA: dict[tuple[str, str], tuple[float, dict[str, Any] | None]] = {}
+
+
+def _viagem_ativa_cacheada(repo: Any, tid: str, veiculo_id: str, ts: datetime) -> dict[str, Any] | None:
+    """A viagem de um veículo muda raramente; relê no máximo a cada 15 s por veículo (por instância)."""
+    agora = time.monotonic()
+    ent = _VIAGEM_ATIVA.get((tid, veiculo_id))
+    if ent and agora - ent[0] < VIAGEM_ATIVA_TTL_S:
+        return ent[1]
+    if len(_VIAGEM_ATIVA) > 20000:
+        _VIAGEM_ATIVA.clear()
+    v = repo.viagem_ativa(tid, veiculo_id, ts)
+    _VIAGEM_ATIVA[(tid, veiculo_id)] = (agora, v)
+    return v
+
+
 def receber(repo: RepositorioMemoria, cofre: Cofre, limitador: Limitador, sensor_id: str, corpo: bytes,
             timestamp: str | None, assinatura: str | None) -> dict[str, Any]:
     if len(corpo) > TAMANHO_MAX_CORPO:
@@ -67,29 +85,36 @@ def receber(repo: RepositorioMemoria, cofre: Cofre, limitador: Limitador, sensor
     for le in leituras:
         if repo.leitura_ja_vista(tid, sensor["id"], le.id):
             continue
-        viagem = repo.viagem_ativa(tid, sensor["veiculo_id"], le.ts)
-        repo.inserir(tid, "leituras", {
+        viagem = _viagem_ativa_cacheada(repo, tid, sensor["veiculo_id"], le.ts)
+        repo.registrar_leitura(tid, {
             "sensor_id": sensor["id"], "viagem_id": viagem["id"] if viagem else None, "leitura_id": le.id, "ts": utc(le.ts),
             "lat": le.lat, "lon": le.lon, "velocidade_kmh": le.velocidade_kmh, "ignicao": le.ignicao,
             "temperatura_c": le.temperatura_c, "combustivel_pct": le.combustivel_pct, "evento": le.evento})
         gravadas += 1
         if viagem and viagem["status"] == "planejada":
             repo.atualizar(tid, "viagens", viagem["id"], {"status": "em_andamento"})
+            _VIAGEM_ATIVA.pop((tid, sensor["veiculo_id"]), None)  # o status mudou: a próxima leitura relê
     if leituras:
         ultimo = utc(leituras[-1].ts)
         anterior = sensor.get("ultimo_sinal_em")
-        if anterior is None or ultimo > utc(anterior):
+        # grava o "último sinal" no máximo a cada 30 s por sensor: uma escrita a mais por leitura não acrescenta nada à tela
+        if anterior is None or ultimo - utc(anterior) >= timedelta(seconds=ULTIMO_SINAL_INTERVALO_S):
             repo.atualizar(tid, "sensores", sensor["id"], {"ultimo_sinal_em": ultimo})
     return {"recebidas": len(leituras), "gravadas": gravadas, "duplicadas": len(leituras) - gravadas}
 
 
-def evento_posicao(viagem: dict[str, Any], sensor_nome: str, le: dict[str, Any]) -> dict[str, Any]:
-    """Posição de uma leitura em relação à rota da viagem: km percorrido e desvio. Só coordenadas; nada de dado pessoal."""
+def preparar_rota(viagem: dict[str, Any]) -> tuple[list[tuple[float, float]], list[float], float]:
+    """Geometria, distâncias acumuladas e escala da rota, calculadas UMA vez por viagem (e não por leitura)."""
     geo = [tuple(p) for p in viagem["resultado"]["rota"]["geometria"]]
-    desvio, km = distancia_ponto_rota_km((le["lat"], le["lon"]), geo)  # type: ignore[arg-type]
-    total = viagem["resultado"]["rota"]["distancia_km"]
     acc = acumulado_km(geo)  # type: ignore[arg-type]
-    escala = total / acc[-1] if acc[-1] else 1.0
+    total = viagem["resultado"]["rota"]["distancia_km"]
+    return geo, acc, (total / acc[-1] if acc[-1] else 1.0)  # type: ignore[return-value]
+
+
+def evento_posicao(viagem: dict[str, Any], sensor_nome: str, le: dict[str, Any], rota: tuple | None = None) -> dict[str, Any]:
+    """Posição de uma leitura em relação à rota da viagem: km percorrido e desvio. Só coordenadas; nada de dado pessoal."""
+    geo, acc, escala = rota or preparar_rota(viagem)
+    desvio, km = distancia_ponto_rota_km((le["lat"], le["lon"]), geo, acc)  # type: ignore[arg-type]
     ts = le["ts"] if isinstance(le["ts"], datetime) else datetime.fromisoformat(str(le["ts"]))
     return {"tipo": "posicao", "viagem_id": viagem["id"], "status": viagem["status"], "sensor": sensor_nome, "ts": utc(ts).isoformat(),
             "lat": le["lat"], "lon": le["lon"], "velocidade_kmh": le.get("velocidade_kmh"), "ignicao": le.get("ignicao"),

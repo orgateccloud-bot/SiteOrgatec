@@ -1,6 +1,8 @@
 # Monitoramento de veículos e motoristas (Central de Viagem): rascunho de base legal
 
-Situação: **rascunho, não aprovado.** Precisa de revisão do responsável técnico e do encarregado (DPO) antes de qualquer cliente real usar o módulo. Nada aqui é parecer jurídico.
+Situação: **adotada como proposta de trabalho pelo escritório em 09/11/2026 ("sim" à base legal sugerida).** Continua sem parecer jurídico: antes de qualquer cliente real usar o módulo, o responsável técnico e o encarregado (DPO) precisam revisar o teste de proporcionalidade e o aviso ao motorista (itens 1 e 3 das pendências abaixo). Nada aqui é parecer jurídico.
+
+**Adotado até a revisão:** base legal principal, execução de contrato (art. 7º, V) com legítimo interesse (art. 7º, IX) de apoio e teste de proporcionalidade por escrito; consentimento não é a base. Controladora: a transportadora cliente; operadora: a ORGATEC. Prazo de guarda das leituras: 30 dias.
 
 ## O que o módulo trata
 

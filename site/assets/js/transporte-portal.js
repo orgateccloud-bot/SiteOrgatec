@@ -107,18 +107,19 @@
     OT.mensagem($('#aviso'), '');
     OT.api('GET', '/contexto').then(function (c) {
       ctx = c;
-      if (c.ambiente !== 'producao') OT.painelDev($('#dev'), iniciar);
+      if (c.ambiente !== 'producao' && c.entrada === 'dev') OT.painelDev($('#dev'), iniciar);
       $('#boxSensores').hidden = !(c.flags.sensores_ativo && c.papel === 'gestor');
       if (!c.flags.sensores_ativo) OT.mensagem($('#aviso'), 'Acompanhamento em tempo real desligado nesta instalação (ORGATEC_TRANSPORTE_SENSORES).', 'aviso');
       return Promise.all([carregarLista(), $('#boxSensores').hidden ? null : carregarSensores()]);
     }).catch(function (e) {
       if (e.status === 403) {
-        OT.painelDev($('#dev'), iniciar);
-        OT.mensagem($('#aviso'), 'Identifique-se para continuar (em desenvolvimento, informe a transportadora no painel acima).', 'aviso');
+        OT.sair();
+        OT.painelEntrada($('#dev'), iniciar);
+        OT.mensagem($('#aviso'), 'Identifique-se para continuar: entre com o e-mail e a senha do seu acesso (em desenvolvimento, informe a transportadora no painel acima).', 'aviso');
       } else { OT.mensagem($('#aviso'), e.message); }
     });
   }
 
   window.addEventListener('beforeunload', fecharStream);
-  iniciar();
+  OT.prepararSessao().then(iniciar);
 })();

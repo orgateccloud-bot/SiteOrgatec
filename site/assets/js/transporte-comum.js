@@ -11,9 +11,48 @@
     try { localStorage.setItem(CHAVE_DEV, JSON.stringify(v)); } catch (e) { /* armazenamento indisponível */ }
   }
 
-  /* Em produção o login do sistema hospedeiro autentica a sessão; estes cabeçalhos só valem no modo dev. */
+  /* Login (Firebase Authentication, e-mail e senha): o ID token fica só na aba (sessionStorage) e vai em Authorization.
+     Os cabeçalhos X-* abaixo só valem no modo dev. */
+  var CHAVE_TOKEN = 'orgatec-transporte-token';
+  var GOOGLE_ENTRAR = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=';
+  var GOOGLE_RENOVAR = 'https://securetoken.googleapis.com/v1/token?key=';
+  var chaveWeb = null;
+
+  function lerToken() {
+    try { return JSON.parse(sessionStorage.getItem(CHAVE_TOKEN) || 'null'); } catch (e) { return null; }
+  }
+  function gravarToken(t) {
+    try { if (t) sessionStorage.setItem(CHAVE_TOKEN, JSON.stringify(t)); else sessionStorage.removeItem(CHAVE_TOKEN); } catch (e) { /* armazenamento indisponível */ }
+  }
+  function guardar(idToken, refresh, segundos) {
+    gravarToken({ id: idToken, refresh: refresh, expira: Date.now() + Number(segundos) * 1000 });
+  }
+  /* Renova o token quando faltam menos de 2 minutos; se não der, apaga e a tela pede o login de novo. */
+  function garantirToken() {
+    var t = lerToken();
+    if (!t || !chaveWeb || t.expira - Date.now() > 120000) return Promise.resolve();
+    return fetch(GOOGLE_RENOVAR + encodeURIComponent(chaveWeb), {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(t.refresh)
+    }).then(function (r) { return r.json().then(function (d) {
+      if (!r.ok || !d.id_token) { gravarToken(null); return; }
+      guardar(d.id_token, d.refresh_token, d.expires_in);
+    }); }, function () { /* sem rede: a chamada seguinte mostra o erro */ });
+  }
+  function entrar(email, senha) {
+    return fetch(GOOGLE_ENTRAR + encodeURIComponent(chaveWeb), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: senha, returnSecureToken: true })
+    }).then(function (r) { return r.json().then(function (d) {
+      if (!r.ok || !d.idToken) throw new Error('E-mail ou senha incorretos.');
+      guardar(d.idToken, d.refreshToken, d.expiresIn);
+    }); }, function () { throw new Error('Sem conexão. Verifique a internet e tente de novo.'); });
+  }
+  function sair() { gravarToken(null); }
+
   function cabecalhos() {
-    var d = lerDev(), h = { 'Content-Type': 'application/json' };
+    var d = lerDev(), h = { 'Content-Type': 'application/json' }, t = lerToken();
+    if (t) { h['Authorization'] = 'Bearer ' + t.id; return h; }
     if (d.transportadora) h['X-Transportadora-Id'] = d.transportadora;
     if (d.papel) h['X-Usuario-Papel'] = d.papel;
     if (d.usuario) h['X-Usuario-Id'] = d.usuario;
@@ -21,6 +60,10 @@
   }
 
   function api(metodo, caminho, corpo) {
+    return garantirToken().then(function () { return requisitar(metodo, caminho, corpo); });
+  }
+
+  function requisitar(metodo, caminho, corpo) {
     return fetch('/api/transporte' + caminho, {
       method: metodo, headers: cabecalhos(), credentials: 'same-origin',
       body: corpo === undefined ? undefined : JSON.stringify(corpo)
@@ -82,6 +125,33 @@
     alvo.hidden = false;
   }
 
+  /* Painel de acesso: formulário de login quando a API usa Firebase; painel de desenvolvimento quando usa cabeçalhos. */
+  function painelEntrada(alvo, aoMudar) {
+    fetch('/api/transporte/entrada', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (e) {
+      if (e.modo === 'dev') { painelDev(alvo, aoMudar); return; }
+      if (e.modo !== 'firebase' || !e.chave_web) { alvo.hidden = false; alvo.textContent = 'O login desta instalação ainda não foi configurado.'; return; }
+      chaveWeb = e.chave_web;
+      alvo.innerHTML = '<form class="entrar" novalidate><strong>Entrar</strong> ' +
+        '<label>E-mail <input name="email" type="email" autocomplete="username" required></label> ' +
+        '<label>Senha <input name="senha" type="password" autocomplete="current-password" required></label> ' +
+        '<button class="mini" type="submit">Entrar</button> <span class="erro-entrada" role="alert"></span></form>';
+      var f = alvo.querySelector('form'), erro = alvo.querySelector('.erro-entrada');
+      f.addEventListener('submit', function (ev) {
+        ev.preventDefault(); erro.textContent = '';
+        entrar(f.email.value.trim(), f.senha.value).then(function () { f.senha.value = ''; alvo.hidden = true; aoMudar(); },
+          function (x) { erro.textContent = x.message; });
+      });
+      alvo.hidden = false;
+    }, function () { /* sem rede */ });
+  }
+  /* Chamado quando a página já tem sessão: precisa da chave para renovar o token. */
+  function prepararSessao() {
+    if (!lerToken()) return Promise.resolve();
+    return fetch('/api/transporte/entrada', { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (e) { chaveWeb = e.chave_web || null; }, function () { /* sem rede */ });
+  }
+
   raiz.OT = { api: api, brl: brl, num1: num1, dataHora: dataHora, diaHora: diaHora, esc: esc, horas: horas,
-    tagEstado: tagEstado, mensagem: mensagem, painelDev: painelDev, lerDev: lerDev };
+    tagEstado: tagEstado, mensagem: mensagem, painelDev: painelDev, painelEntrada: painelEntrada, prepararSessao: prepararSessao, sair: sair,
+    lerDev: lerDev, temSessao: function () { return !!lerToken(); } };
 })(window);

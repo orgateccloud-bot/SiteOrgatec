@@ -56,7 +56,7 @@ def test_firebase_json_versionado_esta_em_homologacao_sem_api():
 def test_modo_cloud_run_encaminha_api_em_sao_paulo_com_regras_fechadas():
     cfg = pf.firebase_json(None, indexar=False, cloud_run="orgatec-api")
     assert cfg["hosting"]["rewrites"] == [{"source": "/api/**", "run": {"serviceId": "orgatec-api", "region": "southamerica-east1"}}]
-    assert cfg["firestore"] == {"rules": "firestore.rules"}
+    assert cfg["firestore"] == {"rules": "firestore.rules", "indexes": "firestore.indexes.json"}
     cab = {c["key"]: c["value"] for c in cfg["hosting"]["headers"][0]["headers"]}
     assert "connect-src 'self';" in cab["Content-Security-Policy"]  # mesma origem: nada além de 'self'
     assert "rewrites" not in pf.firebase_json(None, indexar=False)["hosting"]

@@ -2161,3 +2161,41 @@ def test_janela_empresarial_marca_atrasado_e_indisponivel(navegador, servidor):
     expect(pg.locator("[data-cartao=T1]")).to_have_count(0)
     pg.select_option("#jAtividade", "transportador")
     assert not [e for e in erros if "atual.json" not in e], erros
+
+
+def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, servidor):
+    """Login Firebase na Central: a tela pede e-mail e senha, entra no Google (simulado) e passa a enviar Authorization: Bearer."""
+    vistos = {"auth": [], "google": 0}
+
+    def entrada(rota):
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps({"modo": "firebase", "chave_web": "CHAVE-WEB-TESTE"}))
+
+    def contexto(rota):
+        cab = rota.request.headers.get("authorization")
+        vistos["auth"].append(cab)
+        if cab == "Bearer ID-TOKEN-TESTE":
+            rota.fulfill(status=200, content_type="application/json", body=json.dumps(
+                {"papel": "leitura", "ambiente": "producao", "entrada": "firebase", "flags": {"provedores_reais": [], "sensores_ativo": False}}))
+        else:
+            rota.fulfill(status=403, content_type="application/json", body=json.dumps({"detail": "acesso negado"}))
+
+    def google(rota):
+        vistos["google"] += 1
+        assert "CHAVE-WEB-TESTE" in rota.request.url
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps(
+            {"idToken": "ID-TOKEN-TESTE", "refreshToken": "R", "expiresIn": "3600"}))
+
+    def vazio(rota):
+        rota.fulfill(status=200, content_type="application/json", body="[]")
+
+    pg, erros = _abrir(navegador, servidor, "transporte/portal.html", rotas={
+        "**/api/transporte/entrada": entrada, "**/api/transporte/contexto": contexto, "**/api/transporte/viagens*": vazio,
+        "https://identitytoolkit.googleapis.com/**": google})
+    form = pg.locator("#dev form.entrar")
+    expect(form).to_be_visible()
+    form.locator("input[name=email]").fill("gestor@cliente.com")
+    form.locator("input[name=senha]").fill("senha-de-teste")
+    form.locator("button[type=submit]").click()
+    expect(pg.locator("#dev")).to_be_hidden()
+    assert vistos["google"] == 1 and vistos["auth"][-1] == "Bearer ID-TOKEN-TESTE" and vistos["auth"][0] is None
+    assert not erros, erros

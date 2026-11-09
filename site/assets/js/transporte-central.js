@@ -136,22 +136,23 @@
     OT.mensagem($('#aviso'), '');
     OT.api('GET', '/contexto').then(function (c) {
       ctx = c;
-      if (c.ambiente !== 'producao') OT.painelDev($('#dev'), iniciar);
+      if (c.ambiente !== 'producao' && c.entrada === 'dev') OT.painelDev($('#dev'), iniciar);
       var gestor = c.papel === 'gestor';
       $('#boxVeiculo').hidden = !gestor; $('#boxParametros').hidden = !gestor;
       if (c.papel === 'leitura') { $('#form').hidden = true; OT.mensagem($('#aviso'), 'Perfil de leitura: use o Portal do cliente.', 'aviso'); }
-      var simulados = Object.keys(c.flags).filter(function (k) { return k !== 'sensores_ativo' && !c.flags[k]; });
+      var simulados = ['rota', 'combustivel', 'pedagio', 'clima'].filter(function (k) { return (c.flags.provedores_reais || []).indexOf(k) < 0; });
       if (simulados.length) OT.mensagem($('#aviso'), 'Fontes em modo simulado: ' + simulados.join(', ').replace(/_/g, ' ') + '. Os valores servem para demonstração.', 'aviso');
       return Promise.all([carregarVeiculos(), carregarLista(), gestor ? carregarParametros() : null]);
     }).catch(function (e) {
       if (e.status === 403) {
-        OT.painelDev($('#dev'), iniciar);
-        OT.mensagem($('#aviso'), 'Identifique-se para continuar (em desenvolvimento, informe a transportadora no painel acima).', 'aviso');
+        OT.sair();
+        OT.painelEntrada($('#dev'), iniciar);
+        OT.mensagem($('#aviso'), 'Identifique-se para continuar: entre com o e-mail e a senha do seu acesso (em desenvolvimento, informe a transportadora no painel acima).', 'aviso');
       } else { erroGeral(e); }
     });
   }
 
   montarPontos();
   $('#partida').value = partidaPadrao();
-  iniciar();
+  OT.prepararSessao().then(iniciar);
 })();

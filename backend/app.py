@@ -102,6 +102,8 @@ CSP = "; ".join([
     "form-action 'self'",
     "object-src 'none'",
 ])
+# Páginas da Central de Viagem (/transporte/): além do próprio site, falam com o Firebase Authentication para entrar e renovar o token.
+CSP_TRANSPORTE = CSP.replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
 # Widget oficial do CEPEA (cotações dos cards Orgatec Audi Agro): só em /cotacoes/, aberto pelos cards num iframe com
 # sandbox="allow-scripts" (origem opaca). É a única página que aceita script de fora, e só o do CEPEA.
 CSP_WIDGET = "; ".join([
@@ -135,6 +137,8 @@ async def cabecalhos_seguranca(request: Request, call_next):
     if request.url.path.startswith("/cotacoes/"):
         h["Content-Security-Policy"] = CSP_WIDGET
         h["X-Frame-Options"] = "SAMEORIGIN"
+    if request.url.path.startswith("/transporte/"):
+        h["Content-Security-Policy"] = CSP_TRANSPORTE
     h.setdefault("Content-Security-Policy", CSP)
     h.setdefault("X-Content-Type-Options", "nosniff")
     h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")

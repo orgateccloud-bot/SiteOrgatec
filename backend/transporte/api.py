@@ -2,8 +2,8 @@
 
 - Desligada por padrão: com a flag off o app nem registra as rotas (404).
 - Documentação automática desligada, como no app atual (docs_url=None); o limite por IP e o tratamento de IP do app valem aqui.
-- Autenticação: interface `Autenticador`. O modo de desenvolvimento (cabeçalhos X-Transportadora-Id etc.) é RECUSADO em produção,
-  e não há login real até a decisão R4: sem autenticador configurado, em produção, tudo responde 403.
+- Autenticação: interface `Autenticador`. O modo de desenvolvimento (cabeçalhos X-Transportadora-Id etc.) é RECUSADO em produção.
+  Login real: ORGATEC_TRANSPORTE_AUTH=firebase (backend/transporte/autenticacao.py). Sem autenticador válido, em produção, tudo responde 403.
 - Provedores: só simulados (ver provedores/registro.py). Tempo real: a tela consulta /posicoes a cada 15 s.
 - Sem coordenadas em log; só coordenadas (nunca dado pessoal) iriam a APIs estrangeiras quando os provedores reais existirem.
 """
@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from backend.transporte.autenticacao import autenticador_firebase
 from backend.transporte.dominio import (
     PARAMETROS_META,
     AjusteDespesa,
@@ -76,6 +77,10 @@ class Servicos:
     cofre: Cofre | None
     producao: bool
     limitador: ingestao.Limitador = field(default_factory=ingestao.Limitador)
+    entrada: dict[str, Any] = field(default_factory=dict)  # o que a tela precisa para entrar (modo e chave web pública)
+    limite_ip: Callable[[Request], Any] | None = None  # limite por IP do site: só tentativas de acesso NEGADAS gastam dele
+    # Limite por usuário logado (o painel consulta a cada 15 s; o limite por IP do site, feito para formulários, não serve aqui)
+    limitador_usuario: ingestao.Limitador = field(default_factory=lambda: ingestao.Limitador(maximo=600, janela_s=60.0))
 
     def cofre_ativo(self) -> Cofre:
         if self.cofre is None:
@@ -83,7 +88,8 @@ class Servicos:
         return self.cofre
 
 
-def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioBase | None = None) -> Servicos:
+def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioBase | None = None,
+                   limite_ip: Callable[[Request], Any] | None = None) -> Servicos:
     e = env if env is not None else dict(os.environ)
     producao = e.get("ORGATEC_PRODUCAO", "0") == "1"
     auth_modo = e.get("ORGATEC_TRANSPORTE_AUTH", "dev")
@@ -92,14 +98,18 @@ def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador
             if producao:
                 raise RecursoDesligado("ORGATEC_TRANSPORTE_AUTH=dev não é permitido em produção")
             autenticador = autenticador_dev
+        elif auth_modo == "firebase":
+            autenticador = autenticador_firebase(e.get("ORGATEC_FIREBASE_PROJETO", "").strip())
         else:
-            autenticador = autenticador_recusa_tudo  # login real depende da decisão R4
+            autenticador = autenticador_recusa_tudo  # "externo" (sem implementação): recusa tudo
     chave = e.get("ORGATEC_TRANSPORTE_CHAVE", "")
     cofre = Cofre(chave) if e.get("ORGATEC_TRANSPORTE_SENSORES", "0") == "1" else None
     repo = repo or criar_repositorio(e)
     if e.get("ORGATEC_TRANSPORTE_DEMO", "0") == "1" and not producao:
         repo.criar_transportadora(TRANSPORTADORA_DEMO)  # só desenvolvimento: transportadora fictícia para experimentar a tela
-    return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao)
+    chave_web = e.get("ORGATEC_TRANSPORTE_FIREBASE_WEB_KEY", "").strip()
+    entrada = {"modo": auth_modo, **({"chave_web": chave_web} if auth_modo == "firebase" and chave_web else {})}
+    return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip)
 
 
 def servicos(request: Request) -> Servicos:
@@ -107,9 +117,15 @@ def servicos(request: Request) -> Servicos:
 
 
 def contexto(request: Request, s: Servicos = Depends(servicos)) -> Contexto:  # noqa: B008
-    ctx = s.autenticador(request)
-    if not s.repo.existe_transportadora(ctx.transportadora_id):
-        raise AcessoNegado()
+    try:
+        ctx = s.autenticador(request)
+        if not s.repo.existe_transportadora(ctx.transportadora_id):
+            raise AcessoNegado()
+    except AcessoNegado:
+        if s.limite_ip:
+            s.limite_ip(request)  # quem erra o acesso repetidamente leva 429 pelo limite por IP do site
+        raise
+    s.limitador_usuario.registrar(f"{ctx.transportadora_id}:{ctx.usuario_id}")
     return ctx
 
 
@@ -199,10 +215,16 @@ def _calcular(s: Servicos, ctx: Contexto, entrada: LancarViagem, ajustes: dict[s
                              parametros_vigencia=vigencia, provedores=s.provedores, bloqueios=manual, ajustes=ajustes)
 
 
+@router.get("/entrada")
+def como_entrar(s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B008
+    """Sem login: a tela pergunta se deve mostrar o painel de desenvolvimento ou o formulário de entrada (a chave web é pública)."""
+    return s.entrada
+
+
 @router.get("/contexto")
 def ver_contexto(ctx: Contexto = Depends(contexto), s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B008
-    return {"papel": ctx.papel, "ambiente": "producao" if s.producao else "desenvolvimento",
-            "flags": {"provedores_reais": False, "sensores_ativo": s.cofre is not None}}
+    return {"papel": ctx.papel, "ambiente": "producao" if s.producao else "desenvolvimento", "entrada": s.entrada.get("modo"),
+            "flags": {"provedores_reais": s.provedores.reais(), "sensores_ativo": s.cofre is not None}}
 
 
 @router.get("/parametros")
@@ -356,8 +378,9 @@ def desativar_sensor(sensor_id: str, ctx: Contexto = Depends(GESTOR), s: Servico
 def posicoes(viagem_id: str, ctx: Contexto = Depends(contexto), s: Servicos = Depends(sensores_ligados)) -> list[dict[str, Any]]:  # noqa: B008
     v = _viagem_visivel(s, ctx, viagem_id)
     nomes = {se["id"]: se["nome"] for se in s.repo.listar(ctx.transportadora_id, "sensores")}
-    leituras = sorted((le for le in s.repo.listar(ctx.transportadora_id, "leituras") if le["viagem_id"] == v["id"]), key=lambda le: le["ts"], reverse=True)
-    return [ingestao.evento_posicao(v, nomes.get(le["sensor_id"], "?"), le) for le in leituras[:200]]
+    leituras = s.repo.leituras_da_viagem(ctx.transportadora_id, v["id"], 200)  # indexada: não lê as leituras das outras viagens
+    rota = ingestao.preparar_rota(v)
+    return [ingestao.evento_posicao(v, nomes.get(le["sensor_id"], "?"), le, rota) for le in leituras]
 
 
 @router.post("/viagens/{viagem_id}/simular-sensor")
@@ -405,9 +428,9 @@ def instalar(app: Any, env: dict[str, str] | None = None, autenticador: Autentic
     """Chamado por backend/app.py. Com a flag desligada não registra nada e devolve False."""
     if not ligado(env):
         return False
-    app.state.transporte = criar_servicos(env, autenticador, repo)
+    app.state.transporte = criar_servicos(env, autenticador, repo, limite_ip)
     app.add_exception_handler(ErroTransporte, tratar_erro)
-    # limite por IP do app (backend/app.py) nas rotas de usuário; a telemetria tem limite próprio por sensor
-    app.include_router(router, dependencies=[Depends(limite_ip)] if limite_ip else None)
+    # usuários: limite por usuário logado + limite por IP do app só para acessos negados; telemetria: limite próprio por sensor
+    app.include_router(router)
     app.include_router(telemetria)
     return True

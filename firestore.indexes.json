@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "transporte_leituras",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tid", "order": "ASCENDING" },
+        { "fieldPath": "viagem_id", "order": "ASCENDING" },
+        { "fieldPath": "ts", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

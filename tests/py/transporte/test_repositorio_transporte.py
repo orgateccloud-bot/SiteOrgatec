@@ -69,15 +69,15 @@ def test_sensor_global_viagem_ativa_e_idempotencia(repo):
     agora = datetime.now(UTC)
     repo.inserir(t, "viagens", {"veiculo_id": "V1", "status": "em_andamento", "partida_prevista": agora - timedelta(hours=1)})
     assert repo.viagem_ativa(t, "V1", agora)["veiculo_id"] == "V1" and repo.viagem_ativa(t, "V2", agora) is None
-    repo.inserir(t, "leituras", {"sensor_id": "sensor-abc", "leitura_id": "L1", "ts": agora})
+    repo.registrar_leitura(t, {"sensor_id": "sensor-abc", "leitura_id": "L1", "ts": agora, "viagem_id": None})
     assert repo.leitura_ja_vista(t, "sensor-abc", "L1") and not repo.leitura_ja_vista(t, "sensor-abc", "L2")
 
 
 def test_purga_so_leituras_antigas(repo):
     t = repo.criar_transportadora()
     agora = datetime.now(UTC)
-    repo.inserir(t, "leituras", {"sensor_id": "s", "leitura_id": "velha", "ts": agora - timedelta(days=40)})
-    repo.inserir(t, "leituras", {"sensor_id": "s", "leitura_id": "nova", "ts": agora})
+    repo.registrar_leitura(t, {"sensor_id": "s", "leitura_id": "velha", "ts": agora - timedelta(days=40), "viagem_id": None})
+    repo.registrar_leitura(t, {"sensor_id": "s", "leitura_id": "nova", "ts": agora, "viagem_id": None})
     assert repo.purgar_leituras(agora - timedelta(days=30)) == 1
     assert [x["leitura_id"] for x in repo.listar(t, "leituras")] == ["nova"]
 
@@ -95,3 +95,24 @@ def test_criar_repositorio_por_variavel(tmp_path):
     assert isinstance(criar_repositorio({"ORGATEC_TRANSPORTE_BANCO": "sqlite", "ORGATEC_TRANSPORTE_DB": str(tmp_path / "x.db")}), RepositorioSQLite)
     with pytest.raises(RuntimeError):
         criar_repositorio({"ORGATEC_TRANSPORTE_BANCO": "mongo"})
+
+
+def test_leituras_da_viagem_vem_da_mais_nova_para_a_mais_antiga_e_so_da_viagem(repo):
+    t, outro = repo.criar_transportadora(), repo.criar_transportadora()
+    agora = datetime.now(UTC)
+    for i in range(5):
+        repo.registrar_leitura(t, {"sensor_id": "s", "leitura_id": f"a{i}", "ts": agora - timedelta(minutes=10 - i), "viagem_id": "V1"})
+    repo.registrar_leitura(t, {"sensor_id": "s", "leitura_id": "b0", "ts": agora, "viagem_id": "V2"})
+    repo.registrar_leitura(outro, {"sensor_id": "s2", "leitura_id": "c0", "ts": agora, "viagem_id": "V1"})  # mesmo id de viagem, outro cliente
+    ids = [r["leitura_id"] for r in repo.leituras_da_viagem(t, "V1", 3)]
+    assert ids == ["a4", "a3", "a2"]
+    assert len(repo.leituras_da_viagem(t, "V1", 200)) == 5 and [r["leitura_id"] for r in repo.leituras_da_viagem(outro, "V1")] == ["c0"]
+    assert repo.leituras_da_viagem(t, "V9") == []
+
+
+def test_mesma_leitura_nao_duplica(repo):
+    t = repo.criar_transportadora()
+    reg = {"sensor_id": "s", "leitura_id": "L1", "ts": datetime.now(UTC), "viagem_id": None}
+    repo.registrar_leitura(t, reg)
+    repo.registrar_leitura(t, reg)
+    assert len(repo.listar(t, "leituras")) == 1

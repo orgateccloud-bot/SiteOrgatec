@@ -83,6 +83,14 @@ def csp(api: str | None) -> str:
     ])
 
 
+GOOGLE_AUTH = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"  # Firebase Authentication: entrar e renovar o token da Central de Viagem
+
+
+def csp_transporte(api: str | None) -> str:
+    """Só as páginas de /transporte/ falam com o Google (login); o resto do site mantém connect-src 'self'."""
+    return csp(api).replace("connect-src 'self'", f"connect-src 'self' {GOOGLE_AUTH}")
+
+
 CSP_WIDGET = "; ".join([  # mesma do backend (backend/app.py): widget do CEPEA em /cotacoes/, dentro de iframe isolado
     "default-src 'none'",
     "script-src 'self' https://www.cepea.org.br",
@@ -113,6 +121,7 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
         "headers": [
             {"source": "**", "headers": seguranca},
             # Depois da regra geral, para valer por cima dela nas páginas do widget do CEPEA
+            {"source": "/transporte/**", "headers": [{"key": "Content-Security-Policy", "value": csp_transporte(api)}]},
             {"source": "/cotacoes/**", "headers": [{"key": "Content-Security-Policy", "value": CSP_WIDGET},
                                                   {"key": "X-Frame-Options", "value": "SAMEORIGIN"}]},
             # Arquivos gerados não levam hash no nome: na homologação, o navegador sempre revalida.
@@ -129,7 +138,7 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
     return {
         "hosting": hosting,
         # Regras: nenhum acesso pelo navegador (só a API, com conta de serviço)
-        "firestore": {"rules": "firestore.rules"},
+        "firestore": {"rules": "firestore.rules", "indexes": "firestore.indexes.json"},
         "emulators": {"firestore": {"port": 8085}, "ui": {"enabled": False}, "singleProjectMode": True},
     }
 
