@@ -500,10 +500,14 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta:
         secao("Por que importa", f"A reforma no {nome.lower()}", f'                <p class="text-tinta-suave max-w-3xl leading-relaxed">{porque}</p>'),
         secao("Itens", f"Pontos da reforma para {nome.lower()}", itens(destino=f"setor-{slug}", setor=slug)),
         compliance_do_setor(slug),
+        # Transporte: as obrigações do transportador (tabela 3.6 de docs/relatorio-publicos-reforma-compliance.md) aparecem aqui, com fonte e revisão
+        (secao("Obrigações do transportador", "RNTRC, CIOT, piso de frete e vale-pedágio",
+               '                <p class="text-tinta-suave max-w-3xl mb-6">Cada ponto traz a norma, a data de consulta e o status da revisão técnica. Não substitui a ANTT nem o parecer do contador.</p>\n'
+               + itens(destino="publico-transportador", recolher=True, inicial=6), "bg-superficie", "obrigacoes") if slug == "transporte" else ""),
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
     ])
     pagina(f"setores/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "setores", "captação + autoridade", corpo,
-           trilha=[("Setores", None), (nome, None)])
+           extra=["compliance-itens.js"] if slug == "transporte" else None, trilha=[("Setores", None), (nome, None)])
 
 
 # Cards por atividade (marca Orgatec Audi Agro): configuração única em tools/agro_fontes.json
@@ -1322,6 +1326,8 @@ def main() -> None:
     contato()
     import paginas_compliance  # área de Compliance, gerada à parte (docs/plano-area-compliance.md)
     paginas_compliance.gerar()
+    import paginas_empresarial  # área Empresarial (Fase 3 de docs/ideias/reestruturacao-transporte.md)
+    paginas_empresarial.gerar()
     testes()
 
 

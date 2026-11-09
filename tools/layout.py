@@ -30,10 +30,13 @@ COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de confor
               ("Por público", "compliance/publicos.html"),
               ("Conformidade tributária", "compliance/conformidade-tributaria.html"), ("Prevenção à lavagem de dinheiro", "compliance/prevencao-lavagem.html"),
               ("Proteção de dados (LGPD)", "compliance/protecao-de-dados.html"), ("Integridade e anticorrupção", "compliance/integridade.html")]
+EMPRESARIAL = [("Visão geral", "empresarial/index.html"), ("Transporte", "setores/transporte.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
+               ("Simples Nacional", "reforma/simples-hibrido.html")]
 NAV = [
     ("tributario", "Consultoria", "tributario/index.html", []),
     ("reforma", "Reforma", "reforma/index.html", []),
     ("setores", "Setores", "setores/agro.html", SETORES),
+    ("empresarial", "Empresarial", "empresarial/index.html", EMPRESARIAL),
     ("ferramentas", "Ferramentas", "ferramentas/index.html", FERRAMENTAS),
     ("solucoes", "Soluções", "solucoes/index.html", SOLUCOES),
     ("compliance", "Compliance", "compliance/index.html", COMPLIANCE),
@@ -201,7 +204,7 @@ def rodape(p: str) -> str:
 BASE_URL = "https://orgatec.io/"
 # Primeiro passo da trilha sem endereço próprio: a migalha estruturada precisa de um destino (hoje, a primeira página do grupo).
 MIGALHA_GRUPO = {"Setores": "setores/agro.html", "Consultoria": "tributario/index.html", "Reforma": "reforma/index.html",
-                 "Soluções": "solucoes/index.html", "Compliance": "compliance/index.html", "Ferramentas": "ferramentas/index.html"}
+                 "Soluções": "solucoes/index.html", "Compliance": "compliance/index.html", "Empresarial": "empresarial/index.html", "Ferramentas": "ferramentas/index.html"}
 
 
 def breadcrumb(passos: list, caminho: str) -> str:

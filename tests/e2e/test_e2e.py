@@ -3,6 +3,7 @@
 Executar:  python -m pytest tests/e2e -q   (sobe o uvicorn numa porta livre automaticamente)
 """
 
+import json
 import os
 import re
 import socket
@@ -619,7 +620,7 @@ def test_home_curta_no_celular(navegador, servidor):
 
 def test_menu_com_grupos_desktop_e_celular(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "reforma/index.html")
-    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(1)  # Ferramentas
+    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(2)  # Setores, Empresarial, Ferramentas
     grupo.locator("summary").click()
     expect(grupo.locator(".nav-sub a[href$='simulador.html']")).to_be_visible()
     pg.keyboard.press("Escape")
@@ -991,7 +992,7 @@ def test_auditoria_rural_laudo_de_exemplo_ficticio(navegador, servidor, vp):
 
 def test_menu_tem_solucoes_e_atalhos_levam_as_solucoes(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "inicio.html")
-    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(2)  # Setores, Ferramentas, Soluções
+    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(3)  # Setores, Empresarial, Ferramentas, Soluções
     expect(grupo.locator("summary")).to_have_text("Soluções")
     grupo.locator("summary").click()
     expect(grupo.locator(".nav-sub a[href='solucoes/auditoria-rural.html']")).to_be_visible()
@@ -2127,3 +2128,36 @@ def test_cards_sem_o_arquivo_de_noticias_mantem_o_aviso_e_as_fontes_oficiais(nav
     expect(pg.locator("[data-agro-noticias]").first).to_contain_text("Notícias indisponíveis agora")
     assert pg.locator("[data-agro-oficiais] a").count() == 4
     expect(pg.locator("[data-agro-atividade=leite] .audi-agro-sem")).to_contain_text("não está disponível no widget")  # leite segue sem cotação
+
+
+def test_area_empresarial_hub_e_lucro_real(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "empresarial/index.html")
+    for href in ("../setores/transporte.html", "../empresarial/lucro-real.html", "../reforma/simples-hibrido.html", "../compliance/publicos.html"):
+        expect(pg.locator(f"main a.og-cartao[href='{href}']")).to_be_visible()
+    pg2, erros2 = _abrir(navegador, servidor, "empresarial/lucro-real.html")
+    expect(pg2.locator("[data-itens] .og-item, [data-itens] details").first).to_be_visible()  # itens da reforma com destino empresarial-lucro-real
+    expect(pg2.locator("#item-cbs-2027")).to_have_count(1)
+    assert not erros and not erros2, erros + erros2
+
+
+def test_transporte_mostra_as_obrigacoes_do_transportador_e_sem_link_de_alertas(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "setores/transporte.html")
+    expect(pg.locator("#obrigacoes")).to_be_visible()
+    expect(pg.locator("#obrigacoes .lista-itens > *").first).to_be_visible()  # itens do transportador (RNTRC, CIOT, piso, vale-pedágio)
+    expect(pg.locator("[data-subnav-setores] a[href='regional.html']")).to_have_count(0)
+    assert not erros, erros
+
+
+def test_janela_empresarial_marca_atrasado_e_indisponivel(navegador, servidor):
+    janela = {"geradoEm": "2026-01-01T05:00-03:00", "proximaAtualizacao": "hoje às 11h", "aviso": "Não substitui a SEFAZ, a ANTT nem o contador.",
+              "perfis": [], "cartoes": [
+                  {"id": "E1", "modulo": "Prazos", "fonte": "Calendário", "url": "", "estado": "ok", "validadeHoras": 36, "coletadoEm": "2026-01-01T05:00-03:00",
+                   "dados": {"porPerfil": {"real-GO": []}}},
+                  {"id": "E2", "modulo": "Selic", "fonte": "BCB", "url": "", "estado": "indisponivel", "validadeHoras": 36, "coletadoEm": None, "motivo": "termos não conferidos"}]}
+    pg, erros = _abrir(navegador, servidor, "empresarial/janela.html",
+                       rotas={"**/dados/empresarial/atual.json": lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(janela))})
+    expect(pg.locator("[data-cartao=E1][data-estado=atrasado]")).to_be_visible()
+    expect(pg.locator("[data-cartao=E2][data-estado=indisponivel]")).to_contain_text("termos não conferidos")
+    expect(pg.locator("[data-cartao=T1]")).to_have_count(0)
+    pg.select_option("#jAtividade", "transportador")
+    assert not [e for e in erros if "atual.json" not in e], erros
