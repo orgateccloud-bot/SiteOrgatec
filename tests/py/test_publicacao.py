@@ -80,3 +80,12 @@ def test_respostas_da_api_sem_cache(tmp_path, monkeypatch):
     import backend.app as app
     app = importlib.reload(app)
     assert TestClient(app.app).get("/api/saude").headers["cache-control"] == "no-store"
+
+
+def test_paginas_movidas_respondem_301_direto_para_o_destino():
+    cfg = pf.firebase_json(None, False, "orgatec-api", pf.REGIAO_PADRAO)
+    r = {x["source"]: x for x in cfg["hosting"]["redirects"]}
+    assert r["/setores/transporte.html"] == {"source": "/setores/transporte.html", "destination": "/empresarial/transporte.html", "type": 301}
+    destinos = {x["destination"] for x in r.values()}
+    assert not destinos & set(r), "redirecionamento em cadeia"
+    assert cfg["hosting"]["rewrites"][0]["source"] == "/api/**"

@@ -264,7 +264,7 @@ def test_design_system_html(navegador, servidor, tema):
 
 PAGINAS_NOVAS = ["compliance/index.html", "compliance/conformidade-tributaria.html", "compliance/prevencao-lavagem.html",
                  "compliance/protecao-de-dados.html", "compliance/integridade.html", "compliance/termometro.html",
-                 "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "tributario/index.html", "reforma/index.html", "setores/agro.html", "setores/transporte.html", "setores/regional.html",
+                 "compliance/publicos.html", "compliance/publico/transportador.html", "compliance/publico/produtor-rural.html", "compliance/publico/mei.html", "compliance/publico/autonomo.html", "compliance/publico/simples.html", "compliance/publico/comercio-industria.html", "compliance/publico/servicos.html", "compliance/publico/imoveis.html", "solucoes/index.html", "solucoes/conciliacao.html", "solucoes/auditoria-rural.html", "tributario/index.html", "reforma/index.html", "setores/agro.html", "empresarial/transporte.html", "setores/regional.html",
                  "setores/janela-de-campo.html", "setores/agro-mercado.html",
                  "ferramentas/index.html", SIMULADOR, CALENDARIO, CLIENTE, "cliente/locar.html", "escritorio/index.html", CONTATO]
 
@@ -1384,7 +1384,7 @@ def test_termometro_relatorio_so_na_impressao(navegador, servidor):
 
 
 def test_setor_transporte_aponta_para_o_compliance_do_setor(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/transporte.html")
+    pg, erros = _abrir(navegador, servidor, "empresarial/transporte.html")
     expect(pg.locator("a[data-compliance-setor]")).to_have_attribute("href", "../compliance/publico/transportador.html")
     pg2, _ = _abrir(navegador, servidor, "setores/agro.html")
     expect(pg2.locator("a[data-compliance-setor]")).to_have_attribute("href", "../compliance/publico/produtor-rural.html")
@@ -1790,7 +1790,7 @@ def test_janela_de_campo_sem_os_cards_e_com_caminho_para_o_mercado(navegador, se
 
 
 def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
-    for caminho in ["setores/agro.html", "setores/janela-de-campo.html", "setores/agro-mercado.html", "setores/regional.html", "setores/transporte.html"]:
+    for caminho in ["setores/agro.html", "setores/janela-de-campo.html", "setores/agro-mercado.html", "setores/regional.html", "empresarial/transporte.html"]:
         pg, erros = _abrir(navegador, servidor, caminho)
         expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../setores/agro-mercado.html']").first).to_be_visible()
         assert not erros, (caminho, erros)
@@ -2132,7 +2132,7 @@ def test_cards_sem_o_arquivo_de_noticias_mantem_o_aviso_e_as_fontes_oficiais(nav
 
 def test_area_empresarial_hub_e_lucro_real(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "empresarial/index.html")
-    for href in ("../setores/transporte.html", "../empresarial/lucro-real.html", "../reforma/simples-hibrido.html", "../compliance/publicos.html"):
+    for href in ("../empresarial/transporte.html", "../empresarial/lucro-real.html", "../reforma/simples-hibrido.html", "../compliance/publicos.html"):
         expect(pg.locator(f"main a.og-cartao[href='{href}']")).to_be_visible()
     pg2, erros2 = _abrir(navegador, servidor, "empresarial/lucro-real.html")
     expect(pg2.locator("[data-itens] .og-item, [data-itens] details").first).to_be_visible()  # itens da reforma com destino empresarial-lucro-real
@@ -2141,7 +2141,7 @@ def test_area_empresarial_hub_e_lucro_real(navegador, servidor):
 
 
 def test_transporte_mostra_as_obrigacoes_do_transportador_e_sem_link_de_alertas(navegador, servidor):
-    pg, erros = _abrir(navegador, servidor, "setores/transporte.html")
+    pg, erros = _abrir(navegador, servidor, "empresarial/transporte.html")
     expect(pg.locator("#obrigacoes")).to_be_visible()
     expect(pg.locator("#obrigacoes .lista-itens > *").first).to_be_visible()  # itens do transportador (RNTRC, CIOT, piso, vale-pedágio)
     expect(pg.locator("[data-subnav-setores] a[href='regional.html']")).to_have_count(0)

@@ -1,0 +1,97 @@
+"""Contrato do repositório da Central de Viagem: memória, SQLite e (com o emulador) Firestore se comportam igual.
+
+Firestore: firebase emulators:exec --only firestore --project demo-orgatec "python -m pytest tests/py/transporte/test_repositorio_transporte.py"
+Sem FIRESTORE_EMULATOR_HOST os casos do Firestore são pulados.
+"""
+
+import os
+import uuid
+from datetime import UTC, datetime, timedelta
+from decimal import Decimal
+
+import pytest
+
+from backend.transporte.dominio import ParametrosCusto
+from backend.transporte.erros import NaoEncontrado
+from backend.transporte.repositorio_transporte import (
+    RepositorioFirestore,
+    RepositorioMemoria,
+    RepositorioSQLite,
+    criar_repositorio,
+)
+
+
+@pytest.fixture(params=["memoria", "sqlite", "firestore"])
+def repo(request, tmp_path):
+    if request.param == "memoria":
+        return RepositorioMemoria()
+    if request.param == "sqlite":
+        return RepositorioSQLite(tmp_path / "t.db")
+    if not os.environ.get("FIRESTORE_EMULATOR_HOST"):
+        pytest.skip("emulador do Firestore não está rodando")
+    return RepositorioFirestore(projeto="demo-orgatec", prefixo=f"t{uuid.uuid4().hex[:8]}_")
+
+
+def test_isolamento_entre_transportadoras(repo):
+    a, b = repo.criar_transportadora(), repo.criar_transportadora()
+    v = repo.inserir(a, "veiculos", {"placa": "ABC1D23"})
+    assert repo.obter(a, "veiculos", v["id"])["placa"] == "ABC1D23"
+    with pytest.raises(NaoEncontrado):
+        repo.obter(b, "veiculos", v["id"])
+    assert repo.listar(b, "veiculos") == []
+    assert repo.existe_transportadora(a) and not repo.existe_transportadora("inexistente")
+
+
+def test_decimal_e_data_voltam_como_eram(repo):
+    t = repo.criar_transportadora()
+    quando = datetime(2026, 11, 9, 12, 0, tzinfo=UTC)
+    v = repo.inserir(t, "viagens", {"veiculo_id": "x", "status": "planejada", "partida_prevista": quando, "resultado": {"total": Decimal("1234.50")}})
+    lido = repo.obter(t, "viagens", v["id"])
+    assert lido["resultado"]["total"] == Decimal("1234.50") and isinstance(lido["resultado"]["total"], Decimal)
+    assert lido["partida_prevista"] == quando
+
+
+def test_atualizar_e_parametros(repo):
+    t = repo.criar_transportadora()
+    v = repo.inserir(t, "viagens", {"veiculo_id": "x", "status": "planejada", "partida_prevista": datetime.now(UTC)})
+    assert repo.atualizar(t, "viagens", v["id"], {"status": "em_andamento"})["status"] == "em_andamento"
+    padrao, vig = repo.parametros(t)
+    assert "padrão" in vig
+    repo.salvar_parametros(t, padrao.model_copy(update={"diaria_hospedagem": Decimal("200.00")}))
+    novo, vig2 = repo.parametros(t)
+    assert isinstance(novo, ParametrosCusto) and novo.diaria_hospedagem == Decimal("200.00") and "cadastrados" in vig2
+
+
+def test_sensor_global_viagem_ativa_e_idempotencia(repo):
+    t = repo.criar_transportadora()
+    s = repo.inserir(t, "sensores", {"nome": "S1"}, id_="sensor-abc")
+    assert repo.sensor_global("sensor-abc")["id"] == s["id"] and repo.sensor_global("nao-existe") is None
+    agora = datetime.now(UTC)
+    repo.inserir(t, "viagens", {"veiculo_id": "V1", "status": "em_andamento", "partida_prevista": agora - timedelta(hours=1)})
+    assert repo.viagem_ativa(t, "V1", agora)["veiculo_id"] == "V1" and repo.viagem_ativa(t, "V2", agora) is None
+    repo.inserir(t, "leituras", {"sensor_id": "sensor-abc", "leitura_id": "L1", "ts": agora})
+    assert repo.leitura_ja_vista(t, "sensor-abc", "L1") and not repo.leitura_ja_vista(t, "sensor-abc", "L2")
+
+
+def test_purga_so_leituras_antigas(repo):
+    t = repo.criar_transportadora()
+    agora = datetime.now(UTC)
+    repo.inserir(t, "leituras", {"sensor_id": "s", "leitura_id": "velha", "ts": agora - timedelta(days=40)})
+    repo.inserir(t, "leituras", {"sensor_id": "s", "leitura_id": "nova", "ts": agora})
+    assert repo.purgar_leituras(agora - timedelta(days=30)) == 1
+    assert [x["leitura_id"] for x in repo.listar(t, "leituras")] == ["nova"]
+
+
+def test_sqlite_persiste_entre_instancias(tmp_path):
+    t = RepositorioSQLite(tmp_path / "p.db")
+    tid = t.criar_transportadora()
+    t.inserir(tid, "veiculos", {"placa": "ZZZ9Z99"})
+    outro = RepositorioSQLite(tmp_path / "p.db")
+    assert outro.existe_transportadora(tid) and outro.listar(tid, "veiculos")[0]["placa"] == "ZZZ9Z99"
+
+
+def test_criar_repositorio_por_variavel(tmp_path):
+    assert isinstance(criar_repositorio({}), RepositorioMemoria)
+    assert isinstance(criar_repositorio({"ORGATEC_TRANSPORTE_BANCO": "sqlite", "ORGATEC_TRANSPORTE_DB": str(tmp_path / "x.db")}), RepositorioSQLite)
+    with pytest.raises(RuntimeError):
+        criar_repositorio({"ORGATEC_TRANSPORTE_BANCO": "mongo"})

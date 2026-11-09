@@ -2,7 +2,7 @@
 
 Gerada por gerar_paginas.main(). O conteúdo jurídico NÃO fica aqui: os itens vêm de reforma-itens.js (destino
 'empresarial-lucro-real') e são preenchidos no navegador por paginas.js, com fonte e status de revisão.
-Transporte continua em setores/transporte.html até a decisão de mover páginas (anotada na ideia).
+Transporte fica em empresarial/transporte.html; setores/transporte.html redireciona (301, tools/preparar_firebase.py).
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ MSG = "Olá! Quero falar com a ORGATEC sobre a reforma tributária na minha empr
 
 def hub() -> None:
     cartoes = [
-        gp.cartao("Transporte", "Transportadora, cooperativa e autônomo", "IBS e CBS no frete, crédito do diesel e as obrigações do transportador, com a fonte de cada ponto.", "{p}setores/transporte.html"),
+        gp.cartao("Transporte", "Transportadora, cooperativa e autônomo", "IBS e CBS no frete, crédito do diesel e as obrigações do transportador, com a fonte de cada ponto.", "{p}empresarial/transporte.html"),
         gp.cartao("Lucro real e presumido", "CBS no lugar de PIS e Cofins", "Créditos, saldos e a transição de 2027 a 2033 para quem não está no Simples.", "{p}empresarial/lucro-real.html"),
         gp.cartao("Simples Nacional", "IBS e CBS dentro ou fora do DAS", "Quando vale apurar IBS e CBS no regime regular e as janelas de opção.", "{p}reforma/simples-hibrido.html"),
         gp.cartao("Compliance", "O que cada público precisa cumprir", "Obrigações por público, com prazo e fonte, e o termômetro de conformidade.", "{p}compliance/publicos.html"),

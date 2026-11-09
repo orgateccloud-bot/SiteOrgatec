@@ -164,7 +164,7 @@ PROVA = """        <section class="bg-superficie border-b border-linha">
 C_SIMPLES = cartao("LC 214/2025, art. 41", "Simples Nacional: IBS e CBS fora do DAS", "Quando vale apurar IBS e CBS no regime regular para não perder o cliente PJ.", "{p}reforma/simples-hibrido.html")
 C_REAL = cartao("Lucro real e presumido", "CBS no lugar de PIS e Cofins", "A CBS substitui PIS e Cofins a partir de 2027: o impacto no lucro presumido e no lucro real.", "{p}reforma/cbs.html")
 C_AGRO = cartao("LC 214/2025, arts. 137, 138 e 164 a 168", "Agro e produtor rural", "Redução de 60%, produtor não contribuinte, crédito presumido de quem compra e LCDPR.", "{p}setores/agro.html")
-C_TRANSPORTE = cartao("LC 214/2025, arts. 169, 172 a 180 e 284 a 287", "Transporte", "CT-e com IBS e CBS, crédito do diesel, frete de autônomo e passageiros.", "{p}setores/transporte.html")
+C_TRANSPORTE = cartao("LC 214/2025, arts. 169, 172 a 180 e 284 a 287", "Transporte", "CT-e com IBS e CBS, crédito do diesel, frete de autônomo e passageiros.", "{p}empresarial/transporte.html")
 C_SIMULADOR = cartao("27 UFs · setor · regime", "Simulador tributário", "Compare o cenário atual com o pós-reforma e receba o diagnóstico.", "{p}ferramentas/simulador.html")
 C_CALENDARIO = cartao("Federal · trabalhista · estadual", "Calendário fiscal", "Vencimentos do mês por UF, com download para a agenda e alerta por e-mail.", "{p}ferramentas/calendario.html")
 C_TRANSICAO = cartao("ADCT, arts. 125 a 129", "Transição ano a ano", "O que vale de CBS, IBS, PIS/Cofins, ICMS e ISS em cada ano de 2026 a 2033.", "{p}ferramentas/index.html#transicao")
@@ -398,10 +398,10 @@ def reforma() -> None:
 
 
 def subnav_setores(ativo: str) -> str:
-    botoes = "".join(f'<a href="{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
-                     for chave, rot, arq in [("agro", "Agro", "agro.html"), ("transporte", "Transporte", "transporte.html"),
-                                             ("regional", "Alertas regionais", "regional.html"), ("campo", "Janela de Campo", "janela-de-campo.html"),
-                                             ("mercado", "Cotações e notícias", "agro-mercado.html")]
+    botoes = "".join(f'<a href="{{p}}{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
+                     for chave, rot, arq in [("agro", "Agro", "setores/agro.html"), ("transporte", "Transporte", "empresarial/transporte.html"),
+                                             ("regional", "Alertas regionais", "setores/regional.html"), ("campo", "Janela de Campo", "setores/janela-de-campo.html"),
+                                             ("mercado", "Cotações e notícias", "setores/agro-mercado.html")]
                      # Sem alertas do setor, o botão leva a uma página vazia para o transporte (SETORES_REGIONAIS em regras.js)
                      if not (chave == "regional" and ativo == "transporte"))
     return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores>{botoes}</div>'
@@ -506,8 +506,8 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta:
                + itens(destino="publico-transportador", recolher=True, inicial=6), "bg-superficie", "obrigacoes") if slug == "transporte" else ""),
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
     ])
-    pagina(f"setores/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "setores", "captação + autoridade", corpo,
-           extra=["compliance-itens.js"] if slug == "transporte" else None, trilha=[("Setores", None), (nome, None)])
+    pagina(f"{'empresarial' if slug == 'transporte' else 'setores'}/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "empresarial" if slug == "transporte" else "setores", "captação + autoridade", corpo,
+           extra=["compliance-itens.js"] if slug == "transporte" else None, trilha=[("Empresarial", "empresarial/index.html"), (nome, None)] if slug == "transporte" else [("Setores", None), (nome, None)])
 
 
 # Cards por atividade (marca Orgatec Audi Agro): configuração única em tools/agro_fontes.json
@@ -1243,7 +1243,7 @@ def abertura() -> None:
 
 MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("index.html", "captação: tela de abertura"), ("inicio.html", "captação"), ("tributario/index.html", "captação + autoridade"), ("reforma/index.html", "autoridade + retenção"),
-    ("setores/agro.html", "captação + autoridade"), ("setores/transporte.html", "captação + autoridade"), ("setores/regional.html", "autoridade"), ("setores/janela-de-campo.html", "retenção"),
+    ("setores/agro.html", "captação + autoridade"), ("empresarial/transporte.html", "captação + autoridade"), ("setores/regional.html", "autoridade"), ("setores/janela-de-campo.html", "retenção"),
     ("setores/agro-mercado.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
     ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),

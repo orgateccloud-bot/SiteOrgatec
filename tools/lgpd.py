@@ -48,7 +48,23 @@ def retencao(args) -> int:
         return 0
     apagados = sum(repo.eliminar(r["protocolo"], "retencao") for r in vencidos)
     print(f"{apagados} eliminado(s)")
+    _telemetria_vencida(confirmar=True)
     return _trilha()
+
+
+def _telemetria_vencida(confirmar: bool) -> None:
+    """Leituras de sensores da Central de Viagem fora do prazo (só quando ORGATEC_TRANSPORTE_BANCO é persistente)."""
+    from datetime import timedelta
+
+    from backend.repositorio import agora_utc
+    from backend.retencao import prazos_do_ambiente
+    from backend.transporte.repositorio_transporte import RepositorioMemoria, criar_repositorio
+
+    rt = criar_repositorio()
+    if isinstance(rt, RepositorioMemoria):
+        return
+    limite = agora_utc() - timedelta(days=prazos_do_ambiente().telemetria_dias)
+    print(f"{rt.purgar_leituras(limite)} leitura(s) de sensor eliminada(s)" if confirmar else "")
 
 
 def _exportar(registros: list[dict], destino: Path) -> None:

@@ -271,7 +271,7 @@ def publicos_paginas() -> None:
              ("Conferência", "Fretes contra o piso da ANTT, pagamentos ao autônomo, vale-pedágio no DT-e e IBS e CBS nos documentos fiscais."),
              ("Rotina", "Prazos de revalidação, de exames e de atualização dos pisos acompanhados no calendário."),
              REVISAO_JURIDICA],
-            [gp.cartao("Setor", "Reforma tributária no transporte", "IBS e CBS no frete, crédito do autônomo e combustíveis.", "{p}setores/transporte.html"),
+            [gp.cartao("Setor", "Reforma tributária no transporte", "IBS e CBS no frete, crédito do autônomo e combustíveis.", "{p}empresarial/transporte.html"),
              gp.C_CALENDARIO,
              gp.cartao("Ferramenta", "Termômetro de conformidade", "Perguntas do transportador, com a fonte de cada uma.", "{p}compliance/termometro.html#perfil-transportador")])
     publico("produtor", "Compliance do produtor rural",

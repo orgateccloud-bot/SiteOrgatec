@@ -16,7 +16,7 @@ from html import escape
 # e o certificado estiverem no ar (pendência T5); config.js → portal.url faz o mesmo no navegador.
 PORTAL_URL = "https://orgatec.athenas.online/Usuarios/login"
 INICIO = "inicio.html"
-SETORES = [("Agro e produtor rural", "setores/agro.html"), ("Transporte", "setores/transporte.html"),
+SETORES = [("Agro e produtor rural", "setores/agro.html"), ("Transporte", "empresarial/transporte.html"),
            ("Alertas regionais GO, TO e PA", "setores/regional.html"), ("Janela de Campo (tempo no agro)", "setores/janela-de-campo.html"),
            ("Cotações e notícias do agro", "setores/agro-mercado.html")]
 FERRAMENTAS = [("Simulador tributário", "ferramentas/simulador.html"), ("Calendário fiscal", "ferramentas/calendario.html"),
@@ -30,7 +30,7 @@ COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de confor
               ("Por público", "compliance/publicos.html"),
               ("Conformidade tributária", "compliance/conformidade-tributaria.html"), ("Prevenção à lavagem de dinheiro", "compliance/prevencao-lavagem.html"),
               ("Proteção de dados (LGPD)", "compliance/protecao-de-dados.html"), ("Integridade e anticorrupção", "compliance/integridade.html")]
-EMPRESARIAL = [("Visão geral", "empresarial/index.html"), ("Transporte", "setores/transporte.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
+EMPRESARIAL = [("Visão geral", "empresarial/index.html"), ("Transporte", "empresarial/transporte.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
                ("Simples Nacional", "reforma/simples-hibrido.html")]
 NAV = [
     ("tributario", "Consultoria", "tributario/index.html", []),
@@ -163,7 +163,7 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
 
 RODAPE_CONSULTORIA = [("Consultoria tributária", "tributario/index.html"), ("Simulador tributário", "ferramentas/simulador.html"),
                       ("Calendário fiscal", "ferramentas/calendario.html"), ("Agro e produtor rural", "setores/agro.html"),
-                      ("Transporte", "setores/transporte.html"), ("Soluções do escritório", "solucoes/index.html"),
+                      ("Transporte", "empresarial/transporte.html"), ("Soluções do escritório", "solucoes/index.html"),
                       ("O escritório", "escritorio/index.html")]
 RODAPE_REFORMA = [("Central da Reforma", "reforma/index.html"), ("LC nº 214/2025", "reforma/lc-214-2025.html"), ("IBS", "reforma/ibs.html"),
                   ("CBS", "reforma/cbs.html"), ("Split payment", "reforma/split-payment.html"), ("Fontes legais", "reforma/fontes.html")]

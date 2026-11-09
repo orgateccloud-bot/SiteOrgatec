@@ -1,9 +1,10 @@
 """Persistência da Central de Viagem.
 
-Nesta versão só existe a implementação EM MEMÓRIA (`RepositorioMemoria`): serve ao teste e à demonstração e perde tudo ao
-reiniciar. Criar as coleções do Firestore e as tabelas do SQLite é decisão que depende de aprovação (proposta em
-docs/ideias/reestruturacao-transporte-fase5.md); quando aprovada, as duas implementações seguem este mesmo contrato, no
-padrão de backend/repositorio.py e backend/repositorio_firestore.py, com teste de contrato (tests/py/transporte).
+Três implementações do mesmo contrato (a lógica de consulta fica em `RepositorioBase`; cada uma só implementa o armazenamento):
+`RepositorioMemoria` (teste e demonstração; perde tudo ao reiniciar), `RepositorioSQLite` (tabela `transporte_docs`) e
+`RepositorioFirestore` (coleções `transporte_<coleção>`, documento `<transportadora>__<id>`). A escolha é por
+ORGATEC_TRANSPORTE_BANCO (`criar_repositorio`); sem a variável nada é gravado em disco. Contrato testado em
+tests/py/transporte/test_repositorio_transporte.py (o Firestore só roda com o emulador).
 
 Isolamento entre clientes: toda leitura e escrita exige o `transportadora_id`; registro de outra transportadora é NaoEncontrado.
 Motorista: só nome e vínculo ao usuário (LGPD). Leituras de telemetria têm prazo de guarda (backend/retencao.py, `purgar_leituras`).
@@ -12,9 +13,14 @@ Motorista: só nome e vínculo ao usuário (LGPD). Leituras de telemetria têm p
 from __future__ import annotations
 
 import copy
+import json
+import os
+import sqlite3
 import threading
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from backend.transporte.dominio import ParametrosCusto, utc
@@ -23,88 +29,274 @@ from backend.transporte.erros import NaoEncontrado
 COLECOES = ("veiculos", "motoristas", "viagens", "alertas", "sensores", "leituras")
 
 
-class RepositorioMemoria:
+def codificar(v: Any) -> Any:
+    """JSON sem perda: Decimal e datas voltam como eram (o domínio usa Decimal para dinheiro)."""
+    if isinstance(v, Decimal):
+        return {"__t": "dec", "v": str(v)}
+    if isinstance(v, datetime):
+        return {"__t": "dt", "v": v.isoformat()}
+    if isinstance(v, date):
+        return {"__t": "d", "v": v.isoformat()}
+    if isinstance(v, dict):
+        return {k: codificar(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [codificar(x) for x in v]
+    return v
+
+
+def decodificar(v: Any) -> Any:
+    if isinstance(v, dict):
+        t = v.get("__t")
+        if set(v) == {"__t", "v"}:
+            if t == "dec":
+                return Decimal(v["v"])
+            if t == "dt":
+                return datetime.fromisoformat(v["v"])
+            if t == "d":
+                return date.fromisoformat(v["v"])
+        return {k: decodificar(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [decodificar(x) for x in v]
+    return v
+
+
+class RepositorioBase:
+    """Consultas do módulo sobre as primitivas de armazenamento que cada implementação define."""
+
     def __init__(self) -> None:
         self._trava = threading.RLock()
-        self._dados: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}  # transportadora -> coleção -> id -> registro
-        self._parametros: dict[str, ParametrosCusto] = {}
-        self._transportadoras: set[str] = set()
+
+    def _pegar(self, tid: str, colecao: str, rid: str) -> dict[str, Any] | None:
+        raise NotImplementedError
+
+    def _gravar(self, tid: str, colecao: str, rid: str, reg: dict[str, Any]) -> None:
+        raise NotImplementedError
+
+    def _todos(self, tid: str, colecao: str) -> list[dict[str, Any]]:
+        raise NotImplementedError
+
+    def _global(self, colecao: str, rid: str) -> dict[str, Any] | None:
+        raise NotImplementedError
+
+    def _apagar_leituras(self, antes_de: datetime) -> int:
+        raise NotImplementedError
+
+    def _tenant_existe(self, tid: str) -> bool:
+        raise NotImplementedError
+
+    def _tenant_criar(self, tid: str) -> None:
+        raise NotImplementedError
 
     # ---- transportadoras (tenant) ----
     def criar_transportadora(self, transportadora_id: str | None = None) -> str:
-        with self._trava:
-            tid = transportadora_id or str(uuid.uuid4())
-            self._transportadoras.add(tid)
-            self._dados.setdefault(tid, {c: {} for c in COLECOES})
-            return tid
+        tid = transportadora_id or str(uuid.uuid4())
+        self._tenant_criar(tid)
+        return tid
 
     def existe_transportadora(self, tid: str) -> bool:
-        return tid in self._transportadoras
+        return self._tenant_existe(tid)
 
     # ---- genérico ----
     def inserir(self, tid: str, colecao: str, registro: dict[str, Any], id_: str | None = None) -> dict[str, Any]:
-        with self._trava:
-            rid = id_ or str(uuid.uuid4())
-            reg = {**copy.deepcopy(registro), "id": rid, "transportadora_id": tid}
-            self._dados[tid][colecao][rid] = reg
-            return copy.deepcopy(reg)
+        rid = id_ or str(uuid.uuid4())
+        reg = {**copy.deepcopy(registro), "id": rid, "transportadora_id": tid}
+        self._gravar(tid, colecao, rid, reg)
+        return copy.deepcopy(reg)
 
     def obter(self, tid: str, colecao: str, rid: str) -> dict[str, Any]:
-        with self._trava:
-            reg = self._dados.get(tid, {}).get(colecao, {}).get(rid)
-            if reg is None:
-                raise NaoEncontrado()
-            return copy.deepcopy(reg)
+        reg = self._pegar(tid, colecao, rid)
+        if reg is None:
+            raise NaoEncontrado()
+        return copy.deepcopy(reg)
 
     def atualizar(self, tid: str, colecao: str, rid: str, mudancas: dict[str, Any]) -> dict[str, Any]:
         with self._trava:
             atual = self.obter(tid, colecao, rid)
             atual.update(copy.deepcopy(mudancas))
-            self._dados[tid][colecao][rid] = atual
+            self._gravar(tid, colecao, rid, atual)
             return copy.deepcopy(atual)
 
     def listar(self, tid: str, colecao: str) -> list[dict[str, Any]]:
-        with self._trava:
-            return [copy.deepcopy(r) for r in self._dados.get(tid, {}).get(colecao, {}).values()]
+        return [copy.deepcopy(r) for r in self._todos(tid, colecao)]
 
     # ---- parâmetros ----
     def parametros(self, tid: str) -> tuple[ParametrosCusto, str]:
-        with self._trava:
-            p = self._parametros.get(tid)
-            return (p, "cadastrados pela transportadora") if p else (ParametrosCusto(), "padrão de exemplo (sem parâmetros cadastrados)")
+        reg = self._pegar(tid, "parametros", "atual")
+        if reg:
+            return ParametrosCusto(**{k: v for k, v in reg.items() if k not in ("id", "transportadora_id")}), "cadastrados pela transportadora"
+        return ParametrosCusto(), "padrão de exemplo (sem parâmetros cadastrados)"
 
     def salvar_parametros(self, tid: str, p: ParametrosCusto) -> None:
-        with self._trava:
-            self._parametros[tid] = p
+        self._gravar(tid, "parametros", "atual", {**p.model_dump(), "id": "atual", "transportadora_id": tid})
 
     # ---- telemetria ----
     def sensor_global(self, sensor_id: str) -> dict[str, Any] | None:
-        """O sensor chama sem sessão de usuário: a busca é só por id (que embute o tenant), e quem pergunta recebe 403 se faltar."""
-        with self._trava:
-            for tid, cols in self._dados.items():
-                if sensor_id in cols["sensores"]:
-                    return copy.deepcopy(cols["sensores"][sensor_id])
-            return None
+        """O sensor chama sem sessão de usuário: a busca é só por id; quem pergunta recebe 403 se faltar."""
+        r = self._global("sensores", sensor_id)
+        return copy.deepcopy(r) if r else None
 
     def leitura_ja_vista(self, tid: str, sensor_id: str, leitura_id: str) -> bool:
-        with self._trava:
-            return any(r["sensor_id"] == sensor_id and r["leitura_id"] == leitura_id for r in self._dados[tid]["leituras"].values())
+        return any(r["sensor_id"] == sensor_id and r["leitura_id"] == leitura_id for r in self._todos(tid, "leituras"))
 
     def viagem_ativa(self, tid: str, veiculo_id: str, ts: datetime) -> dict[str, Any] | None:
-        with self._trava:
-            candidatas = [v for v in self._dados[tid]["viagens"].values()
-                          if v["veiculo_id"] == veiculo_id and v["status"] in ("planejada", "em_andamento")
-                          and utc(v["partida_prevista"]) <= utc(ts) + timedelta(hours=12)]
-            candidatas.sort(key=lambda v: v["partida_prevista"], reverse=True)
-            return copy.deepcopy(candidatas[0]) if candidatas else None
+        candidatas = [v for v in self._todos(tid, "viagens")
+                      if v["veiculo_id"] == veiculo_id and v["status"] in ("planejada", "em_andamento")
+                      and utc(v["partida_prevista"]) <= utc(ts) + timedelta(hours=12)]
+        candidatas.sort(key=lambda v: v["partida_prevista"], reverse=True)
+        return copy.deepcopy(candidatas[0]) if candidatas else None
 
     def purgar_leituras(self, antes_de: datetime) -> int:
-        """Prazo de guarda (LGPD): apaga leituras mais antigas que `antes_de`. Chamado por tools/lgpd.py quando o repositório for persistente."""
+        """Prazo de guarda (LGPD): apaga leituras mais antigas que `antes_de`. Chamado por tools/lgpd.py."""
+        return self._apagar_leituras(antes_de)
+
+
+class RepositorioMemoria(RepositorioBase):
+    def __init__(self) -> None:
+        super().__init__()
+        self._dados: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}  # transportadora -> coleção -> id -> registro
+        self._transportadoras: set[str] = set()
+
+    def _tenant_criar(self, tid: str) -> None:
+        with self._trava:
+            self._transportadoras.add(tid)
+            self._dados.setdefault(tid, {})
+
+    def _tenant_existe(self, tid: str) -> bool:
+        return tid in self._transportadoras
+
+    def _pegar(self, tid, colecao, rid):
+        with self._trava:
+            return self._dados.get(tid, {}).get(colecao, {}).get(rid)
+
+    def _gravar(self, tid, colecao, rid, reg):
+        with self._trava:
+            self._dados.setdefault(tid, {}).setdefault(colecao, {})[rid] = reg
+
+    def _todos(self, tid, colecao):
+        with self._trava:
+            return list(self._dados.get(tid, {}).get(colecao, {}).values())
+
+    def _global(self, colecao, rid):
+        with self._trava:
+            for cols in self._dados.values():
+                if rid in cols.get(colecao, {}):
+                    return cols[colecao][rid]
+            return None
+
+    def _apagar_leituras(self, antes_de):
         with self._trava:
             total = 0
             for cols in self._dados.values():
-                velhas = [k for k, r in cols["leituras"].items() if utc(r["ts"]) < utc(antes_de)]
+                velhas = [k for k, r in cols.get("leituras", {}).items() if utc(r["ts"]) < utc(antes_de)]
                 for k in velhas:
                     del cols["leituras"][k]
                 total += len(velhas)
             return total
+
+
+class RepositorioSQLite(RepositorioBase):
+    """Uma tabela de documentos JSON: (transportadora, coleção, id). Toda consulta filtra pela transportadora."""
+
+    def __init__(self, caminho: Path | str) -> None:
+        super().__init__()
+        self._caminho = str(caminho)
+        Path(self._caminho).parent.mkdir(parents=True, exist_ok=True)
+        con = sqlite3.connect(self._caminho)
+        try:
+            with con:
+                con.execute("CREATE TABLE IF NOT EXISTS transporte_docs (tid TEXT NOT NULL, colecao TEXT NOT NULL, id TEXT NOT NULL, "
+                            "ts TEXT, doc TEXT NOT NULL, PRIMARY KEY (tid, colecao, id))")
+                con.execute("CREATE TABLE IF NOT EXISTS transporte_tenants (tid TEXT PRIMARY KEY)")
+                con.execute("CREATE INDEX IF NOT EXISTS transporte_docs_id ON transporte_docs (colecao, id)")
+        finally:
+            con.close()
+
+    def _exec(self, sql: str, args: tuple = (), escrever: bool = False):
+        con = sqlite3.connect(self._caminho)
+        try:
+            with con:
+                cur = con.execute(sql, args)
+                return cur.rowcount if escrever else cur.fetchall()
+        finally:
+            con.close()
+
+    def _tenant_criar(self, tid):
+        self._exec("INSERT OR IGNORE INTO transporte_tenants VALUES (?)", (tid,), escrever=True)
+
+    def _tenant_existe(self, tid):
+        return bool(self._exec("SELECT 1 FROM transporte_tenants WHERE tid = ?", (tid,)))
+
+    def _pegar(self, tid, colecao, rid):
+        r = self._exec("SELECT doc FROM transporte_docs WHERE tid = ? AND colecao = ? AND id = ?", (tid, colecao, rid))
+        return decodificar(json.loads(r[0][0])) if r else None
+
+    def _gravar(self, tid, colecao, rid, reg):
+        ts = utc(reg["ts"]).isoformat() if colecao == "leituras" and reg.get("ts") else None
+        self._exec("INSERT OR REPLACE INTO transporte_docs (tid, colecao, id, ts, doc) VALUES (?,?,?,?,?)",
+                   (tid, colecao, rid, ts, json.dumps(codificar(reg), ensure_ascii=False)), escrever=True)
+
+    def _todos(self, tid, colecao):
+        return [decodificar(json.loads(r[0])) for r in self._exec("SELECT doc FROM transporte_docs WHERE tid = ? AND colecao = ?", (tid, colecao))]
+
+    def _global(self, colecao, rid):
+        r = self._exec("SELECT doc FROM transporte_docs WHERE colecao = ? AND id = ?", (colecao, rid))
+        return decodificar(json.loads(r[0][0])) if r else None
+
+    def _apagar_leituras(self, antes_de):
+        return self._exec("DELETE FROM transporte_docs WHERE colecao = 'leituras' AND ts < ?", (utc(antes_de).isoformat(),), escrever=True)
+
+
+class RepositorioFirestore(RepositorioBase):
+    """Coleções `<prefixo>transporte_<coleção>`; documento `<transportadora>__<id>` com os campos tid, id, ts e doc (JSON em texto)."""
+
+    def __init__(self, projeto: str | None = None, cliente=None, prefixo: str = "") -> None:
+        super().__init__()
+        from google.cloud import firestore
+        self._db = cliente or firestore.Client(project=projeto)
+        self._prefixo = prefixo
+
+    def _col(self, colecao: str):
+        return self._db.collection(f"{self._prefixo}transporte_{colecao}")
+
+    def _tenant_criar(self, tid):
+        self._col("tenants").document(tid).set({"tid": tid})
+
+    def _tenant_existe(self, tid):
+        return self._col("tenants").document(tid).get().exists
+
+    def _pegar(self, tid, colecao, rid):
+        d = self._col(colecao).document(f"{tid}__{rid}").get()
+        return decodificar(json.loads(d.get("doc"))) if d.exists else None
+
+    def _gravar(self, tid, colecao, rid, reg):
+        ts = utc(reg["ts"]).isoformat() if colecao == "leituras" and reg.get("ts") else None
+        self._col(colecao).document(f"{tid}__{rid}").set({"tid": tid, "id": rid, "ts": ts, "doc": json.dumps(codificar(reg), ensure_ascii=False)})
+
+    def _todos(self, tid, colecao):
+        return [decodificar(json.loads(d.get("doc"))) for d in self._col(colecao).where("tid", "==", tid).stream()]
+
+    def _global(self, colecao, rid):
+        for d in self._col(colecao).where("id", "==", rid).limit(1).stream():
+            return decodificar(json.loads(d.get("doc")))
+        return None
+
+    def _apagar_leituras(self, antes_de):
+        total = 0
+        for d in self._col("leituras").where("ts", "<", utc(antes_de).isoformat()).stream():
+            d.reference.delete()
+            total += 1
+        return total
+
+
+def criar_repositorio(env: dict[str, str] | None = None) -> RepositorioBase:
+    """ORGATEC_TRANSPORTE_BANCO = memoria (padrão) | sqlite | firestore."""
+    e = os.environ if env is None else env
+    banco = e.get("ORGATEC_TRANSPORTE_BANCO", "memoria").strip().lower()
+    if banco == "memoria":
+        return RepositorioMemoria()
+    if banco == "sqlite":
+        padrao = Path(__file__).resolve().parents[1] / "dados" / "transporte.db"
+        return RepositorioSQLite(e.get("ORGATEC_TRANSPORTE_DB") or padrao)
+    if banco == "firestore":
+        return RepositorioFirestore(projeto=e.get("ORGATEC_FIRESTORE_PROJETO") or None)
+    raise RuntimeError(f"ORGATEC_TRANSPORTE_BANCO inválido: {banco!r} (memoria, sqlite ou firestore)")

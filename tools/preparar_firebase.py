@@ -54,6 +54,11 @@ def servico_valido(nome: str | None) -> str | None:
     return nome
 
 
+# Páginas movidas: 301 direto para o destino final, sem cadeia (Fase 2, docs/ideias/reestruturacao-transporte-fase2.md).
+# R1: o site segue com .html (cleanUrls desligado); por isso só a forma com .html existe.
+REDIRECIONAMENTOS = [("/setores/transporte.html", "/empresarial/transporte.html")]
+
+
 def csp(api: str | None) -> str:
     """Mesma política do backend (backend/app.py); uma API em outro domínio entra em connect-src."""
     return "; ".join([
@@ -110,6 +115,7 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
             {"source": "/dados/**", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
         ],
     }
+    hosting["redirects"] = [{"source": de, "destination": para, "type": 301} for de, para in REDIRECIONAMENTOS]
     if cloud_run:
         hosting["rewrites"] = [{"source": "/api/**", "run": {"serviceId": cloud_run, "region": regiao}}]
     return {

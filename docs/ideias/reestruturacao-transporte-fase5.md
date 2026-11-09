@@ -1,6 +1,6 @@
 # Fase 5: Central de Viagem e portal do cliente com sensores
 
-Situação: **implementada atrás de flag desligada, só com dados em memória**. O que depende de aprovação está na seção "Aprovações pendentes".
+Situação: **implementada atrás de flag desligada.** A persistência existe (SQLite e Firestore, por `ORGATEC_TRANSPORTE_BANCO`; padrão `memoria`), mas o Firestore só foi testado no contrato com o emulador, que não rodou aqui (casos pulados). Em produção a API segue recusando tudo sem login real (R4). O que depende de aprovação está na seção "Aprovações pendentes".
 
 ## O que existe
 
@@ -9,7 +9,7 @@ Situação: **implementada atrás de flag desligada, só com dados em memória**
 | Domínio, jornada, despesas, rota e geografia | `backend/transporte/dominio.py`, `servicos/`, `geo.py` | Reaproveitado do módulo de referência. Os casos de referência conferidos à mão (jornada de 1.200 km em 33 h e as despesas) passam como testes. |
 | Provedores simulados | `backend/transporte/provedores/` | Rota, clima, combustível, pedágio e bloqueio. Os reais **não existem** (ver pendências). |
 | Telemetria | `backend/transporte/telemetria/` | Assinatura HMAC, adaptadores por fornecedor, ingestão idempotente e limitador por sensor. |
-| Persistência | `backend/transporte/repositorio_transporte.py` | **Só em memória.** Perde tudo ao reiniciar. |
+| Persistência | `backend/transporte/repositorio_transporte.py` | Memória, SQLite (`transporte_docs`) e Firestore (`transporte_<coleção>`). Padrão: memória. Prazo de guarda das leituras aplicado por `python tools/lgpd.py retencao --confirmar`. |
 | API | `backend/transporte/api.py`, incluída em `backend/app.py` | `APIRouter` com documentação automática desligada, o limite por IP do app e o mesmo tratamento de IP. |
 | Telas | `site/transporte/central.html` e `portal.html` (gerador `tools/paginas_transporte.py`) | `noindex`, fora do menu, do hub e do mapa. Usam `orgatec.css` e os tokens (tema claro e escuro). |
 | Testes | `tests/py/transporte/` (36 testes) | Isolamento entre transportadoras, papéis, portal em leitura, sensor, idempotência, 403 sem motivo, limite, produção recusa o modo dev. |
@@ -51,7 +51,7 @@ Flags (todas desligadas por padrão): `ORGATEC_TRANSPORTE`, `ORGATEC_TRANSPORTE_
 
 ## Aprovações pendentes (parei antes de decidir)
 
-1. **Persistência.** Proposta de coleções no Firestore (e tabelas equivalentes no SQLite), todas com `transportadora_id` e consultas sempre filtradas por ele: `transporte_veiculos`, `transporte_motoristas` (só nome e vínculo de usuário), `transporte_viagens` (com o resultado calculado), `transporte_alertas`, `transporte_sensores` (sem segredo) e `transporte_leituras` (com prazo de guarda). O contrato é o de `RepositorioMemoria`; o teste de contrato seguiria o padrão de `tests/py/test_repositorio_contrato.py`, com o emulador. Criar coleção é decisão do escritório.
+1. **Persistência (implementada; falta rodar o contrato no emulador do Firestore e criar as coleções em produção).** Proposta de coleções no Firestore (e tabelas equivalentes no SQLite), todas com `transportadora_id` e consultas sempre filtradas por ele: `transporte_veiculos`, `transporte_motoristas` (só nome e vínculo de usuário), `transporte_viagens` (com o resultado calculado), `transporte_alertas`, `transporte_sensores` (sem segredo) e `transporte_leituras` (com prazo de guarda). O contrato é o de `RepositorioMemoria`; o teste de contrato seguiria o padrão de `tests/py/test_repositorio_contrato.py`, com o emulador. Criar coleção é decisão do escritório.
 2. **Provedores reais.** OpenRouteService (precisa de chave, sem SLA, 2.000 rotas por dia), MET Norway (User-Agent identificado, uso comercial a confirmar nos termos), ANP (falta o conversor do arquivo oficial) e pedágio ANTT (tarifa em formato aberto não confirmada). Precisam de um cliente HTTP no servidor, que é dependência nova (`httpx`), além de chave e termos conferidos. Sem aprovação ficam recusados.
 3. **Login e área do cliente (R4/D2).** Sem autenticador real, em produção toda chamada responde 403. Não ativei o Firebase Authentication.
 4. **Base legal do monitoramento de motoristas.** Rascunho em `docs/lgpd/transporte-monitoramento.md`, para revisão do responsável técnico e do encarregado.

@@ -117,7 +117,7 @@
     simples: { rotulo: 'Simples Nacional', itens: ['simples-hibrido', 'teste-2026', 'split-payment'], guia: 'reforma/simples-hibrido.html', sim: '?regime=simples' },
     real: { rotulo: 'Lucro real e presumido', itens: ['cbs-2027', 'nao-cumulatividade', 'saldo-piscofins'], guia: 'reforma/cbs.html', sim: '?regime=real' },
     agro: { rotulo: 'Agro e produtor rural', itens: ['produtor-nao-contribuinte', 'agro-reducao-60', 'credito-presumido-produtor'], guia: 'setores/agro.html', sim: '?setor=agro' },
-    transporte: { rotulo: 'Transporte', itens: ['transporte-carga', 'documentos-fiscais', 'tac-credito-presumido'], guia: 'setores/transporte.html', sim: '' }
+    transporte: { rotulo: 'Transporte', itens: ['transporte-carga', 'documentos-fiscais', 'tac-credito-presumido'], guia: 'empresarial/transporte.html', sim: '' }
   };
   var painelCaso = $('[data-caso-painel]'), cartoesCaso = $$('a[data-caso]');
   if (painelCaso && cartoesCaso.length) {

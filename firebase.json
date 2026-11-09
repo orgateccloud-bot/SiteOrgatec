@@ -91,6 +91,13 @@
         ]
       }
     ],
+    "redirects": [
+      {
+        "source": "/setores/transporte.html",
+        "destination": "/empresarial/transporte.html",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
         "source": "/api/**",

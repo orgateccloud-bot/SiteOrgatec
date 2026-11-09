@@ -40,7 +40,7 @@ from backend.transporte.erros import AcessoNegado, EntradaInvalida, ErroTranspor
 from backend.transporte.geo import acumulado_km, distancia_ponto_rota_km, ponto_no_km
 from backend.transporte.provedores.base import Bloqueio
 from backend.transporte.provedores.registro import Provedores, bloqueio_simulado, provedores_do_ambiente
-from backend.transporte.repositorio_transporte import RepositorioMemoria
+from backend.transporte.repositorio_transporte import RepositorioBase, criar_repositorio
 from backend.transporte.servicos import viagem as svc_viagem
 from backend.transporte.telemetria import ingestao
 from backend.transporte.telemetria.adaptadores import ADAPTADORES
@@ -70,7 +70,7 @@ def autenticador_recusa_tudo(_request: Request) -> Contexto:
 
 @dataclass
 class Servicos:
-    repo: RepositorioMemoria
+    repo: RepositorioBase
     provedores: Provedores
     autenticador: Autenticador
     cofre: Cofre | None
@@ -83,7 +83,7 @@ class Servicos:
         return self.cofre
 
 
-def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioMemoria | None = None) -> Servicos:
+def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioBase | None = None) -> Servicos:
     e = env if env is not None else dict(os.environ)
     producao = e.get("ORGATEC_PRODUCAO", "0") == "1"
     auth_modo = e.get("ORGATEC_TRANSPORTE_AUTH", "dev")
@@ -96,7 +96,7 @@ def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador
             autenticador = autenticador_recusa_tudo  # login real depende da decisão R4
     chave = e.get("ORGATEC_TRANSPORTE_CHAVE", "")
     cofre = Cofre(chave) if e.get("ORGATEC_TRANSPORTE_SENSORES", "0") == "1" else None
-    repo = repo or RepositorioMemoria()
+    repo = repo or criar_repositorio(e)
     if e.get("ORGATEC_TRANSPORTE_DEMO", "0") == "1" and not producao:
         repo.criar_transportadora(TRANSPORTADORA_DEMO)  # só desenvolvimento: transportadora fictícia para experimentar a tela
     return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao)
@@ -146,7 +146,7 @@ class BloqueioDaTransportadora:
 
     nome = "bloqueio_manual"
 
-    def __init__(self, repo: RepositorioMemoria, tid: str) -> None:
+    def __init__(self, repo: RepositorioBase, tid: str) -> None:
         self._repo, self._tid = repo, tid
 
     def na_rota(self, geometria: Any, inicio: datetime, fim: datetime) -> list[Bloqueio]:
@@ -400,7 +400,7 @@ async def receber_leituras(sensor_id: str, request: Request, s: Servicos = Depen
     return ingestao.receber(s.repo, s.cofre_ativo(), s.limitador, sensor_id, corpo, request.headers.get("X-Timestamp"), request.headers.get("X-Assinatura"))
 
 
-def instalar(app: Any, env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioMemoria | None = None,
+def instalar(app: Any, env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioBase | None = None,
              limite_ip: Any = None) -> bool:
     """Chamado por backend/app.py. Com a flag desligada não registra nada e devolve False."""
     if not ligado(env):

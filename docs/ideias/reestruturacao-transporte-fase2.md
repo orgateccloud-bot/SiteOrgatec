@@ -1,6 +1,6 @@
 # Fase 2: sitemap e áreas (preparada, não executada)
 
-Situação: **não executada.** Toda a fase exige aprovação do escritório (mover páginas, mudar `firebase.json`, decidir R1 e o destino da tela de abertura). O que já foi feito sem mover nada: a Área Empresarial existe com endereços novos (`empresarial/`) e o menu já tem o grupo **Empresarial** ao lado de Setores.
+Situação: **executada só em parte (autorizada em 09/11/2026 com "execute as implementações necessárias").** Decisão tomada pelo menor risco: **R1 = manter `.html`** (sem `cleanUrls`). Feito: `setores/transporte.html` foi para `empresarial/transporte.html`, com 301 gerado por `tools/preparar_firebase.py` (`REDIRECIONAMENTOS`; teste em `tests/py/test_publicacao.py`). **Não feito, por ser maior e mais arriscado:** mover agro, janela de campo, cotações, regional, tributário e escritório, e o destino da tela de abertura (`/`). Para continuar, basta acrescentar pares em `REDIRECIONAMENTOS` e mover a página no gerador. Texto original: **não executada.** Toda a fase exige aprovação do escritório (mover páginas, mudar `firebase.json`, decidir R1 e o destino da tela de abertura). O que já foi feito sem mover nada: a Área Empresarial existe com endereços novos (`empresarial/`) e o menu já tem o grupo **Empresarial** ao lado de Setores.
 
 ## Decisões que travam a fase
 
