@@ -1,6 +1,6 @@
 # Janela de Campo: satélite com divisas, hora em cada imagem e aviso quando a NASA falha (Fase 5)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/campo-satelite` (parte de `desenvolvimento`, que já tem as Fases 0 a 4)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-satelite-20z856ne.web.app/setores/janela-de-campo.html) (expira em 07/12/2026). Conferida em 375 px e 1280 px com as imagens reais da NASA, em 07/11/2026 às 22h: celular sem pedido à NASA antes de abrir a aba; cor real às 21h20 (infravermelho às 21h30); chuva IMERG de 06/11; sem erros nem rolagem lateral.
 

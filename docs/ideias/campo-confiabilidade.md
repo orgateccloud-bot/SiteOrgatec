@@ -1,6 +1,6 @@
 # Janela de Campo: o boletim não pode parar sem ninguém saber (Fase 0)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/campo-confiabilidade`
 - **Prévia:** [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) (a mesma das Fases 0 e 1; expira em 07/12/2026)
 

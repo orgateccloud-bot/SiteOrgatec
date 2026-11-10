@@ -1,6 +1,6 @@
 # Cotações e notícias do agro: fontes com termos conferidos e card que nunca fica mudo (Fase 6)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/agro-noticias` (parte de `desenvolvimento`, que já tem as Fases 0 a 4)
 - **Prévia:** [link](https://orgatec-site--ideia-agro-noticias-lmm935s0.web.app/setores/agro-mercado.html) (expira em 07/12/2026). Conferida em 375 px e 1280 px com dados reais em 07/11/2026 às 23h: 11 cards, 5 com notícia, 6 sem notícia e com os links oficiais, leite sem cotação, 10 de 10 widgets do CEPEA respondendo, sem erro nem rolagem lateral.
 

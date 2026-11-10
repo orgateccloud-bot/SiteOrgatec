@@ -1,6 +1,6 @@
 # Janela de Campo: a decisão do dia na primeira tela (Fase 3)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/campo-layout` (junta as Fases 0, 1 e 2: `ideia/campo-qualidade` e `ideia/agro-hub`)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-layout-xu3bh1tl.web.app/setores/janela-de-campo.html) (expira em 07/12/2026). Usa um boletim real gerado com o código das Fases 0 e 1, em 07/11/2026 às 20h22.
 

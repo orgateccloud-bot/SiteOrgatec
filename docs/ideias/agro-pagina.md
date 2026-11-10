@@ -1,6 +1,6 @@
 # Página Agro: começa pelo dia do produtor, e os pontos da reforma abrem sob demanda (Fase 4)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/agro-pagina` (parte de `ideia/campo-layout`, que junta as Fases 0 a 3)
 - **Prévia:** [link](https://orgatec-site--ideia-agro-pagina-85dosbz7.web.app/setores/agro.html) (expira em 07/12/2026). Usa um boletim real gerado com o código das Fases 0 e 1, em 07/11/2026 às 20h45.
 

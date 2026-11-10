@@ -1,6 +1,6 @@
 # Janela de Campo: o painel precisa discriminar e dizer quando falta dado (Fase 1)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/campo-qualidade` (parte de `ideia/campo-confiabilidade`, que ainda não foi juntada a `desenvolvimento`)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-qualidade-5agwgcx3.web.app/setores/janela-de-campo.html) (inclui a Fase 0; expira em 07/12/2026). O boletim da prévia foi gerado com o código desta branch, em 07/11/2026 às 19h56; o aviso de polo sem previsão não aparece nela porque a fonte respondeu a todos os polos, mas a lacuna de 04/11 aparece no seletor.
 

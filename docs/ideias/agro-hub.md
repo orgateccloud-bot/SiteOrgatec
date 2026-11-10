@@ -1,6 +1,6 @@
 # Agro: uma entrada única para o produtor rural (Fase 2)
 
-- **Situação:** aprovada em 07/11/2026 e junta em `desenvolvimento`; falta lançar (publicar com `tools/publicar.py`, com a sua autorização)
+- **Situação:** aprovada em 07/11/2026 e publicada: no ar desde 08/11/2026 (tag `publicado-20261108-0650`); branch mantida até o lançamento definitivo
 - **Branch:** `ideia/agro-hub` (parte de `desenvolvimento`; independente das branches `ideia/campo-confiabilidade` e `ideia/campo-qualidade`)
 - **Prévia:** [link](https://orgatec-site--ideia-agro-hub-kk86piet.web.app/setores/agro.html) (expira em 07/12/2026)
 
