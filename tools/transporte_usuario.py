@@ -55,7 +55,8 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     if a.transportadora and not re.fullmatch(r"[0-9a-fA-F-]{36}", a.transportadora):
         raise SystemExit("A transportadora deve ser um UUID (36 caracteres).")
-    with httpx.Client(timeout=30, headers={"Authorization": f"Bearer {_token_adc()}"}) as c:
+    # x-goog-user-project: com credencial de usuário (gcloud auth application-default login) o Identity Toolkit exige o projeto de cota
+    with httpx.Client(timeout=30, headers={"Authorization": f"Bearer {_token_adc()}", "x-goog-user-project": a.projeto}) as c:
         print(definir_acesso(c, a.projeto, a.email, None if a.revogar else a.transportadora, a.papel))
     return 0
 
