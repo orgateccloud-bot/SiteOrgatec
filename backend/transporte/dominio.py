@@ -55,6 +55,8 @@ class ParametrosCusto(BaseModel):
     jornada_direcao_max_h: Decimal = Field(Decimal("10"), gt=0, le=Decimal("16"))
     descanso_diario_h: Decimal = Field(Decimal("11"), ge=0, le=Decimal("24"))
     tempo_parada_intermediaria_h: Decimal = Field(Decimal("1"), ge=0, le=Decimal("24"))
+    # Sem padrão de propósito: não há média oficial de velocidade de caminhão no Brasil. Em branco, vale o tempo do provedor de rota.
+    velocidade_media_caminhao_kmh: Decimal | None = Field(None, ge=Decimal("20"), le=Decimal("90"))
 
 
 # Onde cada parâmetro vem e por que tem esse valor. Aparece na tela de parâmetros.
@@ -90,6 +92,10 @@ PARAMETROS_META: dict[str, dict[str, str]] = {
     },
     "descanso_diario_h": {"rotulo": "Descanso diário (h)", "fonte": "CTB art. 67-C §3º — revisão jurídica pendente"},
     "tempo_parada_intermediaria_h": {"rotulo": "Tempo em cada parada intermediária (h)", "fonte": "Parâmetro"},
+    "velocidade_media_caminhao_kmh": {
+        "rotulo": "Velocidade média do caminhão (km/h)",
+        "fonte": "Parâmetro da transportadora. Em branco, vale o tempo da rota de carro do Google; a rota de caminhão do Google não atende o Brasil",
+    },
 }
 
 

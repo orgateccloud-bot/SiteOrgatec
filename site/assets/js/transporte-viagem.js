@@ -3,7 +3,7 @@
   'use strict';
   var OT = raiz.OT, esc = OT.esc, Mapa = raiz.OTMapa;
   var ROTULO_EVENTO = { direcao: 'Direção', pausa: 'Pausa obrigatória', refeicao: 'Refeição', pernoite: 'Pernoite / descanso', parada: 'Parada (carga/descarga)', chegada: 'Chegada' };
-  var ROTULO_FONTE = { rota: 'Rota', combustivel: 'Combustível', pedagio: 'Pedágio', postos: 'Postos', bloqueios: 'Bloqueios', clima: 'Clima' };
+  var ROTULO_FONTE = { rota: 'Rota', combustivel: 'Combustível', pedagio: 'Pedágio', postos: 'Postos', bloqueios: 'Bloqueios', clima: 'Clima', tempo: 'Tempo de direção' };
 
   /* O mapa do Google é criado uma vez por página (cada criação conta como um carregamento cobrado) e reaproveitado a cada redesenho. */
   var mapa = { el: null, inst: null, falhou: false, chave: null, carregando: null };

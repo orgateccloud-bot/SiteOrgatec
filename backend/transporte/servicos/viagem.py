@@ -29,6 +29,29 @@ def _fonte(estado: str, fonte: str, detalhe: str = "") -> dict[str, str]:
     return {"estado": estado, "fonte": fonte, "detalhe": detalhe}
 
 
+def tempos_de_direcao(
+    km_pontos: list[float], duracao_provedor_h: float, distancia_km: float, velocidade_kmh: Decimal | None
+) -> list[tuple[float, float]]:
+    """(distância, horas dirigindo) de cada trecho. O tempo do provedor é repartido pela distância; com a velocidade média
+    do caminhão informada, cada trecho fica com o maior entre esse tempo e distância ÷ velocidade (o caminhão nunca é mais
+    rápido que o carro da rota)."""
+    trechos = []
+    for a, b in zip(km_pontos, km_pontos[1:], strict=False):
+        dist = b - a
+        horas = duracao_provedor_h * dist / distancia_km if distancia_km else 0.0
+        if velocidade_kmh:
+            horas = max(horas, dist / float(velocidade_kmh))
+        trechos.append((dist, horas))
+    return trechos
+
+
+def _fonte_tempo(velocidade_kmh: Decimal | None, fonte_rota: str, estado_rota: str) -> dict[str, str]:
+    if velocidade_kmh:
+        return _fonte("parametro", f"Velocidade média do caminhão: {velocidade_kmh} km/h (parâmetro da transportadora)",
+                      "vale o maior entre esse tempo e o da rota, trecho a trecho")
+    return _fonte(estado_rota, fonte_rota, "tempo de carro; informe a velocidade média do caminhão nos parâmetros")
+
+
 def montar(
     pontos: list[Ponto],
     *,
@@ -64,10 +87,9 @@ def montar(
         km_pontos.append(distancia_ponto_rota_km(c, rota.geometria, acc)[1] * escala)
     km_pontos.append(rota.distancia_km)
     km_pontos = [max(a, b) for a, b in zip(km_pontos, [0.0, *km_pontos[:-1]], strict=False)]  # garante ordem
-    trechos = []
-    for a, b in zip(km_pontos, km_pontos[1:], strict=False):
-        dist = b - a
-        trechos.append((dist, rota.duracao_h * dist / rota.distancia_km))
+    trechos = tempos_de_direcao(km_pontos, rota.duracao_h, rota.distancia_km, parametros.velocidade_media_caminhao_kmh)
+    duracao_direcao_h = round(sum(t for _, t in trechos), 2)
+    fontes["tempo"] = _fonte_tempo(parametros.velocidade_media_caminhao_kmh, rota.fonte, rota.estado)
     plano = jornada.planejar(trechos, partida, parametros)
 
     origem = pontos[0]
@@ -132,7 +154,8 @@ def montar(
         ],
         "rota": {
             "distancia_km": rota.distancia_km,
-            "duracao_direcao_h": rota.duracao_h,
+            "duracao_direcao_h": duracao_direcao_h,
+            "duracao_direcao_provedor_h": rota.duracao_h,
             "geometria": [[round(a, 5), round(b, 5)] for a, b in simplificar(rota.geometria, 400)],
         },
         "jornada": plano.resumo(),

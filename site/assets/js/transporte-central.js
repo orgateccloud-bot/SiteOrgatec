@@ -174,7 +174,7 @@
         var meta = p.meta[k] || { rotulo: k, fonte: '' }, v = p.valores[k];
         var campo = typeof v === 'boolean'
           ? '<input type="checkbox" data-k="' + k + '"' + (v ? ' checked' : '') + ' style="width:auto">'
-          : '<input type="number" step="any" min="0" data-k="' + k + '" value="' + OT.esc(v) + '">';
+          : '<input type="number" step="any" min="0" data-k="' + k + '" value="' + (v == null ? '' : OT.esc(v)) + '"' + (v == null ? ' placeholder="em branco"' : '') + '>';
         return '<label>' + OT.esc(meta.rotulo) + '</label>' + campo + '<div class="fonte">' + OT.esc(meta.fonte) + '</div>';
       }).join('');
       $('#camposParametros').className = '';
@@ -186,7 +186,7 @@
     ev.preventDefault();
     var valores = {};
     document.querySelectorAll('#camposParametros [data-k]').forEach(function (i) {
-      valores[i.dataset.k] = i.type === 'checkbox' ? i.checked : (/_min$/.test(i.dataset.k) ? parseInt(i.value, 10) : i.value);
+      valores[i.dataset.k] = i.type === 'checkbox' ? i.checked : i.value === '' ? null : (/_min$/.test(i.dataset.k) ? parseInt(i.value, 10) : i.value);
     });
     OT.api('PUT', '/parametros', valores).then(function () {
       OT.mensagem($('#msgParametros'), 'Parâmetros salvos. Use “Recalcular” ou lance a rota de novo para aplicar.', 'ok');
