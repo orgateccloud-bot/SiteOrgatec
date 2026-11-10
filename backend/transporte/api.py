@@ -4,7 +4,7 @@
 - Documentação automática desligada, como no app atual (docs_url=None); o limite por IP e o tratamento de IP do app valem aqui.
 - Autenticação: interface `Autenticador`. O modo de desenvolvimento (cabeçalhos X-Transportadora-Id etc.) é RECUSADO em produção.
   Login real: ORGATEC_TRANSPORTE_AUTH=firebase (backend/transporte/autenticacao.py). Sem autenticador válido, em produção, tudo responde 403.
-- Provedores: só simulados (ver provedores/registro.py). Tempo real: a tela consulta /posicoes a cada 15 s.
+- Provedores: simulados por padrão, reais por flag (provedores/registro.py). Tempo real: a tela consulta /posicoes e os lançamentos a cada 15 s.
 - Sem coordenadas em log; só coordenadas (nunca dado pessoal) iriam a APIs estrangeiras quando os provedores reais existirem.
 """
 
@@ -25,10 +25,12 @@ from pydantic import BaseModel
 
 from backend.transporte.autenticacao import autenticador_firebase
 from backend.transporte.dominio import (
+    FONTE_MANUAL,
     PARAMETROS_META,
     AjusteDespesa,
     AlertaEntrada,
     Contexto,
+    LancamentoEntrada,
     LancarViagem,
     MotoristaEntrada,
     ParametrosCusto,
@@ -78,6 +80,7 @@ class Servicos:
     producao: bool
     limitador: ingestao.Limitador = field(default_factory=ingestao.Limitador)
     entrada: dict[str, Any] = field(default_factory=dict)  # o que a tela precisa para entrar (modo e chave web pública)
+    mapa: dict[str, str] | None = None  # chave pública do Maps JavaScript API (restrita por domínio no Console) e Map ID opcional
     limite_ip: Callable[[Request], Any] | None = None  # limite por IP do site: só tentativas de acesso NEGADAS gastam dele
     # Limite por usuário logado (o painel consulta a cada 15 s; o limite por IP do site, feito para formulários, não serve aqui)
     limitador_usuario: ingestao.Limitador = field(default_factory=lambda: ingestao.Limitador(maximo=600, janela_s=60.0))
@@ -109,7 +112,10 @@ def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador
         repo.criar_transportadora(TRANSPORTADORA_DEMO)  # só desenvolvimento: transportadora fictícia para experimentar a tela
     chave_web = e.get("ORGATEC_TRANSPORTE_FIREBASE_WEB_KEY", "").strip()
     entrada = {"modo": auth_modo, **({"chave_web": chave_web} if auth_modo == "firebase" and chave_web else {})}
-    return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip)
+    chave_mapa = e.get("ORGATEC_TRANSPORTE_MAPS_CHAVE_WEB", "").strip()
+    mapa = {"provedor": "google", "chave": chave_mapa, **({"map_id": e["ORGATEC_TRANSPORTE_MAPS_ID"].strip()}
+                                                          if e.get("ORGATEC_TRANSPORTE_MAPS_ID", "").strip() else {})} if chave_mapa else None
+    return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip, mapa=mapa)
 
 
 def servicos(request: Request) -> Servicos:
@@ -223,8 +229,9 @@ def como_entrar(s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B00
 
 @router.get("/contexto")
 def ver_contexto(ctx: Contexto = Depends(contexto), s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B008
-    return {"papel": ctx.papel, "ambiente": "producao" if s.producao else "desenvolvimento", "entrada": s.entrada.get("modo"),
-            "flags": {"provedores_reais": s.provedores.reais(), "sensores_ativo": s.cofre is not None}}
+    return {"papel": ctx.papel, "usuario_id": ctx.usuario_id, "ambiente": "producao" if s.producao else "desenvolvimento", "entrada": s.entrada.get("modo"),
+            "flags": {"provedores_reais": s.provedores.reais(), "sensores_ativo": s.cofre is not None},
+            "mapa": s.mapa}  # só depois do login: a chave é pública, mas não precisa ficar exposta a quem não entrou
 
 
 @router.get("/parametros")
@@ -340,6 +347,47 @@ def criar_alerta(entrada: AlertaEntrada, ctx: Contexto = Depends(LANCA), s: Serv
     return {"id": s.repo.inserir(ctx.transportadora_id, "alertas", dados)["id"]}
 
 
+# ---------- Lançamentos manuais da viagem (abastecimento, pedágio pago, parada, ocorrência, posição informada) ----------
+def _lancamento_dict(r: dict[str, Any]) -> dict[str, Any]:
+    return {**{k: r.get(k) for k in ("id", "tipo", "local", "lat", "lon", "observacao", "autor_id", "fonte")},
+            **{k: (str(r[k]) if r.get(k) is not None else None) for k in ("valor", "litros", "preco_l")},
+            "ts": utc(r["ts"]).isoformat(), "criado_em": utc(r["criado_em"]).isoformat()}
+
+
+@router.get("/viagens/{viagem_id}/lancamentos")
+def listar_lancamentos(viagem_id: str, ctx: Contexto = Depends(contexto), s: Servicos = Depends(servicos)) -> list[dict[str, Any]]:  # noqa: B008
+    v = _viagem_visivel(s, ctx, viagem_id)
+    regs = [r for r in s.repo.listar(ctx.transportadora_id, "lancamentos") if r["viagem_id"] == v["id"] and not r.get("removido")]
+    return [_lancamento_dict(r) for r in sorted(regs, key=lambda r: utc(r["ts"]), reverse=True)[:300]]
+
+
+@router.post("/viagens/{viagem_id}/lancamentos", status_code=201)
+def criar_lancamento(viagem_id: str, entrada: LancamentoEntrada, ctx: Contexto = Depends(LANCA),  # noqa: B008
+                     s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B008
+    v = _viagem_visivel(s, ctx, viagem_id)
+    agora = datetime.now(UTC)
+    if utc(entrada.ts) > agora + timedelta(minutes=10):
+        raise EntradaInvalida("O lançamento não pode ter data no futuro.")
+    dados = {**entrada.model_dump(), "ts": utc(entrada.ts), "viagem_id": v["id"], "autor_id": ctx.usuario_id, "fonte": FONTE_MANUAL,
+             "criado_em": agora, "removido": False}
+    return _lancamento_dict(s.repo.inserir(ctx.transportadora_id, "lancamentos", dados))
+
+
+@router.delete("/viagens/{viagem_id}/lancamentos/{lancamento_id}")
+def remover_lancamento(viagem_id: str, lancamento_id: str, ctx: Contexto = Depends(LANCA),  # noqa: B008
+                       s: Servicos = Depends(servicos)) -> dict[str, str]:  # noqa: B008
+    """Remoção lógica (fica registrado quem removeu). O motorista só remove o que ele mesmo lançou."""
+    v = _viagem_visivel(s, ctx, viagem_id)
+    r = s.repo.obter(ctx.transportadora_id, "lancamentos", lancamento_id)
+    if r["viagem_id"] != v["id"] or r.get("removido"):
+        raise NaoEncontrado()
+    if ctx.papel != "gestor" and r["autor_id"] != ctx.usuario_id:
+        raise AcessoNegado()
+    s.repo.atualizar(ctx.transportadora_id, "lancamentos", r["id"], {"removido": True, "removido_por": ctx.usuario_id,
+                                                                     "removido_em": datetime.now(UTC)})
+    return {"id": r["id"]}
+
+
 # ---------- Sensores e posição (flag ORGATEC_TRANSPORTE_SENSORES) ----------
 def sensores_ligados(s: Servicos = Depends(servicos)) -> Servicos:  # noqa: B008
     if s.cofre is None:
@@ -379,6 +427,10 @@ def posicoes(viagem_id: str, ctx: Contexto = Depends(contexto), s: Servicos = De
     v = _viagem_visivel(s, ctx, viagem_id)
     nomes = {se["id"]: se["nome"] for se in s.repo.listar(ctx.transportadora_id, "sensores")}
     leituras = s.repo.leituras_da_viagem(ctx.transportadora_id, v["id"], 200)  # indexada: não lê as leituras das outras viagens
+    if not v["resultado"]["rota"]["geometria"]:  # traçado apagado após 30 dias (termos do Google): sem km nem desvio
+        return [{"tipo": "posicao", "viagem_id": v["id"], "status": v["status"], "sensor": nomes.get(le["sensor_id"], "?"),
+                 "ts": utc(le["ts"]).isoformat(), "lat": le["lat"], "lon": le["lon"], "velocidade_kmh": le.get("velocidade_kmh"),
+                 "km_percorrido": None, "desvio_km": None, "fora_da_rota": False} for le in leituras]
     rota = ingestao.preparar_rota(v)
     return [ingestao.evento_posicao(v, nomes.get(le["sensor_id"], "?"), le, rota) for le in leituras]
 
@@ -389,6 +441,8 @@ def simular_sensor(viagem_id: str, entrada: SimularSensor, ctx: Contexto = Depen
     if s.producao:
         raise EntradaInvalida("Sensor simulado não é permitido em produção.")
     v = _viagem_visivel(s, ctx, viagem_id)
+    if not v["resultado"]["rota"]["geometria"]:
+        raise EntradaInvalida("Recalcule a viagem: o traçado foi apagado após 30 dias.")
     se = s.repo.obter(ctx.transportadora_id, "sensores", entrada.sensor_id)
     if se["veiculo_id"] != v["veiculo_id"]:
         raise EntradaInvalida("O sensor não está no veículo desta viagem.")

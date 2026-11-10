@@ -2,7 +2,8 @@
 (function () {
   'use strict';
   var OT = window.OT, View = window.ViagemView, $ = function (s) { return document.querySelector(s); };
-  var ctx = null, atual = null;
+  var ctx = null, atual = null, lancamentos = [], posicao = null, relogio = null, assinatura = '';
+  var INTERVALO_MS = 15000;  /* o Cloud Run escala em várias instâncias: a tela consulta em vez de manter canal aberto */
 
   function blocoPonto(rotulo, removivel) {
     var div = document.createElement('div');
@@ -61,15 +62,75 @@
     });
   }
 
+  function marca(v, ls) {
+    return JSON.stringify([v.status, v.resultado.calculado_em, v.resultado.coordenadas_expiradas || '', v.ajustes, ls.map(function (l) { return l.id; })]);
+  }
+
+  /* Abre uma viagem: busca os lançamentos e a última posição, desenha e passa a acompanhar as mudanças. */
   function mostrar(v) {
+    var trocou = !atual || atual.id !== v.id;
     atual = v;
-    var editavel = ctx && ctx.papel === 'gestor';
-    View.renderizar($('#resultado'), v, { editavel: editavel, aoAjustar: ajustar });
-    carregarLista();
+    if (trocou) { lancamentos = []; posicao = null; }
+    return Promise.all([
+      OT.api('GET', '/viagens/' + v.id + '/lancamentos').catch(function () { return []; }),
+      ctx.flags.sensores_ativo ? OT.api('GET', '/viagens/' + v.id + '/posicoes').catch(function () { return []; }) : Promise.resolve([])
+    ]).then(function (r) {
+      lancamentos = r[0]; posicao = r[1][0] || null;
+      desenhar();
+      acompanhar();
+      carregarLista();
+    });
+  }
+
+  function desenhar() {
+    var gestor = ctx.papel === 'gestor', lanca = gestor || ctx.papel === 'motorista';
+    assinatura = marca(atual, lancamentos);
+    View.renderizar($('#resultado'), atual, {
+      editavel: gestor, aoAjustar: ajustar, aoRecalcular: gestor ? recalcular : null,
+      mapa: ctx.mapa, lancamentos: lancamentos, posicao: posicao, telemetria: ctx.flags.sensores_ativo,
+      aoLancar: lanca ? lancar : null, aoRemoverLancamento: lanca ? removerLancamento : null, papel: ctx.papel, usuario: ctx.usuario_id
+    });
+  }
+
+  /* A cada 15 s (com a aba visível): viagem, lançamentos e posição. Redesenha só o que mudou e nunca enquanto alguém digita. */
+  function acompanhar() {
+    if (relogio) clearInterval(relogio);
+    relogio = setInterval(function () {
+      if (!atual || document.hidden) return;
+      var id = atual.id;
+      Promise.all([
+        OT.api('GET', '/viagens/' + id),
+        OT.api('GET', '/viagens/' + id + '/lancamentos'),
+        ctx.flags.sensores_ativo ? OT.api('GET', '/viagens/' + id + '/posicoes') : Promise.resolve([])
+      ]).then(function (r) {
+        if (!atual || atual.id !== id) return;
+        var nova = r[2][0] || null, digitando = document.activeElement && $('#resultado').contains(document.activeElement) &&
+          /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName);
+        if (marca(r[0], r[1]) !== assinatura && !digitando) {
+          atual = r[0]; lancamentos = r[1]; posicao = nova;
+          desenhar();
+        } else if (nova && (!posicao || nova.ts !== posicao.ts)) {
+          posicao = nova;
+          View.mostrarPosicao($('#resultado'), atual, nova);
+        }
+      }).catch(function () { /* sem atualização: a tela mantém o último estado */ });
+    }, INTERVALO_MS);
   }
 
   function ajustar(tipo, valor) {
     OT.api('PUT', '/viagens/' + atual.id + '/despesas/' + tipo, { valor: valor === null ? null : String(valor) }).then(mostrar).catch(erroGeral);
+  }
+
+  function recalcular() {
+    OT.api('POST', '/viagens/' + atual.id + '/recalcular').then(mostrar).catch(erroGeral);
+  }
+
+  function lancar(corpo) {
+    return OT.api('POST', '/viagens/' + atual.id + '/lancamentos', corpo).then(function () { return mostrar(atual); });
+  }
+
+  function removerLancamento(id) {
+    OT.api('DELETE', '/viagens/' + atual.id + '/lancamentos/' + id).then(function () { return mostrar(atual); }).catch(erroGeral);
   }
 
   function erroGeral(e) { OT.mensagem($('#aviso'), e.message); }
@@ -152,6 +213,7 @@
     });
   }
 
+  window.addEventListener('beforeunload', function () { if (relogio) clearInterval(relogio); });
   montarPontos();
   $('#partida').value = partidaPadrao();
   OT.prepararSessao().then(iniciar);

@@ -1,13 +1,20 @@
-/* Componente único da viagem: o mesmo na Central (motorista/gestor) e no Portal (cliente). */
+/* Componente único da viagem: o mesmo na Central (motorista/gestor) e no Portal (cliente). O mapa vem de transporte-mapa.js. */
 (function (raiz) {
   'use strict';
-  var OT = raiz.OT, esc = OT.esc;
+  var OT = raiz.OT, esc = OT.esc, Mapa = raiz.OTMapa;
   var ROTULO_EVENTO = { direcao: 'Direção', pausa: 'Pausa obrigatória', refeicao: 'Refeição', pernoite: 'Pernoite / descanso', parada: 'Parada (carga/descarga)', chegada: 'Chegada' };
-  var ROTULO_FONTE = { rota: 'Rota', combustivel: 'Combustível', pedagio: 'Pedágio', bloqueios: 'Bloqueios', clima: 'Clima' };
+  var ROTULO_FONTE = { rota: 'Rota', combustivel: 'Combustível', pedagio: 'Pedágio', postos: 'Postos', bloqueios: 'Bloqueios', clima: 'Clima' };
 
+  /* O mapa do Google é criado uma vez por página (cada criação conta como um carregamento cobrado) e reaproveitado a cada redesenho. */
+  var mapa = { el: null, inst: null, falhou: false, chave: null, carregando: null };
+  var ultimo = { alvo: null, v: null, opcoes: null };
+
+  /* opcoes: editavel, aoAjustar, aoRecalcular, mapa {chave, map_id}, lancamentos, posicao (telemetria), telemetria (bool),
+     aoLancar(corpo) -> Promise, aoRemoverLancamento(id), papel, usuario. */
   function renderizar(alvo, v, opcoes) {
     opcoes = opcoes || {};
-    var r = v.resultado, j = r.jornada, d = r.despesas;
+    ultimo = { alvo: alvo, v: v, opcoes: opcoes };
+    var r = v.resultado, j = r.jornada, d = r.despesas, expirado = !!r.coordenadas_expiradas;
     alvo.innerHTML =
       '<div class="kpis">' +
         kpi(OT.num1.format(r.rota.distancia_km) + ' km', 'distância') +
@@ -17,26 +24,226 @@
         kpi(OT.brl.format(Number(d.total)), 'despesa prevista') +
         kpi(OT.brl.format(Number(d.custo_por_km)), 'custo por km') +
       '</div>' +
-      '<div class="duas">' +
-        '<div class="cartao"><h2>Rota ' + (v.status ? '<span class="tag t-ok">' + esc(v.status.replace('_', ' ')) + '</span>' : '') + '</h2>' +
-          '<svg class="mapa" data-mapa role="img" aria-label="Traçado da rota com pedágios, bloqueios e pernoites"></svg>' +
-          '<div class="legenda"><span><i style="background:#003365"></i>origem/destino</span><span><i style="background:#3f88d5"></i>pedágio</span>' +
-          '<span><i style="background:#c0392b"></i>bloqueio</span><span><i style="background:#8e44ad"></i>pernoite</span><span><i style="background:#1d6b3a"></i>posição atual</span></div>' +
-          '<div data-vivo></div></div>' +
-        '<div class="cartao"><h2>Despesas previstas</h2><div class="rolagem">' + tabelaDespesas(d, opcoes.editavel) + '</div></div>' +
+      '<div class="cartao mapa-cartao">' +
+        '<div class="mapa-topo"><h2>Mapa da viagem ' + (v.status ? '<span class="tag t-ok">' + esc(v.status.replace('_', ' ')) + '</span>' : '') + '</h2>' +
+          '<span class="fonte" data-mapa-fonte></span></div>' +
+        (expirado ? '<div class="msg aviso">O traçado e as coordenadas do Google foram apagados 30 dias após o cálculo, como exigem os termos do Google Maps. ' +
+          (opcoes.aoRecalcular ? 'Use “Recalcular viagem” para ver o mapa de novo.' : 'Peça ao gestor para recalcular a viagem.') + '</div>' : '') +
+        '<div class="mapa-grade">' +
+          '<div class="mapa-area"><div class="mapa-slot" data-mapa></div><div class="legenda" data-legenda>' + legenda() + '</div></div>' +
+          '<aside class="mapa-lado">' +
+            '<div data-vivo>' + caixaPosicao(v, opcoes) + '</div>' +
+            listaPedagios(r.pedagios || []) + listaPostos(r.postos || [], r.fontes.postos) + listaLancamentos(opcoes) +
+            (opcoes.aoRecalcular ? '<div class="acoes"><button type="button" class="mini sec" data-recalcular>Recalcular viagem</button></div>' : '') +
+          '</aside>' +
+        '</div>' +
       '</div>' +
       '<div class="duas">' +
+        '<div class="cartao"><h2>Despesas previstas</h2><div class="rolagem">' + tabelaDespesas(d, opcoes.editavel) + '</div></div>' +
         '<div class="cartao"><h2>Linha do tempo</h2><ul class="tempo">' + linhaTempo(j.eventos) + '</ul>' +
           '<p class="fonte">Limites de direção e descanso são parâmetros (CTB art. 67-C) — revisão jurídica pendente.</p></div>' +
+      '</div>' +
+      '<div class="duas">' +
         '<div><div class="cartao"><h2>Bloqueios e interdições</h2>' + bloqueios(r.bloqueios) + '</div>' +
-          '<div class="cartao"><h2>Previsão do tempo no trajeto</h2>' + clima(r.clima) + '</div>' +
-          '<div class="cartao"><h3>Fontes desta estimativa</h3>' + fontes(r) + '</div></div>' +
+          '<div class="cartao"><h2>Previsão do tempo no trajeto</h2>' + clima(r.clima) + '</div></div>' +
+        '<div class="cartao"><h3>Fontes desta estimativa</h3>' + fontes(r) + '</div>' +
       '</div>';
-    desenharMapa(alvo.querySelector('[data-mapa]'), r, null);
+    montarMapa(alvo, v, opcoes);
+    ligarPainel(alvo, v, opcoes);
     if (opcoes.editavel && opcoes.aoAjustar) ligarAjustes(alvo, opcoes.aoAjustar);
   }
 
   function kpi(valor, rotulo) { return '<div class="kpi"><b>' + esc(valor) + '</b><span>' + esc(rotulo) + '</span></div>'; }
+
+  function legenda() {
+    return Mapa.GRUPOS.map(function (g) {
+      var t = Mapa.TIPOS[g[0] === 'pontos' ? 'origem' : g[0]];
+      return '<label><input type="checkbox" data-grupo="' + g[0] + '" checked><i style="background:' + t.cor + '"></i>' + esc(g[1]) + '</label>';
+    }).join('');
+  }
+
+  function caixaPosicao(v, opcoes) {
+    var pos = Mapa.posicaoAtual(opcoes.posicao, opcoes.lancamentos);
+    if (pos && pos.telemetria) return linhaPosicao(v, pos.evt);
+    var sem = opcoes.telemetria ? 'Sem dado de telemetria para esta viagem ainda.' : 'Sem telemetria: nenhum rastreador conectado nesta instalação.';
+    if (pos) return '<div class="msg aviso">' + esc(sem) + ' Última posição informada à mão em ' + esc(OT.diaHora.format(new Date(pos.ts))) + '.</div>';
+    return '<div class="msg aviso">' + esc(sem) + '</div>';
+  }
+
+  function linhaPosicao(v, evt) {
+    return '<div class="msg ' + (evt.fora_da_rota ? 'aviso' : 'ok') + '"><span class="ao-vivo">Posição</span> ' +
+      esc(OT.diaHora.format(new Date(evt.ts))) +
+      (evt.km_percorrido != null ? ' · km ' + OT.num1.format(evt.km_percorrido) + ' de ' + OT.num1.format(v.resultado.rota.distancia_km) : '') +
+      (evt.velocidade_kmh != null ? ' · ' + OT.num1.format(evt.velocidade_kmh) + ' km/h' : '') +
+      (evt.temperatura_c != null ? ' · baú ' + OT.num1.format(evt.temperatura_c) + ' °C' : '') +
+      (evt.combustivel_pct != null ? ' · tanque ' + OT.num1.format(evt.combustivel_pct) + '%' : '') +
+      (evt.fora_da_rota ? ' · <b>fora da rota (' + OT.num1.format(evt.desvio_km) + ' km)</b>' : '') + ' · telemetria: ' + esc(evt.sensor) + '</div>';
+  }
+
+  function itemLista(id, titulo, detalhe) {
+    return '<li><button type="button" class="link" data-focar="' + esc(id) + '">' + esc(titulo) + '</button><small>' + detalhe + '</small></li>';
+  }
+
+  function listaPedagios(ps) {
+    var total = ps.reduce(function (s, p) { return s + Number(p.valor || 0); }, 0);
+    var corpo = ps.length ? '<ul class="lista-mapa">' + ps.map(function (p, i) {
+      return itemLista('pedagio-' + i, p.nome, 'km ' + OT.num1.format(p.km) + ' · ' + (p.valor != null ? OT.brl.format(Number(p.valor)) : 'sem valor') +
+        (p.tarifa_oficial ? '' : ' <span class="tag t-parametro">estimado</span>') + '<span class="fonte"> · ' + esc(p.fonte || '') + '</span>');
+    }).join('') + '</ul>' : '<p class="vazio">Nenhuma praça de pedágio na rota.</p>';
+    return '<details open><summary>Pedágios <span class="fonte">(' + ps.length + ' · ' + OT.brl.format(total) + ')</span></summary>' + corpo + '</details>';
+  }
+
+  function listaPostos(ps, fonte) {
+    var corpo;
+    if (!ps.length && fonte && fonte.estado !== 'ok') {
+      corpo = '<p class="vazio">' + esc(fonte.fonte) + (fonte.detalhe ? ' — ' + esc(fonte.detalhe) : '') + '.</p>';
+    } else if (!ps.length) {
+      corpo = '<p class="vazio">' + (fonte ? 'Nenhum posto encontrado a até 3 km da rota.' : 'Busca de postos não feita nesta viagem (recalcule).') + '</p>';
+    } else {
+      corpo = '<ul class="lista-mapa">' + ps.map(function (p, i) {
+        return itemLista('posto-' + i, p.nome, 'km ' + OT.num1.format(p.km) + (p.municipio ? ' · ' + esc(p.municipio) + (p.uf ? '/' + esc(p.uf) : '') : '') +
+          ' · diesel ' + (p.preco_diesel_referencia ? OT.brl.format(Number(p.preco_diesel_referencia)) + ' <span class="fonte">(média ANP)</span>' : '<span class="fonte">preço não disponível</span>'));
+      }).join('') + '</ul><p class="fonte">Postos: Google Places. Preço: média da ANP no município (ou na UF), não é o preço do posto.</p>';
+    }
+    return '<details' + (ps.length ? '' : ' open') + '><summary>Postos <span class="fonte">(' + ps.length + ')</span></summary>' + corpo + '</details>';
+  }
+
+  function listaLancamentos(opcoes) {
+    var ls = opcoes.lancamentos || [];
+    var corpo = ls.length ? '<ul class="lista-mapa">' + ls.map(function (l) {
+      var det = esc(OT.diaHora.format(new Date(l.ts))) + (l.valor != null ? ' · ' + OT.brl.format(Number(l.valor)) : '') +
+        (l.litros != null ? ' · ' + OT.num1.format(Number(l.litros)) + ' l' : '') + (l.observacao ? ' · ' + esc(l.observacao) : '') +
+        '<span class="fonte"> · informado manualmente</span>' +
+        (opcoes.aoRemoverLancamento && (opcoes.papel === 'gestor' || l.autor_id === opcoes.usuario)
+          ? ' <button type="button" class="mini sec" data-remover="' + esc(l.id) + '" title="Remover lançamento">remover</button>' : '');
+      var titulo = (Mapa.ROTULO_LANC[l.tipo] || l.tipo) + (l.local ? ': ' + l.local : '');
+      return l.lat != null ? itemLista(l.tipo === 'posicao_manual' ? 'caminhao' : 'lanc-' + l.id, titulo, det) : '<li><b>' + esc(titulo) + '</b><small>' + det + '</small></li>';
+    }).join('') + '</ul>' : '<p class="vazio">Nenhum lançamento.</p>';
+    return '<details' + (ls.length ? ' open' : '') + '><summary>Lançamentos <span class="fonte">(' + ls.length + ')</span></summary>' + corpo +
+      (opcoes.aoLancar ? formLancamento() : '') + '</details>';
+  }
+
+  function formLancamento() {
+    var tipos = Object.keys(Mapa.ROTULO_LANC).map(function (k) { return '<option value="' + k + '">' + esc(Mapa.ROTULO_LANC[k]) + '</option>'; }).join('');
+    return '<form class="form-lanc" data-form-lanc novalidate><h3>Novo lançamento</h3>' +
+      '<div class="linha"><div><label>Tipo</label><select name="tipo">' + tipos + '</select></div><div><label>Quando</label><input name="ts" type="datetime-local" required></div></div>' +
+      '<label>Local</label><input name="local" maxlength="120" placeholder="Posto, cidade ou km">' +
+      '<div class="linha"><div><label>Valor (R$)</label><input name="valor" type="number" min="0" step="0.01"></div>' +
+      '<div data-so-abastecimento><label>Litros</label><input name="litros" type="number" min="0" step="0.01"></div>' +
+      '<div data-so-abastecimento><label>R$/l</label><input name="preco_l" type="number" min="0" step="0.001"></div></div>' +
+      '<div class="linha"><div><label>Latitude</label><input name="lat" type="number" step="any"></div><div><label>Longitude</label><input name="lon" type="number" step="any"></div></div>' +
+      '<p class="fonte" data-dica-mapa hidden>Clique no mapa para preencher a posição.</p>' +
+      '<label>Observação</label><input name="observacao" maxlength="300">' +
+      '<div data-msg-lanc></div><div class="acoes"><button type="submit" class="mini">Salvar lançamento</button></div></form>';
+  }
+
+  function agoraLocal() {
+    return new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+      .format(new Date()).replace(' ', 'T');
+  }
+
+  function mapaAtivo() { return mapa.inst && !mapa.falhou; }
+
+  function ligarClique(alvo) {
+    var f = alvo.querySelector('[data-form-lanc]');
+    if (!f || !mapaAtivo()) return;
+    mapa.inst.aoClicar(function (la, lo) { f.lat.value = la.toFixed(5); f.lon.value = lo.toFixed(5); });
+    f.querySelector('[data-dica-mapa]').hidden = false;
+  }
+
+  function ligarPainel(alvo, v, opcoes) {
+    alvo.querySelectorAll('[data-grupo]').forEach(function (cb) {
+      cb.addEventListener('change', function () { if (mapaAtivo()) mapa.inst.visivel(cb.dataset.grupo, cb.checked); else desenharSvg(alvo, v, opcoes); });
+    });
+    alvo.querySelectorAll('[data-focar]').forEach(function (b) {
+      b.addEventListener('click', function () { if (mapaAtivo()) mapa.inst.focar(b.dataset.focar); });
+    });
+    var rec = alvo.querySelector('[data-recalcular]');
+    if (rec) rec.addEventListener('click', function () { rec.disabled = true; rec.textContent = 'Recalculando…'; opcoes.aoRecalcular(); });
+    alvo.querySelectorAll('[data-remover]').forEach(function (b) {
+      b.addEventListener('click', function () { b.disabled = true; opcoes.aoRemoverLancamento(b.dataset.remover); });
+    });
+    var f = alvo.querySelector('[data-form-lanc]');
+    if (!f) return;
+    f.ts.value = agoraLocal();
+    function ajustarTipo() { f.querySelectorAll('[data-so-abastecimento]').forEach(function (d) { d.hidden = f.tipo.value !== 'abastecimento'; }); }
+    f.tipo.addEventListener('change', ajustarTipo);
+    ajustarTipo();
+    ligarClique(alvo);
+    f.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var msg = f.querySelector('[data-msg-lanc]'), botao = f.querySelector('button[type=submit]');
+      if (!f.ts.value) return OT.mensagem(msg, 'Informe quando aconteceu.');
+      var corpo = { tipo: f.tipo.value, ts: f.ts.value + ':00-03:00', local: f.local.value.trim(), observacao: f.observacao.value.trim() };
+      ['valor', 'litros', 'preco_l'].forEach(function (k) { if (f[k].value !== '' && !f[k].closest('[hidden]')) corpo[k] = f[k].value; });
+      if (f.lat.value !== '' || f.lon.value !== '') { corpo.lat = Number(f.lat.value); corpo.lon = Number(f.lon.value); }
+      botao.disabled = true;
+      Promise.resolve(opcoes.aoLancar(corpo)).catch(function (e) { OT.mensagem(msg, e.message); botao.disabled = false; });
+    });
+  }
+
+  function dadosMapa(v, opcoes) {
+    return Mapa.camadas(v.resultado, { lancamentos: opcoes.lancamentos, posicao: opcoes.posicao });
+  }
+
+  /* Google Maps quando há chave e ele carregou; senão o diagrama SVG (permitido: os termos aceitam uso sem mapa). */
+  function montarMapa(alvo, v, opcoes) {
+    var slot = alvo.querySelector('[data-mapa]'), fonte = alvo.querySelector('[data-mapa-fonte]'), cfg = opcoes.mapa;
+    if (!cfg || !cfg.chave || mapa.falhou) {
+      fonte.textContent = cfg && cfg.chave ? 'Mapa do Google indisponível: diagrama do traçado.' : 'Diagrama do traçado (mapa real não configurado nesta instalação).';
+      desenharSvg(alvo, v, opcoes);
+      return;
+    }
+    fonte.textContent = 'Imagens: Google Maps · rota: ' + v.resultado.fontes.rota.fonte;
+    if (!mapa.el || mapa.chave !== cfg.chave) {
+      mapa.el = document.createElement('div');
+      mapa.el.className = 'mapa mapa-google';
+      mapa.inst = null;
+      mapa.chave = cfg.chave;
+      mapa.carregando = Mapa.criar(mapa.el, cfg, falhar).then(function (inst) { mapa.inst = inst; return inst; }, function () { falhar(); return null; });
+    }
+    slot.appendChild(mapa.el);
+    mapa.carregando.then(function (inst) {
+      if (!inst || ultimo.v !== v || mapa.falhou) return;
+      inst.desenhar(dadosMapa(v, opcoes), v.id);
+      alvo.querySelectorAll('[data-grupo]').forEach(function (cb) { if (!cb.checked) inst.visivel(cb.dataset.grupo, false); });
+      ligarClique(alvo);
+    });
+  }
+
+  function falhar() {
+    if (mapa.falhou) return;
+    mapa.falhou = true;
+    if (mapa.el && mapa.el.parentNode) mapa.el.parentNode.removeChild(mapa.el);
+    if (!ultimo.alvo || !ultimo.v) return;
+    var f = ultimo.alvo.querySelector('[data-mapa-fonte]');
+    if (f) f.textContent = 'Mapa do Google indisponível: diagrama do traçado.';
+    desenharSvg(ultimo.alvo, ultimo.v, ultimo.opcoes);
+  }
+
+  /* Diagrama SVG do traçado (sem imagem de fundo): usado quando o mapa do Google não está configurado ou não carregou. */
+  function desenharSvg(alvo, v, opcoes) {
+    var slot = alvo.querySelector('[data-mapa]');
+    if (!slot) return;
+    var dados = dadosMapa(v, opcoes), g = dados.rota, ocultos = {};
+    alvo.querySelectorAll('[data-grupo]').forEach(function (cb) { ocultos[cb.dataset.grupo] = !cb.checked; });
+    var marc = dados.marcadores.filter(function (mk) { return !ocultos[mk.grupo]; });
+    var todos = g.concat(marc.map(function (mk) { return [mk.lat, mk.lon]; }));
+    if (!todos.length) { slot.innerHTML = '<div class="mapa vazio">Sem coordenadas para desenhar.</div>'; return; }
+    var lats = todos.map(function (p) { return p[0]; }), lons = todos.map(function (p) { return p[1]; });
+    var minLa = Math.min.apply(null, lats), maxLa = Math.max.apply(null, lats), minLo = Math.min.apply(null, lons), maxLo = Math.max.apply(null, lons);
+    var W = 600, H = 360, m = 24, k = Math.cos((minLa + maxLa) / 2 * Math.PI / 180);
+    var e = Math.min((W - 2 * m) / Math.max((maxLo - minLo) * k, 1e-6), (H - 2 * m) / Math.max(maxLa - minLa, 1e-6));
+    var ox = (W - (maxLo - minLo) * k * e) / 2, oy = (H - (maxLa - minLa) * e) / 2;
+    function xy(la, lo) { return [(ox + (lo - minLo) * k * e).toFixed(1), (H - oy - (la - minLa) * e).toFixed(1)]; }
+    var s = g.length ? '<polyline points="' + g.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ') + '" fill="none" stroke="#003365" stroke-width="3" stroke-linejoin="round" opacity=".85"/>' : '';
+    marc.forEach(function (mk) {
+      var p = xy(mk.lat, mk.lon), raio = mk.tipo === 'caminhao' ? 7 : (mk.grupo === 'pontos' ? 6 : 4.5);
+      s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + raio + '" fill="' + Mapa.TIPOS[mk.tipo].cor + '" stroke="#fff" stroke-width="1.5"><title>' +
+        esc(mk.titulo + ' — ' + mk.linhas.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · ') + ' — fonte: ' + (mk.fonte || 'não informada')) + '</title></circle>';
+    });
+    slot.innerHTML = '<svg class="mapa" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Traçado da rota com pedágios, postos, bloqueios, pernoites e posição">' + s + '</svg>';
+  }
 
   function tabelaDespesas(d, editavel) {
     var linhas = d.itens.map(function (i) {
@@ -91,55 +298,18 @@
     return '<table><tbody>' + Object.keys(r.fontes).map(function (k) {
       var f = r.fontes[k];
       return '<tr><td>' + esc(ROTULO_FONTE[k] || k) + '</td><td>' + OT.tagEstado(f.estado) + '</td><td class="fonte">' + esc(f.fonte) + (f.detalhe ? ' — ' + esc(f.detalhe) : '') + '</td></tr>';
-    }).join('') + '</tbody></table><p class="fonte">Parâmetros vigentes: ' + esc(r.parametros_vigencia) + ' · calculado em ' + OT.dataHora.format(new Date(r.calculado_em)) + '</p>';
+    }).join('') + '<tr><td>Lançamentos</td><td><span class="tag t-parametro">manual</span></td><td class="fonte">informado manualmente</td></tr>' +
+      '</tbody></table><p class="fonte">Parâmetros vigentes: ' + esc(r.parametros_vigencia) + ' · calculado em ' + OT.dataHora.format(new Date(r.calculado_em)) + '</p>';
   }
 
-  /* Mapa sem imagens de fundo (CSP img-src 'self'): projeção simples do traçado em SVG. */
-  function desenharMapa(svg, r, posicao) {
-    if (!svg) return;
-    var g = r.rota.geometria, todos = g.slice();
-    if (posicao) todos.push([posicao.lat, posicao.lon]);
-    var lats = todos.map(function (p) { return p[0]; }), lons = todos.map(function (p) { return p[1]; });
-    var minLa = Math.min.apply(null, lats), maxLa = Math.max.apply(null, lats), minLo = Math.min.apply(null, lons), maxLo = Math.max.apply(null, lons);
-    var W = 600, H = 320, m = 24, k = Math.cos((minLa + maxLa) / 2 * Math.PI / 180);
-    var esc_ = Math.min((W - 2 * m) / Math.max((maxLo - minLo) * k, 1e-6), (H - 2 * m) / Math.max(maxLa - minLa, 1e-6));
-    var ox = (W - (maxLo - minLo) * k * esc_) / 2, oy = (H - (maxLa - minLa) * esc_) / 2;
-    function xy(la, lo) { return [(ox + (lo - minLo) * k * esc_).toFixed(1), (H - oy - (la - minLa) * esc_).toFixed(1)]; }
-    function ponto(la, lo, cor, raio, titulo) { var p = xy(la, lo); return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + raio + '" fill="' + cor + '" stroke="#fff" stroke-width="1.5"><title>' + esc(titulo) + '</title></circle>'; }
-    var linha = g.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ');
-    var s = '<polyline points="' + linha + '" fill="none" stroke="#003365" stroke-width="3" stroke-linejoin="round" opacity=".85"/>';
-    (r.pedagios || []).forEach(function (p) { s += ponto(p.lat, p.lon, '#3f88d5', 4, 'Pedágio: ' + p.nome); });
-    (r.bloqueios || []).forEach(function (b) { s += ponto(b.lat, b.lon, '#c0392b', 6, 'Bloqueio: ' + b.descricao); });
-    r.jornada.eventos.filter(function (e) { return e.tipo === 'pernoite'; }).forEach(function (e) {
-      var p = pontoNoKm(g, r.rota.distancia_km, e.km_inicio); s += ponto(p[0], p[1], '#8e44ad', 5, 'Pernoite km ' + e.km_inicio);
-    });
-    r.pontos.forEach(function (p) { s += ponto(p.lat, p.lon, '#003365', 6, p.nome); });
-    if (posicao) s += ponto(posicao.lat, posicao.lon, '#1d6b3a', 7, 'Posição atual ' + OT.diaHora.format(new Date(posicao.ts)));
-    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    svg.innerHTML = s;
-  }
-
-  function pontoNoKm(g, total, km) {
-    var acc = [0];
-    for (var i = 1; i < g.length; i++) acc.push(acc[i - 1] + Math.hypot(g[i][0] - g[i - 1][0], g[i][1] - g[i - 1][1]));
-    var alvo = km / total * acc[acc.length - 1];
-    for (var j = 1; j < acc.length; j++) if (acc[j] >= alvo) {
-      var f = (alvo - acc[j - 1]) / ((acc[j] - acc[j - 1]) || 1);
-      return [g[j - 1][0] + (g[j][0] - g[j - 1][0]) * f, g[j - 1][1] + (g[j][1] - g[j - 1][1]) * f];
-    }
-    return g[g.length - 1];
-  }
-
+  /* Nova posição de telemetria: atualiza o caminhão e a caixa de posição sem recriar a tela. */
   function mostrarPosicao(alvo, v, evt) {
-    desenharMapa(alvo.querySelector('[data-mapa]'), v.resultado, evt);
+    if (!ultimo.v || ultimo.v.id !== v.id) return;
+    ultimo.opcoes.posicao = evt;
     var box = alvo.querySelector('[data-vivo]');
-    if (!box || !evt) return;
-    box.innerHTML = '<div class="msg ' + (evt.fora_da_rota ? 'aviso' : 'ok') + '"><span class="ao-vivo">Posição</span> ' +
-      esc(OT.diaHora.format(new Date(evt.ts))) + ' · km ' + OT.num1.format(evt.km_percorrido) + ' de ' + OT.num1.format(v.resultado.rota.distancia_km) +
-      (evt.velocidade_kmh != null ? ' · ' + OT.num1.format(evt.velocidade_kmh) + ' km/h' : '') +
-      (evt.temperatura_c != null ? ' · baú ' + OT.num1.format(evt.temperatura_c) + ' °C' : '') +
-      (evt.combustivel_pct != null ? ' · tanque ' + OT.num1.format(evt.combustivel_pct) + '%' : '') +
-      (evt.fora_da_rota ? ' · <b>fora da rota (' + OT.num1.format(evt.desvio_km) + ' km)</b>' : '') + ' · ' + esc(evt.sensor) + '</div>';
+    if (box) box.innerHTML = caixaPosicao(v, ultimo.opcoes);
+    if (mapaAtivo()) mapa.inst.desenhar(dadosMapa(v, ultimo.opcoes), v.id);
+    else desenharSvg(alvo, v, ultimo.opcoes);
   }
 
   raiz.ViagemView = { renderizar: renderizar, mostrarPosicao: mostrarPosicao };

@@ -49,6 +49,7 @@ def retencao(args) -> int:
     apagados = sum(repo.eliminar(r["protocolo"], "retencao") for r in vencidos)
     print(f"{apagados} eliminado(s)")
     _telemetria_vencida(confirmar=True)
+    _coordenadas_google_vencidas()
     return _trilha()
 
 
@@ -65,6 +66,21 @@ def _telemetria_vencida(confirmar: bool) -> None:
         return
     limite = agora_utc() - timedelta(days=prazos_do_ambiente().telemetria_dias)
     print(f"{rt.purgar_leituras(limite)} leitura(s) de sensor eliminada(s)" if confirmar else "")
+
+
+def _coordenadas_google_vencidas() -> None:
+    """Termos do Google Maps Platform: coordenadas da Routes e da Places só ficam guardadas por até 30 dias (Central de Viagem)."""
+    from datetime import timedelta
+
+    from backend.repositorio import agora_utc
+    from backend.transporte.repositorio_transporte import RepositorioMemoria, criar_repositorio
+    from backend.transporte.servicos.viagem import PRAZO_COORDENADAS_GOOGLE_DIAS
+
+    rt = criar_repositorio()
+    if isinstance(rt, RepositorioMemoria):
+        return
+    limite = agora_utc() - timedelta(days=PRAZO_COORDENADAS_GOOGLE_DIAS)
+    print(f"{rt.expirar_coordenadas_google(limite)} viagem(ns) sem as coordenadas do Google vencidas")
 
 
 def _exportar(registros: list[dict], destino: Path) -> None:

@@ -21,9 +21,10 @@
   function abrir(id) {
     fecharStream();
     $('#detalhe').innerHTML = '<div class="cartao carregando">Carregando viagem…</div>';
-    OT.api('GET', '/viagens/' + id).then(function (v) {
+    Promise.all([OT.api('GET', '/viagens/' + id), OT.api('GET', '/viagens/' + id + '/lancamentos').catch(function () { return []; })]).then(function (r) {
+      var v = r[0];
       atual = v;
-      View.renderizar($('#detalhe'), v, { editavel: false });
+      View.renderizar($('#detalhe'), v, { editavel: false, mapa: ctx.mapa, lancamentos: r[1], telemetria: ctx.flags.sensores_ativo });
       marcarLista();
       if (!ctx.flags.sensores_ativo) return;
       acoesSensor(v);

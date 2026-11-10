@@ -83,12 +83,24 @@ def csp(api: str | None) -> str:
     ])
 
 
-GOOGLE_AUTH = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"  # Firebase Authentication: entrar e renovar o token da Central de Viagem
+# Central de Viagem: Firebase Authentication (entrar e renovar o token) e mapa do Google (Maps JavaScript API). Igual a
+# backend/app.py (MAPA_GOOGLE); o teste compara as duas.
+MAPA_GOOGLE = {
+    "script-src": "https://maps.googleapis.com https://maps.gstatic.com",
+    "style-src": "https://fonts.googleapis.com",
+    "font-src": "https://fonts.gstatic.com",
+    "img-src": "https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com",
+    "connect-src": "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://maps.googleapis.com https://*.gstatic.com",
+}
 
 
 def csp_transporte(api: str | None) -> str:
-    """Só as páginas de /transporte/ falam com o Google (login); o resto do site mantém connect-src 'self'."""
-    return csp(api).replace("connect-src 'self'", f"connect-src 'self' {GOOGLE_AUTH}")
+    """Só as páginas de /transporte/ falam com o Google (login e mapa); o resto do site mantém a política geral."""
+    partes = []
+    for diretiva in csp(api).split("; "):
+        nome = diretiva.split(" ", 1)[0]
+        partes.append(f"{diretiva} {MAPA_GOOGLE[nome]}" if nome in MAPA_GOOGLE else diretiva)
+    return "; ".join([*partes, "worker-src blob:"])
 
 
 CSP_WIDGET = "; ".join([  # mesma do backend (backend/app.py): widget do CEPEA em /cotacoes/, dentro de iframe isolado

@@ -6,11 +6,11 @@
 .ot h2 { font-size: 16px; margin: 0 0 8px; color: var(--tinta); } .ot h3 { font-size: 14px; margin: 0; color: var(--tinta); }
 .ot .grade { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 12px; align-items: start; }
 .ot .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: var(--r8); padding: 12px 14px; margin-bottom: 12px; }
-.ot label { display: block; font-size: 12px; color: var(--tinta-suave); margin: 6px 0 2px; font-weight: 600; }
-.ot input, .ot select { width: 100%; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: var(--cartao); color: var(--tinta); font: inherit; }
+.ot label:not(.mapa-google *) { display: block; font-size: 12px; color: var(--tinta-suave); margin: 6px 0 2px; font-weight: 600; }
+.ot input:not(.mapa-google *), .ot select:not(.mapa-google *) { width: 100%; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: var(--cartao); color: var(--tinta); font: inherit; }
 .ot input:focus-visible, .ot select:focus-visible, .ot button:focus-visible { outline: 2px solid var(--acao); outline-offset: 1px; }
 .ot .linha { display: flex; gap: 6px; align-items: end; } .ot .linha > * { flex: 1; } .ot .linha .estreito { flex: 0 0 64px; }
-.ot button { background: var(--acao); color: #fff; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; font: inherit; font-weight: 600; }
+.ot button:not(.mapa-google *) { background: var(--acao); color: #fff; border: 0; border-radius: 6px; padding: 7px 12px; cursor: pointer; font: inherit; font-weight: 600; }
 .ot button.sec { background: var(--suave); color: var(--acao); } .ot button.mini { padding: 3px 8px; font-size: 12px; }
 .ot button:disabled { opacity: .55; cursor: wait; }
 .ot .acoes { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
@@ -21,7 +21,7 @@
 .ot .kpi b { display: block; font-size: 20px; color: var(--tinta); } .ot .kpi span { color: var(--tinta-suave); font-size: 12px; }
 .ot .duas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: start; }
 .ot .rolagem { overflow-x: auto; }
-.ot table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ot table:not(.mapa-google *) { width: 100%; border-collapse: collapse; font-size: 13px; }
 .ot th { text-align: left; color: var(--tinta); background: var(--suave); padding: 6px 8px; font-size: 12px; }
 .ot td { padding: 5px 8px; border-bottom: 1px solid var(--linha); vertical-align: top; }
 .ot td.num, .ot th.num { text-align: right; white-space: nowrap; } .ot tfoot td { font-weight: 700; border-top: 2px solid var(--acao); }
@@ -30,7 +30,7 @@
 .ot .t-ok { background: var(--ok-f); color: var(--ok); } .ot .t-simulado { background: var(--si-f); color: var(--si); }
 .ot .t-parametro, .ot .t-aviso { background: var(--av-f); color: var(--av); } .ot .t-erro { background: var(--er-f); color: var(--er); }
 .ot .fonte { color: var(--tinta-suave); font-size: 11.5px; }
-.ot .mapa { width: 100%; height: 320px; background: var(--suave); border: 1px solid var(--linha); border-radius: 6px; }
+.ot .mapa { width: 100%; height: 360px; background: var(--suave); border: 1px solid var(--linha); border-radius: 6px; }
 .ot .legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--tinta-suave); margin-top: 6px; }
 .ot .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
 .ot .tempo { list-style: none; margin: 0; padding: 0; } .ot .tempo li { display: flex; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--linha); }
@@ -46,5 +46,38 @@
 .ot details summary { cursor: pointer; font-weight: 700; color: var(--tinta); }
 .ot .dev { font-size: 12px; background: var(--av-f); color: var(--av); border: 1px solid var(--linha); border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .ot .dev input, .ot .dev select { width: auto; max-width: 100%; padding: 3px 6px; }
+/* Mapa da viagem: mapa largo + painel lateral; o painel rola por dentro para não esticar a tela. */
+.ot .mapa-cartao { padding: 10px 12px; }
+.ot .mapa-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.ot .mapa-grade { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 10px; align-items: stretch; }
+.ot .mapa-area { min-width: 0; }
+.ot .mapa-google { height: 480px; border-radius: 6px; overflow: hidden; background: #0b1f3a; }
+.ot .mapa-slot svg.mapa { height: 480px; }
+.ot .mapa-lado { max-height: 520px; overflow-y: auto; padding-right: 2px; }
+.ot .mapa-lado details { border-top: 1px solid var(--linha); padding: 6px 0; }
+.ot .mapa-lado details:first-of-type { border-top: 0; }
+.ot .mapa-lado summary { font-size: 13px; }
+.ot .lista-mapa { list-style: none; margin: 4px 0 0; padding: 0; }
+.ot .lista-mapa li { padding: 4px 0; border-bottom: 1px dashed var(--linha); font-size: 12.5px; }
+.ot .lista-mapa small { display: block; color: var(--tinta-suave); }
+.ot button.link:not(.mapa-google *) { background: none; color: var(--acao); padding: 0; font-weight: 600; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+.ot .legenda label { display: inline-flex; align-items: center; gap: 4px; margin: 0; font-weight: 500; color: var(--tinta-suave); cursor: pointer; }
+.ot .legenda input { width: auto; margin: 0; }
+.ot .legenda i { margin-right: 0; }
+.ot .form-lanc { margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--linha); }
+.ot .form-lanc h3 { font-size: 13px; }
+.ot .form-lanc input, .ot .form-lanc select { padding: 4px 6px; }
+.ot .mapa-lado .msg { margin: 0 0 6px; }
+/* Google Maps dentro do site: o reset do Tailwind (img max-width) desalinha os blocos e os ícones do mapa. */
+.ot .mapa-google img { max-width: none; }
+.ot .ot-pino { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; color: #fff; font: 700 11px/18px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.45); }
+.ot .ot-pino-caminhao { width: 28px; height: 28px; line-height: 24px; font-size: 13px; }
+.ot .ot-info { color: #1b2430; font-size: 13px; max-width: 280px; }
+.ot .ot-info dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 6px 0; }
+.ot .ot-info dt { color: #5b6573; } .ot .ot-info dd { margin: 0; font-weight: 600; }
+.ot .ot-info p { margin: 0; color: #5b6573; font-size: 11.5px; }
+@media (max-width: 1280px) { .ot .mapa-grade { grid-template-columns: minmax(0, 1fr); } .ot .mapa-lado { max-height: none; } }
+@media (max-width: 640px) { .ot .mapa-google, .ot .mapa-slot svg.mapa { height: 360px; } }
 @media (max-width: 960px) { .ot .grade, .ot .duas { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .ot .ao-vivo::before { animation: none; } }
+.ot td.fonte, .ot .lista-mapa small { overflow-wrap: anywhere; }

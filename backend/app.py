@@ -102,8 +102,28 @@ CSP = "; ".join([
     "form-action 'self'",
     "object-src 'none'",
 ])
-# Páginas da Central de Viagem (/transporte/): além do próprio site, falam com o Firebase Authentication para entrar e renovar o token.
-CSP_TRANSPORTE = CSP.replace("connect-src 'self'", "connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com")
+# Páginas da Central de Viagem (/transporte/): além do próprio site, falam com o Firebase Authentication para entrar e renovar o token
+# e carregam o mapa do Google (Maps JavaScript API). Lista de domínios do guia oficial de CSP do Maps JavaScript API, sem
+# 'unsafe-inline' em script-src e com hosts exatos onde dá (o curinga *.googleapis.com em script-src incluiria o Cloud Storage).
+# Mesma política em tools/preparar_firebase.py (csp_transporte); o teste compara as duas.
+MAPA_GOOGLE = {
+    "script-src": "https://maps.googleapis.com https://maps.gstatic.com",
+    "style-src": "https://fonts.googleapis.com",
+    "font-src": "https://fonts.gstatic.com",
+    "img-src": "https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com",
+    "connect-src": "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://maps.googleapis.com https://*.gstatic.com",
+}
+
+
+def com_mapa_google(politica: str) -> str:
+    partes = []
+    for diretiva in politica.split("; "):
+        nome = diretiva.split(" ", 1)[0]
+        partes.append(f"{diretiva} {MAPA_GOOGLE[nome]}" if nome in MAPA_GOOGLE else diretiva)
+    return "; ".join([*partes, "worker-src blob:"])
+
+
+CSP_TRANSPORTE = com_mapa_google(CSP)
 # Widget oficial do CEPEA (cotações dos cards Orgatec Audi Agro): só em /cotacoes/, aberto pelos cards num iframe com
 # sandbox="allow-scripts" (origem opaca). É a única página que aceita script de fora, e só o do CEPEA.
 CSP_WIDGET = "; ".join([

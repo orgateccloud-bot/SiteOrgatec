@@ -8,7 +8,9 @@ Fontes (verificadas em 09/11/2026; ver docs/ideias/reestruturacao-transporte-fas
 - Rota alternativa: Google Routes API + Geocoding API (RotaGoogle), licença comercial, sem perfil de caminhão; ORGATEC_TRANSPORTE_ROTA_FONTE=google.
 - Clima: MET Norway Locationforecast 2.0 (CC BY 4.0, uso comercial permitido). Exige User-Agent com nome do app e contato.
 - Combustível: ANP, "Série histórica de preços de combustíveis" (dados abertos), arquivos mensais precos-diesel-gnv-MM.csv.
-- Pedágio: ANTT, dados abertos "Praça de Pedágio" (CC BY): localização das praças. NÃO traz tarifa; o custo usa o parâmetro da transportadora.
+- Pedágio: ANTT, dados abertos "Praça de Pedágio" (CC BY): localização das praças; tarifa da tabela oficial da concessionária quando houver
+  (tarifas_pedagio.py), senão o parâmetro da transportadora.
+- Postos: Google Places API (New), Text Search ao longo da rota (PostosGoogle), com ORGATEC_TRANSPORTE_POSTOS_REAL=1.
 Os arquivos da ANP e da ANTT são baixados por tools/transporte_dados_abertos.py para uma pasta local; o provedor só lê o arquivo.
 """
 
@@ -25,7 +27,7 @@ from typing import Any
 
 from backend.transporte.erros import EntradaInvalida, ErroProvedor, ProvedorRespostaInvalida
 from backend.transporte.geo import Coord, acumulado_km, distancia_ponto_rota_km, simplificar
-from backend.transporte.provedores.base import PracaPedagio, PrecoCombustivel, PrevisaoClima, RotaCalculada
+from backend.transporte.provedores.base import Posto, PracaPedagio, PrecoCombustivel, PrevisaoClima, RotaCalculada
 from backend.transporte.provedores.cache import Cache
 from backend.transporte.provedores.http import ClienteHttp
 from backend.transporte.provedores.tarifas_pedagio import rotulo_fonte, tarifa_cat1
@@ -159,6 +161,86 @@ class RotaGoogle:
             geometria=simplificar([tuple(c) for c in bruto["g"]], 2000),
             fonte="Google Routes API (veículo de passeio, sem restrição de carga nem trânsito em tempo real)",
         )
+
+
+def codificar_polilinha(pontos: list[Coord]) -> str:
+    """Inverso de _decodificar_polilinha: polilinha codificada do Google (precisão 1e-5)."""
+    saida: list[str] = []
+    ant_lat = ant_lon = 0
+    for lat, lon in pontos:
+        ilat, ilon = round(lat * 1e5), round(lon * 1e5)
+        for delta in (ilat - ant_lat, ilon - ant_lon):
+            v = ~(delta << 1) if delta < 0 else delta << 1
+            while v >= 0x20:
+                saida.append(chr((0x20 | (v & 0x1F)) + 63))
+                v >>= 5
+            saida.append(chr(v + 63))
+        ant_lat, ant_lon = ilat, ilon
+    return "".join(saida)
+
+
+class PostosDesligado:
+    """Sem provedor de postos configurado: a tela diz que a busca está desligada. Nenhum posto é inventado."""
+
+    nome = "postos_desligado"
+
+    def postos_na_rota(self, geometria: list[Coord]) -> list[Posto] | None:
+        return None
+
+
+def _componente(componentes: list[dict[str, Any]], tipo: str, curto: bool = False) -> str | None:
+    for c in componentes or []:
+        if tipo in c.get("types", []):
+            return c.get("shortText" if curto else "longText")
+    return None
+
+
+class PostosGoogle:
+    """Google Places API (New), Text Search com "search along route": postos ao longo da polilinha da rota, numa única requisição
+    por cálculo de viagem (até 20 resultados; SKU Text Search Pro). Termos do Google (Service Specific Terms 14.2 e 14.3): o resultado
+    só pode ser exibido em mapa Google ou sem mapa, e as coordenadas valem por até 30 dias (o job de retenção apaga depois)."""
+
+    nome = "google_places"
+    URL = "https://places.googleapis.com/v1/places:searchText"
+    CAMPOS = "places.id,places.displayName,places.location,places.formattedAddress,places.addressComponents"
+    DISTANCIA_MAX_KM = 3.0
+    MAX_PONTOS_POLILINHA = 300
+
+    def __init__(self, cliente: ClienteHttp, chave: str, cache: Cache, ttl: int, url: str = URL) -> None:
+        self._http, self._chave, self._cache, self._ttl, self._url = cliente, chave, cache, ttl, url
+
+    def postos_na_rota(self, geometria: list[Coord]) -> list[Posto] | None:
+        if len(geometria) < 2:
+            return []
+        linha = codificar_polilinha(simplificar(geometria, self.MAX_PONTOS_POLILINHA))
+
+        def buscar() -> list[dict[str, Any]]:
+            dados = self._http.requisitar(
+                "POST", self._url,
+                headers={"X-Goog-Api-Key": self._chave, "X-Goog-FieldMask": self.CAMPOS},
+                json={"textQuery": "posto de combustível diesel", "includedType": "gas_station", "strictTypeFiltering": True,
+                      "languageCode": "pt-BR", "regionCode": "BR", "pageSize": 20,
+                      "searchAlongRouteParameters": {"polyline": {"encodedPolyline": linha}}})
+            if not isinstance(dados, dict):
+                raise ProvedorRespostaInvalida(self.nome, "formato de lugares inesperado")
+            return dados.get("places", [])  # sem resultado, a API devolve {} (sem a chave "places")
+
+        acc = acumulado_km(geometria)
+        achados: list[Posto] = []
+        for p in self._cache.obter_ou_calcular(Cache.chave("gpostos", linha), self._ttl, buscar):
+            try:
+                lat, lon = float(p["location"]["latitude"]), float(p["location"]["longitude"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            dist, km = distancia_ponto_rota_km((lat, lon), geometria, acc)
+            if dist > self.DISTANCIA_MAX_KM:
+                continue
+            comp = p.get("addressComponents", [])
+            achados.append(Posto(
+                nome=str((p.get("displayName") or {}).get("text") or "Posto sem nome"), lat=lat, lon=lon, km_na_rota=round(km, 1),
+                endereco=str(p.get("formattedAddress", "")), municipio=_componente(comp, "administrative_area_level_2"),
+                uf=_componente(comp, "administrative_area_level_1", curto=True), fonte="Google Places", id_externo=str(p.get("id", ""))))
+        return sorted(achados, key=lambda x: x.km_na_rota)
 
 
 class ClimaMetNo:

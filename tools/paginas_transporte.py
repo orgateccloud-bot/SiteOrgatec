@@ -12,7 +12,7 @@ import gerar_paginas as gp
 
 MODELOS = Path(__file__).resolve().parent / "transporte_modelos"
 CSS = '    <link rel="stylesheet" href="{p}assets/css/transporte.css">'
-SCRIPTS = ["transporte-comum.js", "transporte-viagem.js"]
+SCRIPTS = ["transporte-comum.js", "transporte-mapa.js", "transporte-viagem.js"]
 NAV = ('<nav class="mb-4 flex gap-2" aria-label="Seções"><a href="central.html" class="og-btn og-btn-{c} og-btn-md">Central</a>'
        '<a href="portal.html" class="og-btn og-btn-{p} og-btn-md">Portal do cliente</a></nav>')
 

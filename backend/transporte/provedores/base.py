@@ -38,6 +38,22 @@ class PracaPedagio:
 
 
 @dataclass(frozen=True)
+class Posto:
+    """Posto de combustível perto da rota. Sem preço: o provedor de lugares não informa preço confiável; a tela mostra a média da ANP
+    do município, identificada como média."""
+
+    nome: str
+    lat: float
+    lon: float
+    km_na_rota: float
+    endereco: str
+    municipio: str | None
+    uf: str | None
+    fonte: str
+    id_externo: str = ""
+
+
+@dataclass(frozen=True)
 class PrevisaoClima:
     previsto_para: datetime
     temperatura_c: float | None
@@ -78,6 +94,14 @@ class PedagioProvider(Protocol):
     nome: str
 
     def pracas_na_rota(self, geometria: list[Coord]) -> list[PracaPedagio]: ...
+
+
+class PostosProvider(Protocol):
+    nome: str
+
+    def postos_na_rota(self, geometria: list[Coord]) -> list[Posto] | None:
+        """None = busca desligada (nada é inventado); lista vazia = buscou e não achou."""
+        ...
 
 
 class ClimaProvider(Protocol):

@@ -83,7 +83,8 @@
   function mensagemValidacao(d) {
     if (typeof d === 'string') return d;  // erros do módulo (EntradaInvalida, AcessoNegado...) trazem o texto em detail
     if (!Array.isArray(d) || !d.length) return null;
-    return 'Dado inválido em ' + d[0].loc.slice(1).join(' › ') + ': ' + d[0].msg;
+    var onde = d[0].loc.slice(1).join(' › '), msg = String(d[0].msg).replace(/^Value error, /, '');
+    return onde ? 'Dado inválido em ' + onde + ': ' + msg : 'Dado inválido: ' + msg;
   }
 
   var brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });

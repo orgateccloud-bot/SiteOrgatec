@@ -84,6 +84,10 @@ class RepositorioBase:
     def _tenant_existe(self, tid: str) -> bool:
         raise NotImplementedError
 
+    def _todas_viagens(self) -> list[tuple[str, dict[str, Any]]]:
+        """(transportadora, viagem) de todas as transportadoras. Só para rotinas de retenção, nunca para resposta a usuário."""
+        raise NotImplementedError
+
     def _tenant_criar(self, tid: str) -> None:
         raise NotImplementedError
 
@@ -167,6 +171,18 @@ class RepositorioBase:
         """Prazo de guarda (LGPD): apaga leituras mais antigas que `antes_de`. Chamado por tools/lgpd.py."""
         return self._apagar_leituras(antes_de)
 
+    def expirar_coordenadas_google(self, antes_de: datetime) -> int:
+        """Termos do Google Maps: apaga latitude e longitude da Routes e da Places calculadas antes de `antes_de`. Chamado por tools/lgpd.py."""
+        from backend.transporte.servicos.viagem import expirar_coordenadas
+
+        total = 0
+        for tid, v in self._todas_viagens():
+            novo = expirar_coordenadas(v, antes_de)
+            if novo is not None:
+                self.atualizar(tid, "viagens", v["id"], {"resultado": novo})
+                total += 1
+        return total
+
 
 class RepositorioMemoria(RepositorioBase):
     def __init__(self) -> None:
@@ -200,6 +216,10 @@ class RepositorioMemoria(RepositorioBase):
                 if rid in cols.get(colecao, {}):
                     return cols[colecao][rid]
             return None
+
+    def _todas_viagens(self):
+        with self._trava:
+            return [(tid, r) for tid, cols in self._dados.items() for r in cols.get("viagens", {}).values()]
 
     def _apagar_leituras(self, antes_de):
         with self._trava:
@@ -283,6 +303,9 @@ class RepositorioSQLite(RepositorioBase):
             "SELECT doc FROM transporte_docs WHERE tid = ? AND colecao = 'leituras' AND viagem_id = ? ORDER BY ts DESC LIMIT ?",
             (tid, viagem_id, limite))]
 
+    def _todas_viagens(self):
+        return [(r[0], decodificar(json.loads(r[1]))) for r in self._exec("SELECT tid, doc FROM transporte_docs WHERE colecao = 'viagens'")]
+
     def _apagar_leituras(self, antes_de):
         return self._exec("DELETE FROM transporte_docs WHERE colecao = 'leituras' AND ts < ?", (utc(antes_de).isoformat(),), escrever=True)
 
@@ -330,6 +353,9 @@ class RepositorioFirestore(RepositorioBase):
         # exige o índice composto de firestore.indexes.json (tid, viagem_id, ts desc); o emulador não exige
         q = self._col("leituras").where("tid", "==", tid).where("viagem_id", "==", viagem_id).order_by("ts", direction="DESCENDING").limit(limite)
         return [decodificar(json.loads(d.get("doc"))) for d in q.stream()]
+
+    def _todas_viagens(self):
+        return [(d.get("tid"), decodificar(json.loads(d.get("doc")))) for d in self._col("viagens").stream()]
 
     def _apagar_leituras(self, antes_de):
         total = 0

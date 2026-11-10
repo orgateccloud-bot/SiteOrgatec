@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Papel = Literal["gestor", "motorista", "leitura"]
 StatusViagem = Literal["planejada", "em_andamento", "concluida", "cancelada"]
@@ -134,6 +134,36 @@ class AlertaEntrada(BaseModel):
     inicio: AwareDatetime
     fim: AwareDatetime | None = None
     fonte: str = Field(min_length=3, max_length=200)
+
+
+TipoLancamento = Literal["abastecimento", "pedagio_pago", "parada", "ocorrencia", "posicao_manual"]
+FONTE_MANUAL = "informado manualmente"
+
+
+class LancamentoEntrada(BaseModel):
+    """O que o motorista ou o gestor informa à mão durante a viagem. A fonte é sempre "informado manualmente"."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tipo: TipoLancamento
+    ts: AwareDatetime
+    local: str = Field(default="", max_length=120)
+    lat: float | None = Field(default=None, ge=-34.0, le=6.0)
+    lon: float | None = Field(default=None, ge=-74.0, le=-34.0)
+    valor: Decimal | None = Field(default=None, ge=0, le=Decimal("1000000"))
+    litros: Decimal | None = Field(default=None, gt=0, le=Decimal("3000"))
+    preco_l: Decimal | None = Field(default=None, gt=0, le=Decimal("100"))
+    observacao: str = Field(default="", max_length=300)
+
+    @model_validator(mode="after")
+    def _coerente(self) -> LancamentoEntrada:
+        if (self.lat is None) != (self.lon is None):
+            raise ValueError("informe latitude e longitude juntas")
+        if self.tipo == "posicao_manual" and self.lat is None:
+            raise ValueError("a posição informada precisa de latitude e longitude")
+        if self.tipo != "abastecimento" and (self.litros is not None or self.preco_l is not None):
+            raise ValueError("litros e preço por litro só valem para abastecimento")
+        return self
 
 
 class SensorEntrada(BaseModel):

@@ -130,7 +130,10 @@ def test_viagem_completa_com_simulados():
     assert Decimal(r["despesas"]["total"]) > 0
     assert len(r["bloqueios"]) == 1 and r["bloqueios"][0]["passagem_prevista"]
     assert len(r["clima"]) >= 5
-    assert {f["estado"] for f in r["fontes"].values()} == {"simulado"}
+    assert {f["estado"] for k, f in r["fontes"].items() if k != "postos"} == {"simulado"}
+    assert r["fontes"]["postos"]["estado"] == "indisponivel" and r["postos"] == []  # sem provedor, nenhum posto é inventado
+    fator = 6 * P.pedagio_multiplicador_por_eixo
+    assert r["pedagios"] and all(Decimal(p["valor"]) == Decimal(p["tarifa_cat1"]) * fator for p in r["pedagios"])
 
 
 def test_viagem_com_parada_intermediaria_coordenada():

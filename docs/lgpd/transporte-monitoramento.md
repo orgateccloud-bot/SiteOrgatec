@@ -7,6 +7,7 @@ Situação: **adotada como proposta de trabalho pelo escritório em 09/11/2026 (
 ## O que o módulo trata
 
 - **Posição, velocidade, ignição, temperatura e combustível** enviados por sensores do veículo. A posição de um caminhão, ligada a uma viagem e a um motorista, é dado pessoal do motorista.
+- **Lançamentos manuais da viagem** (`transporte_lancamentos`, desde 10/11/2026): abastecimento, pedágio pago, parada, ocorrência e posição informada à mão, com o usuário que lançou. A posição informada tem a mesma natureza da telemetria. Ainda sem prazo automático de guarda: definir junto com a revisão deste documento.
 - **Motorista:** só nome e vínculo ao usuário. Sem CPF, CNH, telefone ou endereço.
 - **Coordenadas em log:** nenhuma. O log registra só o tipo do erro.
 - **APIs estrangeiras:** só coordenadas de origem e destino (nunca nome nem placa), e apenas quando os provedores reais existirem.

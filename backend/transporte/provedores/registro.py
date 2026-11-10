@@ -6,12 +6,14 @@
   ORGATEC_TRANSPORTE_CLIMA_REAL=1        exige ORGATEC_TRANSPORTE_METNO_CONTATO (e-mail ou site, vai no User-Agent)
   ORGATEC_TRANSPORTE_COMBUSTIVEL_REAL=1  exige ORGATEC_TRANSPORTE_ANP_ARQUIVO (CSV da ANP)
   ORGATEC_TRANSPORTE_PEDAGIO_REAL=1      exige ORGATEC_TRANSPORTE_ANTT_ARQUIVO (CSV da ANTT)
+  ORGATEC_TRANSPORTE_POSTOS_REAL=1       exige ORGATEC_TRANSPORTE_GOOGLE_CHAVE com a Places API (New) ativada; sem a flag, a busca de
+                                         postos fica desligada (a tela avisa e nenhum posto é inventado)
 Os dois arquivos vêm de `python tools/transporte_dados_abertos.py`. Bloqueios seguem manuais (não há API aberta confirmada).
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from backend.transporte.erros import RecursoDesligado
 from backend.transporte.provedores.base import (
@@ -19,11 +21,12 @@ from backend.transporte.provedores.base import (
     ClimaProvider,
     CombustivelProvider,
     PedagioProvider,
+    PostosProvider,
     RotaProvider,
 )
 from backend.transporte.provedores.cache import Cache
 from backend.transporte.provedores.http import ClienteHttp
-from backend.transporte.provedores.reais import ClimaMetNo, CombustivelANP, PedagioANTT, RotaGoogle, RotaORS
+from backend.transporte.provedores.reais import ClimaMetNo, CombustivelANP, PedagioANTT, PostosDesligado, PostosGoogle, RotaGoogle, RotaORS
 from backend.transporte.provedores.simulados import (
     BloqueioSimulado,
     ClimaSimulado,
@@ -43,10 +46,12 @@ class Provedores:
     combustivel: CombustivelProvider
     pedagio: PedagioProvider
     clima: ClimaProvider
+    postos: PostosProvider = field(default_factory=PostosDesligado)
 
     def reais(self) -> list[str]:
-        return [n for n, p in (("rota", self.rota), ("combustivel", self.combustivel), ("pedagio", self.pedagio), ("clima", self.clima))
-                if not type(p).__name__.endswith(("Simulada", "Simulado"))]
+        nomes = [n for n, p in (("rota", self.rota), ("combustivel", self.combustivel), ("pedagio", self.pedagio), ("clima", self.clima))
+                 if not type(p).__name__.endswith(("Simulada", "Simulado"))]
+        return nomes + (["postos"] if not isinstance(self.postos, PostosDesligado) else [])
 
 
 def provedores_simulados() -> Provedores:
@@ -88,4 +93,7 @@ def provedores_do_ambiente(env: dict[str, str], cache: Cache | None = None, tran
         p.combustivel = CombustivelANP(_exigir(env, "ORGATEC_TRANSPORTE_ANP_ARQUIVO", "combustível real"))
     if ligado("PEDAGIO"):
         p.pedagio = PedagioANTT(_exigir(env, "ORGATEC_TRANSPORTE_ANTT_ARQUIVO", "pedágio real"))
+    if ligado("POSTOS"):
+        chave = _exigir(env, "ORGATEC_TRANSPORTE_GOOGLE_CHAVE", "postos (Google Places)")
+        p.postos = PostosGoogle(ClienteHttp("google_places", transporte=transporte), chave, cache, 86400)
     return p

@@ -101,6 +101,65 @@ gcloud run jobs update orgatec-retencao --region southamerica-east1 --image <ima
   O acesso vale no próximo login (até 1 hora). Para retirar: `transporte_usuario.py ... --revogar`.
 - Sensores, rota, clima, combustível e pedágio reais seguem desligados até haver as flags `ORGATEC_TRANSPORTE_*` correspondentes. Combustível (ANP) e pedágio (ANTT): o `Dockerfile` baixa os arquivos na construção da imagem (estágio `dados`, `tools/transporte_dados_abertos.py`) e os deixa em `/app/dados-abertos`. Para usar: `--update-env-vars ORGATEC_TRANSPORTE_COMBUSTIVEL_REAL=1,ORGATEC_TRANSPORTE_PEDAGIO_REAL=1`. A ANP publica um arquivo por mês, então reimplante a API uma vez por mês para renovar o diesel. Se o gov.br estiver fora do ar na construção, a imagem sai sem os arquivos e só esses dois provedores ficam indisponíveis (a tela mostra o estado ao lado do dado). O pedágio da ANTT traz as praças, não a tarifa: o valor segue o parâmetro da transportadora.
 
+### Mapa real, postos e lançamentos da Central de Viagem
+
+O mapa da Central e do Portal é o **Google Maps** (satélite com rótulos, com troca para ruas e relevo). A escolha segue os termos do
+Google Maps Platform, conferidos em 10/11/2026: a rota (Routes API) e os postos (Places API) **não podem aparecer em mapa de outro
+provedor** (termos gerais 3.2.3(e); Service Specific Terms 19.2 e 14.2). Sem chave, ou se o Google recusar a chave, a tela volta ao
+diagrama SVG do traçado, o que os termos permitem (19.1 e 14.1).
+
+**1. Chave do mapa (navegador).** Em Console › APIs e serviços › Credenciais, crie uma chave nova só para o mapa:
+- Restrições de aplicativo: **Referenciadores HTTP**, `https://orgatec.io/*` (e o endereço de prévia, se for testar nele).
+- Restrições de API: só **Maps JavaScript API** (ative a API antes em Biblioteca).
+- Opcional, recomendado: em Gerenciamento de mapas, crie um **Map ID** (tipo JavaScript, raster). Com ele, os marcadores usam
+  `AdvancedMarkerElement`; sem ele, usam `google.maps.Marker`, que o Google marcou como obsoleto (sem data de desligamento, com aviso de 12 meses).
+
+A chave fica numa variável de ambiente do Cloud Run e só é entregue à tela depois do login (`/api/transporte/contexto`):
+
+```bash
+gcloud run services update orgatec-api --region southamerica-east1 --update-env-vars ORGATEC_TRANSPORTE_MAPS_CHAVE_WEB=<chave do mapa>,ORGATEC_TRANSPORTE_MAPS_ID=<map id>
+```
+
+**2. Postos ao longo da rota (servidor).** Ative a **Places API (New)** no projeto e acrescente-a às APIs permitidas da chave do
+servidor (o segredo `orgatec-google-chave`, que já atende Routes e Geocoding). Depois:
+
+```bash
+gcloud run services update orgatec-api --region southamerica-east1 --update-env-vars ORGATEC_TRANSPORTE_POSTOS_REAL=1
+```
+
+Uma busca "ao longo da rota" (Text Search Pro, até 20 postos a até 3 km do traçado) por cálculo ou recálculo de viagem; abrir a viagem
+não consulta de novo. O preço exibido é a **média da ANP no município do posto** (ou na UF), rotulada como média; nunca o preço do posto.
+
+**3. Teto de gasto.** Orçamento só avisa. O corte real é a cota diária por API em Console › APIs e serviços › Cotas
+(fonte: developers.google.com/maps/billing-and-pricing/manage-costs). Para ficar na faixa gratuita mensal, divida a cota mensal por 31:
+
+| API (SKU) | Gratuito por mês | Acima disso, por 1.000 | Cota diária sugerida |
+|---|---|---|---|
+| Maps JavaScript API, Dynamic Maps | 10.000 carregamentos | US$ 7,00 | 322 |
+| Places API (New), Text Search Pro | 5.000 | US$ 32,00 | 161 |
+| Routes API, Compute Routes Essentials | 10.000 | US$ 5,00 | 322 |
+| Geocoding API | 10.000 | US$ 5,00 | 322 |
+
+Valores da tabela oficial (developers.google.com/maps/billing-and-pricing/pricing), lidos em 10/11/2026. A página não diz se o modo
+satélite do mapa JavaScript entra no mesmo SKU de Dynamic Maps; confira no relatório de faturamento no primeiro mês.
+A tela cria o mapa uma vez por página aberta e o reaproveita nas atualizações, então cada abertura da Central conta um carregamento.
+
+**4. Prazo de 30 dias.** Os termos (19.3 e 14.3) só permitem guardar latitude e longitude da Routes e da Places por 30 dias. O job
+`orgatec-retencao` (`tools/lgpd.py retencao --confirmar`) apaga, depois de 29 dias, o traçado, os pontos geocodificados, os pontos de
+clima e as coordenadas dos postos. Distâncias, tempos, valores, praças da ANTT e pontos digitados ficam. A tela avisa e o gestor pode
+recalcular a viagem. Reimplante o job com a imagem nova para valer:
+`gcloud run jobs update orgatec-retencao --region southamerica-east1 --image <imagem da API>`.
+
+**5. Lançamentos manuais (Firestore).** Coleção `transporte_lancamentos`, no mesmo formato das outras (documento
+`<transportadora>__<id>` com `tid`, `id` e `doc`). Campos do registro: `tipo` (`abastecimento`, `pedagio_pago`, `parada`, `ocorrencia`
+ou `posicao_manual`), `ts`, `local`, `lat` e `lon` (opcionais; obrigatórios na posição), `valor`, `litros` e `preco_l` (só
+abastecimento), `observacao`, `viagem_id`, `autor_id`, `criado_em`, `fonte` = "informado manualmente" e a remoção lógica
+(`removido`, `removido_por`, `removido_em`). As regras do Firestore não mudam: o navegador continua sem acesso; só a API lê e grava.
+A posição informada à mão é dado pessoal do motorista, como a telemetria (ver `docs/lgpd/transporte-monitoramento.md`).
+
+**Atualização da tela.** A Central consulta viagem, lançamentos e posição a cada 15 s com a aba visível e redesenha só o que mudou,
+sem apagar o que estiver sendo digitado. Não há listener do Firestore no navegador, porque isso exigiria abrir as regras do banco.
+
 ### Testar localmente com o emulador
 
 ```bash
