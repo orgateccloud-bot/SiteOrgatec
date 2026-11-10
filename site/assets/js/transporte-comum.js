@@ -81,6 +81,7 @@
   }
 
   function mensagemValidacao(d) {
+    if (typeof d === 'string') return d;  // erros do módulo (EntradaInvalida, AcessoNegado...) trazem o texto em detail
     if (!Array.isArray(d) || !d.length) return null;
     return 'Dado inválido em ' + d[0].loc.slice(1).join(' › ') + ': ' + d[0].msg;
   }
