@@ -13,11 +13,14 @@ from __future__ import annotations
 import json
 import logging
 import os
+import hmac
 import random
+import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
+from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
@@ -80,6 +83,7 @@ class Servicos:
     producao: bool
     limitador: ingestao.Limitador = field(default_factory=ingestao.Limitador)
     entrada: dict[str, Any] = field(default_factory=dict)  # o que a tela precisa para entrar (modo e chave web pública)
+    traccar: bool = False  # ORGATEC_TRANSPORTE_TRACCAR=1: aceita o app Traccar Client (teste com celular), ver receber_traccar
     mapa: dict[str, str] | None = None  # chave pública do Maps JavaScript API (restrita por domínio no Console) e Map ID opcional
     limite_ip: Callable[[Request], Any] | None = None  # limite por IP do site: só tentativas de acesso NEGADAS gastam dele
     # Limite por usuário logado (o painel consulta a cada 15 s; o limite por IP do site, feito para formulários, não serve aqui)
@@ -115,7 +119,8 @@ def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador
     chave_mapa = e.get("ORGATEC_TRANSPORTE_MAPS_CHAVE_WEB", "").strip()
     mapa = {"provedor": "google", "chave": chave_mapa, **({"map_id": e["ORGATEC_TRANSPORTE_MAPS_ID"].strip()}
                                                           if e.get("ORGATEC_TRANSPORTE_MAPS_ID", "").strip() else {})} if chave_mapa else None
-    return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip, mapa=mapa)
+    return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip, mapa=mapa,
+                    traccar=e.get("ORGATEC_TRANSPORTE_TRACCAR", "0") == "1")
 
 
 def servicos(request: Request) -> Servicos:
@@ -413,7 +418,12 @@ def criar_sensor(entrada: SensorEntrada, ctx: Contexto = Depends(GESTOR), s: Ser
         raise EntradaInvalida(f"Fornecedor '{entrada.fornecedor}' sem adaptador registrado.")
     se = s.repo.inserir(ctx.transportadora_id, "sensores", {**entrada.model_dump(), "ativo": True, "versao": 1, "ultimo_sinal_em": None,
                                                            "criado_por": ctx.usuario_id})
-    return {**_sensor_dict(se), "segredo": s.cofre_ativo().segredo_do_sensor(se["id"], se["versao"]), "aviso": "Guarde o segredo agora: ele não é exibido de novo.",
+    segredo = s.cofre_ativo().segredo_do_sensor(se["id"], se["versao"])
+    if entrada.fornecedor == "traccar_client":
+        return {**_sensor_dict(se), "segredo": segredo, "endpoint": f"/api/telemetria/{se['id']}/traccar",
+                "aviso": "No app Traccar Client: endereço do servidor = https://orgatec.io + endpoint; identificador do dispositivo = segredo. "
+                         "Guarde o segredo agora: ele não é exibido de novo."}
+    return {**_sensor_dict(se), "segredo": segredo, "aviso": "Guarde o segredo agora: ele não é exibido de novo.",
             "endpoint": f"/api/telemetria/{se['id']}"}
 
 
@@ -475,6 +485,38 @@ def _leituras_simuladas(s: Servicos, v: dict[str, Any], n: int, sensor_id: str) 
 async def receber_leituras(sensor_id: str, request: Request, s: Servicos = Depends(sensores_ligados)) -> dict[str, Any]:  # noqa: B008
     corpo = await request.body()
     return ingestao.receber(s.repo, s.cofre_ativo(), s.limitador, sensor_id, corpo, request.headers.get("X-Timestamp"), request.headers.get("X-Assinatura"))
+
+
+@telemetria.api_route("/{sensor_id}/traccar", methods=["GET", "POST"])
+async def receber_traccar(sensor_id: str, request: Request, s: Servicos = Depends(sensores_ligados)) -> dict[str, Any]:  # noqa: B008
+    """App Traccar Client (celular como rastreador, para teste). O app não sabe assinar: o identificador do dispositivo
+    configurado nele é o segredo do sensor, conferido aqui; depois a leitura segue pelo mesmo caminho assinado dos
+    outros sensores. Só para sensores com fornecedor traccar_client e com ORGATEC_TRANSPORTE_TRACCAR=1."""
+    if not s.traccar:
+        raise RecursoDesligado("Traccar Client desligado")
+    corpo = await request.body()
+    if len(corpo) > ingestao.TAMANHO_MAX_CORPO:
+        raise EntradaInvalida("Corpo acima de 256 KB.")
+    if request.headers.get("content-type", "").startswith("application/json"):
+        try:
+            dados = json.loads(corpo)
+        except ValueError as exc:
+            raise EntradaInvalida("Corpo não é JSON válido.") from exc
+        if not isinstance(dados, dict):
+            raise EntradaInvalida("Corpo deve ser um objeto JSON.")
+    else:  # protocolo OsmAnd por parâmetros: na URL ou no corpo (formulário)
+        dados = dict(request.query_params)
+        dados.update({k: v[-1] for k, v in parse_qs(corpo.decode("utf-8", "replace")).items()})
+    sensor = s.repo.sensor_global(sensor_id)
+    if sensor is None or not sensor["ativo"] or sensor["fornecedor"] != "traccar_client":
+        raise AcessoNegado()
+    segredo = s.cofre_ativo().segredo_do_sensor(sensor["id"], sensor["versao"])
+    identificador = str(dados.pop("device_id", None) or dados.pop("id", None) or dados.pop("deviceid", None) or "")
+    if not hmac.compare_digest(identificador.encode(), segredo.encode()):
+        raise AcessoNegado()
+    normalizado = json.dumps(dados).encode()  # sem o identificador: o segredo não segue adiante
+    ts = str(int(time.time()))
+    return ingestao.receber(s.repo, s.cofre_ativo(), s.limitador, sensor["id"], normalizado, ts, assinar(segredo, ts, normalizado))
 
 
 def instalar(app: Any, env: dict[str, str] | None = None, autenticador: Autenticador | None = None, repo: RepositorioBase | None = None,
