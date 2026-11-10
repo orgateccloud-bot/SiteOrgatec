@@ -16,9 +16,15 @@
   'use strict';
   var REF = '2026-11-01';
   var PENDENTE = { status: 'pendente', por: null, em: null };
+  /* Aprovações do responsável técnico, gravadas por tools/aplicar_revisao.py (não edite à mão): id → { por, em, hash }.
+     O hash é do texto revisado; tests/js/revisao-aplicada.test.js falha se o texto de um item aprovado mudar depois. */
+  /* REVISOES:INICIO */
+  var APROVADOS = {};
+  /* REVISOES:FIM */
+  function revisaoDe(id) { var a = APROVADOS['item:' + id]; return a ? { status: 'aprovada', por: a.por, em: a.em, hash: a.hash } : PENDENTE; }
   function item(o) {
     o.consultadoEm = o.consultadoEm || REF;
-    o.revisao = o.revisao || PENDENTE;
+    o.revisao = o.revisao || revisaoDe(o.id);
     o.historico = o.historico || [];
     o.tributos = o.tributos || [];
     return o;

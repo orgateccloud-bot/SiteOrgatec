@@ -33,7 +33,11 @@ test('cobertura mínima do levantamento: tributos, setores, status e destinos', 
 });
 
 test('nenhum item sai aprovado sem revisão técnica do responsável', () => {
-  for (const it of ITENS) assert.equal(it.revisao.status, 'pendente', it.id);
+  // A aprovação só entra por tools/aplicar_revisao.py (registro assinado); revisao-aplicada.test.js confere o hash do texto.
+  for (const it of ITENS) {
+    assert.ok(['pendente', 'aprovada'].includes(it.revisao.status), it.id);
+    if (it.revisao.status === 'aprovada') assert.ok(it.revisao.por && it.revisao.hash, it.id + ' aprovado sem registro');
+  }
 });
 
 test('validação: campos obrigatórios, status, datas, fontes, setor, tributo, destino', () => {

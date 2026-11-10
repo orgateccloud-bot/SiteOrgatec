@@ -14,6 +14,8 @@
 })(this, function () {
   'use strict';
 
+  /* Revisão das perguntas, pesos e faixas: vale para o conjunto todo. tools/aplicar_revisao.py grava aqui o responsável, a
+     data e o hash do conjunto aprovado (não edite à mão). */
   var REVISAO = { status: 'pendente', por: null, em: null };
   var RESPOSTAS = { sim: 'Sim', nao: 'Não', nao_sei: 'Não sei', na: 'Não se aplica' };
   // percentual mínimo de cada nível (do maior para o menor)

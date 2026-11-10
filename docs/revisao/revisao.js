@@ -15,22 +15,24 @@
     return '{' + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ':' + canonico(v[k]); }).join(',') + '}';
   }
 
-  /* O que vai à revisão: [{ id, tipo, titulo, conteudo }], com `conteudo` = o texto que o responsável aprova. */
-  function pendentes(O) {
+  /* [{ id, tipo, titulo, conteudo }], com `conteudo` = o texto que o responsável aprova. Com `todos` falso, só o que ainda
+     espera revisão (o que a tela mostra); com `todos` verdadeiro, tudo, para tools/aplicar_revisao.py e o teste que
+     confere se um texto aprovado mudou depois da revisão. */
+  function listar(O, todos) {
     var lista = [];
     (O.reformaItens || []).concat(O.complianceItens || []).forEach(function (it) {
-      if (it.revisao && it.revisao.status === 'aprovada') return;
+      if (!todos && it.revisao && it.revisao.status === 'aprovada') return;
       lista.push({ id: 'item:' + it.id, tipo: 'Ponto', titulo: it.titulo,
         conteudo: { fato: it.fato, orientacao: it.orientacao || '', fontes: it.fontes, status: it.status } });
     });
     var T = O.termometro;
-    if (T && T.REVISAO.status !== 'aprovada') {
+    if (T && (todos || T.REVISAO.status !== 'aprovada')) {
       T.PERGUNTAS.forEach(function (p) {
         lista.push({ id: 'pergunta:' + p.id, tipo: 'Pergunta', titulo: p.texto,
           conteudo: { texto: p.texto, corrigir: p.corrigir, peso: p.peso, fontes: p.fontes, camadas: T.CAMADAS[p.id] || null } });
       });
     }
-    if (T && T.PESOS_PERFIL && T.PESOS_PERFIL.status !== 'aprovada') {
+    if (T && T.PESOS_PERFIL && (todos || T.PESOS_PERFIL.status !== 'aprovada')) {
       Object.keys(T.PESOS_PERFIL.ajustes).forEach(function (perfil) {
         Object.keys(T.PESOS_PERFIL.ajustes[perfil]).forEach(function (id) {
           var a = T.PESOS_PERFIL.ajustes[perfil][id];
@@ -41,6 +43,8 @@
     }
     return lista;
   }
+  function pendentes(O) { return listar(O, false); }
+  function todos(O) { return listar(O, true); }
 
   /* hash(texto) → Promise<hex>. No navegador usa crypto.subtle; nos testes, o crypto do Node. */
   function sha256(texto) {
@@ -71,5 +75,5 @@
     });
   }
 
-  return { canonico: canonico, pendentes: pendentes, registro: registro, sha256: sha256 };
+  return { canonico: canonico, pendentes: pendentes, todos: todos, registro: registro, sha256: sha256 };
 });

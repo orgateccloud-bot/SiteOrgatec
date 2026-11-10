@@ -6,7 +6,8 @@ const CONFIG = req('config.js');
 const O = { config: CONFIG, fontes: req('fontes.js'), ufs: req('ufs.js'), regras: req('regras.js'), conteudo: req('conteudo.js'),
   reformaItens: req('reforma-itens.js'), calculadoras: req('calculadoras.js'), calendario: req('calendario.js'), validadores: req('validadores.js') };
 const HOJE = '2026-10-31';
-const ctx = (config) => ({ config: config || CONFIG, fontes: O.fontes, itens: O.reformaItens, ufs: O.ufs, conteudo: O.conteudo, hoje: HOJE });
+const ctx = (config) => ({ config: config || CONFIG, fontes: O.fontes, itens: O.reformaItens, complianceItens: req('compliance-itens.js'),
+  ufs: O.ufs, conteudo: O.conteudo, hoje: HOJE });
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const status = (av, id) => av.itens.find((i) => i.id === id).status;
 
@@ -20,6 +21,25 @@ test('lista: ids únicos, categoria, responsável e onde resolver em toda pendê
     assert.equal(typeof p.bloqueia, 'boolean', p.id);
   }
   for (const cat of Object.keys(H.CATEGORIAS)) assert.ok(H.PENDENCIAS.some((p) => p.categoria === cat), cat);
+});
+
+test('trava da virada: config.ambiente só pode ser producao com todas as pendências que bloqueiam resolvidas', () => {
+  // Hoje o site está em homologação. Quem trocar para 'producao' sem fechar os bloqueios derruba a suíte, e a suíte
+  // barra tools/publicar.py. A troca real está descrita em docs/virada-para-producao.md.
+  const av = H.avaliar(ctx());
+  if (CONFIG.ambiente === 'producao') {
+    assert.equal(av.resumo.prontoParaProducao, true,
+      'ambiente = producao com pendências bloqueando: ' + av.itens.filter((i) => i.bloqueia && i.status !== 'resolvida').map((i) => i.id).join(', '));
+  }
+  assert.ok(['homologacao', 'producao'].includes(CONFIG.ambiente));
+});
+
+test('o V1 conta também os pontos do compliance', () => {
+  const av = H.avaliar(ctx());
+  const v1 = av.itens.find((i) => i.id === 'V1');
+  assert.match(v1.situacao || v1.detalhe || '', /pontos \(reforma e compliance\)/);
+  const total = O.reformaItens.length + req('compliance-itens.js').length;
+  assert.match(v1.detalhe, new RegExp('de ' + total + ' pontos'));
 });
 
 test('modo teste: nada pronto para produção e configuração atual com pendências abertas', () => {
@@ -52,7 +72,8 @@ test('verificação automática acompanha a configuração', () => {
 
 test('V1 conta itens sem revisão; V2 lista fontes pendentes; V3 lista UFs sem ICMS confirmado', () => {
   const av = H.avaliar(ctx());
-  assert.match(av.itens.find((i) => i.id === 'V1').detalhe, new RegExp('^' + O.reformaItens.length + ' de ' + O.reformaItens.length));
+  const total = O.reformaItens.length + req('compliance-itens.js').length;  // reforma e compliance
+  assert.match(av.itens.find((i) => i.id === 'V1').detalhe, new RegExp('^' + total + ' de ' + total));
   const pendentes = O.fontes.lista.filter((f) => !f.validado).length;
   assert.match(av.itens.find((i) => i.id === 'V2').detalhe, new RegExp('^' + pendentes + ' pendentes'));
   assert.match(av.itens.find((i) => i.id === 'V3').detalhe, /TO/);

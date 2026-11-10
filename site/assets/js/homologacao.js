@@ -95,10 +95,11 @@
 
     // ---------- Validação técnica do conteúdo
     { id: 'V1', categoria: 'validacao', responsavel: 'rt', bloqueia: true, titulo: 'Revisão técnica dos itens da reforma',
-      onde: "site/assets/js/reforma-itens.js → revisao: { status: 'aprovada', por, em }", descricao: 'Em produção, só itens aprovados aparecem. Roteiro em docs/revisao-tecnica.md.',
+      onde: "docs/revisao/revisao-tecnica.html (o responsável decide) e python tools/aplicar_revisao.py (grava no site)", descricao: 'Em produção, só pontos aprovados aparecem: com todos pendentes, a página da reforma e as do compliance ficam sem conteúdo. O responsável técnico decide na tela de revisão e baixa o registro; tools/aplicar_revisao.py grava as aprovações no site, só se o texto não mudou depois. Roteiro em docs/revisao-tecnica.md e docs/virada-para-producao.md.',
       verifica: function (c) {
-        var pend = c.itens.filter(function (i) { return !i.revisao || i.revisao.status !== 'aprovada'; });
-        return { resolvida: pend.length === 0, detalhe: pend.length + ' de ' + c.itens.length + ' itens aguardando revisão.' };
+        var todos = c.itens.concat(c.complianceItens || []);
+        var pend = todos.filter(function (i) { return !i.revisao || i.revisao.status !== 'aprovada'; });
+        return { resolvida: pend.length === 0, detalhe: pend.length + ' de ' + todos.length + ' pontos (reforma e compliance) aguardando revisão.' };
       } },
     { id: 'V2', categoria: 'validacao', responsavel: 'rt', bloqueia: false, titulo: 'Fontes legais com o selo "pendente de validação"',
       onde: "site/assets/js/fontes.js → validado: true e conferido", descricao: 'Cada fonte pendente aparece com selo em todo o site. Conferir o dispositivo na fonte primária.',
@@ -149,7 +150,7 @@
       descricao: 'Em 01/11/2026 foram conferidos no texto literal oficial: LC nº 225/2026 (arts. 18 e 19), Decreto nº 13.075/2026, Lei nº 9.613/1998 (arts. 9º a 12), Res. CFC nº 1.721/2024 (DOU de 06/05/2024), LGPD (arts. 37, 41, 46, 48 e 52), Res. CD/ANPD nº 2/2022 (no site da ANPD), Lei nº 12.846/2013, Decreto nº 11.129/2022, Lei nº 14.133/2021 (art. 25, § 4º) e Decreto nº 12.304/2024. Faltam: o texto da IN RFB nº 2.295/2025 do Confia no DOU (lido em 01/11/2026 só em cópia não oficial do LegisWeb, já com as INs nº 2.317/2026 e nº 2.328/2026; a IN nº 2.328/2026 não foi aberta), a Res. CD/ANPD nº 2/2022 no DOU (in.gov.br não respondeu) e alterações posteriores a essas datas. Os 15 itens de compliance aguardam revisão técnica (V1).' },
     { id: 'V11', categoria: 'validacao', responsavel: 'rt', bloqueia: false, titulo: 'Revisar os pesos e as faixas do termômetro de conformidade',
       onde: 'site/assets/js/termometro.js (PERGUNTAS[].peso, FAIXAS e REVISAO)',
-      descricao: 'O termômetro (compliance/termometro.html) tem 16 perguntas nas quatro frentes, cada uma com fonte. Pesos de 1 a 3 e faixas (em dia a partir de 85%, atenção a partir de 60%) são provisórios. Em produção, o termômetro só aparece depois de REVISAO.status = aprovada.' },
+      descricao: 'O termômetro (compliance/termometro.html) tem 47 perguntas, cada uma com fonte. Pesos de 1 a 3, pesos por perfil e faixas (em dia a partir de 85%, atenção a partir de 60%) são provisórios. Em produção, o termômetro só aparece depois de REVISAO.status = aprovada, o que tools/aplicar_revisao.py grava quando o responsável técnico aprova todas as perguntas na tela de revisão.' },
     { id: 'V12', categoria: 'validacao', responsavel: 'rt', bloqueia: true, titulo: 'Confirmar o bloco "Como a ORGATEC cumpre as próprias obrigações"',
       onde: 'site/quem-somos.html (tools/gerar_paginas.py, função escritorio)',
       descricao: 'Publicado em 01/11/2026 por decisão da direção (C6): o escritório segue a Res. CFC nº 1.721/2024 (cadastro, comunicação ao COAF e declaração de não ocorrência ao CFC até 31/01), trata dados pessoais conforme a LGPD e não emite parecer jurídico. O responsável técnico confirma que essas rotinas existem de fato no escritório antes da produção.' },

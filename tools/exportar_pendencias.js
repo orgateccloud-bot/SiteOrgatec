@@ -13,7 +13,7 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(hoje)) { console.error('Data inválida: use AAAA
 
 const H = req('homologacao.js');
 const av = H.avaliar({
-  config: req('config.js'), fontes: req('fontes.js'), itens: req('reforma-itens.js'),
+  config: req('config.js'), fontes: req('fontes.js'), itens: req('reforma-itens.js'), complianceItens: req('compliance-itens.js'),
   ufs: req('ufs.js'), conteudo: req('conteudo.js'), hoje
 });
 const destino = path.join(__dirname, '..', 'docs', 'pendencias-proxima-fase.md');
