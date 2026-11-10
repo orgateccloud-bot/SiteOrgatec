@@ -23,6 +23,7 @@ Variáveis de ambiente (nunca versionar valores reais):
                           X-Robots-Tag: noindex (homologação fora do Google)            (padrão: 0)
     ORGATEC_RETENCAO_LEAD_DIAS, ORGATEC_RETENCAO_CONTATO_DIAS, ORGATEC_RETENCAO_OPTIN_PENDENTE_DIAS
                           prazos de guarda (backend/retencao.py); a eliminação roda em tools/lgpd.py
+    ORGATEC_EMAIL e ORGATEC_SMTP_*  envio da confirmação do opt-in (backend/envio.py)  (padrão: desligado)
 """
 
 from __future__ import annotations
@@ -40,6 +41,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from .envio import confirmacao_optin, enviador_do_ambiente
 from .repositorio import Repositorio
 from .retencao import prazos_do_ambiente
 from .schemas import ContatoIn, LeadIn, OptInIn, Recibo
@@ -78,6 +80,7 @@ def _criar_repo():
 
 
 repo = _criar_repo()
+enviador = enviador_do_ambiente(PRODUCAO)  # e-mail de confirmação do opt-in (backend/envio.py); padrão: desligado
 
 # Sem /docs, /redoc nem /openapi.json: o esquema da API não precisa ficar público.
 app = FastAPI(title="ORGATEC — API pública", version="1.0.0", docs_url=None, redoc_url=None, openapi_url=None)
@@ -244,12 +247,19 @@ def criar_lead(dados: LeadIn, ip: str = Depends(limitar)) -> dict:
 
 @app.post("/api/optin", response_model=Recibo, status_code=201)
 def criar_optin(dados: OptInIn, ip: str = Depends(limitar)) -> dict:
-    # Double opt-in: o registro só vale após confirmação pelo link enviado ao contato.
-    # O envio da mensagem depende da ativação de contato@orgatec.io (pendência do Plano Diretor),
-    # por isso aqui apenas registramos os tokens; o disparo fica a cargo do serviço de e-mail/WhatsApp, que deve
-    # mandar /api/optin/confirmar?token=<token> e, em toda mensagem, /api/optin/sair?token=<token_saida>.
+    # Double opt-in: o registro só vale após confirmação pelo link enviado ao contato (backend/envio.py).
+    # Os tokens só existem em claro aqui: o banco guarda o hash. A resposta (Recibo) não os devolve.
     r = repo.inserir("optin", "pendente_confirmacao", dados.model_dump(exclude={"website"}), ip, com_token=True)
     log.info("optin %s registrado (aguardando confirmação)", r["protocolo"])
+    if dados.email:
+        try:
+            enviador.enviar(confirmacao_optin(dados.email, r["token"], r["token_saida"], list(dados.ufs), list(dados.esferas),
+                                              prazos_do_ambiente().optin_pendente_dias))
+            log.info("optin %s: confirmação entregue ao provedor de e-mail", r["protocolo"])
+        except Exception as erro:  # o cadastro fica; sem confirmação, a retenção apaga o pedido no prazo
+            log.error("optin %s: falha no envio da confirmação (%s)", r["protocolo"], type(erro).__name__)
+    else:
+        log.warning("optin %s só com WhatsApp: confirmação por WhatsApp ainda não existe", r["protocolo"])
     return r
 
 
