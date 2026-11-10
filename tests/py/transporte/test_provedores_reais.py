@@ -186,3 +186,45 @@ def test_registro_escolhe_google_so_com_flag_e_chave():
     p = provedores_do_ambiente({"ORGATEC_TRANSPORTE_ROTA_REAL": "1", "ORGATEC_TRANSPORTE_ROTA_FONTE": "google",
                                 "ORGATEC_TRANSPORTE_GOOGLE_CHAVE": "k"}, cache=Cache())
     assert type(p.rota).__name__ == "RotaGoogle" and p.reais() == ["rota"]
+
+
+# --- tarifas oficiais de pedágio (Ecovias do Araguaia) ---
+def test_tabela_de_tarifas_confere_com_a_pagina_oficial():
+    from decimal import Decimal
+
+    from backend.transporte.provedores.tarifas_pedagio import tarifa_cat1
+
+    valor, fonte = tarifa_cat1("ECOVIAS DO ARAGUAIA", "P5 - Campinorte")
+    assert valor == Decimal("14.30") and "ecoviasaraguaia.com.br" in fonte.url
+    assert Decimal("6") * valor == Decimal("85.80")  # categoria 8 (6 eixos) na tabela oficial
+    assert tarifa_cat1("Ecovias do Araguaia", "p1 - Aliança do Tocantins")[0] == Decimal("9.50")  # maiúsculas e acento não importam
+    assert tarifa_cat1("ECO 050", "P1 - Perdizes") is None and tarifa_cat1("ECOVIAS DO ARAGUAIA", "Sem código") is None
+
+
+ANTT_ECOVIAS = ("concessionaria;praca_de_pedagio;ano_do_pnv_snv;rodovia;uf;km_m;municipal;tipo_de_pista;sentido;situacao;data_da_inativacao;latitude;longitude\n"
+                "ECOVIAS DO ARAGUAIA;P5 - Campinorte;2021;BR-153;GO;182.0;Campinorte;Principal;Crescente/Decrescente;Ativo;;-14.372969;-49.158264\n"
+                "ECOVIAS DO ARAGUAIA;P3 - Porangatu;2021;BR-153;GO;12.5;Porangatu;Principal;Crescente/Decrescente;Ativo;;-12.943414;-49.133122\n"
+                "OUTRA;Meio;2010;BR-153;GO;5.0;X;Principal;Crescente;Ativo;;-13.500000;-49.150000\n")
+
+
+def test_antt_traz_a_tarifa_oficial_e_a_despesa_soma_por_eixo(tmp_path):
+    from decimal import Decimal
+
+    from backend.transporte.dominio import ParametrosCusto
+    from backend.transporte.servicos import despesas
+
+    arq = tmp_path / "antt.csv"
+    arq.write_text(ANTT_ECOVIAS, encoding="utf-8")
+    rota = [(-16.6869, -49.2648), (-14.372969, -49.158264), (-13.5, -49.15), (-12.943414, -49.133122), (-10.1844, -48.3336)]
+    pracas = PedagioANTT(str(arq)).pracas_na_rota(rota)
+    por_nome = {p.nome.split(" (")[0]: p for p in pracas}
+    assert por_nome["P5 - Campinorte"].tarifa_cat1 == Decimal("14.30") and "tabela oficial Ecovias do Araguaia" in por_nome["P5 - Campinorte"].fonte
+    assert por_nome["Meio"].tarifa_cat1 is None and "tabela oficial" not in por_nome["Meio"].fonte  # concessionária fora da tabela
+
+    p = ParametrosCusto()
+    ins = despesas.Insumos(distancia_km=Decimal("800"), pernoites=1, eixos=6, consumo_km_l=Decimal("2.3"), preco_diesel=Decimal("7"),
+                           preco_diesel_fonte="t", preco_diesel_estado="ok", tarifas_pracas=[Decimal("14.30"), Decimal("12.00")], pedagio_estado="ok")
+    ped = next(i for i in despesas.calcular(ins, p)["itens"] if i["tipo"] == "pedagio")
+    assert Decimal(ped["valor"]) == Decimal("157.80") and "tabela oficial da concessionária" in ped["fonte"]
+    misto = despesas.Insumos(**{**ins.__dict__, "tarifas_pracas": [Decimal("14.30"), None]})
+    assert "1 de 2 praças" in next(i for i in despesas.calcular(misto, p)["itens"] if i["tipo"] == "pedagio")["fonte"]

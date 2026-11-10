@@ -99,7 +99,12 @@ def calcular(ins: Insumos, p: ParametrosCusto, ajustes: dict[str, str] | None = 
     soma_pedagio = sum((t * fator_eixo for t in tarifas), Decimal("0"))
     n = Decimal(len(tarifas))
     fonte_ped = "Praças: " + ("ANTT" if ins.pedagio_estado == "ok" else ins.pedagio_estado)
-    if any(t is None for t in ins.tarifas_pracas):
+    oficiais = sum(1 for t in ins.tarifas_pracas if t is not None)
+    if oficiais == len(ins.tarifas_pracas) and oficiais:
+        fonte_ped += "; tarifas: tabela oficial da concessionária"
+    elif oficiais:
+        fonte_ped += f"; tarifas: tabela oficial em {oficiais} de {len(ins.tarifas_pracas)} praças, parâmetro da transportadora nas demais"
+    elif ins.tarifas_pracas:
         fonte_ped += "; tarifa: parâmetro da transportadora"
     ped = _item("pedagio", n, "praça(s)", q(soma_pedagio / n) if n else Decimal("0"), fonte_ped, ins.pedagio_estado)
     ped["valor_calculado"] = ped["valor"] = str(q(soma_pedagio))

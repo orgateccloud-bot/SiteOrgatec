@@ -28,6 +28,7 @@ from backend.transporte.geo import Coord, acumulado_km, distancia_ponto_rota_km,
 from backend.transporte.provedores.base import PracaPedagio, PrecoCombustivel, PrevisaoClima, RotaCalculada
 from backend.transporte.provedores.cache import Cache
 from backend.transporte.provedores.http import ClienteHttp
+from backend.transporte.provedores.tarifas_pedagio import rotulo_fonte, tarifa_cat1
 
 log = logging.getLogger(__name__)
 
@@ -268,7 +269,8 @@ class CombustivelANP:
 class PedagioANTT:
     """Lê o CSV de praças da ANTT (concessionaria;praca_de_pedagio;rodovia;uf;sentido;situacao;latitude;longitude).
 
-    O arquivo não traz tarifa: `tarifa_cat1` fica None e o serviço de despesas usa o parâmetro da transportadora.
+    O arquivo não traz tarifa. Praças de concessionárias da tabela oficial (tarifas_pedagio.py) saem com `tarifa_cat1`; as demais ficam
+    com None e o serviço de despesas usa o parâmetro da transportadora.
     """
 
     nome = "antt_arquivo"
@@ -292,5 +294,7 @@ class PedagioANTT:
             nome = f"{r.get('praca_de_pedagio', '?')} ({r.get('concessionaria', '?')}, {r.get('rodovia', '?')})"
             if dist <= self.DISTANCIA_MAX_KM and nome not in vistas:
                 vistas.add(nome)  # um registro por sentido: a praça conta uma vez
-                achadas.append(PracaPedagio(nome, lat, lon, round(km, 1), None, "ANTT, dados abertos (CC BY)"))
+                oficial = tarifa_cat1(r.get("concessionaria", ""), r.get("praca_de_pedagio", ""))
+                fonte = "ANTT, dados abertos (CC BY)" + (f"; tarifa: {rotulo_fonte(oficial[1])}" if oficial else "")
+                achadas.append(PracaPedagio(nome, lat, lon, round(km, 1), oficial[0] if oficial else None, fonte))
         return sorted(achadas, key=lambda p: p.km_na_rota)
