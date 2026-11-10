@@ -99,7 +99,7 @@ gcloud run jobs update orgatec-retencao --region southamerica-east1 --image <ima
   ```
 
   O acesso vale no próximo login (até 1 hora). Para retirar: `transporte_usuario.py ... --revogar`.
-- Sensores, rota, clima, combustível e pedágio reais seguem desligados até haver as flags `ORGATEC_TRANSPORTE_*` correspondentes. Combustível e pedágio dependem de arquivos em `backend/dados/`, que a imagem não leva.
+- Sensores, rota, clima, combustível e pedágio reais seguem desligados até haver as flags `ORGATEC_TRANSPORTE_*` correspondentes. Combustível (ANP) e pedágio (ANTT): o `Dockerfile` baixa os arquivos na construção da imagem (estágio `dados`, `tools/transporte_dados_abertos.py`) e os deixa em `/app/dados-abertos`. Para usar: `--update-env-vars ORGATEC_TRANSPORTE_COMBUSTIVEL_REAL=1,ORGATEC_TRANSPORTE_PEDAGIO_REAL=1`. A ANP publica um arquivo por mês, então reimplante a API uma vez por mês para renovar o diesel. Se o gov.br estiver fora do ar na construção, a imagem sai sem os arquivos e só esses dois provedores ficam indisponíveis (a tela mostra o estado ao lado do dado). O pedágio da ANTT traz as praças, não a tarifa: o valor segue o parâmetro da transportadora.
 
 ### Testar localmente com o emulador
 
