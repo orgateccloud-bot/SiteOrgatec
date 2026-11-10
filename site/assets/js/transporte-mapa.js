@@ -177,8 +177,8 @@
         function marcar(mk) {
           var pos = { lat: mk.lat, lng: mk.lon }, t = TIPOS[mk.tipo], obj;
           if (avancado) {
-            obj = new marker.AdvancedMarkerElement({ position: pos, map: mapa, title: mk.titulo, content: pino(mk.tipo), zIndex: mk.tipo === 'caminhao' ? 10 : 1 });
-            obj.addListener('gmp-click', function () { info.setContent(detalheNo(mk)); info.open({ map: mapa, anchor: obj }); });
+            obj = new marker.AdvancedMarkerElement({ position: pos, map: mapa, title: mk.titulo, content: pino(mk.tipo), gmpClickable: true, zIndex: mk.tipo === 'caminhao' ? 10 : 1 });
+            obj.addEventListener('gmp-click', function () { info.setContent(detalheNo(mk)); info.open({ map: mapa, anchor: obj }); });
           } else {
             obj = new marker.Marker({ position: pos, map: mapa, title: mk.titulo, zIndex: mk.tipo === 'caminhao' ? 10 : 1,
               icon: { path: raiz.google.maps.SymbolPath.CIRCLE, scale: mk.tipo === 'caminhao' ? 10 : 8, fillColor: t.cor, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
