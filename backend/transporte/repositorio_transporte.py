@@ -161,10 +161,16 @@ class RepositorioBase:
         return [copy.deepcopy(r) for r in self._leituras_da_viagem(tid, viagem_id, limite)]
 
     def viagem_ativa(self, tid: str, veiculo_id: str, ts: datetime) -> dict[str, Any] | None:
+        """A viagem a que pertence uma leitura do veículo no instante `ts`.
+
+        Cada viagem aceita leituras de 12 h antes da partida até 12 h depois da chegada prevista (sem chegada calculada,
+        72 h depois da partida). Entre as que aceitam, vale primeiro a que já está em andamento e, depois, a de partida
+        mais próxima do instante. Antes (até 11/11/2026) valia a de partida mais recente, e uma viagem marcada para mais
+        tarde no mesmo dia tomava as leituras da que estava acontecendo."""
+        momento = utc(ts)
         candidatas = [v for v in self._viagens_do_veiculo(tid, veiculo_id)
-                      if v["status"] in ("planejada", "em_andamento")
-                      and utc(v["partida_prevista"]) <= utc(ts) + timedelta(hours=12)]
-        candidatas.sort(key=lambda v: v["partida_prevista"], reverse=True)
+                      if v["status"] in ("planejada", "em_andamento") and _janela_aceita(v, momento)]
+        candidatas.sort(key=lambda v: (v["status"] != "em_andamento", abs((utc(v["partida_prevista"]) - momento).total_seconds())))
         return copy.deepcopy(candidatas[0]) if candidatas else None
 
     def purgar_leituras(self, antes_de: datetime) -> int:
@@ -182,6 +188,20 @@ class RepositorioBase:
                 self.atualizar(tid, "viagens", v["id"], {"resultado": novo})
                 total += 1
         return total
+
+
+JANELA_ANTES_DA_PARTIDA = timedelta(hours=12)
+JANELA_DEPOIS_DA_CHEGADA = timedelta(hours=12)
+JANELA_SEM_CHEGADA = timedelta(hours=72)
+
+
+def _janela_aceita(viagem: dict[str, Any], momento: datetime) -> bool:
+    partida = utc(viagem["partida_prevista"])
+    chegada = ((viagem.get("resultado") or {}).get("jornada") or {}).get("chegada_prevista")
+    if isinstance(chegada, str):
+        chegada = datetime.fromisoformat(chegada)
+    fim = utc(chegada) + JANELA_DEPOIS_DA_CHEGADA if chegada else partida + JANELA_SEM_CHEGADA
+    return partida - JANELA_ANTES_DA_PARTIDA <= momento <= fim
 
 
 class RepositorioMemoria(RepositorioBase):

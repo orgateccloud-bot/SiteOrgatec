@@ -73,6 +73,41 @@ def test_sensor_global_viagem_ativa_e_idempotencia(repo):
     assert repo.leitura_ja_vista(t, "sensor-abc", "L1") and not repo.leitura_ja_vista(t, "sensor-abc", "L2")
 
 
+def _viagem(repo, t, partida, status="planejada", chegada=None):
+    dados = {"veiculo_id": "V1", "status": status, "partida_prevista": partida}
+    if chegada is not None:
+        dados["resultado"] = {"jornada": {"chegada_prevista": chegada.isoformat()}}
+    return repo.inserir(t, "viagens", dados)["id"]
+
+
+def test_viagem_marcada_para_mais_tarde_nao_toma_as_leituras_de_agora(repo):
+    # Caso real de 11/11/2026: viagens às 09:00 e às 10:00; o celular andou às 08:54 e tudo foi para a das 10:00.
+    t = repo.criar_transportadora()
+    base = datetime(2026, 11, 11, 12, tzinfo=UTC)
+    das_9 = _viagem(repo, t, base, chegada=base + timedelta(hours=2))
+    _viagem(repo, t, base + timedelta(hours=1), chegada=base + timedelta(hours=3))
+    assert repo.viagem_ativa(t, "V1", base - timedelta(minutes=6))["id"] == das_9
+
+
+def test_viagem_em_andamento_vence_a_proxima_planejada(repo):
+    t = repo.criar_transportadora()
+    agora = datetime(2026, 11, 11, 12, tzinfo=UTC)
+    longa = _viagem(repo, t, agora - timedelta(days=2), "em_andamento", chegada=agora + timedelta(hours=5))
+    _viagem(repo, t, agora + timedelta(hours=1), chegada=agora + timedelta(hours=9))
+    assert repo.viagem_ativa(t, "V1", agora)["id"] == longa
+
+
+def test_viagem_vencida_ou_distante_nao_recebe_leitura(repo):
+    t = repo.criar_transportadora()
+    agora = datetime(2026, 11, 11, 12, tzinfo=UTC)
+    _viagem(repo, t, agora - timedelta(days=1), "em_andamento", chegada=agora - timedelta(hours=13))  # chegou há mais de 12 h
+    _viagem(repo, t, agora - timedelta(days=4), "em_andamento")  # sem chegada calculada: 72 h depois da partida
+    _viagem(repo, t, agora + timedelta(hours=13))  # parte daqui a mais de 12 h
+    assert repo.viagem_ativa(t, "V1", agora) is None
+    sem_chegada = _viagem(repo, t, agora - timedelta(hours=70), "em_andamento")
+    assert repo.viagem_ativa(t, "V1", agora)["id"] == sem_chegada
+
+
 def test_purga_so_leituras_antigas(repo):
     t = repo.criar_transportadora()
     agora = datetime.now(UTC)
