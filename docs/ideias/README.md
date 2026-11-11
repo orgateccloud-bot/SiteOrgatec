@@ -4,7 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Janela do score da empresa: medidor, evolução e alertas](score-empresa.md) | em desenvolvimento desde 11/11/2026 | `ideia/score-empresa` | — |
+| [Janela do score da empresa: medidor, evolução e alertas](score-empresa.md) | em prévia desde 11/11/2026 | `ideia/score-empresa` | [link](https://orgatec-site--ideia-score-empresa-mc5dskwg.web.app/empresarial/score.html) |
 | [Janela de Campo 2, V2: grade de glifos das regiões e boletim de arquivo em cinza](campo-visual-2b.md) | implementada em 11/11/2026; suíte verde; aprovada em 11/11/2026 e junta na desenvolvimento; falta lançar | `ideia/campo-visual-2` | [link](https://orgatec-site--ideia-campo-visual-2-zktkjnan.web.app/rural/janela-de-campo.html) |
 | [Score de compliance na Janela Empresarial (nota de 0 a 100 por frente)](janela-score.md) | integrada na desenvolvimento em 11/11/2026; falta lançar | removida | [link](https://orgatec-site--ideia-janela-score-vmjjy32j.web.app/empresarial/janela.html) |
 | [Janela de Campo 2, V1: veredito, barra do local e cartões com faixa horária](campo-visual-1.md) | aprovada em 11/11/2026 e junta na desenvolvimento; falta lançar | `ideia/campo-visual-1` | [link](https://orgatec-site--ideia-campo-visual-1-ho4o5rf4.web.app/rural/janela-de-campo.html) |

@@ -1,8 +1,8 @@
 # Janela do score da empresa (gráficos e alertas)
 
-- **Situação:** em desenvolvimento
+- **Situação:** em prévia
 - **Branch:** `ideia/score-empresa`
-- **Prévia:**
+- **Prévia:** [link](https://orgatec-site--ideia-score-empresa-mc5dskwg.web.app/empresarial/score.html)
 
 ## Problema
 
