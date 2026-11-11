@@ -232,6 +232,7 @@ def _clima(
     marcos += [e.km_inicio for e in plano.eventos if e.tipo == "pernoite"]
     marcos.append(distancia_km)
     saida: list[dict[str, Any]] = []
+    credito = ""  # atribuição exigida pela licença do provedor (MET Norway: CC BY 4.0)
     for km_rel in sorted(set(round(m, 1) for m in marcos))[:MAX_PONTOS_CLIMA]:
         lat, lon = ponto_no_km(geometria, km_rel / escala, acc)
         quando = plano.tempo_no_km(km_rel)
@@ -249,6 +250,7 @@ def _clima(
         if prev is None:
             item.update({"condicao": "fora do horizonte da previsão", "temperatura_c": None, "chuva_mm": None})
         else:
+            credito = credito or prev.fonte
             item.update(
                 {
                     "condicao": prev.condicao,
@@ -259,7 +261,7 @@ def _clima(
             )
         saida.append(item)
     estado = "simulado" if provedores.clima.nome.endswith("simulado") else "ok"
-    return _fonte(estado, provedores.clima.nome), saida
+    return _fonte(estado, credito or provedores.clima.nome), saida
 
 
 def recalcular_despesas(resultado: dict[str, Any], ajustes: dict[str, str]) -> dict[str, Any]:
