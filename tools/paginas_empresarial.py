@@ -52,11 +52,14 @@ def lucro_real() -> None:
               "empresarial", "captação + autoridade", corpo, trilha=[("Empresarial", "empresarial/index.html"), ("Lucro real e presumido", None)])
 
 
+# "Minha atividade" da Janela e da janela do score: cada valor tem perfil em termometro.ATIVIDADE_PERFIL (vazio = geral)
+ATIVIDADES = [("", "Escolha"), ("transportador", "Transportador de cargas"), ("comercio", "Comércio e indústria"),
+              ("servicos", "Prestador de serviço"), ("simples", "Simples Nacional")]
+
+
 def janela() -> None:
     """Janela Empresarial e do Transporte. Fica FORA do menu, do hub e do mapa do site (noindex) até a decisão R3 e a semana de sombra."""
-    publicos = [("", "Escolha"), ("transportador", "Transportador de cargas"), ("comercio", "Comércio e indústria"),
-                ("servicos", "Prestador de serviço"), ("simples", "Simples Nacional")]
-    opcoes_pub = "".join(f'<option value="{v}">{r}</option>' for v, r in publicos)
+    opcoes_pub = "".join(f'<option value="{v}">{r}</option>' for v, r in ATIVIDADES)
     regimes = "".join(f'<option value="{v}"{" selected" if v == "real" else ""}>{r}</option>' for v, r in
                       (("simples", "Simples Nacional"), ("presumido", "Lucro presumido"), ("real", "Lucro real")))
     ufs = "".join(f'<option value="{u}">{u}</option>' for u in ("GO", "TO", "PA"))
@@ -80,7 +83,42 @@ def janela() -> None:
               trilha=[("Empresarial", "empresarial/index.html"), ("Janela", None)])
 
 
+def score() -> None:
+    """Janela do score da empresa: medidor, evolução das notas registradas e alertas (site/assets/js/score-empresa.js).
+    Fora do menu e noindex, como a Janela; aberta pelo cartão do score da Janela (score.html#perfil-<id>)."""
+    opcoes = "".join(f'<option value="{v}">{"Qualquer empresa" if not v else r}</option>' for v, r in ATIVIDADES)
+    controles = ('<div class="flex flex-wrap items-end gap-3 mb-4">'
+                 f'<div class="og-campo"><label class="og-campo-rotulo" for="sAtividade">Minha atividade</label>'
+                 f'<select id="sAtividade" class="og-campo-controle og-campo-md" data-score-atividade>{opcoes}</select></div>'
+                 '<p class="text-sm text-tinta-suave pb-2">Perfil: <strong data-score-perfil>Qualquer empresa</strong></p></div>')
+    painel = (controles +
+              '\n                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">'
+              '<article class="og-cartao min-w-0"><span class="og-cartao-ref">Nota geral</span><div data-score-medidor></div></article>'
+              '<article class="og-cartao min-w-0"><span class="og-cartao-ref">Evolução da nota</span><div data-score-evolucao></div>'
+              '<div class="flex flex-wrap gap-3 mt-3"><button type="button" class="og-btn og-btn-primario og-btn-md" data-score-registrar hidden>Registrar a nota de hoje</button>'
+              '<button type="button" class="og-btn og-btn-contorno og-btn-md" data-score-apagar hidden>Apagar histórico</button></div></article></div>'
+              '\n                <article class="og-cartao mt-4"><div class="flex flex-wrap items-center justify-between gap-3 mb-3"><span class="og-cartao-ref">Alertas</span>'
+              '<button type="button" class="og-btn og-btn-contorno og-btn-md" data-score-ics hidden>Adicionar prazos à agenda (.ics)</button></div>'
+              '<div data-score-alertas aria-live="polite"></div></article>'
+              '\n                <p class="text-sm text-tinta-suave mt-3" data-score-status role="status"></p>'
+              '\n                <p class="text-xs text-tinta-fraca mt-2">Calculado só no seu navegador, com as respostas do termômetro. O histórico guarda só as notas, neste navegador, '
+              'e só quando você registra. Não é parecer nem probabilidade de autuação. Pesos e faixas em revisão técnica.</p>')
+    corpo = "\n".join([
+        gp.hero("Empresarial · Score", "O score de compliance da sua empresa.",
+                "A nota de 0 a 100 nas regras de compliance do seu perfil, como ela evolui e os alertas de prazo e de frente em risco, com a fonte de cada ponto.",
+                f'<a {gp.WHATS} data-msg="{MSG}" class="og-btn og-btn-contato og-btn-lg">Falar com o escritório</a>'
+                '<a href="{p}compliance/termometro.html" class="og-btn og-btn-sobre-palco og-btn-lg">Responder o termômetro</a>', compacto=True),
+        gp.secao("Score", "Sua janela do score", '                <div data-score-empresa>' + painel + '</div>', "bg-fundo", "score", compacto=True),
+    ])
+    gp.pagina("empresarial/score.html", "Score de compliance da empresa",
+              "Nota de compliance de 0 a 100, evolução e alertas de prazo e de frente em risco, calculados no navegador.",
+              "empresarial", "retenção", corpo, indexar=False,
+              extra=["compliance-itens.js", "calendario.js", "termometro.js", "score-empresa.js"],
+              trilha=[("Empresarial", "empresarial/index.html"), ("Janela", "empresarial/janela.html"), ("Score", None)])
+
+
 def gerar() -> None:
     hub()
     lucro_real()
     janela()
+    score()
