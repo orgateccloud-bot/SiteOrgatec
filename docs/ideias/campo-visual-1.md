@@ -1,9 +1,9 @@
 # Janela de Campo 2, V1: veredito, barra do local e cartões com faixa horária
 
-- **Situação:** implementada em 11/11/2026 na branch `ideia/campo-visual-1`; **aguarda a sua aprovação da prévia**. Não publicada.
+- **Situação:** implementada em 11/11/2026 na branch `ideia/campo-visual-1`; **aguarda a sua aprovação da prévia (gerada)**. Não publicada.
 - **Branch:** `ideia/campo-visual-1` (parte da `desenvolvimento`)
 - **Plano e mockups:** [campo-visual-2.md](campo-visual-2.md) (opção A, escolhida em 11/11/2026) e [arquivo no Figma](https://www.figma.com/design/hbSLuSGZ2Zx7gvxzpPh6vt)
-- **Prévia:** a gerar com `python tools/previa.py` depois da sua aprovação para gerar.
+- **Prévia:** [link](https://orgatec-site--ideia-campo-visual-1-ho4o5rf4.web.app/rural/janela-de-campo.html) (expira em 11/12/2026). Usa o boletim real do ar, copiado da pasta principal.
 
 ## O que muda (só na Janela de Campo)
 

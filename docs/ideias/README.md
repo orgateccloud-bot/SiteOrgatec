@@ -4,7 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Janela de Campo 2, V1: veredito, barra do local e cartões com faixa horária](campo-visual-1.md) | implementada em 11/11/2026; suíte verde; aguarda prévia e aprovação | `ideia/campo-visual-1` | — |
+| [Janela de Campo 2, V1: veredito, barra do local e cartões com faixa horária](campo-visual-1.md) | implementada em 11/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/campo-visual-1` | [link](https://orgatec-site--ideia-campo-visual-1-ho4o5rf4.web.app/rural/janela-de-campo.html) |
 | [Janela de Campo 2: veredito primeiro, legível ao sol e uma só língua visual (planejamento)](campo-visual-2.md) | V0 concluída em 11/11/2026 (opção A escolhida); a V1 aguarda "execute"; nenhum código alterado | `ideia/campo-visual-1` a `-4` (a criar) | — |
 | [Reestruturação: áreas Rural e Empresarial, Janelas do Transporte e Empresarial e Central de Viagem](reestruturacao-transporte.md) | em desenvolvimento; fases 0, 1, 3, 4 e 5 (atrás de flag) feitas; fase 2 aguarda aprovação | `ideia/reestruturacao-transporte` | — |
 | [Logo do Noturno igual à do Cristal](vidro-logo-cristal.md) | integrada na desenvolvimento em 08/11/2026; falta lançar | `ideia/vidro-logo-cristal` | [link](https://orgatec-site--ideia-vidro-logo-cristal-ka2ny2mm.web.app/inicio.html) |
