@@ -1,6 +1,6 @@
 # Janela de Campo 2, V2: grade de glifos das regiões e boletim de arquivo em cinza
 
-- **Situação:** implementada em 11/11/2026 na branch `ideia/campo-visual-2`; **aguarda a sua aprovação da prévia**. Não publicada.
+- **Situação:** implementada em 11/11/2026; **aprovada em 11/11/2026 e junta na `desenvolvimento`**. Falta lançar (publicar com `tools/publicar.py`, com a sua autorização).
 - **Branch:** `ideia/campo-visual-2` (parte da `desenvolvimento`, com a V1 já junta)
 - **Plano e mockups:** [campo-visual-2.md](campo-visual-2.md) (seções 4.3 e 4.7)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-visual-2-zktkjnan.web.app/rural/janela-de-campo.html) (expira em 11/12/2026). Usa o boletim real do ar.
