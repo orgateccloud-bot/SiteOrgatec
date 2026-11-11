@@ -89,6 +89,23 @@
       return '<li class="flex items-center justify-between gap-3"><span>' + K.esc(K.PILARES[p]) + '</span>' +
         (x.faixa ? '<span class="og-selo og-selo-' + x.faixa.tom + '">' + notas.porPilar[p] + '%</span>' : '<span class="text-tinta-fraca text-sm">—</span>') + '</li>';
     }).join('');
+    // Gráfico 3D (prismas de vidro): altura = percentual; sem resposta = prisma vazio tracejado. Decorativo para
+    // leitor de tela, que recebe o mesmo dado no aria-label e na lista por frente.
+    var CURTO = { tributario: 'Tributário', pld: 'PLD', lgpd: 'LGPD', integridade: 'Integridade', transporte: 'Transporte', rural: 'Rural', pequenos: 'Pequenos', imoveis: 'Imóveis' };
+    function prisma(chave, rotulo, valor, geral) {
+      var h = valor == null ? 0 : Math.max(4, Math.round(valor * 1.4));
+      return '<div class="graf3d-col' + (geral ? ' graf3d-geral' : '') + '" data-graf3d="' + chave + '">' +
+        '<div class="graf3d-barra' + (valor == null ? ' graf3d-vazia' : '') + '" style="height:' + h + 'px"><i class="graf3d-f"></i><i class="graf3d-l"></i><i class="graf3d-t"></i>' +
+        '<b class="graf3d-valor">' + (valor == null ? '—' : valor + '%') + '</b></div>' +
+        '<span class="graf3d-rotulo">' + K.esc(rotulo) + '</span></div>';
+    }
+    var descr = 'Gráfico: geral ' + (pct == null ? 'sem resposta' : pct + '%') + '; ' + ativos.map(function (p) {
+      return K.PILARES[p] + ' ' + (r.porPilar[p].faixa ? notas.porPilar[p] + '%' : 'sem resposta');
+    }).join('; ') + '.';
+    var graf3d = '<div class="graf3d mt-5" role="img" aria-label="' + K.esc(descr) + '" data-graf3d-grafico><div class="graf3d-cena">' +
+      prisma('geral', 'Geral', pct, true) +
+      ativos.map(function (p) { return prisma(p, CURTO[p] || K.PILARES[p], r.porPilar[p].faixa ? notas.porPilar[p] : null); }).join('') +
+      '</div><div class="graf3d-piso" aria-hidden="true"></div></div>';
     var pend = r.pendencias.map(function (pd) {
       var p = pd.pergunta;
       return '<li class="og-item" data-pendencia="' + p.id + '"><span class="og-selo og-selo-' + (pd.tipo === 'corrigir' ? 'pendente' : 'futuro') + '">' + (pd.tipo === 'corrigir' ? 'corrigir' : 'verificar') + '</span> ' +
@@ -98,7 +115,7 @@
     saida.innerHTML =
       '<div class="flex flex-wrap items-center justify-between gap-3"><p class="eyebrow">Resultado</p>' + nivel + '</div>' +
       '<p class="text-4xl font-extrabold text-tinta font-display mt-2" data-percentual>' + (pct == null ? '—' : pct + '%') + '</p>' +
-      '<div class="barra" aria-hidden="true"><i style="width:' + (pct || 0) + '%"></i></div>' +
+      graf3d +
       '<p class="text-sm text-tinta-suave mt-2">' + r.respondidas + ' de ' + r.total + ' perguntas respondidas.</p>' +
       '<ul class="grid gap-2 mt-4 text-sm">' + porFrente + '</ul>' +
       (pend ? '<h3 class="og-cartao-titulo mt-6">O que corrigir ou verificar, por prioridade</h3><ol class="grid gap-3 text-sm" data-pendencias-termometro>' + pend + '</ol>' : '') +
