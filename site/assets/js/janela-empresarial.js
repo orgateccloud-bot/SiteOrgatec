@@ -93,7 +93,8 @@
       '<p class="text-sm text-tinta-suave mt-2">' + r.respondidas + ' de ' + r.total + ' perguntas respondidas para este perfil.</p>' +
       '<ul class="grid gap-2 mt-4 text-sm">' + frentes + '</ul>' +
       (pend ? '<h3 class="og-cartao-titulo mt-5">O que corrigir primeiro</h3><ol class="grid gap-3 text-sm">' + pend + '</ol>' : '') +
-      '<p class="mt-4"><a class="og-link text-sm" data-score-termometro href="' + link + '">Ver tudo no termômetro</a></p>' +
+      '<p class="mt-4 flex flex-wrap gap-3"><a class="og-btn og-btn-primario og-btn-md" data-score-janela href="score.html#perfil-' + perfil + '">Abrir a janela do score</a>' +
+        '<a class="og-btn og-btn-contorno og-btn-md" data-score-termometro href="' + link + '">Ver tudo no termômetro</a></p>' +
       '<p class="text-xs text-tinta-fraca mt-3">' + AVISO_SCORE + '</p>');
   }
 

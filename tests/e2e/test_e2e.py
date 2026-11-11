@@ -2469,6 +2469,66 @@ def test_janela_empresarial_score_igual_ao_termometro_e_sem_rede(navegador, serv
     assert not erros, erros
 
 
+@pytest.mark.parametrize("vp", ["mobile", "desktop"])
+def test_janela_do_score_graficos_alertas_e_historico(navegador, servidor, vp):
+    """Janela do score (empresarial/score.html): mesma nota do termômetro e da Janela, medidor, alertas de prazo e de frente
+    em Risco, histórico só com as notas e só quando o visitante registra, e nada para a rede."""
+    sem_dados = {"**/dados/empresarial/atual.json": lambda r: r.fulfill(status=404, body="")}
+    pg, erros = _abrir(navegador, servidor, "compliance/termometro.html", vp, rotas=sem_dados)
+    pg.check("[data-pergunta=t-docs-fiscais] input[value=sim]", force=True)
+    pg.check("[data-pergunta=t-obrigacoes-2026] input[value=nao]", force=True)
+    pg.check("[data-pergunta=t-inconsistencias] input[value=nao_sei]", force=True)
+    expect(pg.locator("[data-percentual]")).to_have_text("33%")
+
+    pedidos = []
+    pg.on("request", lambda r: pedidos.append((r.method, r.url, r.post_data)))
+    pg.goto(f"{servidor}/empresarial/janela.html")
+    expect(pg.locator("[data-score-nota]")).to_contain_text("33")
+    pg.click("[data-score-janela]")
+    pg.wait_for_url("**/empresarial/score.html#perfil-geral")
+    expect(pg.locator("[data-medidor]")).to_have_attribute("data-medidor", "33")
+    expect(pg.locator("[data-medidor-faixa]")).to_have_attribute("data-medidor-faixa", "risco")
+    expect(pg.locator("[data-score-perfil]")).to_have_text("Qualquer empresa")
+    # alertas: frente tributária em Risco e os prazos que o motor calcula para hoje (o .ics só aparece com prazo)
+    expect(pg.locator("[data-alerta=risco][data-alerta-pilar=tributario]")).to_contain_text("33 de 100")
+    prazos = pg.evaluate("(() => { const O = window.Orgatec, it = {}; O.reformaItens.concat(O.complianceItens).forEach(i => it[i.id] = i);"
+                         " const r = JSON.parse(sessionStorage.getItem(O.termometro.CHAVE_RESPOSTAS));"
+                         " return O.scoreEmpresa.alertas(O.termometro, r, 'geral', it, O.scoreEmpresa.hojeLocal()).plano.length; })()")
+    expect(pg.locator("[data-alerta=prazo]")).to_have_count(prazos)
+    if prazos:
+        expect(pg.locator("[data-score-ics]")).to_be_visible()
+        expect(pg.locator("[data-alerta=prazo]").first).to_contain_text("Fonte:")
+    # histórico: vazio, registrar, sobreviver ao recarregar, guardar só as notas, apagar
+    expect(pg.locator("[data-evolucao-vazia]")).to_be_visible()
+    pg.click("[data-score-registrar]")
+    expect(pg.locator("[data-score-status]")).to_contain_text("registrada neste navegador")
+    pg.reload()
+    expect(pg.locator("[data-evolucao]")).to_have_attribute("data-evolucao", "1")
+    guardado = pg.evaluate("JSON.parse(localStorage.getItem('orgatec.score.historico'))")
+    assert len(guardado) == 1 and set(guardado[0]) == {"data", "perfil", "geral", "porPilar"} and guardado[0]["geral"] == 33, guardado
+    pg.click("[data-score-apagar]")
+    expect(pg.locator("[data-evolucao-vazia]")).to_be_visible()
+    assert pg.evaluate("localStorage.getItem('orgatec.score.historico')") is None
+    # outro perfil: o transportador vê só as frentes dele
+    pg.select_option("#sAtividade", "transportador")
+    expect(pg.locator("[data-score-perfil]")).to_have_text("Transportador de cargas")
+    expect(pg.locator("[data-alerta-pilar=pld]")).to_have_count(0)
+    assert all(m == "GET" and not d for m, _, d in pedidos), pedidos
+    assert not [u for _, u, _ in pedidos if "t-obrigacoes" in u or "historico" in u or "nao_sei" in u], pedidos
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
+    assert not erros, erros
+
+
+def test_janela_do_score_some_em_producao_sem_revisao(navegador, servidor):
+    if (RAIZ / "site" / "assets" / "js" / "termometro.js").read_text(encoding="utf-8").count("status: 'aprovada'"):
+        pytest.skip("revisão V11 aprovada: o score aparece em produção")
+    rota = _config_alterada([("ambiente: 'homologacao'", "ambiente: 'producao'")])
+    pg, erros = _abrir(navegador, servidor, "empresarial/score.html", rotas={"**/assets/js/config.js": rota})
+    expect(pg.locator("[data-score-revisao]")).to_contain_text("revisão técnica")
+    expect(pg.locator("[data-medidor]")).to_have_count(0)
+    assert not erros, erros
+
+
 def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, servidor):
     """Login Firebase na Central: a tela pede e-mail e senha, entra no Google (simulado) e passa a enviar Authorization: Bearer."""
     vistos = {"auth": [], "google": 0}
