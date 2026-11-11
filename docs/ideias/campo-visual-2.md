@@ -1,7 +1,8 @@
 # Janela de Campo 2: o veredito primeiro, legível ao sol, uma só língua visual (planejamento)
 
-- **Situação:** planejamento escrito em 10/11/2026, **aguardando aprovação**. Nenhum código foi alterado.
+- **Situação:** V0 em andamento (10/11/2026): **mockups prontos no Figma, aguardando a sua escolha entre as opções A e B** (seção 10). Nenhum código do site foi alterado.
 - **Branches previstas:** `ideia/campo-visual-1` a `ideia/campo-visual-4` (uma por fase, como nas Fases 0 a 6)
+- **Mockups (V0):** [arquivo no Figma](https://www.figma.com/design/hbSLuSGZ2Zx7gvxzpPh6vt) (criado nos rascunhos da conta da ORGATEC) e imagens na pasta `campo-visual-2/`.
 - **Prévia:** ainda não existe. Cada fase gera a sua com `python tools/previa.py`.
 - **Relatório da sessão que originou este plano:** [relatorio-sessao-boletim-campo-2026-11.md](../relatorio-sessao-boletim-campo-2026-11.md)
 
@@ -198,3 +199,61 @@ Cada fase atualiza os testes e2e que dependem do layout atual (primeira operaç�
 ## 9. Fora deste plano
 
 Resumo da atividade com cotação e notícia dentro da Janela (depende de juntar `noticias.json` e o CEPEA, D21), mudança nos limites agronômicos (V20), mudança da publicação do boletim para o GitHub (ver relatório, seção 6) e a correção do cabeçalho do site (4.10), que é defeito separado.
+
+## 10. V0: mockups no Figma (10/11/2026)
+
+Arquivo: [ORGATEC · Janela de Campo 2 · V0 (mockups)](https://www.figma.com/design/hbSLuSGZ2Zx7gvxzpPh6vt), página "V0 · Mockups". Desenhados com os tokens do Azul flutuante escuro (Sora, IBM Plex Sans e IBM Plex Mono). **São desenhos, não o site:** nada foi para o código.
+
+**Dados dos desenhos.** Estados e faixas horárias são os **reais do polo Sorriso (MT)** no boletim de 10/11/2026 (`polos[].ops[op].porHora`, de 05h às 20h). Duas coisas são simuladas: a hora "agora 11h42" e a curva de temperatura e chuva do gráfico desktop (a curva final usa as horas do boletim). Os motivos são os que o boletim já traz.
+
+### Opção A: veredito + cartões com faixa horária (recomendada)
+
+![Opção A no celular](campo-visual-2/mockup-a-celular.png)
+
+- Veredito (Sora 26) a **251 px** do topo; primeira operação a **491 px** (hoje: cerca de 640 px, sem veredito). Os cinco glifos do dia ficam entre os dois.
+- Um cartão por operação: nome, estado em forma, faixa de 16 horas, janela em número grande ("05–11h") e motivo. A orientação abre no próprio cartão (o primeiro está aberto).
+- Barra de local com data, polo e o botão "Ao sol".
+- Quando escolher: o produtor decide uma operação de cada vez e quer a explicação ao lado.
+
+### Opção B: linha do tempo do dia
+
+![Opção B no celular](campo-visual-2/mockup-b-celular.png)
+
+- As cinco operações numa só faixa de 05h às 20h, com a marca "agora". O quadro vai de 363 a 630 px: **cabe na primeira tela sem rolar**.
+- A linha tocada abre a orientação logo abaixo (a Pulverização está aberta no desenho).
+- Preço: cada hora fica com 12 px de largura (contra 18 px na A), e o veredito perde a fileira de glifos, porque a própria faixa já mostra tudo.
+- Quando escolher: o produtor planeja o dia inteiro (por exemplo, "pulverizo cedo e colho à tarde").
+
+### Desktop (opção A)
+
+![Opção A no desktop](campo-visual-2/mockup-a-desktop.png)
+
+Coluna esquerda com veredito e cartões; direita com satélite (como hoje, com os glifos novos nos polos), abas e a **linha do dia** (temperatura, chuva e a janela da operação sombreada); embaixo, **Comparar as regiões** em grade de glifos, aberta, sem rolagem horizontal. As colunas em que as 6 regiões estão iguais (pulverização, plantio e máquinas, em 10/11) dizem "igual em todas" em vez de repetir seis glifos.
+
+### Estados que não enganam
+
+![Boletim vencido e previsão parcial](campo-visual-2/mockup-estados.png)
+
+Vencido (mais de 18 h): sem veredito, glifos em cinza e a frase "Não use esta previsão para decidir". Previsão parcial: o veredito só usa as horas que têm previsão e diz quantas faltam.
+
+### Linguagem de estados e modo Ao sol
+
+![Linguagem de estados](campo-visual-2/mockup-legenda.png)
+
+![Modo Ao sol](campo-visual-2/mockup-ao-sol.png)
+
+- Favorável = cheio azul com ✓; com restrição = vazado, borda laranja, com !; evitar = hachurado laranja, com ×; sem previsão = pontilhado cinza. Funciona em escala de cinza e **mantém a regra de não usar verde nem vermelho**.
+- Ao sol usa a paleta clara `azul-fl`. O âmbar de restrição sobre o fundo suave dessa paleta dava **4,2:1** (abaixo de 4,5:1); no desenho, a restrição fica em **branco com borda #B03A0A, 6,1:1**. O ajuste vale só dentro da Janela, por variável local, sem mexer nos tokens do projeto.
+
+### Notas para a implementação (quando houver código)
+
+- A hachura do estado "evitar" no site é CSS puro (`repeating-linear-gradient`), sem imagem. Os glifos são SVG inline pequenos.
+- No desktop a coluna da direita fica fixa ao rolar (satélite sempre à vista), como hoje; no desenho ela termina antes da esquerda de propósito.
+- A faixa horária do **cartão da região** (que só tem texto de janela) é a interseção das faixas dos polos, calculada no navegador.
+
+### O que falta você decidir para fechar a V0
+
+1. **A ou B** no celular. Uma terceira via: A como padrão e a faixa da B como aba "Dia" dentro da A. Se escolher esta, eu desenho antes de começar a V1.
+2. **Estados em forma** (cheio, vazado, hachurado, pontilhado): confirma?
+3. **Ao sol** só por toque, ou também automático?
+4. As demais decisões da seção 7 (ícones de tempo, compartilhar no WhatsApp, offline, ordem das fases).
