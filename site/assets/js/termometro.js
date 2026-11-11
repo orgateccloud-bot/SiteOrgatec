@@ -361,7 +361,23 @@
   /* Pode aparecer? Em produção, só com revisão técnica aprovada dos pesos e das faixas. */
   function publicavel(ambiente) { return ambiente !== 'producao' || REVISAO.status === 'aprovada'; }
 
-  return { PERGUNTAS: PERGUNTAS, FAIXAS: FAIXAS, RESPOSTAS: RESPOSTAS, PILARES: PILARES, REVISAO: REVISAO, REGRA: REGRA, PERFIS: PERFIS, PAGINA_PUBLICO: PAGINA_PUBLICO,
+  /* Nota de 0 a 100 do resultado de avaliar(), no geral e por frente; null onde não há resposta que conte.
+     É o mesmo percentual da tela, arredondado: nível de atenção, não probabilidade de autuação. */
+  function paraNota(percentual) { return percentual == null ? null : Math.round(percentual * 100); }
+  function nota(resultado) {
+    var porPilar = {};
+    Object.keys(resultado.porPilar || {}).forEach(function (k) { porPilar[k] = paraNota(resultado.porPilar[k].percentual); });
+    return { geral: paraNota(resultado.percentual), porPilar: porPilar };
+  }
+
+  /* "Minha atividade" da Janela Empresarial (empresarial/janela.html) → perfil do termômetro; vazia ou desconhecida = 'geral'. */
+  var ATIVIDADE_PERFIL = { transportador: 'transportador', comercio: 'comercio', servicos: 'servicos', simples: 'simples' };
+  function perfilDaAtividade(atividade) { return ATIVIDADE_PERFIL[atividade] || 'geral'; }
+
+  // Chave das respostas na memória da aba (sessionStorage), lida pelo termômetro e pela Janela Empresarial
+  var CHAVE_RESPOSTAS = 'orgatec.termometro.respostas';
+
+  return { nota: nota, perfilDaAtividade: perfilDaAtividade, ATIVIDADE_PERFIL: ATIVIDADE_PERFIL, CHAVE_RESPOSTAS: CHAVE_RESPOSTAS, PERGUNTAS: PERGUNTAS, FAIXAS: FAIXAS, RESPOSTAS: RESPOSTAS, PILARES: PILARES, REVISAO: REVISAO, REGRA: REGRA, PERFIS: PERFIS, PAGINA_PUBLICO: PAGINA_PUBLICO,
     avaliar: avaliar, faixa: faixa, validar: validar, publicavel: publicavel, pilaresDoPerfil: pilaresDoPerfil,
     perguntaVale: perguntaVale, regraDe: regraDe, CAMADAS: CAMADAS, evidencia: evidencia, planoDeAcao: planoDeAcao,
     PESOS_PERFIL: PESOS_PERFIL, pesoDe: pesoDe };

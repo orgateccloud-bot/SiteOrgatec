@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Score de compliance na Janela Empresarial (nota de 0 a 100 por frente)](janela-score.md) | em desenvolvimento desde 11/11/2026 | `ideia/janela-score` | — |
 | [Janela de Campo 2: veredito primeiro, legível ao sol e uma só língua visual (planejamento)](campo-visual-2.md) | V0 concluída em 11/11/2026 (opção A escolhida); a V1 aguarda "execute"; nenhum código alterado | `ideia/campo-visual-1` a `-4` (a criar) | — |
 | [Reestruturação: áreas Rural e Empresarial, Janelas do Transporte e Empresarial e Central de Viagem](reestruturacao-transporte.md) | em desenvolvimento; fases 0, 1, 3, 4 e 5 (atrás de flag) feitas; fase 2 aguarda aprovação | `ideia/reestruturacao-transporte` | — |
 | [Logo do Noturno igual à do Cristal](vidro-logo-cristal.md) | integrada na desenvolvimento em 08/11/2026; falta lançar | `ideia/vidro-logo-cristal` | [link](https://orgatec-site--ideia-vidro-logo-cristal-ka2ny2mm.web.app/inicio.html) |

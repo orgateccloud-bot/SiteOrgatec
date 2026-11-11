@@ -1598,7 +1598,7 @@ def test_politica_declara_o_que_o_site_guarda_e_quem_recebe_dados():
         if arq.name.startswith("ds-"):
             continue
         texto = arq.read_text(encoding="utf-8")
-        chaves |= set(re.findall(r"Storage\.\w+Item\('(orgatec\.[\w.]+)'", texto)) | set(re.findall(r"CHAVE = '(orgatec\.[\w.]+)'", texto))
+        chaves |= set(re.findall(r"Storage\.\w+Item\('(orgatec\.[\w.]+)'", texto)) | set(re.findall(r"CHAVE(?:_\w+)? = '(orgatec\.[\w.]+)'", texto))
         cookies += ["document.cookie"] if "document.cookie" in texto else []
     assert len(chaves) >= 6 and not cookies  # a política diz que o site não grava cookies
     assert not [c for c in chaves if c not in politica], "chave do navegador fora da política"
@@ -2161,6 +2161,44 @@ def test_janela_empresarial_marca_atrasado_e_indisponivel(navegador, servidor):
     expect(pg.locator("[data-cartao=T1]")).to_have_count(0)
     pg.select_option("#jAtividade", "transportador")
     assert not [e for e in erros if "atual.json" not in e], erros
+
+
+@pytest.mark.parametrize("vp", ["mobile", "desktop"])
+def test_janela_empresarial_score_igual_ao_termometro_e_sem_rede(navegador, servidor, vp):
+    """Score de compliance na Janela: sem respostas, convida ao termômetro no perfil da atividade; depois de responder na
+    mesma aba, mostra a mesma nota do termômetro, por frente do perfil, sem mandar as respostas para a rede."""
+    sem_dados = {"**/dados/empresarial/atual.json": lambda r: r.fulfill(status=404, body="")}
+    pg, erros = _abrir(navegador, servidor, "empresarial/janela.html", vp, rotas=sem_dados)
+    expect(pg.locator("[data-cartao=score][data-score-estado=sem-resposta]")).to_be_visible()
+    # toda atividade da Janela tem perfil no termômetro
+    assert pg.evaluate("Array.from(document.querySelectorAll('#jAtividade option')).filter(o => o.value)"
+                       ".every(o => window.Orgatec.termometro.ATIVIDADE_PERFIL[o.value] === o.value)")
+    pg.select_option("#jAtividade", "transportador")
+    expect(pg.locator("[data-score-responder]")).to_have_attribute("href", "../compliance/termometro.html#perfil-transportador")
+
+    pg.goto(f"{servidor}/compliance/termometro.html")  # mesma aba: as respostas ficam na memória dela
+    pg.check("[data-pergunta=t-docs-fiscais] input[value=sim]", force=True)
+    pg.check("[data-pergunta=t-obrigacoes-2026] input[value=nao]", force=True)
+    pg.check("[data-pergunta=t-inconsistencias] input[value=nao_sei]", force=True)
+    expect(pg.locator("[data-percentual]")).to_have_text("33%")
+
+    pedidos = []
+    pg.on("request", lambda r: pedidos.append((r.method, r.url, r.post_data)))
+    pg.goto(f"{servidor}/empresarial/janela.html")
+    expect(pg.locator("[data-score-nota]")).to_contain_text("33")
+    expect(pg.locator("[data-cartao=score]")).to_have_attribute("data-score-perfil", "geral")
+    expect(pg.locator("[data-score-faixa]")).to_have_attribute("data-score-faixa", "risco")
+    expect(pg.locator("[data-score-frente=tributario]")).to_contain_text("33")
+    expect(pg.locator("[data-score-pendencia]")).to_have_count(2)
+    expect(pg.locator("[data-score-pendencia=t-obrigacoes-2026]")).to_contain_text("Fonte:")
+    pg.select_option("#jAtividade", "transportador")
+    expect(pg.locator("[data-cartao=score]")).to_have_attribute("data-score-perfil", "transportador")
+    expect(pg.locator("[data-score-frente=transporte]")).to_be_visible()
+    expect(pg.locator("[data-score-frente=pld]")).to_have_count(0)
+    assert all(m == "GET" and not d for m, d in [(m, d) for m, _, d in pedidos]), pedidos
+    assert not [u for _, u, _ in pedidos if "t-obrigacoes" in u or "nao_sei" in u], pedidos
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
+    assert not erros, erros
 
 
 def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, servidor):

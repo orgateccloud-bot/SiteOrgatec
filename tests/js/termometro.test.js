@@ -138,3 +138,25 @@ test('plano de ação: só pendências com prazo de hoje em diante, em ordem de 
   assert.ok(plano.every((x) => x.titulo.startsWith('ORGATEC: ')));
   assert.equal(T.planoDeAcao(r.pendencias, itensPorId, '2027-02-01').length, 0);  // prazos vencidos ficam fora
 });
+
+test('nota de 0 a 100: mesmo percentual da tela, arredondado, e null sem resposta que conte', () => {
+  const r = T.avaliar({ 't-docs-fiscais': 'sim', 't-obrigacoes-2026': 'nao', 't-inconsistencias': 'nao_sei' }, ['tributario']);
+  const n = T.nota(r);
+  assert.equal(n.geral, Math.round(r.percentual * 100));
+  assert.equal(n.geral, 33);
+  assert.equal(n.porPilar.tributario, 33);
+  assert.deepEqual(T.nota(T.avaliar({}, ['tributario', 'pld'])), { geral: null, porPilar: { tributario: null, pld: null } });
+  assert.equal(T.nota(T.avaliar(todas('na'))).geral, null);  // "não se aplica" não conta
+  assert.equal(T.nota(T.avaliar(todas('sim'))).geral, 100);
+  assert.equal(T.nota(T.avaliar(todas('nao'))).geral, 0);
+});
+
+test('atividade da Janela Empresarial vira perfil do termômetro; vazia ou desconhecida = geral', () => {
+  ['transportador', 'comercio', 'servicos', 'simples'].forEach((a) => {
+    assert.equal(T.perfilDaAtividade(a), a);
+    assert.ok(T.PERFIS[T.perfilDaAtividade(a)], a);
+  });
+  assert.equal(T.perfilDaAtividade(''), 'geral');
+  assert.equal(T.perfilDaAtividade('outra'), 'geral');
+  assert.equal(T.CHAVE_RESPOSTAS, 'orgatec.termometro.respostas');
+});
