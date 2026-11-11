@@ -102,3 +102,26 @@ test('legenda do cartão cabe em 90 caracteres com os motivos do gerador', () =>
     assert.ok(t.length <= 90, t);
   }
 });
+
+const regiao = (e) => ({ ops: { pulv: [e[0], 'x', 'x'], plantio: [e[1], 'x', 'x'], colheita: [e[2], 'x', 'x'], animais: [e[3], 'x', 'x'], maquinas: [e[4], 'x', 'x'] } });
+
+test('colunasIguais: só marca a coluna em que todas as regiões têm o mesmo estado', () => {
+  const linhas = [regiao(['atencao', 'ok', 'atencao', 'atencao', 'ok']), regiao(['atencao', 'ok', 'ok', 'atencao', 'ok']), regiao(['atencao', 'ok', 'ok', 'ok', 'ok'])].map(V.itensDaRegiao);
+  assert.deepEqual(V.colunasIguais(linhas).map((c) => c.igual), [true, true, false, false, true]);
+  assert.equal(V.fraseIguais(V.colunasIguais(linhas)), 'Igual em todas as regiões: pulverização (com restrição), plantio (favorável) e máquinas (favorável).');
+});
+
+test('colunasIguais: uma região só, ou nenhuma coluna igual, não gera frase', () => {
+  const uma = [regiao(['ok', 'ok', 'ok', 'ok', 'ok'])].map(V.itensDaRegiao);
+  assert.ok(V.colunasIguais(uma).every((c) => !c.igual));
+  assert.equal(V.fraseIguais(V.colunasIguais(uma)), '');
+  const duas = [regiao(['ok', 'ok', 'ok', 'ok', 'ok']), regiao(['atencao', 'atencao', 'atencao', 'atencao', 'atencao'])].map(V.itensDaRegiao);
+  assert.equal(V.fraseIguais(V.colunasIguais(duas)), '');
+});
+
+test('colunasIguais: região sem previsão conta como estado "sem" e diz "sem previsão"', () => {
+  const sem = ['Sem previsão para as horas úteis de hoje (05h às 20h).'];
+  const r = (v) => ({ ops: { pulv: ['atencao', sem[0], 'x'], plantio: [v, 'x', 'x'], colheita: [v, 'x', 'x'], animais: [v, 'x', 'x'], maquinas: [v, 'x', 'x'] } });
+  const linhas = [r('ok'), r('atencao')].map(V.itensDaRegiao);
+  assert.match(V.fraseIguais(V.colunasIguais(linhas)), /pulverização \(sem previsão\)/);
+});
