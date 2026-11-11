@@ -3,7 +3,7 @@
 - **Situação:** implementada em 11/11/2026 na branch `ideia/campo-visual-4`; **aguarda a sua aprovação**. Não publicada.
 - **Branch:** `ideia/campo-visual-4` (parte da `desenvolvimento`, com V1 a V3 já juntas)
 - **Plano e mockups:** [campo-visual-2.md](campo-visual-2.md) (seção 4.9)
-- **Prévia:** do site, com o botão: a gerar depois da sua autorização. O cartão tem imagens de exemplo (ver "Como ver o cartão").
+- **Prévia:** [link](https://orgatec-site--ideia-campo-visual-4-eixx9ujt.web.app/rural/janela-de-campo.html) (expira em 11/12/2026), com o botão e as barras recolhidas. O cartão tem imagens de exemplo (ver "Como ver o cartão").
 
 ## O que muda
 
