@@ -1,7 +1,7 @@
 # Score de compliance na Janela Empresarial
 
-- **Situação:** em prévia
-- **Branch:** `ideia/janela-score`
+- **Situação:** integrada na desenvolvimento em 11/11/2026; falta lançar
+- **Branch:** `ideia/janela-score` (removida após a mescla)
 - **Prévia:** [link](https://orgatec-site--ideia-janela-score-vmjjy32j.web.app/empresarial/janela.html)
 
 ## Problema
