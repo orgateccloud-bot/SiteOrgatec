@@ -1,8 +1,8 @@
 # Score de compliance na Janela Empresarial
 
-- **Situação:** em desenvolvimento
+- **Situação:** em prévia
 - **Branch:** `ideia/janela-score`
-- **Prévia:**
+- **Prévia:** [link](https://orgatec-site--ideia-janela-score-vmjjy32j.web.app/empresarial/janela.html)
 
 ## Problema
 
