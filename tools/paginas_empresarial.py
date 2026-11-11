@@ -66,14 +66,17 @@ def janela() -> None:
                  f'<div class="og-campo"><label class="og-campo-rotulo" for="jUf">UF</label><select id="jUf" class="og-campo-controle og-campo-md" data-filtro-janela="uf">{ufs}</select></div></div>')
     corpo = "\n".join([
         gp.hero("Empresarial · Janela", "O que importa para a sua empresa esta semana.",
-                "Prazos dos próximos 7 dias, mudanças na reforma e, para o transportador, as obrigações do setor. Cada cartão mostra a fonte, a hora da coleta e o estado.",
+                "O score de compliance da sua empresa, prazos dos próximos 7 dias, mudanças na reforma e, para o transportador, as obrigações do setor. "
+                "Cada cartão mostra a fonte, a hora da coleta e o estado.",
                 f'<a {gp.WHATS} data-msg="{MSG}" class="og-btn og-btn-contato og-btn-lg">Falar com o escritório</a>', compacto=True),
-        gp.secao("Janela", "Seu painel", controles + '\n                <div data-janela-empresarial data-origem="{p}dados/empresarial/atual.json">'
+        # O score (janela-empresarial.js → termometro.js) é calculado no navegador e não depende do atual.json
+        gp.secao("Janela", "Seu painel", controles + '\n                <div data-janela-score aria-live="polite" class="mb-4"></div>'
+                 '\n                <div data-janela-empresarial data-origem="{p}dados/empresarial/atual.json">'
                  '<div data-janela-lista aria-live="polite"><p class="og-cartao-texto">Carregando a janela…</p></div></div>', "bg-fundo", "janela", compacto=True),
     ])
     gp.pagina("empresarial/janela.html", "Janela Empresarial e do Transporte",
-              "Prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.",
-              "empresarial", "retenção", corpo, indexar=False, extra=["janela-empresarial.js"],
+              "Score de compliance, prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.",
+              "empresarial", "retenção", corpo, indexar=False, extra=["termometro.js", "janela-empresarial.js"],
               trilha=[("Empresarial", "empresarial/index.html"), ("Janela", None)])
 
 

@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Janela Empresarial e do Transporte | ORGATEC</title>
-    <meta name="description" content="Prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.">
+    <meta name="description" content="Score de compliance, prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.">
     <meta name="robots" content="noindex">
     <link rel="canonical" href="https://orgatec.io/empresarial/janela.html">
     <meta property="og:title" content="Janela Empresarial e do Transporte">
-    <meta property="og:description" content="Prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.">
+    <meta property="og:description" content="Score de compliance, prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.">
     <meta property="og:type" content="website">
     <meta property="og:image" content="https://orgatec.io/assets/marca/og-image.png">
     <link rel="icon" href="../assets/marca/favicon-32.png" sizes="32x32" type="image/png">
@@ -76,7 +76,7 @@
                 <div class="max-w-3xl">
                     <p class="eyebrow">Empresarial · Janela</p>
                     <h1 class="text-3xl sm:text-6xl my-3 sm:my-6 font-extrabold leading-[1.05] text-ink">O que importa para a sua empresa esta semana.</h1>
-                    <p class="text-lg text-muted mb-5 sm:mb-8 line-clamp-3 sm:line-clamp-none leading-relaxed">Prazos dos próximos 7 dias, mudanças na reforma e, para o transportador, as obrigações do setor. Cada cartão mostra a fonte, a hora da coleta e o estado.</p>
+                    <p class="text-lg text-muted mb-5 sm:mb-8 line-clamp-3 sm:line-clamp-none leading-relaxed">O score de compliance da sua empresa, prazos dos próximos 7 dias, mudanças na reforma e, para o transportador, as obrigações do setor. Cada cartão mostra a fonte, a hora da coleta e o estado.</p>
                     <div class="flex flex-col sm:flex-row gap-3"><a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" data-msg="Olá! Quero falar com a ORGATEC sobre a reforma tributária na minha empresa." class="og-btn og-btn-contato og-btn-lg">Falar com o escritório</a></div>
                 </div>
             </div>
@@ -86,6 +86,7 @@
                 <p class="eyebrow">Janela</p>
                 <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Seu painel</h2>
 <div class="flex flex-wrap items-end gap-3 mb-4"><div class="og-campo"><label class="og-campo-rotulo" for="jAtividade">Minha atividade</label><select id="jAtividade" class="og-campo-controle og-campo-md" data-filtro-janela="atividade"><option value="">Escolha</option><option value="transportador">Transportador de cargas</option><option value="comercio">Comércio e indústria</option><option value="servicos">Prestador de serviço</option><option value="simples">Simples Nacional</option></select></div><div class="og-campo"><label class="og-campo-rotulo" for="jRegime">Regime</label><select id="jRegime" class="og-campo-controle og-campo-md" data-filtro-janela="regime"><option value="simples">Simples Nacional</option><option value="presumido">Lucro presumido</option><option value="real" selected>Lucro real</option></select></div><div class="og-campo"><label class="og-campo-rotulo" for="jUf">UF</label><select id="jUf" class="og-campo-controle og-campo-md" data-filtro-janela="uf"><option value="GO">GO</option><option value="TO">TO</option><option value="PA">PA</option></select></div></div>
+                <div data-janela-score aria-live="polite" class="mb-4"></div>
                 <div data-janela-empresarial data-origem="../dados/empresarial/atual.json"><div data-janela-lista aria-live="polite"><p class="og-cartao-texto">Carregando a janela…</p></div></div>
             </div>
         </section>
@@ -126,6 +127,7 @@
     <script src="../assets/js/conteudo.js"></script>
     <script src="../assets/js/reforma-itens.js"></script>
     <script src="../assets/js/calculadoras.js"></script>
+    <script src="../assets/js/termometro.js"></script>
     <script src="../assets/js/janela-empresarial.js"></script>
     <script src="../assets/js/paginas.js"></script>
 </body>

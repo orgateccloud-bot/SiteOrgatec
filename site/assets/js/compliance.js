@@ -20,7 +20,7 @@
     var it = itens[p.item], r = T.regraDe(p);
     return it && r && it.destinos.indexOf(r.destino) >= 0 ? r.pagina + '#item-' + p.item : '../reforma/index.html#item-' + p.item;
   }
-  var CHAVE = 'orgatec.termometro.respostas';
+  var CHAVE = T.CHAVE_RESPOSTAS;
   var respostas = {};
   try { respostas = JSON.parse(sessionStorage.getItem(CHAVE) || '{}') || {}; } catch (e) { respostas = {}; }
 
@@ -82,12 +82,12 @@
     var ev = T.evidencia(respostas, consideradas);
     plano = T.planoDeAcao(r.pendencias, itens, new Date().toISOString().slice(0, 10));
     if (botaoIcs) botaoIcs.hidden = !plano.length;
-    var pct = r.percentual == null ? null : Math.round(r.percentual * 100);
+    var notas = T.nota(r), pct = notas.geral;
     var nivel = r.faixa ? '<span class="og-selo og-selo-' + r.faixa.tom + '" data-nivel="' + r.faixa.nivel + '">' + r.faixa.rotulo + '</span>' : '<span class="og-selo og-selo-pendente" data-nivel="">Responda para ver</span>';
     var porFrente = ativos.map(function (p) {
       var x = r.porPilar[p];
       return '<li class="flex items-center justify-between gap-3"><span>' + K.esc(K.PILARES[p]) + '</span>' +
-        (x.faixa ? '<span class="og-selo og-selo-' + x.faixa.tom + '">' + Math.round(x.percentual * 100) + '%</span>' : '<span class="text-tinta-fraca text-sm">—</span>') + '</li>';
+        (x.faixa ? '<span class="og-selo og-selo-' + x.faixa.tom + '">' + notas.porPilar[p] + '%</span>' : '<span class="text-tinta-fraca text-sm">—</span>') + '</li>';
     }).join('');
     var pend = r.pendencias.map(function (pd) {
       var p = pd.pergunta;
