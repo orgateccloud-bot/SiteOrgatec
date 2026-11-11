@@ -1,6 +1,6 @@
 # Janela de Campo 2, V3: linha do dia, ícones de tempo, alvos de 44 px e modo Ao sol
 
-- **Situação:** implementada em 11/11/2026 na branch `ideia/campo-visual-3`; **aguarda a sua aprovação da prévia**. Não publicada.
+- **Situação:** implementada em 11/11/2026; **aprovada em 11/11/2026 e junta na `desenvolvimento`**. Falta lançar (publicar com `tools/publicar.py`, com a sua autorização).
 - **Branch:** `ideia/campo-visual-3` (parte da `desenvolvimento`, com V1 e V2 já juntas)
 - **Plano e mockups:** [campo-visual-2.md](campo-visual-2.md) (seções 4.4, 4.5 e 4.6)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-visual-3-1e037t0u.web.app/rural/janela-de-campo.html) (expira em 11/12/2026). Usa o boletim real do ar.
