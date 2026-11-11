@@ -3,7 +3,7 @@
 - **Situação:** implementada em 11/11/2026 na branch `ideia/campo-visual-2`; **aguarda a sua aprovação da prévia**. Não publicada.
 - **Branch:** `ideia/campo-visual-2` (parte da `desenvolvimento`, com a V1 já junta)
 - **Plano e mockups:** [campo-visual-2.md](campo-visual-2.md) (seções 4.3 e 4.7)
-- **Prévia:** a gerar depois da sua autorização.
+- **Prévia:** [link](https://orgatec-site--ideia-campo-visual-2-zktkjnan.web.app/rural/janela-de-campo.html) (expira em 11/12/2026). Usa o boletim real do ar.
 
 ## O que muda (só na Janela de Campo)
 
