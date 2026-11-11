@@ -56,37 +56,43 @@ ICONES = {
     "ok": '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     "atencao": '<path d="M12 5v9"/><path d="M12 19h.01"/>',
     "evitar": '<path d="M6.5 6.5l11 11"/><path d="M17.5 6.5l-11 11"/>',
+    "sem": '<path d="M7 12h10"/>',
 }
 
 CSS = """
 .c{height:100%;background:radial-gradient(900px 700px at 100% 0,var(--brand-soft),transparent 70%),var(--bg)}
-.z{display:flex;flex-direction:column;gap:24px}
+.z{display:flex;flex-direction:column;gap:20px}
 svg{fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .topo{display:flex;align-items:center;gap:22px}
 .marca{font:800 42px/1 var(--f-display);letter-spacing:-.02em}
 .sub{font:500 17px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:10px}
 .eyebrow{font:500 22px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--hl)}
-h1{font:700 80px/1 var(--f-display);letter-spacing:-.03em;margin-top:14px}
-.dia{font:600 34px/1.2 var(--f-body);color:var(--ink);margin-top:14px}
+h1{font:700 64px/1 var(--f-display);letter-spacing:-.03em;margin-top:10px}
+.dia{font:600 30px/1.2 var(--f-body);color:var(--ink);margin-top:10px}
 .info{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border:1px solid var(--line);border-radius:22px}
-.info div{padding:16px 22px}.info div+div{border-left:1px solid var(--line)}
-.info b{display:block;font:500 16px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.info span{display:block;font:600 28px/1.15 var(--f-display);margin-top:10px}
+.info div{padding:10px 18px}.info div+div{border-left:1px solid var(--line)}
+.info b{display:block;font:500 15px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.info span{display:block;font:600 25px/1.15 var(--f-display);margin-top:6px}
 .legenda{display:flex;gap:14px;flex-wrap:wrap}
 .selo{display:inline-flex;align-items:center;gap:10px;padding:8px 18px 8px 12px;border-radius:999px;font:600 24px/1 var(--f-body);border:2px solid transparent}
-.ic{display:grid;place-items:center;border-radius:16px;border:2px solid transparent}
-.ok{background:var(--brand-soft);color:var(--brand)}
-.atencao{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
-.evitar{background:var(--warn);color:var(--surface)}
+.gl{display:inline-grid;place-items:center;flex:none}
+.gl circle{stroke-width:2.6}
+.gl-ok circle{fill:var(--brand);stroke:none}.gl-ok path{stroke:var(--brand-ink);stroke-width:2.6}
+.gl-atencao circle{fill:var(--warn-soft);stroke:var(--warn)}.gl-atencao path{stroke:var(--warn);stroke-width:2.8}
+.gl-evitar circle{fill:var(--warn);stroke:none}.gl-evitar path{stroke:var(--brand-ink);stroke-width:2.6}
+.gl-sem circle{fill:none;stroke:var(--muted);stroke-dasharray:3 3}.gl-sem path{stroke:var(--muted);stroke-width:2.4}
+.leg{display:inline-flex;align-items:center;gap:10px;font:600 24px/1 var(--f-body);color:var(--ink)}
+.veredito{display:flex;flex-direction:column;gap:12px}
+.vt{font:700 48px/1.08 var(--f-display);letter-spacing:-.02em;color:var(--ink)}
+.vl{font:500 26px/1.22 var(--f-body);color:var(--ink)}
 .tabela{flex:1;display:grid;grid-template-columns:300px repeat(5,1fr);grid-template-rows:auto;grid-auto-rows:1fr;
   background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:4px 18px}
 .tabela>*{display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--line)}
 .tabela>.fim{border-bottom:0}
-.op{font:600 18px/1.15 var(--f-body);color:var(--muted);text-align:center;padding:12px 2px}
-.reg{flex-direction:column;align-items:flex-start;justify-content:center;padding:10px 10px 10px 0}
-.reg strong{font:600 28px/1.1 var(--f-display)}
-.reg small{font:400 19px/1.25 var(--f-body);color:var(--muted);margin-top:6px}
-.ic.grande{width:88px;height:70px}
+.op{font:600 18px/1.15 var(--f-body);color:var(--muted);text-align:center;padding:8px 2px}
+.reg{flex-direction:column;align-items:flex-start;justify-content:center;padding:6px 10px 6px 0}
+.reg strong{font:600 26px/1.1 var(--f-display)}
+.reg small{font:400 17px/1.2 var(--f-body);color:var(--muted);margin-top:3px}
 .alerta{border:2px solid var(--warn);background:var(--warn-soft);border-radius:22px;padding:18px 24px}
 .alerta strong{display:block;font:700 26px/1.1 var(--f-display);color:var(--warn);text-transform:uppercase;letter-spacing:.02em}
 .alerta p{font:400 21px/1.3 var(--f-body);margin-top:8px}
@@ -146,21 +152,45 @@ def icone(estado: str, tamanho: int) -> str:
     return f'<svg viewBox="0 0 24 24" width="{tamanho}" height="{tamanho}" aria-hidden="true">{ICONES[estado]}</svg>'
 
 
+def glifo(estado: str, tamanho: int) -> str:
+    """Glifo de estado igual ao da página (campo.js, glifoSvg): cheio com ✓, vazado com !, cheio com ✕, pontilhado com –."""
+    return (f'<span class="gl gl-{estado}"><svg viewBox="0 0 24 24" width="{tamanho}" height="{tamanho}" aria-hidden="true">'
+            f'<circle cx="12" cy="12" r="10.4"/>{ICONES[estado]}</svg></span>')
+
+
+def veredito(boletim: dict) -> dict | None:
+    """Veredito do boletim inteiro e a matriz de estados região x operação, calculados por site/assets/js/campo-veredito.js
+    (a mesma regra da página; None sem regiões)."""
+    node = shutil.which("node")
+    if not node:
+        raise RuntimeError("Node.js não encontrado no PATH (necessário para ler site/assets/js/campo-veredito.js)")
+    js = ("const v=require('./site/assets/js/campo-veredito.js'),b=JSON.parse(require('fs').readFileSync(0,'utf8'));"
+          "process.stdout.write(JSON.stringify(v.vereditoDasRegioes(b.regioes)))")
+    r = subprocess.run([node, "-e", js], input=json.dumps({"regioes": boletim["regioes"]}), capture_output=True, text=True,
+                       encoding="utf-8", cwd=RAIZ, check=False)  # nosec B603
+    if r.returncode != 0:
+        raise RuntimeError(f"leitura de campo-veredito.js falhou: {r.stderr.strip()}")
+    return json.loads(r.stdout)
+
+
 def montar_html(boletim: dict, rot: dict, formato: str = "status") -> str:
     alto, direita, baixo, esquerda = FORMATOS[formato]["margens"]
     escala = FORMATOS[formato]["escala"]
     g = gerado_em(boletim)
     dia = rot["diaExtenso"]
     estados, ops = rot["estados"], rot["operacoes"]
-    legenda = "".join(f'<span class="selo {s}">{icone(s, 26)}{escape(e["rotulo"])}</span>' for s, e in estados.items())
+    ver = veredito(boletim)
+    legenda = "".join(f'<span class="leg">{glifo(s, 34)}{escape(e["rotulo"])}</span>' for s, e in estados.items()) + f'<span class="leg">{glifo("sem", 34)}Sem previsão</span>'
+    bloco_veredito = (f'<section class="veredito"><p class="vt">{escape(ver["titulo"])}</p>' + "".join(f'<p class="vl">{escape(t)}</p>' for t in ver["linhas"]) + "</section>") if ver else ""
     celulas = ['<div></div>'] + [f'<div class="op">{escape(o["nome"])}</div>' for o in ops]
     regioes = boletim["regioes"]
     for i, r in enumerate(regioes):
         fim = " fim" if i == len(regioes) - 1 else ""  # a janela de horário de cada região fica na página (PAGINA)
         celulas.append(f'<div class="reg{fim}"><strong>{escape(r["nome"])}</strong><small>{escape(r["uf"])}</small></div>')
-        for o in ops:
-            s = r["ops"][o["id"]][0]
-            celulas.append(f'<div class="{fim.strip()}"><span class="ic grande {s}" title="{escape(estados[s]["rotulo"])}">{icone(s, 44)}</span></div>')
+        for k, o in enumerate(ops):
+            s = ver["matriz"][i][k] if ver else r["ops"][o["id"]][0]
+            rotulo = estados[s]["rotulo"] if s in estados else "Sem previsão"
+            celulas.append(f'<div class="{fim.strip()}"><span title="{escape(rotulo)}">{glifo(s, 46)}</span></div>')
     alerta = ""
     if boletim.get("alerta"):
         itens = boletim["alerta"].get("itens") or []
@@ -176,6 +206,7 @@ def montar_html(boletim: dict, rot: dict, formato: str = "status") -> str:
 <header class="topo">{M.logo_img(96)}<div><p class="marca">ORGATEC</p><p class="sub">Inteligência Tributária</p></div></header>
 <section><p class="eyebrow">Boletim informativo · tempo no agro</p><h1>Janela de Campo</h1>
 <p class="dia">{escape(dia[:1].upper() + dia[1:])}</p></section>
+{bloco_veredito}
 <section class="info"><div><b>Emitido às</b><span>{g:%H}h{g:%M}</span></div><div><b>Vale até</b><span>23h59 de {g:%d/%m}</span></div>
 <div><b>Próxima</b><span>{proxima_emissao(g)}</span></div></section>
 <section class="legenda">{legenda}</section>

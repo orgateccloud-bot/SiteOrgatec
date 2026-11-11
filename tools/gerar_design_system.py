@@ -955,6 +955,9 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .campo-sol-rot{{display:none}}
 @media (min-width:400px){{.campo-sol-rot{{display:inline}}}}
 :root[data-escuro="nao"] [data-campo]{{--warn-soft:var(--surface)}}
+.campo-compartilhar{{justify-self:start;min-height:44px}}
+.campo-detalhes-horas>summary{{cursor:pointer;display:flex;align-items:center;min-height:44px;font-weight:600}}
+.campo-detalhes-horas>summary:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
 .campo-card-ok .campo-op-txt,.campo-card-ok .campo-op-eixo,.campo-card-evitar .campo-op-txt,.campo-card-evitar .campo-op-eixo{{color:var(--ink)}}
 .campo-comparar>summary{{cursor:pointer;font-weight:600;padding:10px 0}}
 .campo-comparar>summary:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
