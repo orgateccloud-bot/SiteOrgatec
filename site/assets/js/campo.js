@@ -89,6 +89,7 @@
   var alvo = document.querySelector('[data-campo]');
   var O = (typeof window !== 'undefined' && window.Orgatec) || {};
   if (!alvo) return api;
+  var VD = O.campoVeredito;  // veredito do dia e faixa horária (campo-veredito.js, carregado antes)
 
   var BASE = alvo.getAttribute('data-campo-dados') || '../dados/campo/';
   var HOJE = (function () { var d = new Date(Date.now() - 3 * 3600000); return d.toISOString().slice(0, 10); })();  // dia em Brasília
@@ -108,6 +109,7 @@
 
   var pref = {};
   try { pref = JSON.parse(localStorage.getItem('orgatec.campo') || '{}'); } catch (e) { pref = {}; }
+  var orientAberta = true;  // a orientação da operação escolhida abre dentro do cartão
   var selR = pref.r, selO = OPERACOES.some(function (o) { return o.id === pref.o; }) ? pref.o : OPERACOES[0].id, selP = pref.p, selA = typeof pref.a === 'string' ? pref.a : '';  // selA: atividade do produtor
 
   function json(url) {
@@ -125,17 +127,26 @@
     if (b.polos) selP = poloValido(b, r, selP);
   }
 
+  /* 'vigente', 'vencido' (o dia previsto já passou) ou 'desatualizado' (gerado há mais de LIMITE_HORAS). */
+  function vigencia() {
+    if (situacao(b, HOJE) !== 'vigente') return 'vencido';
+    var horas = horasDesde(b, Date.now());
+    return horas != null && horas > LIMITE_HORAS ? 'desatualizado' : 'vigente';
+  }
+
   function textoSituacao() {
-    var vigente = situacao(b, HOJE) === 'vigente', horas = horasDesde(b, Date.now());
-    var inmet = 'Avisos oficiais: <a href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a>.';
-    if (!vigente) return ['vencido', '<strong>Boletim vencido: arquivo de ' + esc(dataCurta(b.dia)) + '.</strong> Não use para decidir o trabalho de hoje. ' + inmet];
-    if (horas != null && horas > LIMITE_HORAS) return ['vencido', '<strong>Boletim desatualizado:</strong> gerado há ' + Math.round(horas) + ' horas. A atualização automática pode ter falhado. ' + inmet];
+    var vig = vigencia(), horas = horasDesde(b, Date.now());
+    var inmet = '<a href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a>';
+    if (vig === 'vencido') return ['vencido', '<strong>Boletim vencido: arquivo de ' + esc(dataCurta(b.dia)) + '.</strong> Não use para decidir o trabalho de hoje. Avisos oficiais: ' + inmet + '.'];
+    if (vig === 'desatualizado') return ['vencido', '<strong>Boletim desatualizado:</strong> gerado há ' + Math.round(horas) + ' horas. A atualização automática pode ter falhado. Avisos oficiais: ' + inmet + '.'];
+    var ponto = '<span class="campo-ponto" aria-hidden="true"></span>';
     if (b.automatico) {
       var hora = b.geradoEm.slice(11, 16).replace(':', 'h');
-      return ['vigente', '<strong>Atualizado às ' + esc(hora) + ' de ' + esc(dataCurta(b.dia)) + '</strong>' + (b.proximaAtualizacao ? ' · próxima atualização ' + esc(b.proximaAtualizacao) : '') + '. ' +
-        (b.semDados && b.semDados.length ? 'Sem previsão neste horário: ' + esc(b.semDados.map(function (p) { return p.nome; }).join(', ')) + '. ' : '') + inmet];
+      var prox = b.proximaAtualizacao ? ' · próxima ' + esc(String(b.proximaAtualizacao).replace(/^hoje às /, '')) : '';
+      return ['vigente', ponto + '<strong>Vigente</strong> · atualizado ' + esc(hora) + prox + ' · ' + inmet +
+        (b.semDados && b.semDados.length ? ' Sem previsão neste horário: ' + esc(b.semDados.map(function (p) { return p.nome; }).join(', ')) + '.' : '')];
     }
-    return ['vigente', '<strong>Boletim em vigor</strong> para ' + esc(formatarDia(b.dia)) + '. ' + inmet];
+    return ['vigente', ponto + '<strong>Boletim em vigor</strong> para ' + esc(formatarDia(b.dia)) + '. Avisos oficiais: ' + inmet + '.'];
   }
 
   function opcoesArquivo() {
@@ -147,6 +158,56 @@
     if (itens.length < 2) return '';
     return '<div class="og-campo max-w-xs"><label class="og-campo-rotulo" for="campoBoletim">Boletim</label><select id="campoBoletim" class="og-campo-controle og-campo-md">' +
       itens.map(function (x) { return '<option value="' + esc(x.id) + '"' + (x.lacuna ? ' disabled' : '') + (x.id === b.id ? ' selected' : '') + '>' + esc(dataCurta(x.dia)) + (x.lacuna ? ' (sem boletim)' : x.dia < HOJE ? ' (arquivo)' : '') + '</option>'; }).join('') + '</select></div>';
+  }
+
+  /* Glifos de estado: forma + ícone + cor (cheio com ✓, vazado com !, cheio com ✕, pontilhado com –). Só SVG inline. */
+  function glifoSvg(e) {
+    var corpo = {
+      ok: '<circle cx="12" cy="12" r="11"/><path d="M7 12.5l3.2 3.2L17 8.8"/>',
+      atencao: '<circle cx="12" cy="12" r="10"/><path d="M12 7v6"/><circle class="ponto" cx="12" cy="16.6" r="1.4"/>',
+      evitar: '<circle cx="12" cy="12" r="11"/><path d="M8 8l8 8M16 8l-8 8"/>',
+      sem: '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>'
+    }[e] || '';
+    return '<svg class="glifo glifo-' + (corpo ? e : 'sem') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (corpo || '<circle cx="12" cy="12" r="10"/>') + '</svg>';
+  }
+
+  function dataBarra() {
+    var d = new Date(b.dia + 'T12:00:00Z'), dia = DSEM[d.getUTCDay()];
+    return dia.charAt(0).toUpperCase() + dia.slice(1) + ' ' + dataCurta(b.dia).slice(0, 5);
+  }
+
+  function folhaHtml() {
+    return '<dialog class="campo-folha" data-campo-folha aria-labelledby="campoFolhaTitulo"><div class="campo-folha-corpo">' +
+      '<div class="campo-folha-topo"><h3 id="campoFolhaTitulo" class="text-lg font-bold text-tinta">Onde você trabalha</h3>' +
+        '<button type="button" class="campo-folha-fechar" data-campo-fechar aria-label="Fechar">✕</button></div>' +
+      '<div class="campo-seletor" data-campo-seletor>' +
+        '<div class="grid gap-1"><p class="eyebrow">Região</p><div class="campo-abas" role="group" aria-label="Região">' +
+          b.regioes.map(function (r) { return '<button type="button" class="campo-aba" data-r="' + esc(r.id) + '">' + esc(r.nome) + '</button>'; }).join('') + '</div></div>' +
+        (b.polos ? '<div class="grid gap-1"><p class="eyebrow">Polo</p><div class="campo-abas" role="group" aria-label="Polo" data-campo-polos></div></div>' : '') +
+      '</div></div></dialog>';
+  }
+  function abrirFolha() {
+    var d = alvo.querySelector('[data-campo-folha]');
+    if (!d || d.open) return;
+    if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+  }
+  function fecharFolha() {
+    var d = alvo.querySelector('[data-campo-folha]');
+    if (!d || !d.open) return;
+    if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
+  }
+
+  /* A barra do local gruda sob o cabeçalho do site; ao grudar, mostra os cinco glifos do dia (classe "fixo"). */
+  var ioBarra = null;
+  function observarBarra() {
+    if (ioBarra) ioBarra.disconnect();
+    var s = alvo.querySelector('[data-campo-sentinela]'), bar = alvo.querySelector('[data-campo-barra]');
+    if (!s || !bar || !('IntersectionObserver' in window)) return;
+    ioBarra = new IntersectionObserver(function (es) {
+      var e = es[es.length - 1];
+      bar.classList.toggle('fixo', !e.isIntersecting && e.boundingClientRect.top < 0);
+    }, { rootMargin: '-84px 0px 0px 0px' });
+    ioBarra.observe(s);
   }
 
   var abaAtiva = 'horas';
@@ -258,22 +319,24 @@
     if (!abas.some(function (a) { return a[0] === abaAtiva; })) abaAtiva = 'horas';
     alvo.innerHTML =
       '<div class="campo-situacao campo-situacao-' + sit[0] + '" data-campo-situacao>' + sit[1] + '</div>' +
-      '<div><p class="eyebrow hidden sm:block">Boletim agrometeorológico · ' + (b.automatico ? 'automático' : 'emitido ' + esc(dataCurta(b.emitidoEm))) + '</p>' +
-        '<h2 class="text-xl sm:text-4xl font-extrabold text-tinta tracking-tight sm:mt-1 first-letter:uppercase" data-campo-dia>' + esc(formatarDia(b.dia)) + '</h2></div>' +
+      '<h2 class="sr-only" data-campo-dia>' + esc(formatarDia(b.dia)) + '</h2>' +
       (b.alerta ? '<div class="campo-alerta"' + (vigente ? ' role="alert"' : '') + '><strong>' + esc(b.alerta.titulo) + '</strong><ul>' +
         b.alerta.itens.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<div class="campo-sentinela" data-campo-sentinela aria-hidden="true"></div>' +
+      '<div class="campo-local" data-campo-barra>' +
+        '<button type="button" class="campo-local-botao" data-campo-local aria-haspopup="dialog" aria-label="Escolher região e polo">' +
+          '<span class="campo-local-data" data-campo-data></span><span class="campo-local-nome" data-campo-nome></span><span class="campo-local-seta" aria-hidden="true">▾</span></button>' +
+        '<div class="campo-local-mini" data-campo-mini aria-hidden="true"></div>' +
+      '</div>' +
+      folhaHtml() +
       '<div class="campo-grade">' +
         '<div class="campo-esq">' +
-          '<div class="campo-seletor" data-campo-seletor>' +
-            '<div class="grid gap-1"><p class="eyebrow sr-only lg:not-sr-only">Região</p><div class="campo-abas" role="group" aria-label="Região">' +
-              b.regioes.map(function (r) { return '<button type="button" class="campo-aba" data-r="' + esc(r.id) + '">' + esc(r.nome) + '</button>'; }).join('') + '</div></div>' +
-            (b.polos ? '<div class="grid gap-1"><p class="eyebrow sr-only lg:not-sr-only">Polo</p><div class="campo-abas" role="group" aria-label="Polo" data-campo-polos></div></div>' : '') +
-          '</div>' +
-          '<section aria-labelledby="campoRegiao" id="campoHoje" class="grid gap-3">' +
-            '<div><p class="eyebrow">Hoje na minha região</p><div class="flex flex-wrap items-baseline gap-x-3"><h3 id="campoRegiao" class="text-2xl font-bold text-tinta"></h3><p class="eyebrow" data-campo-uf></p></div></div>' +
+          '<div class="campo-veredito" data-campo-veredito></div>' +
+          '<ul class="campo-glifos" data-campo-glifos aria-label="Estado de cada operação hoje"></ul>' +
+          '<section aria-labelledby="campoPolo" id="campoHoje" class="grid gap-3">' +
+            '<div><h3 id="campoPolo" class="text-lg font-bold text-tinta" data-campo-titulo></h3><p class="campo-quem"><span id="campoRegiao"></span> · <span data-campo-uf></span></p></div>' +
             '<ul class="campo-hoje" data-campo-hoje></ul>' +
             '<div class="flex flex-wrap gap-2" data-campo-alertas></div>' +
-            '<div class="campo-recomendacao" aria-live="polite" data-campo-rec></div>' +
           '</section>' +
         '</div>' +
         '<div class="campo-dir">' +
@@ -292,6 +355,7 @@
     abrirAba(abaAtiva);
     desenhar();
     observarMapa();
+    observarBarra();
   }
 
   /* No desktop o satélite fica à vista, mas as imagens da NASA só são pedidas quando o painel chega perto da tela
@@ -334,13 +398,29 @@
       c.classList.toggle('ativa', ativa);
       c.setAttribute('aria-pressed', String(ativa));
     });
-    Array.prototype.forEach.call(alvo.querySelectorAll('.campo-aba, .campo-op'), function (a) {
+    Array.prototype.forEach.call(alvo.querySelectorAll('.campo-aba, .campo-glifo'), function (a) {
       var v = a.getAttribute('data-r') || a.getAttribute('data-o') || a.getAttribute('data-p');
       var atual = a.hasAttribute('data-r') ? selR : a.hasAttribute('data-o') ? selO : selP;
       a.setAttribute('aria-pressed', String(v === atual));
     });
     q('[data-campo-uf]').textContent = r.uf;
     q('#campoRegiao').textContent = r.nome;
+    var polo = b.polos ? poloDe(selP) : null, local = polo ? polo.nome : r.nome;
+    var itens = polo ? VD.itensDoPolo(polo) : VD.itensDaRegiao(r), vd = VD.veredito(vigencia(), itens);
+    q('[data-campo-data]').textContent = dataBarra();
+    q('[data-campo-nome]').textContent = polo ? polo.nome + ' · ' + polo.uf : r.nome;
+    q('[data-campo-titulo]').textContent = 'Hoje em ' + local;
+    q('[data-campo-veredito]').innerHTML = '<p class="campo-veredito-titulo' + (vd.tipo === 'sem' ? ' campo-veredito-sem' : '') + '">' + esc(vd.titulo) + '</p>' +
+      vd.linhas.map(function (l) { return '<p class="campo-veredito-linha">' + esc(l) + '</p>'; }).join('') +
+      (vd.tipo === 'normal' ? '<p class="campo-veredito-fonte">' + vd.contagem.favoraveis + ' de ' + vd.contagem.total + ' favoráveis · ' + esc(local) +
+        (vd.parcial ? ' · <span class="campo-veredito-aviso">previsão parcial: ' + vd.parcial.de + ' de ' + vd.parcial.total + ' horas</span>' : '') +
+        (b.automatico ? ' · MET Norway' : '') + '</p>' : '');
+    q('[data-campo-glifos]').innerHTML = vd.glifos.map(function (g) {
+      var nome = OPERACOES.filter(function (x) { return x.id === g.op; })[0].nome, rot = g.estado === 'sem' ? 'sem previsão' : ESTADOS[g.estado].rotulo;
+      return '<li><button type="button" class="campo-glifo campo-glifo-' + g.estado + '" data-o="' + g.op + '" aria-pressed="' + (g.op === selO) + '" aria-label="' + esc(nome + ': ' + rot) + '">' +
+        glifoSvg(g.estado) + '<span>' + esc(g.curto) + '</span></button></li>';
+    }).join('');
+    q('[data-campo-mini]').innerHTML = vd.glifos.map(function (g) { return glifoSvg(g.estado); }).join('');
     q('[data-campo-fatos]').innerHTML = [['Céu', r.ceu], ['Temperatura', r.temp], ['Chuva', r.chuva], ['Vento', r.vento]]
       .map(function (f) { return '<div class="campo-fato"><span class="eyebrow">' + f[0] + '</span><span>' + esc(f[1]) + '</span></div>'; }).join('');
     q('[data-campo-alertas]').innerHTML = (r.alertas || []).map(function (a) { return selo(a[0], a[1]); }).join('');
@@ -351,13 +431,17 @@
     }).join('');
     linha.setAttribute('aria-label', r.dia.map(function (s, i) { return PERIODOS[i] + ' ' + (ESTADOS[s] ? ESTADOS[s].rotulo : 'já passou'); }).join('; '));
     q('[data-campo-nota]').textContent = r.nota;
-    var op = r.ops[o.id];
-    // Boletim automático: o resumo já está na linha da operação; aqui vai a orientação. Boletim manual: o texto inteiro.
-    q('[data-campo-rec]').innerHTML = '<div class="flex flex-wrap items-center gap-2"><h4 class="text-lg font-bold text-tinta">' + esc(o.nome) + '</h4>' + selo(op[0]) + '</div><p>' + esc(op[2] || op[1]) + '</p>';
-    q('[data-campo-hoje]').innerHTML = OPERACOES.map(function (x) {
-      var v = r.ops[x.id];
-      return '<li><button type="button" class="campo-op" data-o="' + x.id + '" aria-pressed="' + (x.id === selO) + '"><span class="campo-op-nome">' + esc(x.nome) + '</span>' + selo(v[0]) +
-        '<span class="campo-op-txt">' + esc(resumoSemEstado(v[1])) + '</span></button></li>';
+    q('[data-campo-hoje]').innerHTML = OPERACOES.map(function (x, i) {
+      var v = r.ops[x.id], item = itens[i], aberto = x.id === selO && orientAberta;
+      var leg = item.faixa ? VD.legendaJanela(item) : null;
+      var celulas = item.faixa ? item.faixa.split('').map(function (c) { return '<i class="campo-h campo-h-' + c + '"></i>'; }).join('') : '';
+      return '<li class="campo-card campo-card-' + item.estado + '"><button type="button" class="campo-op" data-o="' + x.id + '" aria-expanded="' + aberto + '"' + (aberto ? ' aria-controls="campoOrient"' : '') + '>' +
+        '<span class="campo-op-cab"><span class="campo-op-nome">' + esc(x.nome) + '</span>' + (item.estado === 'sem' ? selo('sem', 'Sem previsão') : selo(item.estado)) + '</span>' +
+        (item.faixa ? '<span class="campo-faixa" role="img" aria-label="' + esc(x.nome + ', hora a hora: ' + VD.descreverFaixa(item.faixa)) + '">' + celulas + '</span>' +
+          '<span class="campo-op-eixo" aria-hidden="true"><span>05h</span><span>12h</span><span>20h</span></span>' : '') +
+        '<span class="campo-op-linha">' + (leg ? '<span class="campo-op-janela">' + esc(leg.janela) + '</span><span class="campo-op-txt">' + esc(leg.texto) + '</span>'
+          : '<span class="campo-op-txt">' + esc(resumoSemEstado(v[1])) + '</span>') + '</span></button>' +
+        (aberto ? '<div class="campo-orient" id="campoOrient" data-campo-rec><p>' + esc(v[2] || v[1]) + '</p></div>' : '') + '</li>';
     }).join('');
     if (b.polos) {
       q('[data-campo-polos]').innerHTML = (r.polos || []).map(function (id) {
@@ -402,13 +486,20 @@
   }
 
   alvo.addEventListener('click', function (ev) {
+    if (ev.target.closest('[data-campo-local]')) { abrirFolha(); return; }
+    if (ev.target.closest('[data-campo-fechar]') || (ev.target.hasAttribute && ev.target.hasAttribute('data-campo-folha'))) { fecharFolha(); return; }
     var bt = ev.target.closest('button[data-r], button[data-o], button[data-p]');
     if (!bt) return;
     if (bt.hasAttribute('data-r')) { selR = bt.getAttribute('data-r'); selP = null; }
-    if (bt.hasAttribute('data-o')) selO = bt.getAttribute('data-o');
+    if (bt.hasAttribute('data-o')) {
+      var novaOp = bt.getAttribute('data-o');
+      if (bt.classList.contains('campo-op') && novaOp === selO) orientAberta = !orientAberta;  // tocar de novo no cartão aberto recolhe
+      else { selO = novaOp; orientAberta = true; }
+    }
     if (bt.hasAttribute('data-p')) selP = bt.getAttribute('data-p');
     ajustarSelecao();
     desenhar();
+    if (bt.hasAttribute('data-p')) fecharFolha();
     if (bt.classList.contains('campo-celula') && !largo.matches) {
       var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       document.getElementById('campoHoje').scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });

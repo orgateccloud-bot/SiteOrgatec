@@ -914,9 +914,10 @@ def test_janela_de_campo(navegador, servidor, vp):
         pg.click("[data-campo-comparar] summary")
     pg.click(".campo-celula[data-r=sul][data-o=colheita]")
     expect(pg.locator("#campoRegiao")).to_have_text("Sul")
-    expect(pg.locator("[data-campo-rec]")).to_contain_text("Colheita")
+    expect(pg.locator(".campo-op[data-o=colheita]")).to_contain_text("Colheita")
     expect(pg.locator("[data-campo-rec]")).to_contain_text("trigo")
-    expect(pg.locator(".campo-op[data-o=colheita]")).to_have_attribute("aria-pressed", "true")
+    expect(pg.locator(".campo-op[data-o=colheita]")).to_have_attribute("aria-expanded", "true")
+    expect(pg.locator("[data-campo-veredito]")).to_contain_text("Sem veredito: boletim vencido")  # arquivo: nunca mostra veredito
     assert pg.locator("[data-campo-linha] > div").count() == 6
     assert pg.locator("[data-campo-fontes] a[href^='https://']").count() >= 1
     # a escolha fica lembrada
@@ -1225,6 +1226,12 @@ PNG_1PX = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000001000000010806000
                         "1f15c4890000000d49444154789c6360000002000154a24f5d0000000049454e44ae426082")
 
 
+def _abrir_local(pg):
+    """A região e o polo ficam numa folha que abre pela barra do local (V1 da Janela de Campo 2)."""
+    pg.click("[data-campo-local]")
+    expect(pg.locator("[data-campo-folha]")).to_be_visible()
+
+
 def _boletim_automatico(horas_atras=0.0):
     """Boletim de hoje montado com a resposta gravada do MET Norway, com as datas deslocadas para hoje."""
     import json
@@ -1257,7 +1264,7 @@ def _rotas_campo(boletim):
 def test_janela_de_campo_automatica(navegador, servidor, vp):
     b = _boletim_automatico()
     pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", vp, rotas=_rotas_campo(b))
-    expect(pg.locator("[data-campo-situacao]")).to_contain_text("Atualizado às")
+    expect(pg.locator("[data-campo-situacao]")).to_contain_text(re.compile(r"Vigente · atualizado \d{2}h\d{2}"))
     expect(pg.locator("[data-campo-situacao]")).not_to_contain_text("vencido")
     if vp == "mobile":
         pg.click("[data-aba=satelite]")  # no desktop o satélite fica sempre à vista
@@ -1792,7 +1799,7 @@ def test_janela_de_campo_sem_os_cards_e_com_caminho_para_o_mercado(navegador, se
 def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
     for caminho in ["rural/index.html", "rural/janela-de-campo.html", "rural/cotacoes.html", "reforma/alertas-regionais.html", "empresarial/transporte.html"]:
         pg, erros = _abrir(navegador, servidor, caminho)
-        expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../rural/cotacoes.html']").first).to_be_visible()
+        expect(pg.locator("main a[href='agro-mercado.html'], main a[href='../rural/cotacoes.html']").locator("visible=true").first).to_be_visible()
         assert not erros, (caminho, erros)
 
 
@@ -1857,6 +1864,7 @@ def test_janela_avisa_polo_sem_previsao_e_mantem_um_polo_escolhido(navegador, se
     pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
     pg.wait_for_selector(".campo-op")
     expect(pg.locator("[data-campo-situacao]")).to_contain_text("Sem previsão neste horário: " + ausente["nome"])
+    _abrir_local(pg)
     pg.click(f".campo-aba[data-r={ausente['regiao']}]")
     regiao = next(r for r in b["regioes"] if r["id"] == ausente["regiao"])
     assert pg.locator("[data-campo-polos] .campo-aba").count() == len(regiao["polos"]) - 1
@@ -1874,6 +1882,113 @@ def test_janela_minha_atividade_leva_ao_card_e_fica_lembrada(navegador, servidor
     pg.wait_for_load_state("load")
     expect(pg.locator("[data-minha-atividade]")).to_have_value("soja")
     expect(pg.locator("a[data-agro-mercado]")).to_have_attribute("href", "../rural/cotacoes.html#agro-soja")
+    assert not erros, erros
+
+
+# ---------- Janela de Campo 2, V1: veredito, barra do local, cartões com faixa horária (docs/ideias/campo-visual-2.md)
+
+def test_janela_veredito_acompanha_os_estados_do_polo_escolhido(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    polo = next(p for p in b["polos"] if p["id"] == pg.evaluate("JSON.parse(localStorage.getItem('orgatec.campo') || '{}').p"))
+    favoraveis = [o for o in ("pulv", "plantio", "colheita", "animais", "maquinas") if polo["ops"][o]["estado"] == "ok" and polo["ops"][o]["horasPrevistas"] > 0]
+    titulo = pg.locator(".campo-veredito-titulo").inner_text()
+    if len(favoraveis) == 5:
+        assert titulo == "Dia favorável para todas as operações."
+    elif favoraveis:
+        assert titulo.startswith("Favorável hoje: ")
+    else:
+        assert titulo in ("Nenhuma operação está favorável hoje.", "Dia ruim: evite todas as operações.") or titulo.startswith("Sem veredito")
+    # os cinco glifos do dia repetem o estado de cada cartão
+    estados = pg.locator(".campo-glifo").evaluate_all("els => els.map(e => e.className.match(/campo-glifo-(\\w+)/)[1])")
+    cartoes = pg.locator(".campo-card").evaluate_all("els => els.map(e => e.className.match(/campo-card-(\\w+)/)[1])")
+    assert estados == cartoes and len(estados) == 5
+    assert not erros, erros
+
+
+def test_janela_barra_do_local_abre_folha_troca_o_polo_e_fecha(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-campo-folha]")).to_be_hidden()
+    _abrir_local(pg)
+    pg.click(".campo-aba[data-r=norte]")
+    expect(pg.locator("#campoRegiao")).to_have_text("Norte e Tocantins")
+    expect(pg.locator("[data-campo-folha]")).to_be_visible()  # escolher a região não fecha: falta o polo
+    pg.click("[data-campo-polos] .campo-aba[data-p=palmas]")
+    expect(pg.locator("[data-campo-folha]")).to_be_hidden()
+    expect(pg.locator("[data-campo-nome]")).to_contain_text("Palmas")
+    expect(pg.locator("[data-campo-titulo]")).to_have_text("Hoje em Palmas")
+    _abrir_local(pg)
+    pg.keyboard.press("Escape")
+    expect(pg.locator("[data-campo-folha]")).to_be_hidden()
+    assert not erros, erros
+
+
+def test_janela_cartao_tem_faixa_horaria_e_orientacao_no_proprio_cartao(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    assert pg.locator(".campo-faixa").count() == 5
+    assert pg.locator(".campo-faixa > .campo-h").count() == 5 * 16
+    assert all(rotulo and "hora a hora" in rotulo for rotulo in pg.locator(".campo-faixa").evaluate_all("els => els.map(e => e.getAttribute('aria-label'))"))
+    # só o cartão da operação escolhida mostra a orientação; tocar em outro troca; tocar no aberto recolhe
+    assert pg.locator("[data-campo-rec]").count() == 1
+    pg.click(".campo-op[data-o=colheita]")
+    expect(pg.locator(".campo-op[data-o=colheita]")).to_have_attribute("aria-expanded", "true")
+    expect(pg.locator(".campo-op[data-o=pulv]")).to_have_attribute("aria-expanded", "false")
+    assert pg.locator("[data-campo-rec]").count() == 1
+    pg.click(".campo-op[data-o=colheita]")
+    assert pg.locator("[data-campo-rec]").count() == 0
+    # o glifo do dia escolhe a operação
+    pg.click(".campo-glifo[data-o=animais]")
+    expect(pg.locator(".campo-op[data-o=animais]")).to_have_attribute("aria-expanded", "true")
+    assert all(len(t) <= 90 for t in pg.locator(".campo-op-txt").all_inner_texts())
+    assert not erros, erros
+
+
+def test_janela_boletim_desatualizado_nao_tem_veredito(navegador, servidor):
+    b = _boletim_automatico()
+    b["geradoEm"] = "2000-01-01T05:00-03:00"
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator(".campo-veredito-titulo")).to_contain_text("Sem veredito: boletim")
+    assert pg.locator(".campo-glifo-ok, .campo-glifo-atencao, .campo-glifo-evitar").count() == 0
+    assert pg.locator(".campo-glifo-sem").count() == 5
+    expect(pg.locator("[data-campo-veredito]")).not_to_contain_text("favoráveis")
+    assert not erros, erros
+
+
+def test_janela_barra_do_local_gruda_ao_rolar_e_mostra_os_glifos(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    pg.wait_for_selector(".campo-op")
+    barra = pg.locator("[data-campo-barra]")
+    assert "fixo" not in (barra.get_attribute("class") or "")
+    pg.evaluate("window.scrollTo(0, 1400)")
+    expect(barra).to_have_class(re.compile("fixo"))
+    topo = pg.evaluate("document.querySelector('[data-campo-barra]').getBoundingClientRect().top")
+    cabecalho = pg.evaluate("document.querySelector('body > header').getBoundingClientRect().height")
+    assert abs(topo - cabecalho) <= 2, (topo, cabecalho)  # colada logo abaixo do cabeçalho do site
+    expect(pg.locator("[data-campo-mini] .glifo")).to_have_count(5)
+    assert not erros, erros
+
+
+def test_janela_celular_alvos_de_toque_e_menu_de_setores(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-subnav-setores]")).to_be_hidden()  # a fileira vira o menu "Setores"
+    pg.click("[data-subnav-menu] summary")
+    expect(pg.locator("[data-subnav-menu] a[href='../rural/cotacoes.html']")).to_be_visible()
+    pg.click("[data-subnav-menu] summary")
+    # botões do boletim com pelo menos 44 px de altura (a folha do local tem os chips de 44 px)
+    pequenos = pg.evaluate("""() => [...document.querySelectorAll('[data-campo] button:not([data-aba]):not(.campo-aba):not([data-mapa-play])')]
+        .filter(e => e.offsetParent && !e.closest('dialog') && !e.closest('[data-painel]') && e.getBoundingClientRect().height < 44).map(e => e.className + ' ' + Math.round(e.getBoundingClientRect().height))""")
+    assert not pequenos, pequenos
+    _abrir_local(pg)
+    altos = pg.evaluate("[...document.querySelectorAll('[data-campo-folha] .campo-aba, [data-campo-fechar]')].map(e => Math.round(e.getBoundingClientRect().height))")
+    assert altos and min(altos) >= 44, altos
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
     assert not erros, erros
 
 

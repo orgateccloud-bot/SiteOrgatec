@@ -75,16 +75,21 @@ def hero(sobre: str, titulo: str, lead: str, ctas: str, compacto: bool = False) 
         </section>"""
 
 
-def intro(sobre: str, titulo: str, texto: str = "", depois: str = "", compacto: bool = False) -> str:
+def intro(sobre: str, titulo: str, texto: str = "", depois: str = "", compacto: bool = False, enxuto: bool = False, menu: str = "") -> str:
     """Abertura curta das páginas internas (ferramentas, cliente, contato). compacto: no celular, sem o texto e com menos
-    espaço, para a página que precisa mostrar a decisão na primeira tela (Janela de Campo)."""
+    espaço, para a página que precisa mostrar a decisão na primeira tela (Janela de Campo).
+    enxuto: no celular, sem o rótulo de cima, com o título menor e (em menu) o atalho para os outros setores no canto."""
     classe_texto = "text-tinta-suave max-w-3xl" + (" hidden sm:block" if compacto else "")
+    classe_rotulo = "eyebrow" + (" hidden sm:block" if enxuto else "")
+    classe_ancora = " relative" if enxuto else ""
+    classe_titulo = "text-3xl sm:text-4xl font-extrabold text-tinta tracking-tight mt-2 mb-4" if not enxuto else "text-2xl sm:text-4xl font-extrabold text-tinta tracking-tight sm:mt-2 mb-0 sm:mb-4"
+    classe_secao = ("py-4 sm:py-14" if compacto else "py-10 sm:py-14") if not enxuto else "py-4 sm:py-14"
     paragrafo = f'\n                <p class="{classe_texto}">{texto}</p>' if texto else ""
-    return f"""        <section class="{"py-4 sm:py-14" if compacto else "py-10 sm:py-14"} bg-superficie border-b border-linha" data-hero>
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <p class="eyebrow">{sobre}</p>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-tinta tracking-tight mt-2 mb-4">{titulo}</h1>{paragrafo}
-{depois}
+    return f"""        <section class="{classe_secao} bg-superficie border-b border-linha" data-hero>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8{classe_ancora}">
+                <p class="{classe_rotulo}">{sobre}</p>
+                <h1 class="{classe_titulo}">{titulo}</h1>{paragrafo}
+{depois}{menu}
             </div>
         </section>"""
 
@@ -397,14 +402,27 @@ def reforma() -> None:
            "reforma", "autoridade + retenção", corpo, trilha=[("Reforma", None)])
 
 
-def subnav_setores(ativo: str) -> str:
-    botoes = "".join(f'<a href="{{p}}{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>'
-                     for chave, rot, arq in [("agro", "Agro", "rural/index.html"), ("transporte", "Transporte", "empresarial/transporte.html"),
-                                             ("regional", "Alertas regionais", "reforma/alertas-regionais.html"), ("campo", "Janela de Campo", "rural/janela-de-campo.html"),
-                                             ("mercado", "Cotações e notícias", "rural/cotacoes.html")]
-                     # Sem alertas do setor, o botão leva a uma página vazia para o transporte (SETORES_REGIONAIS em regras.js)
-                     if not (chave == "regional" and ativo == "transporte"))
-    return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto" data-subnav-setores>{botoes}</div>'
+def _links_setores(ativo: str) -> list:
+    return [(chave, rot, arq) for chave, rot, arq in [("agro", "Agro", "rural/index.html"), ("transporte", "Transporte", "empresarial/transporte.html"),
+                                                     ("regional", "Alertas regionais", "reforma/alertas-regionais.html"), ("campo", "Janela de Campo", "rural/janela-de-campo.html"),
+                                                     ("mercado", "Cotações e notícias", "rural/cotacoes.html")]
+            # Sem alertas do setor, o botão leva a uma página vazia para o transporte (SETORES_REGIONAIS em regras.js)
+            if not (chave == "regional" and ativo == "transporte")]
+
+
+def subnav_setores(ativo: str, enxuto: bool = False) -> str:
+    """enxuto: no celular a fileira some (os atalhos vão para menu_setores, no canto do título); do tablet para cima fica igual."""
+    botoes = "".join(f'<a href="{{p}}{arq}" class="og-btn og-btn-{"primario" if chave == ativo else "contorno"} og-btn-md">{rot}</a>' for chave, rot, arq in _links_setores(ativo))
+    classes = "hidden sm:flex sm:flex-wrap gap-3" if enxuto else "flex flex-nowrap sm:flex-wrap gap-3 overflow-x-auto"
+    return f'        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 {classes}" data-subnav-setores>{botoes}</div>'
+
+
+def menu_setores(ativo: str) -> str:
+    """Atalho "Setores" para o celular (a fileira de botões fica escondida nessa largura): lista de links de 44 px."""
+    atual = ' aria-current="page"'
+    links = "".join(f'<a href="{{p}}{arq}"{atual if chave == ativo else ""}>{rot}</a>' for chave, rot, arq in _links_setores(ativo))
+    return (f'<details class="campo-menu-setores sm:hidden" data-subnav-menu><summary class="og-btn og-btn-contorno og-btn-md">Setores ▾</summary>'
+            f'<nav class="campo-menu-lista" aria-label="Setores">{links}</nav></details>')
 
 
 # Página "Por público" da área de Compliance que corresponde ao setor (só as que já estão no ar)
@@ -623,10 +641,10 @@ def janela_de_campo() -> None:
     opcoes_atividades = "".join(f'<option value="{a["id"]}">{escape(a["nome"])}</option>' for a in atividades)
     corpo = "\n".join([
         intro("Setor · Agro", "Janela de Campo",
-              "Boletim automático três vezes ao dia, por região e operação.", compacto=True),
-        subnav_setores("campo"),
+              "Boletim automático três vezes ao dia, por região e operação.", compacto=True, enxuto=True, menu=menu_setores("campo")),
+        subnav_setores("campo", enxuto=True),
         """        <section class="py-5 sm:py-12">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-4 sm:gap-8" data-campo data-campo-divisas="{p}assets/img/divisas-ufs.svg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-3 sm:gap-6" data-campo data-campo-divisas="{p}assets/img/divisas-ufs.svg">
                 <p class="og-cartao-texto">Carregando o boletim. Se nada aparecer, ative o JavaScript ou consulte os avisos do INMET em <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">alertas2.inmet.gov.br</a>.</p>
             </div>
             <p class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 text-xs text-tinta-fraca font-mono">Boletim informativo gerado automaticamente a partir das fontes listadas (previsão: MET Norway, CC BY 4.0; satélite: NASA/NOAA). Não substitui os avisos oficiais do <a class="og-link" href="https://alertas2.inmet.gov.br" target="_blank" rel="noopener">INMET</a> e da Defesa Civil do seu município, nem a bula dos produtos.</p>
@@ -638,7 +656,7 @@ def janela_de_campo() -> None:
     ])
     pagina("rural/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
            "Boletim agrometeorológico para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
-           "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
+           "setores", "retenção", corpo, extra=["boletins-campo.js", "campo-mapa.js", "campo-veredito.js", "campo.js"], trilha=[("Setores", None), ("Janela de Campo", None)])
 
 
 def agro_mercado() -> None:
