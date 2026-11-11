@@ -346,6 +346,38 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 .campo-legenda-glifos .glifo{width:18px;height:18px}
 .campo-igual-texto{margin:10px 0 0;font-size:13px;color:var(--muted)}
 .campo-arquivo .campo-card,.campo-arquivo .campo-glifo,.campo-arquivo .campo-regioes .glifo,.campo-arquivo .campo-faixa{filter:grayscale(1);opacity:.72}
+/* Janela de Campo 2 (V3): linha do dia, ícones de tempo, rótulos de 13 px, alvos de 44 px e o modo Ao sol */
+[data-campo] .eyebrow{font:600 13px/18px var(--f-body);letter-spacing:0;text-transform:none}
+.campo-horas,.campo-horaria-rotulos{font-size:12px}
+[data-campo] .campo-aba{min-height:44px;padding:8px 14px;font-size:14px}
+.campo-aba-painel{min-height:44px;padding:12px 14px}
+.mapa-controles button,.mapa-tempo button,.mapa-aviso button{min-height:44px}
+[data-campo] .og-consentimento{min-height:44px}
+.campo-linhadia{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px}
+.dia-svg{display:block;width:100%;height:auto}
+.dia-base{stroke:var(--line);stroke-width:1;fill:none}
+.dia-janela{fill:var(--brand);fill-opacity:.16}
+.dia-chuva{fill:var(--hl);fill-opacity:.6}
+.dia-vento{fill:none;stroke:var(--hl);stroke-width:2;stroke-dasharray:5 4;stroke-linecap:round;stroke-linejoin:round}
+.dia-temp{fill:none;stroke:var(--warn);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.dia-agora{fill:none;stroke:var(--ink);stroke-width:2;stroke-dasharray:3 4}
+.campo-linhadia-eixo{display:flex;justify-content:space-between;padding:0 6px;font:500 12px var(--f-mono);color:var(--muted)}
+.campo-linhadia-legenda{display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+.campo-linhadia-legenda li{display:inline-flex;align-items:center;gap:6px}
+.dia-chave{display:inline-block;width:16px;height:6px;border-radius:3px}
+.dia-chave-temp{background:var(--warn)}
+.dia-chave-vento{background:repeating-linear-gradient(90deg,var(--hl) 0 5px,transparent 5px 8px)}
+.dia-chave-chuva{background:var(--hl);opacity:.6}
+.dia-chave-janela{background:var(--brand);opacity:.35}
+.icone-tempo{display:inline-block;vertical-align:-5px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.campo-sol{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:22px;background:transparent;color:var(--ink);font:500 13px var(--f-body);cursor:pointer}
+.campo-sol svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.campo-sol[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.campo-sol:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.campo-sol-rot{display:none}
+@media (min-width:400px){.campo-sol-rot{display:inline}}
+:root[data-escuro="nao"] [data-campo]{--warn-soft:var(--surface)}
+.campo-card-ok .campo-op-txt,.campo-card-ok .campo-op-eixo,.campo-card-evitar .campo-op-txt,.campo-card-evitar .campo-op-eixo{color:var(--ink)}
 .campo-comparar>summary{cursor:pointer;font-weight:600;padding:10px 0}
 .campo-comparar>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .campo-abas-painel{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}

@@ -128,6 +128,80 @@
     return it.length ? 'Igual em todas as regiões: ' + lista(it) + '.' : '';
   }
 
-  return { OPS: OPS, ROTULOS: ROTULOS, colunasIguais: colunasIguais, fraseIguais: fraseIguais, HORAS_UTEIS: HORAS_UTEIS, janelaCurta: janelaCurta, faixa: faixa, trechos: trechos, descreverFaixa: descreverFaixa,
+
+  /* ---------- Ícones de tempo (conjunto próprio, traço de 2 px, cor do texto) para a tabela dos 7 dias */
+  var NUVEM = 'M6.5 17a3.6 3.6 0 0 1-.5-7.17 5.2 5.2 0 0 1 10-1.2A4.2 4.2 0 0 1 16.5 17z';
+  var ICONES = {
+    sol: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8"/>',
+    'sol-nuvens': '<circle cx="8" cy="8" r="2.8"/><path d="M8 2.5v1.2M2.5 8h1.2M3.9 3.9l.9.9M12.1 3.9l-.9.9"/><path d="M8.5 19a3.4 3.4 0 0 1-.4-6.78 4.6 4.6 0 0 1 8.9-.9A3.8 3.8 0 0 1 17 19z"/>',
+    nublado: '<path d="' + NUVEM + '"/>',
+    chuva: '<path d="' + NUVEM.replace('17z', '15z').replace('17a', '15a') + '"/><path d="M8 18l-1 2.2M12.5 18l-1 2.2M17 18l-1 2.2"/>',
+    'chuva-forte': '<path d="' + NUVEM.replace('17z', '14z').replace('17a', '14a') + '"/><path d="M7.5 16.5l-1.2 3.4M11 16.5l-1.2 3.4M14.5 16.5l-1.2 3.4M18 16.5l-1.2 3.4"/>',
+    trovoada: '<path d="' + NUVEM.replace('17z', '14z').replace('17a', '14a') + '"/><path d="M12.8 14.5l-2.8 4h3.6l-2.4 3.7"/>'
+  };
+  function iconeTempo(familia) {
+    return '<svg class="icone-tempo" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">' + (ICONES[familia] || ICONES.nublado) + '</svg>';
+  }
+
+  /* ---------- Linha do dia: temperatura, vento e chuva hora a hora (05h às 20h) de um polo, em SVG puro */
+  function serieDoDia(polo, dia) {
+    var s = [], i;
+    for (i = 0; i < HORAS_UTEIS; i++) s.push(null);
+    ((polo && polo.horas) || []).forEach(function (h) {
+      if (h.dia === dia && h.h >= HORA_INICIAL && h.h <= HORA_FINAL) s[h.h - HORA_INICIAL] = { h: h.h, t: h.t, vento: h.vento, chuva: h.chuva || 0 };
+    });
+    return s;
+  }
+  function num(n, casas) { return Number(n).toFixed(casas == null ? 0 : casas).replace('.', ','); }
+
+  /* serie: de serieDoDia. opcoes: {faixa: 16 letras da operação escolhida, agora: hora decimal em Brasília ou null}.
+     Devolve null sem temperatura; senão {svg, resumo, tabela} (resumo e tabela para texto e leitor de tela). */
+  function linhaDoDia(serie, opcoes) {
+    opcoes = opcoes || {};
+    var vivos = serie.filter(Boolean), W = 640, H = 200, PAD = 12, N = HORAS_UTEIS, dx = (W - 2 * PAD) / (N - 1);
+    var temps = vivos.filter(function (p) { return p.t != null; }).map(function (p) { return p.t; });
+    if (!temps.length) return null;
+    var tmin = Math.min.apply(null, temps), tmax = Math.max.apply(null, temps);
+    var lo = tmin - 1, hi = Math.max(tmax + 1, lo + 6);
+    var ventos = vivos.filter(function (p) { return p.vento != null; }).map(function (p) { return p.vento * 3.6; });
+    var vmax = Math.max(10, ventos.length ? Math.max.apply(null, ventos) : 0);
+    var cmax = Math.max(1, Math.max.apply(null, vivos.map(function (p) { return p.chuva; }).concat([0])));
+    var X = function (i) { return PAD + i * dx; };
+    var yT = function (t) { return 12 + (hi - t) / (hi - lo) * 88; };      // faixa de cima: 12 a 100
+    var yV = function (v) { return 138 - v / vmax * 26; };                   // faixa do meio: 112 a 138
+    var traco = function (valor, yf) {
+      var d = '', ant = false;
+      serie.forEach(function (p, i) {
+        var v = p && valor(p);
+        if (v == null) { ant = false; return; }
+        d += (ant ? 'L' : 'M') + X(i).toFixed(1) + ' ' + yf(v).toFixed(1); ant = true;
+      });
+      return d;
+    };
+    var corpo = '', f = opcoes.faixa || '', i0 = -1;
+    for (var i = 0; i <= f.length; i++) {
+      var ok = i < f.length && f.charAt(i) === 'o';
+      if (ok && i0 < 0) i0 = i;
+      if (!ok && i0 >= 0) { corpo += '<rect class="dia-janela" x="' + (X(i0) - dx / 2).toFixed(1) + '" y="4" width="' + ((i - i0) * dx).toFixed(1) + '" height="' + (H - 8) + '" rx="8"/>'; i0 = -1; }
+    }
+    corpo += '<path class="dia-base" d="M' + PAD + ' 192H' + (W - PAD) + '"/>';
+    serie.forEach(function (p, i) {
+      if (p && p.chuva > 0) { var h = Math.max(3, p.chuva / cmax * 38); corpo += '<rect class="dia-chuva" x="' + (X(i) - dx * 0.3).toFixed(1) + '" y="' + (192 - h).toFixed(1) + '" width="' + (dx * 0.6).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="2"/>'; }
+    });
+    corpo += '<path class="dia-vento" d="' + traco(function (p) { return p.vento == null ? null : p.vento * 3.6; }, yV) + '"/>';
+    corpo += '<path class="dia-temp" d="' + traco(function (p) { return p.t; }, yT) + '"/>';
+    if (opcoes.agora != null && opcoes.agora >= HORA_INICIAL && opcoes.agora <= HORA_FINAL + 1) {
+      var xa = PAD + (opcoes.agora - HORA_INICIAL) * dx;
+      corpo += '<path class="dia-agora" d="M' + xa.toFixed(1) + ' 4V' + (H - 8) + '"/>';
+    }
+    var chuvaTotal = vivos.reduce(function (a, p) { return a + p.chuva; }, 0);
+    var resumo = 'Temperatura de ' + num(tmin) + ' a ' + num(tmax) + ' °C · vento até ' + num(Math.max.apply(null, ventos.concat([0]))) + ' km/h · ' +
+      (chuvaTotal >= 0.1 ? 'chuva de ' + num(chuvaTotal, 1) + ' mm nas horas úteis' : 'sem chuva nas horas úteis');
+    var tabela = '<div class="sr-only"><table><caption>Hora a hora, 05h às 20h</caption><thead><tr><th scope="col">Hora</th><th scope="col">Temperatura (°C)</th><th scope="col">Vento (km/h)</th><th scope="col">Chuva (mm)</th></tr></thead><tbody>' +
+      serie.map(function (p, i) { return p ? '<tr><th scope="row">' + (HORA_INICIAL + i) + 'h</th><td>' + num(p.t, 1) + '</td><td>' + num(p.vento * 3.6) + '</td><td>' + num(p.chuva, 1) + '</td></tr>' : ''; }).join('') + '</tbody></table></div>';
+    return { svg: '<svg class="dia-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + resumo + '" focusable="false">' + corpo + '</svg>', resumo: resumo, tabela: tabela };
+  }
+
+  return { iconeTempo: iconeTempo, serieDoDia: serieDoDia, linhaDoDia: linhaDoDia, OPS: OPS, ROTULOS: ROTULOS, colunasIguais: colunasIguais, fraseIguais: fraseIguais, HORAS_UTEIS: HORAS_UTEIS, janelaCurta: janelaCurta, faixa: faixa, trechos: trechos, descreverFaixa: descreverFaixa,
     itensDoPolo: itensDoPolo, itensDaRegiao: itensDaRegiao, veredito: veredito, legendaJanela: legendaJanela, maiuscula: maiuscula, lista: lista };
 });

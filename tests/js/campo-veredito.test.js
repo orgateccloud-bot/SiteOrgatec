@@ -125,3 +125,44 @@ test('colunasIguais: região sem previsão conta como estado "sem" e diz "sem pr
   const linhas = [r('ok'), r('atencao')].map(V.itensDaRegiao);
   assert.match(V.fraseIguais(V.colunasIguais(linhas)), /pulverização \(sem previsão\)/);
 });
+
+const horas = (dia, t0) => Array.from({ length: 24 }, (_, h) => ({ dia, h, t: t0 + Math.sin(h / 24 * Math.PI) * 8, vento: 3 + (h % 5), chuva: h === 15 || h === 16 ? 0.8 : 0 }));
+
+test('serieDoDia: 16 posições, só o dia pedido, horas sem dado ficam nulas', () => {
+  const polo = { horas: horas('2026-11-11', 20).filter((h) => h.h !== 9).concat(horas('2026-11-12', 20)) };
+  const s = V.serieDoDia(polo, '2026-11-11');
+  assert.equal(s.length, 16);
+  assert.equal(s[0].h, 5);
+  assert.equal(s[4], null);   // 09h
+  assert.equal(s[15].h, 20);
+  assert.equal(V.serieDoDia({}, '2026-11-11').filter(Boolean).length, 0);
+});
+
+test('linhaDoDia: SVG com temperatura, vento, chuva, janela favorável e marca de agora; resumo em português', () => {
+  const s = V.serieDoDia({ horas: horas('2026-11-11', 20) }, '2026-11-11');
+  const g = V.linhaDoDia(s, { faixa: 'ooooooaaaaaaaaaa', agora: 11.5 });
+  assert.match(g.svg, /^<svg class="dia-svg"/);
+  for (const c of ['dia-temp', 'dia-vento', 'dia-chuva', 'dia-janela', 'dia-agora']) assert.ok(g.svg.includes(c), c);
+  assert.equal((g.svg.match(/class="dia-janela"/g) || []).length, 1);
+  assert.match(g.resumo, /^Temperatura de \d+ a \d+ °C · vento até \d+ km\/h · chuva de 1,6 mm nas horas úteis$/);
+  assert.equal((g.tabela.match(/<tr>/g) || []).length, 16 + 1);
+});
+
+test('linhaDoDia: sem janela favorável nem agora não desenha essas marcas; sem temperatura não há gráfico', () => {
+  const s = V.serieDoDia({ horas: horas('2026-11-11', 20) }, '2026-11-11');
+  const g = V.linhaDoDia(s, { faixa: 'aaaaaaaaaaaaaaaa', agora: null });
+  assert.ok(!g.svg.includes('dia-janela') && !g.svg.includes('dia-agora'));
+  assert.equal(V.linhaDoDia(V.serieDoDia({}, '2026-11-11')), null);
+});
+
+test('linhaDoDia: hora sem dado interrompe a linha em vez de ligar os pontos', () => {
+  const s = V.serieDoDia({ horas: horas('2026-11-11', 20).filter((h) => h.h !== 12) }, '2026-11-11');
+  const temp = V.linhaDoDia(s, {}).svg.match(/class="dia-temp" d="([^"]+)"/)[1];
+  assert.equal((temp.match(/M/g) || []).length, 2);
+});
+
+test('iconeTempo: um ícone para cada família do boletim; família desconhecida cai em nublado', () => {
+  for (const f of ['sol', 'sol-nuvens', 'nublado', 'chuva', 'chuva-forte', 'trovoada']) assert.match(V.iconeTempo(f), /^<svg class="icone-tempo".*aria-hidden="true"/);
+  assert.equal(V.iconeTempo('granizo'), V.iconeTempo('nublado'));
+  assert.notEqual(V.iconeTempo('chuva'), V.iconeTempo('chuva-forte'));
+});

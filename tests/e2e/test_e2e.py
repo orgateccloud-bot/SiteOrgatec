@@ -1981,9 +1981,9 @@ def test_janela_celular_alvos_de_toque_e_menu_de_setores(navegador, servidor):
     pg.click("[data-subnav-menu] summary")
     expect(pg.locator("[data-subnav-menu] a[href='../rural/cotacoes.html']")).to_be_visible()
     pg.click("[data-subnav-menu] summary")
-    # botões do boletim com pelo menos 44 px de altura (a folha do local tem os chips de 44 px)
-    pequenos = pg.evaluate("""() => [...document.querySelectorAll('[data-campo] button:not([data-aba]):not(.campo-aba):not([data-mapa-play])')]
-        .filter(e => e.offsetParent && !e.closest('dialog') && !e.closest('[data-painel]') && e.getBoundingClientRect().height < 44).map(e => e.className + ' ' + Math.round(e.getBoundingClientRect().height))""")
+    # botões do boletim, abas inclusive, com pelo menos 44 px de altura (a folha do local tem os chips de 44 px)
+    pequenos = pg.evaluate("""() => [...document.querySelectorAll('[data-campo] button')]
+        .filter(e => e.offsetParent && !e.closest('dialog') && e.getBoundingClientRect().height < 43.5).map(e => e.className + ' ' + Math.round(e.getBoundingClientRect().height))""")
     assert not pequenos, pequenos
     _abrir_local(pg)
     altos = pg.evaluate("[...document.querySelectorAll('[data-campo-folha] .campo-aba, [data-campo-fechar]')].map(e => Math.round(e.getBoundingClientRect().height))")
@@ -2067,6 +2067,82 @@ def test_janela_boletim_vencido_fica_em_cinza(navegador, servidor):
     pg2.wait_for_selector(".campo-regioes")
     assert "campo-arquivo" not in (pg2.locator("[data-campo]").get_attribute("class") or "")
     assert not erros and not erros2, (erros, erros2)
+
+
+CONTRASTE_JS = """() => {
+    const lum = c => { const [r, g, b] = c.match(/[\\d.]+/g).slice(0, 3).map(Number).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const fundo = e => { while (e) { const c = getComputedStyle(e).backgroundColor; const m = c.match(/[\\d.]+/g); if (m && (m.length < 4 || Number(m[3]) > 0.95)) return c; e = e.parentElement; } return 'rgb(255,255,255)'; };
+    const razao = e => { const a = lum(getComputedStyle(e).color), b = lum(fundo(e)); const [x, y] = a > b ? [a, b] : [b, a]; return (x + 0.05) / (y + 0.05); };
+    const alvos = ['.campo-selo.campo-atencao', '.campo-selo.campo-ok', '.campo-card-atencao .campo-op-txt', '.campo-card-ok .campo-op-txt', '.campo-glifo span', '.campo-op-nome', '.campo-veredito-linha'];
+    return alvos.map(s => { const e = document.querySelector(s); return e ? [s, +razao(e).toFixed(2)] : null; }).filter(Boolean);
+}"""
+
+
+def test_janela_linha_do_dia_em_svg_com_tabela_para_leitor_de_tela(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    grafico = pg.locator("[data-campo-grafico] .dia-svg")
+    expect(grafico).to_have_count(1)
+    assert grafico.get_attribute("aria-label").startswith("Temperatura de ")
+    assert pg.locator("[data-campo-grafico] .dia-temp").get_attribute("d").startswith("M")
+    linhas = pg.locator("[data-campo-grafico] .sr-only tbody tr").count()
+    assert 1 <= linhas <= 16, linhas  # uma linha por hora com previsão entre 05h e 20h
+    expect(pg.locator("[data-campo-linhadia-titulo]")).to_contain_text("pulverização")
+    pg.click(".campo-glifo[data-o=colheita]")  # a operação escolhida muda o título e o sombreado das horas favoráveis
+    expect(pg.locator("[data-campo-linhadia-titulo]")).to_contain_text("colheita")
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375  # a tabela só para leitor de tela não pode alargar a página
+    assert not erros, erros
+
+
+def test_janela_sete_dias_com_icones_de_tempo(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    pg.click("[data-aba=semana]")
+    tempos = pg.locator(".campo-semana .campo-tempo")
+    assert tempos.count() >= len(b["regioes"])
+    assert pg.locator(".campo-semana .campo-tempo .icone-tempo").count() == tempos.count()
+    assert pg.locator(".campo-semana .icone-tempo[aria-hidden=true]").count() == tempos.count()  # o texto ("Chuva fraca") continua dizendo o tempo
+    assert not erros, erros
+
+
+def test_janela_ao_sol_liga_a_paleta_clara_lembra_e_mantem_o_contraste(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    sol = pg.locator("[data-campo-sol]")
+    expect(sol).to_have_attribute("aria-pressed", "false")
+    escuro = pg.evaluate(CONTRASTE_JS)
+    assert escuro and all(r >= 4.5 for _, r in escuro), escuro
+    sol.click()
+    expect(sol).to_have_attribute("aria-pressed", "true")
+    assert pg.evaluate("document.documentElement.getAttribute('data-tema')") == "azul-fl"
+    assert pg.evaluate("localStorage.getItem('orgatec.tema')") == "azul-fl"  # a mesma chave do botão "Cores"
+    claro = pg.evaluate(CONTRASTE_JS)
+    assert claro and all(r >= 4.5 for _, r in claro), claro
+    pg.reload()
+    pg.wait_for_selector(".campo-op")
+    expect(pg.locator("[data-campo-sol]")).to_have_attribute("aria-pressed", "true")
+    pg.click("[data-campo-sol]")
+    assert pg.evaluate("document.documentElement.getAttribute('data-tema')") == "azul-fl-esc"
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros, erros
+
+
+@pytest.mark.parametrize("tema", ["verde", "azul", "vinho", "ciano", "noite", "azul-fl", "azul-fl-esc"])
+def test_janela_contraste_do_texto_em_todas_as_paletas(navegador, servidor, tema):
+    b = _boletim_automatico()
+    ctx = navegador.new_context(viewport={"width": 375, "height": 812})
+    ctx.add_init_script(f"localStorage.setItem('orgatec.tema', '{tema}')")
+    pg = ctx.new_page()
+    for padrao, f in _rotas_campo(b).items():
+        pg.route(padrao, f)
+    pg.goto(f"{servidor}/rural/janela-de-campo.html")
+    pg.wait_for_selector(".campo-op")
+    assert pg.evaluate("document.documentElement.getAttribute('data-tema')") == tema
+    medidas = pg.evaluate(CONTRASTE_JS)
+    assert medidas and all(r >= 4.5 for _, r in medidas), (tema, medidas)
 
 
 # ---------- Página Agro: resumo do dia, pontos da reforma recolhidos por tema (Fase 4)

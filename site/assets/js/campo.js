@@ -176,6 +176,14 @@
     return dia.charAt(0).toUpperCase() + dia.slice(1) + ' ' + dataCurta(b.dia).slice(0, 5);
   }
 
+  /* "Ao sol": liga a paleta clara (Azul flutuante) na mesma escolha que o botão "Cores" grava (orgatec.tema); desligar volta ao padrão. */
+  var SOL_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg>';
+  function sincronizarSol() {
+    var bt = alvo.querySelector('[data-campo-sol]');
+    if (bt) bt.setAttribute('aria-pressed', String(document.documentElement.getAttribute('data-escuro') === 'nao'));
+  }
+  if (O.tema && window.MutationObserver) new MutationObserver(sincronizarSol).observe(document.documentElement, { attributes: true, attributeFilter: ['data-escuro'] });
+
   function folhaHtml() {
     return '<dialog class="campo-folha" data-campo-folha aria-labelledby="campoFolhaTitulo"><div class="campo-folha-corpo">' +
       '<div class="campo-folha-topo"><h3 id="campoFolhaTitulo" class="text-lg font-bold text-tinta">Onde você trabalha</h3>' +
@@ -260,6 +268,11 @@
 
   function painelHoras() {
     return '<div class="campo-fatos" data-campo-fatos></div>' +
+      (b.polos ? '<div class="grid gap-2" data-campo-linhadia><p class="eyebrow" data-campo-linhadia-titulo></p><div class="campo-linhadia" data-campo-grafico></div>' +
+        '<div class="campo-linhadia-eixo" aria-hidden="true"><span>05h</span><span>08h</span><span>11h</span><span>14h</span><span>17h</span><span>20h</span></div>' +
+        '<ul class="campo-linhadia-legenda" aria-hidden="true"><li><i class="dia-chave dia-chave-temp"></i>temperatura</li><li><i class="dia-chave dia-chave-vento"></i>vento</li>' +
+        '<li><i class="dia-chave dia-chave-chuva"></i>chuva</li><li><i class="dia-chave dia-chave-janela"></i>horas favoráveis da operação</li></ul>' +
+        '<p class="text-sm text-tinta-suave" data-campo-linhadia-txt></p></div>' : '') +
       '<div class="grid gap-2"><p class="eyebrow">Condição ao longo do dia na região (horário de Brasília)</p>' +
         '<div class="campo-dia" role="img" data-campo-linha></div>' +
         '<div class="campo-horas" aria-hidden="true"><span>00h</span><span>06h</span><span>10h</span><span>12h</span><span>15h</span><span><span>18h</span><span>24h</span></span></div>' +
@@ -340,6 +353,7 @@
         '<button type="button" class="campo-local-botao" data-campo-local aria-haspopup="dialog" aria-label="Escolher região e polo">' +
           '<span class="campo-local-data" data-campo-data></span><span class="campo-local-nome" data-campo-nome></span><span class="campo-local-seta" aria-hidden="true">▾</span></button>' +
         '<div class="campo-local-mini" data-campo-mini aria-hidden="true"></div>' +
+        (O.tema ? '<button type="button" class="campo-sol" data-campo-sol aria-pressed="false" aria-label="Ao sol: paleta clara de alto contraste">' + SOL_SVG + '<span class="campo-sol-rot">Ao sol</span></button>' : '') +
       '</div>' +
       folhaHtml() +
       '<div class="campo-grade">' +
@@ -369,6 +383,7 @@
     desenhar();
     observarMapa();
     observarBarra();
+    sincronizarSol();
   }
 
   /* No desktop o satélite fica à vista, mas as imagens da NASA só são pedidas quando o painel chega perto da tela
@@ -394,7 +409,7 @@
       p.regioes.map(function (r) {
         return '<tr><th scope="row">' + esc(r.nome) + '</th>' + r.dias.map(function (d) {
           if (!d.familia) return '<td class="campo-dia-sem">—</td>';
-          return '<td><span class="campo-tempo campo-tempo-' + esc(d.familia) + '">' + esc(d.rotulo) + '</span>' +
+          return '<td><span class="campo-tempo campo-tempo-' + esc(d.familia) + '">' + VD.iconeTempo(d.familia) + esc(d.rotulo) + '</span>' +
             '<span class="campo-temp">' + esc(d.max) + '° <small>' + esc(d.min) + '°</small></span>' +
             '<span class="campo-mm">' + (d.chuva >= 1 ? esc(d.chuva) + ' mm' : 'sem chuva') + '</span></td>';
         }).join('') + '</tr>';
@@ -434,6 +449,18 @@
         glifoSvg(g.estado) + '<span>' + esc(g.curto) + '</span></button></li>';
     }).join('');
     q('[data-campo-mini]').innerHTML = vd.glifos.map(function (g) { return glifoSvg(g.estado); }).join('');
+    var graf = q('[data-campo-grafico]');
+    if (graf) {
+      var itemSel = itens.filter(function (x) { return x.op === selO; })[0], hora = new Date(Date.now() - 3 * 3600000);
+      var agora = b.dia === HOJE ? hora.getUTCHours() + hora.getUTCMinutes() / 60 : null;
+      var linha = polo ? VD.linhaDoDia(VD.serieDoDia(polo, b.dia), { faixa: itemSel && itemSel.faixa, agora: agora }) : null;
+      q('[data-campo-linhadia]').hidden = !linha;
+      if (linha) {
+        graf.innerHTML = linha.svg + linha.tabela;
+        q('[data-campo-linhadia-titulo]').textContent = 'Linha do dia em ' + local + ' · horas favoráveis: ' + OPERACOES.filter(function (x) { return x.id === selO; })[0].nome.toLowerCase();
+        q('[data-campo-linhadia-txt]').textContent = linha.resumo + '.';
+      }
+    }
     q('[data-campo-fatos]').innerHTML = [['Céu', r.ceu], ['Temperatura', r.temp], ['Chuva', r.chuva], ['Vento', r.vento]]
       .map(function (f) { return '<div class="campo-fato"><span class="eyebrow">' + f[0] + '</span><span>' + esc(f[1]) + '</span></div>'; }).join('');
     q('[data-campo-alertas]').innerHTML = (r.alertas || []).map(function (a) { return selo(a[0], a[1]); }).join('');
@@ -499,6 +526,7 @@
   }
 
   alvo.addEventListener('click', function (ev) {
+    if (ev.target.closest('[data-campo-sol]')) { O.tema.escolher(document.documentElement.getAttribute('data-escuro') === 'nao' ? O.tema.PADRAO : 'azul-fl'); sincronizarSol(); return; }
     if (ev.target.closest('[data-campo-local]')) { abrirFolha(); return; }
     if (ev.target.closest('[data-campo-fechar]') || (ev.target.hasAttribute && ev.target.hasAttribute('data-campo-folha'))) { fecharFolha(); return; }
     var bt = ev.target.closest('button[data-r], button[data-o], button[data-p]');
