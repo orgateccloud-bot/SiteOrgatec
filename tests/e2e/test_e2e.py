@@ -2145,6 +2145,40 @@ def test_janela_contraste_do_texto_em_todas_as_paletas(navegador, servidor, tema
     assert medidas and all(r >= 4.5 for _, r in medidas), (tema, medidas)
 
 
+def test_janela_compartilhar_no_whatsapp_leva_o_veredito_e_o_site_so_em_producao(navegador, servidor):
+    from urllib.parse import parse_qs, urlparse
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    link = pg.locator("[data-campo-compartilhar]")
+    expect(link).to_have_attribute("target", "_blank")
+    expect(link).to_have_attribute("rel", "noopener")
+    expect(link).to_have_text("Compartilhar no WhatsApp")
+    assert link.evaluate("e => e.getBoundingClientRect().height") >= 44
+
+    def texto():
+        href = pg.locator("[data-campo-compartilhar]").get_attribute("href")
+        assert href.startswith("https://wa.me/?text=")
+        return parse_qs(urlparse(href).query)["text"][0]
+
+    em_homologacao = texto()
+    assert pg.locator(".campo-veredito-titulo").inner_text() in em_homologacao
+    assert "Janela de Campo · " in em_homologacao and "MET Norway" in em_homologacao and "INMET" in em_homologacao
+    assert "orgatec.io" not in em_homologacao  # as peças das redes não levam o site em homologação
+    pg.evaluate("window.Orgatec.config.ambiente = 'producao'")
+    pg.click(".campo-glifo[data-o=colheita]")  # redesenha o veredito
+    assert "https://orgatec.io/rural/janela-de-campo.html" in texto()
+    assert not erros, erros
+
+
+def test_janela_boletim_vencido_nao_tem_botao_de_compartilhar(navegador, servidor):
+    sem_auto = {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=sem_auto)
+    pg.wait_for_selector(".campo-op")
+    assert pg.locator("[data-campo-compartilhar]").count() == 0
+    assert not erros, erros
+
+
 # ---------- Página Agro: resumo do dia, pontos da reforma recolhidos por tema (Fase 4)
 
 def _agro(navegador, servidor, vp="desktop", boletim=None, rotas=None):

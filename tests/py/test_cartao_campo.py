@@ -214,3 +214,18 @@ def test_boletim_que_falha_retira_o_cartao_vencido(monkeypatch):
     monkeypatch.setattr(G, "gerar", lambda: (_ for _ in ()).throw(G.FonteIndisponivel("fora do ar")))
     monkeypatch.setattr(C, "retirar_vencido", lambda: retirou.append(True))
     assert G.main([]) == 1 and retirou == [True]
+
+
+def test_cartao_traz_o_veredito_primeiro_e_os_glifos_da_pagina(boletim):
+    """V4 da Janela de Campo 2: o veredito do boletim vem antes da tabela, escrito pela mesma regra da página (campo-veredito.js)."""
+    ver = C.veredito(boletim)
+    html = C.montar_html(boletim, C.rotulos(boletim["dia"]))
+    assert ver["titulo"] in html
+    assert html.index('class="vt"') < html.index('class="info"') < html.index('class="tabela"')
+    assert all(f"gl-{e}" in html for e in ("ok", "atencao"))
+    assert "Sem previsão" in html  # a legenda tem os quatro glifos
+    assert len(ver["matriz"]) == len(boletim["regioes"]) and all(len(linha) == 5 for linha in ver["matriz"])
+
+
+def test_veredito_sem_regioes_nao_quebra_o_cartao(boletim):
+    assert C.veredito({"regioes": []}) is None

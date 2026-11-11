@@ -171,6 +171,15 @@
     return '<svg class="glifo glifo-' + (corpo ? e : 'sem') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (corpo || '<circle cx="12" cy="12" r="10"/>') + '</svg>';
   }
 
+  /* O texto vai pronto para o WhatsApp (o link só abre a conversa; nada é enviado sozinho). O endereço do site entra só com o site
+     em produção, como nas peças do marketing (tools/cartao_campo.py). */
+  function linkWhatsApp(vd, local) {
+    var cfg = O.config || {}, linhas = ['*Janela de Campo · ' + local + ' · ' + dataBarra() + '*', vd.titulo].concat(vd.linhas);
+    linhas.push('Previsão: MET Norway. Não substitui os avisos oficiais do INMET.');
+    if (cfg.ambiente === 'producao') linhas.push('https://orgatec.io/rural/janela-de-campo.html');
+    return 'https://wa.me/?text=' + encodeURIComponent(linhas.join('\n'));
+  }
+
   function dataBarra() {
     var d = new Date(b.dia + 'T12:00:00Z'), dia = DSEM[d.getUTCDay()];
     return dia.charAt(0).toUpperCase() + dia.slice(1) + ' ' + dataCurta(b.dia).slice(0, 5);
@@ -267,19 +276,22 @@
   }
 
   function painelHoras() {
-    return '<div class="campo-fatos" data-campo-fatos></div>' +
-      (b.polos ? '<div class="grid gap-2" data-campo-linhadia><p class="eyebrow" data-campo-linhadia-titulo></p><div class="campo-linhadia" data-campo-grafico></div>' +
-        '<div class="campo-linhadia-eixo" aria-hidden="true"><span>05h</span><span>08h</span><span>11h</span><span>14h</span><span>17h</span><span>20h</span></div>' +
-        '<ul class="campo-linhadia-legenda" aria-hidden="true"><li><i class="dia-chave dia-chave-temp"></i>temperatura</li><li><i class="dia-chave dia-chave-vento"></i>vento</li>' +
-        '<li><i class="dia-chave dia-chave-chuva"></i>chuva</li><li><i class="dia-chave dia-chave-janela"></i>horas favoráveis da operação</li></ul>' +
-        '<p class="text-sm text-tinta-suave" data-campo-linhadia-txt></p></div>' : '') +
-      '<div class="grid gap-2"><p class="eyebrow">Condição ao longo do dia na região (horário de Brasília)</p>' +
+    // As duas barras por período e por hora ficam recolhidas no celular (a faixa de cada cartão e a linha do dia já as cobrem) e abertas no desktop.
+    var barras = '<div class="grid gap-2"><p class="eyebrow">Condição ao longo do dia na região (horário de Brasília)</p>' +
         '<div class="campo-dia" role="img" data-campo-linha></div>' +
         '<div class="campo-horas" aria-hidden="true"><span>00h</span><span>06h</span><span>10h</span><span>12h</span><span>15h</span><span><span>18h</span><span>24h</span></span></div>' +
         '<p class="text-sm text-tinta-suave" data-campo-nota></p></div>' +
       (b.polos ? '<div class="grid gap-2" data-campo-polo-bloco><p class="eyebrow">Hora a hora no polo escolhido</p>' +
         '<div class="campo-horaria" role="img" data-campo-horaria></div><div class="campo-horaria-rotulos" aria-hidden="true"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></div>' +
         '<p class="text-sm text-tinta-suave" data-campo-polo-txt></p></div>' : '');
+    var detalhesHoras = b.polos ? '<details class="campo-detalhes-horas" data-campo-detalhes-horas' + (largo.matches ? ' open' : '') + '><summary>Detalhes por período e por hora</summary><div class="grid gap-4 pt-3">' + barras + '</div></details>' : barras;
+    return '<div class="campo-fatos" data-campo-fatos></div>' +
+      (b.polos ? '<div class="grid gap-2" data-campo-linhadia><p class="eyebrow" data-campo-linhadia-titulo></p><div class="campo-linhadia" data-campo-grafico></div>' +
+        '<div class="campo-linhadia-eixo" aria-hidden="true"><span>05h</span><span>08h</span><span>11h</span><span>14h</span><span>17h</span><span>20h</span></div>' +
+        '<ul class="campo-linhadia-legenda" aria-hidden="true"><li><i class="dia-chave dia-chave-temp"></i>temperatura</li><li><i class="dia-chave dia-chave-vento"></i>vento</li>' +
+        '<li><i class="dia-chave dia-chave-chuva"></i>chuva</li><li><i class="dia-chave dia-chave-janela"></i>horas favoráveis da operação</li></ul>' +
+        '<p class="text-sm text-tinta-suave" data-campo-linhadia-txt></p></div>' : '') +
+      detalhesHoras;
   }
 
   function painelSemana() {
@@ -442,7 +454,8 @@
       vd.linhas.map(function (l) { return '<p class="campo-veredito-linha">' + esc(l) + '</p>'; }).join('') +
       (vd.tipo === 'normal' ? '<p class="campo-veredito-fonte">' + vd.contagem.favoraveis + ' de ' + vd.contagem.total + ' favoráveis · ' + esc(local) +
         (vd.parcial ? ' · <span class="campo-veredito-aviso">previsão parcial: ' + vd.parcial.de + ' de ' + vd.parcial.total + ' horas</span>' : '') +
-        (b.automatico ? ' · MET Norway' : '') + '</p>' : '');
+        (b.automatico ? ' · MET Norway' : '') + '</p>' +
+        '<a class="og-btn og-btn-contorno og-btn-md campo-compartilhar" data-campo-compartilhar target="_blank" rel="noopener" href="' + esc(linkWhatsApp(vd, local)) + '">Compartilhar no WhatsApp</a>' : '');
     q('[data-campo-glifos]').innerHTML = vd.glifos.map(function (g) {
       var nome = OPERACOES.filter(function (x) { return x.id === g.op; })[0].nome, rot = g.estado === 'sem' ? 'sem previsão' : ESTADOS[g.estado].rotulo;
       return '<li><button type="button" class="campo-glifo campo-glifo-' + g.estado + '" data-o="' + g.op + '" aria-pressed="' + (g.op === selO) + '" aria-label="' + esc(nome + ': ' + rot) + '">' +
@@ -567,6 +580,8 @@
     garantirMapa();
     var d = alvo.querySelector('[data-campo-comparar]');
     if (d) d.open = true;
+    var dh = alvo.querySelector('[data-campo-detalhes-horas]');
+    if (dh) dh.open = true;
   });
 
   // "Minha atividade": o link das cotações e notícias abre o card da atividade escolhida (a escolha fica só neste navegador,

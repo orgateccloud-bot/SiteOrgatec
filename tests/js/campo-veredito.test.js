@@ -166,3 +166,31 @@ test('iconeTempo: um ícone para cada família do boletim; família desconhecida
   assert.equal(V.iconeTempo('granizo'), V.iconeTempo('nublado'));
   assert.notEqual(V.iconeTempo('chuva'), V.iconeTempo('chuva-forte'));
 });
+
+test('vereditoDasRegioes: o que é igual em todas as regiões vem dito uma vez, o que varia aponta para a tabela', () => {
+  const rs = [regiao(['atencao', 'ok', 'atencao', 'atencao', 'ok']), regiao(['atencao', 'ok', 'ok', 'atencao', 'ok']), regiao(['atencao', 'ok', 'ok', 'ok', 'ok'])];
+  const v = V.vereditoDasRegioes(rs);
+  assert.equal(v.titulo, 'Favorável em todas as regiões: plantio e máquinas.');
+  assert.deepEqual(v.linhas, ['Com restrição em todas as regiões: pulverização.', 'Varia por região: colheita e manejo de animais.']);
+  assert.equal(v.matriz.length, 3);
+  assert.deepEqual(v.matriz[0], ['atencao', 'ok', 'atencao', 'atencao', 'ok']);
+});
+
+test('vereditoDasRegioes: tudo igual, tudo varia, uma região só e nenhuma', () => {
+  const todas = (e) => V.vereditoDasRegioes([regiao([e, e, e, e, e]), regiao([e, e, e, e, e])]);
+  assert.equal(todas('ok').titulo, 'Favorável em todas as regiões: pulverização, plantio, colheita, manejo de animais e máquinas.');
+  assert.deepEqual(todas('ok').linhas, []);
+  const varia = V.vereditoDasRegioes([regiao(['ok', 'ok', 'ok', 'ok', 'ok']), regiao(['atencao', 'atencao', 'atencao', 'atencao', 'atencao'])]);
+  assert.equal(varia.titulo, 'Varia por região: pulverização, plantio, colheita, manejo de animais e máquinas.');
+  const uma = V.vereditoDasRegioes([regiao(['atencao', 'ok', 'ok', 'ok', 'ok'])]);
+  assert.equal(uma.titulo, 'Favorável hoje: plantio, colheita, manejo de animais e máquinas.');
+  assert.equal(V.vereditoDasRegioes([]), null);
+});
+
+test('vereditoDasRegioes: região sem previsão aparece como sem previsão na matriz e no texto', () => {
+  const sem = 'Sem previsão para as horas úteis de hoje (05h às 20h).';
+  const r = () => ({ ops: { pulv: ['atencao', sem, 'x'], plantio: ['ok', 'x', 'x'], colheita: ['ok', 'x', 'x'], animais: ['ok', 'x', 'x'], maquinas: ['ok', 'x', 'x'] } });
+  const v = V.vereditoDasRegioes([r(), r()]);
+  assert.ok(v.linhas.includes('Sem previsão em todas as regiões: pulverização.'));
+  assert.equal(v.matriz[0][0], 'sem');
+});

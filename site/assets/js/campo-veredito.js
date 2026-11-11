@@ -202,6 +202,21 @@
     return { svg: '<svg class="dia-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + resumo + '" focusable="false">' + corpo + '</svg>', resumo: resumo, tabela: tabela };
   }
 
-  return { iconeTempo: iconeTempo, serieDoDia: serieDoDia, linhaDoDia: linhaDoDia, OPS: OPS, ROTULOS: ROTULOS, colunasIguais: colunasIguais, fraseIguais: fraseIguais, HORAS_UTEIS: HORAS_UTEIS, janelaCurta: janelaCurta, faixa: faixa, trechos: trechos, descreverFaixa: descreverFaixa,
+  /* Veredito do boletim inteiro (o cartão das redes não tem um polo): as operações em que todas as regiões têm o mesmo
+     estado são ditas uma vez; as que variam, apontam para a tabela. Uma região só usa o veredito do dia dela. */
+  function vereditoDasRegioes(regioes) {
+    var linhas = (regioes || []).map(itensDaRegiao);
+    if (!linhas.length) return null;
+    var matriz = linhas.map(function (l) { return l.map(function (i) { return i.estado; }); });
+    if (linhas.length === 1) { var u = veredito('vigente', linhas[0]); return { titulo: u.titulo, linhas: u.linhas, matriz: matriz }; }
+    var cols = colunasIguais(linhas), g = { ok: [], atencao: [], evitar: [], sem: [] }, variam = [];
+    cols.forEach(function (c) { if (c.igual) g[c.estado].push(nome(c.op)); else variam.push(nome(c.op)); });
+    var rot = { ok: 'Favorável', atencao: 'Com restrição', evitar: 'Evitar', sem: 'Sem previsão' };
+    var frases = ['ok', 'atencao', 'evitar', 'sem'].filter(function (e) { return g[e].length; }).map(function (e) { return rot[e] + ' em todas as regiões: ' + lista(g[e]) + '.'; });
+    if (variam.length) frases.push('Varia por região: ' + lista(variam) + '.');
+    return { titulo: frases.shift(), linhas: frases, matriz: matriz };
+  }
+
+  return { vereditoDasRegioes: vereditoDasRegioes, iconeTempo: iconeTempo, serieDoDia: serieDoDia, linhaDoDia: linhaDoDia, OPS: OPS, ROTULOS: ROTULOS, colunasIguais: colunasIguais, fraseIguais: fraseIguais, HORAS_UTEIS: HORAS_UTEIS, janelaCurta: janelaCurta, faixa: faixa, trechos: trechos, descreverFaixa: descreverFaixa,
     itensDoPolo: itensDoPolo, itensDaRegiao: itensDaRegiao, veredito: veredito, legendaJanela: legendaJanela, maiuscula: maiuscula, lista: lista };
 });
