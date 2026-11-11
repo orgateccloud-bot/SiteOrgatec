@@ -1,6 +1,6 @@
 # Janela de Campo 2: o veredito primeiro, legível ao sol, uma só língua visual (planejamento)
 
-- **Situação:** V0 em andamento (10/11/2026): **mockups prontos no Figma, aguardando a sua escolha entre as opções A e B** (seção 10). Nenhum código do site foi alterado.
+- **Situação:** V0 concluída em 11/11/2026: **você escolheu a opção A** (seção 10). A V1 aguarda o seu "execute". Nenhum código do site foi alterado.
 - **Branches previstas:** `ideia/campo-visual-1` a `ideia/campo-visual-4` (uma por fase, como nas Fases 0 a 6)
 - **Mockups (V0):** [arquivo no Figma](https://www.figma.com/design/hbSLuSGZ2Zx7gvxzpPh6vt) (criado nos rascunhos da conta da ORGATEC) e imagens na pasta `campo-visual-2/`.
 - **Prévia:** ainda não existe. Cada fase gera a sua com `python tools/previa.py`.
@@ -251,7 +251,13 @@ Vencido (mais de 18 h): sem veredito, glifos em cinza e a frase "Não use esta p
 - No desktop a coluna da direita fica fixa ao rolar (satélite sempre à vista), como hoje; no desenho ela termina antes da esquerda de propósito.
 - A faixa horária do **cartão da região** (que só tem texto de janela) é a interseção das faixas dos polos, calculada no navegador.
 
-### O que falta você decidir para fechar a V0
+### Decisão (11/11/2026)
+
+**Opção A no celular**, com o desktop como desenhado. A faixa da B fica de fora por ora (pode voltar como aba "Dia" numa fase posterior).
+
+Para os itens abaixo, que você ainda não respondeu, a V1 segue **o que o plano propõe**, e você muda quando quiser: estados em forma (cheio, vazado, hachurado, pontilhado); Ao sol só por toque; sem ícones de tempo, sem botão de WhatsApp e sem modo offline na V1 (entram nas fases V3 a V5).
+
+### O que ainda está em aberto
 
 1. **A ou B** no celular. Uma terceira via: A como padrão e a faixa da B como aba "Dia" dentro da A. Se escolher esta, eu desenho antes de começar a V1.
 2. **Estados em forma** (cheio, vazado, hachurado, pontilhado): confirma?
