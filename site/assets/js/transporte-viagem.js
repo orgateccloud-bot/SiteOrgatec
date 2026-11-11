@@ -23,7 +23,7 @@
         kpi(j.pernoites + ' / ' + j.pausas, 'pernoites / pausas') +
         kpi(OT.brl.format(Number(d.total)), 'despesa prevista') +
         kpi(OT.brl.format(Number(d.custo_por_km)), 'custo por km') +
-      '</div>' +
+      '</div>' + cartaoAlertas(opcoes) +
       '<div class="cartao mapa-cartao">' +
         '<div class="mapa-topo"><h2>Mapa da viagem ' + (v.status ? '<span class="tag t-ok">' + esc(v.status.replace('_', ' ')) + '</span>' : '') + '</h2>' +
           '<span class="fonte" data-mapa-fonte></span></div>' +
@@ -51,6 +51,74 @@
     montarMapa(alvo, v, opcoes);
     ligarPainel(alvo, v, opcoes);
     if (opcoes.editavel && opcoes.aoAjustar) ligarAjustes(alvo, opcoes.aoAjustar);
+  }
+
+  /* ---------- Alertas de clima e desastres na rota (só com ORGATEC_TRANSPORTE_ALERTAS) ---------- */
+  var ROTULO_ORIGEM = { inmet: 'INMET', firms: 'NASA FIRMS', inpe: 'INPE Queimadas' };
+  var ESTADO_FONTE = { ok: ['t-ok', 'ok'], indisponivel: ['t-erro', 'indisponível'], desligada: ['t-simulado', 'desligada'] };
+  var ESTADO_ENVIO = { enviada: 'enviada', entregue: 'entregue', lida: 'lida', falhou: 'falhou', sem_consentimento: 'sem consentimento',
+    bloqueada_teto: 'bloqueada pelo teto', canal_desligado: 'canal desligado' };
+  var VERIFICACAO_ATRASADA_MIN = 40;  // o job roda a cada 15 min
+
+  function linhaFontes(d) {
+    var chaves = Object.keys(d.fontes || {});
+    if (!d.atualizado_em || !chaves.length) {
+      return '<div class="msg aviso">A verificação automática ainda não rodou para esta transportadora. Sem verificação, a falta de alerta não quer dizer que não há risco.</div>';
+    }
+    var chips = chaves.map(function (k) {
+      var f = d.fontes[k], e = ESTADO_FONTE[f.estado] || ['t-aviso', f.estado];
+      return '<span class="fonte-chip" title="' + esc(f.credito + (f.detalhe ? ' — ' + f.detalhe : '')) + '">' + esc(ROTULO_ORIGEM[k] || k) + ' <span class="tag ' + e[0] + '">' + esc(e[1]) + '</span></span>';
+    }).join('');
+    var min = Math.round((Date.now() - new Date(d.atualizado_em).getTime()) / 60000), avisos = [];
+    var fora = chaves.filter(function (k) { return d.fontes[k].estado === 'indisponivel'; }).map(function (k) { return ROTULO_ORIGEM[k] || k; });
+    if (fora.length) avisos.push(fora.join(' e ') + ' sem resposta na última verificação: a falta de alerta dessa fonte não quer dizer que não há risco.');
+    if (min > VERIFICACAO_ATRASADA_MIN) avisos.push('A última verificação foi há ' + min + ' min (o normal é a cada 15 min).');
+    return '<div class="fontes-alerta">' + chips + '<span class="fonte">verificado em ' + esc(OT.diaHora.format(new Date(d.atualizado_em))) + '</span></div>' +
+      avisos.map(function (t) { return '<div class="msg aviso">' + esc(t) + '</div>'; }).join('');
+  }
+
+  function itemAlerta(a, opcoes) {
+    var al = a.alerta, t = Mapa.TIPO_ALERTA[al.tipo] || Mapa.TIPO_ALERTA.outro, ativo = a.estado === 'ativo';
+    var cor = Mapa.COR_GRAVIDADE[al.gravidade] || '#ea580c';
+    var quando = a.chegada_prevista ? OT.diaHora.format(new Date(a.chegada_prevista)) : 'sem dado';
+    return '<li class="alerta-item' + (ativo ? '' : ' encerrado') + '" style="--g:' + cor + '">' +
+      '<div class="alerta-topo"><span class="alerta-icone" aria-hidden="true">' + esc(t[1]) + '</span><b>' + esc(t[0]) + '</b>' +
+        '<span class="tag tag-g">' + esc(Mapa.ROTULO_GRAVIDADE[al.gravidade] || al.gravidade) + '</span>' +
+        (ativo ? '' : ' <span class="tag t-simulado">' + esc(a.estado) + '</span>') + (a.visto ? ' <span class="tag t-ok">visto</span>' : '') + '</div>' +
+      '<div>' + esc(al.titulo) + '</div>' +
+      '<small>km ' + OT.num1.format(a.km_ini) + (a.km_fim > a.km_ini ? ' a ' + OT.num1.format(a.km_fim) : '') + ' · chega por volta de ' + esc(quando) +
+        ' (' + (a.posicao_fonte === 'telemetria' ? 'pela telemetria' : 'pelo plano') + ') · vale até ' + esc(OT.diaHora.format(new Date(al.fim))) + '</small>' +
+      ((al.riscos || al.instrucoes) ? '<details><summary class="fonte">riscos e o que fazer</summary><p>' + esc(al.riscos || '') + '</p><p><b>' + esc(al.instrucoes || '') + '</b></p></details>' : '') +
+      '<div class="fonte">Fonte: ' + (al.link ? '<a href="' + esc(al.link) + '" target="_blank" rel="noopener noreferrer">' + esc(al.fonte) + '</a>' : esc(al.fonte)) + '</div>' +
+      '<div class="acoes">' + (a.lat != null ? '<button type="button" class="mini sec" data-focar="alerta-' + esc(a.id) + '">ver no mapa</button>' : '') +
+        (ativo && !a.visto && opcoes.aoMarcarVisto ? '<button type="button" class="mini" data-visto="' + esc(a.id) + '">marcar como visto</button>' : '') + '</div></li>';
+  }
+
+  function tabelaEnvios(coms) {
+    if (!coms || !coms.length) return '';
+    return '<details><summary>Avisos ao motorista <span class="fonte">(' + coms.length + ')</span></summary><div class="rolagem"><table><thead><tr><th>Quando</th><th>Canal</th><th>Situação</th><th>Destino</th></tr></thead><tbody>' +
+      coms.map(function (c) {
+        var ruim = ['falhou', 'sem_consentimento', 'bloqueada_teto', 'canal_desligado'].indexOf(c.estado) >= 0;
+        return '<tr><td>' + esc(OT.diaHora.format(new Date(c.enviada_em))) + '</td><td>' + esc(c.canal === 'sms' ? 'SMS' : 'WhatsApp') + '</td>' +
+          '<td><span class="tag ' + (ruim ? 't-erro' : 't-ok') + '">' + esc(ESTADO_ENVIO[c.estado] || c.estado) + '</span>' + (c.detalhe ? '<div class="fonte">' + esc(c.detalhe) + '</div>' : '') + '</td>' +
+          '<td class="fonte">' + esc(c.destino || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div></details>';
+  }
+
+  function cartaoAlertas(opcoes) {
+    var d = opcoes.alertas;
+    if (!d) return '';
+    var ativos = (d.alertas || []).filter(function (a) { return a.estado === 'ativo'; });
+    var outros = (d.alertas || []).filter(function (a) { return a.estado !== 'ativo'; }).slice(0, 5);
+    var corpo = ativos.length ? '<ul class="lista-alertas">' + ativos.map(function (a) { return itemAlerta(a, opcoes); }).join('') + '</ul>'
+      : '<p class="vazio-curto">Nenhum alerta ativo no trecho que falta' + (d.atualizado_em ? '' : ' (sem verificação ainda)') + '.</p>';
+    return '<div class="cartao cartao-alertas"><div class="mapa-topo"><h2>Alertas de clima e desastres no trajeto ' +
+        (ativos.length ? '<span class="tag t-erro">' + ativos.length + ' ativo(s)</span>' : '') + '</h2></div>' +
+      linhaFontes(d) + corpo +
+      (outros.length ? '<details><summary class="fonte">Encerrados recentes (' + outros.length + ')</summary><ul class="lista-alertas">' +
+        outros.map(function (a) { return itemAlerta(a, opcoes); }).join('') + '</ul></details>' : '') +
+      tabelaEnvios(opcoes.comunicacoes) +
+      '<p class="fonte">Interdição de rodovia não tem fonte oficial em tempo real (PRF, DNIT e ANTT não publicam): registre em Bloqueios. Deslizamento e enchente aparecem só pelo aviso de chuva do INMET.</p></div>';
   }
 
   function kpi(valor, rotulo) { return '<div class="kpi"><b>' + esc(valor) + '</b><span>' + esc(rotulo) + '</span></div>'; }
@@ -158,6 +226,9 @@
     alvo.querySelectorAll('[data-focar]').forEach(function (b) {
       b.addEventListener('click', function () { if (mapaAtivo()) mapa.inst.focar(b.dataset.focar); });
     });
+    alvo.querySelectorAll('[data-visto]').forEach(function (b) {
+      b.addEventListener('click', function () { b.disabled = true; opcoes.aoMarcarVisto(b.dataset.visto); });
+    });
     var rec = alvo.querySelector('[data-recalcular]');
     if (rec) rec.addEventListener('click', function () { rec.disabled = true; rec.textContent = 'Recalculando…'; opcoes.aoRecalcular(); });
     alvo.querySelectorAll('[data-remover]').forEach(function (b) {
@@ -183,7 +254,7 @@
   }
 
   function dadosMapa(v, opcoes) {
-    return Mapa.camadas(v.resultado, { lancamentos: opcoes.lancamentos, posicao: opcoes.posicao });
+    return Mapa.camadas(v.resultado, { lancamentos: opcoes.lancamentos, posicao: opcoes.posicao, alertas: opcoes.alertas ? opcoes.alertas.alertas : [] });
   }
 
   /* Google Maps quando há chave e ele carregou; senão o diagrama SVG (permitido: os termos aceitam uso sem mapa). */
@@ -236,10 +307,13 @@
     var e = Math.min((W - 2 * m) / Math.max((maxLo - minLo) * k, 1e-6), (H - 2 * m) / Math.max(maxLa - minLa, 1e-6));
     var ox = (W - (maxLo - minLo) * k * e) / 2, oy = (H - (maxLa - minLa) * e) / 2;
     function xy(la, lo) { return [(ox + (lo - minLo) * k * e).toFixed(1), (H - oy - (la - minLa) * e).toFixed(1)]; }
-    var s = g.length ? '<polyline points="' + g.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ') + '" fill="none" stroke="#003365" stroke-width="3" stroke-linejoin="round" opacity=".85"/>' : '';
+    var s = (dados.areas || []).filter(function (ar) { return !ocultos[ar.grupo]; }).map(function (ar) {
+      return '<polygon points="' + ar.pontos.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ') + '" fill="' + ar.cor + '" fill-opacity=".14" stroke="' + ar.cor + '" stroke-width="1.5"/>';
+    }).join('');
+    s += g.length ? '<polyline points="' + g.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ') + '" fill="none" stroke="#003365" stroke-width="3" stroke-linejoin="round" opacity=".85"/>' : '';
     marc.forEach(function (mk) {
       var p = xy(mk.lat, mk.lon), raio = mk.tipo === 'caminhao' ? 7 : (mk.grupo === 'pontos' ? 6 : 4.5);
-      s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + raio + '" fill="' + Mapa.TIPOS[mk.tipo].cor + '" stroke="#fff" stroke-width="1.5"><title>' +
+      s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + raio + '" fill="' + (mk.cor || Mapa.TIPOS[mk.tipo].cor) + '" stroke="#fff" stroke-width="1.5"><title>' +
         esc(mk.titulo + ' — ' + mk.linhas.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · ') + ' — fonte: ' + (mk.fonte || 'não informada')) + '</title></circle>';
     });
     slot.innerHTML = '<svg class="mapa" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Traçado da rota com pedágios, postos, bloqueios, pernoites e posição">' + s + '</svg>';

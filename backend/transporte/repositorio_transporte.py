@@ -139,6 +139,11 @@ class RepositorioBase:
         r = self._global("sensores", sensor_id)
         return copy.deepcopy(r) if r else None
 
+    def comunicacao_global(self, rid: str) -> dict[str, Any] | None:
+        """O webhook do WhatsApp chama sem sessão: acha o envio pelo id derivado do id da Meta (backend/transporte/alertas/envio.py)."""
+        r = self._global("comunicacoes", rid)
+        return copy.deepcopy(r) if r else None
+
     @staticmethod
     def _id_leitura(sensor_id: str, leitura_id: str) -> str:
         return f"{sensor_id}:{leitura_id}"  # a idempotência vira uma busca direta pela chave, sem varrer as leituras

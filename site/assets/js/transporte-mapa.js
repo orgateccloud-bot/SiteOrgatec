@@ -13,13 +13,21 @@
     pedagio: { rotulo: 'Pedágio', cor: '#2563eb', letra: 'P' },
     posto: { rotulo: 'Posto', cor: '#ea580c', letra: 'C' },
     bloqueio: { rotulo: 'Bloqueio', cor: '#dc2626', letra: '!' },
+    alerta: { rotulo: 'Alerta de clima ou fogo', cor: '#ea580c', letra: '⚠' },
     pernoite: { rotulo: 'Pernoite', cor: '#7c3aed', letra: 'N' },
     lancamento: { rotulo: 'Informado', cor: '#0f766e', letra: 'M' },
     caminhao: { rotulo: 'Caminhão', cor: '#16a34a', letra: '▲' }
   };
   /* Grupos que a legenda liga e desliga (origem, destino e paradas andam juntos). */
   var GRUPOS = [['pontos', 'Origem, destino e paradas'], ['pedagio', 'Pedágios'], ['posto', 'Postos'], ['bloqueio', 'Bloqueios'],
-    ['pernoite', 'Pernoites'], ['lancamento', 'Lançamentos'], ['caminhao', 'Caminhão']];
+    ['alerta', 'Alertas de clima e fogo'], ['pernoite', 'Pernoites'], ['lancamento', 'Lançamentos'], ['caminhao', 'Caminhão']];
+  /* Alertas de rota: cor pela gravidade (amarelo, laranja, vermelho, como os avisos do INMET) e letra pelo tipo. */
+  var COR_GRAVIDADE = { potencial: '#ca8a04', perigo: '#ea580c', grande_perigo: '#dc2626' };
+  var ROTULO_GRAVIDADE = { potencial: 'Atenção', perigo: 'Perigo', grande_perigo: 'Grande perigo' };
+  var TIPO_ALERTA = {
+    tempestade: ['Tempestade', 'T'], chuva: ['Chuva forte', 'C'], vento: ['Vento forte', 'V'], geada: ['Geada', 'G'], frio: ['Frio intenso', 'G'],
+    calor: ['Calor extremo', 'Q'], baixa_umidade: ['Umidade muito baixa', 'U'], fogo: ['Fogo e fumaça', 'F'], outro: ['Alerta', '!']
+  };
   var ROTULO_LANC = { abastecimento: 'Abastecimento', pedagio_pago: 'Pedágio pago', parada: 'Parada', ocorrencia: 'Ocorrência', posicao_manual: 'Posição informada' };
 
   var brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -54,7 +62,13 @@
   function camadas(r, extras) {
     extras = extras || {};
     var g = (r.rota && r.rota.geometria) || [], m = [];
-    function add(tipo, id, p, titulo, linhas, fonte) { if (temCoord(p)) m.push({ id: id, tipo: tipo, grupo: grupo(tipo), lat: p.lat, lon: p.lon, titulo: titulo, linhas: linhas, fonte: fonte }); }
+    var areas = [];
+    function add(tipo, id, p, titulo, linhas, fonte) {
+      if (!temCoord(p)) return null;
+      var mk = { id: id, tipo: tipo, grupo: grupo(tipo), lat: p.lat, lon: p.lon, titulo: titulo, linhas: linhas, fonte: fonte };
+      m.push(mk);
+      return mk;
+    }
 
     var n = (r.pontos || []).length;
     (r.pontos || []).forEach(function (p, i) {
@@ -95,6 +109,16 @@
       if (l.observacao) linhas.push(['Observação', l.observacao]);
       add('lancamento', 'lanc-' + l.id, l, (ROTULO_LANC[l.tipo] || l.tipo) + (l.local ? ': ' + l.local : ''), linhas, 'informado manualmente');
     });
+    (extras.alertas || []).filter(function (a) { return a.estado === 'ativo'; }).forEach(function (a) {
+      var al = a.alerta, t = TIPO_ALERTA[al.tipo] || TIPO_ALERTA.outro, cor = COR_GRAVIDADE[al.gravidade] || TIPOS.alerta.cor;
+      var mk = add('alerta', 'alerta-' + a.id, a, t[0] + ' · ' + (ROTULO_GRAVIDADE[al.gravidade] || al.gravidade), [
+        ['Trecho', km(a.km_ini) + ' a ' + km(a.km_fim)],
+        ['Chegada prevista', a.chegada_prevista ? quando.format(new Date(a.chegada_prevista)) : 'sem dado'],
+        ['Vale até', quando.format(new Date(al.fim))], ['Aviso', al.titulo]
+      ], al.fonte);
+      if (mk) { mk.cor = cor; mk.letra = t[1]; }
+      (al.poligonos || []).forEach(function (anel, i) { areas.push({ id: 'area-' + a.id + '-' + i, grupo: 'alerta', cor: cor, pontos: anel }); });
+    });
     var pos = posicaoAtual(extras.posicao, extras.lancamentos);
     if (pos) {
       var e = pos.evt || {}, linhas = [['Quando', quando.format(new Date(pos.ts))]];
@@ -104,7 +128,7 @@
       add('caminhao', 'caminhao', pos, pos.telemetria ? 'Posição atual (telemetria)' : 'Última posição informada', linhas,
         pos.telemetria ? 'telemetria: ' + (e.sensor || 'rastreador') : 'informado manualmente');
     }
-    return { rota: g, marcadores: m, posicao: pos };
+    return { rota: g, marcadores: m, posicao: pos, areas: areas };
   }
 
   /* ---------- Google Maps ---------- */
@@ -146,11 +170,11 @@
     return div;
   }
 
-  function pino(tipo) {
+  function pino(tipo, mk) {
     var t = TIPOS[tipo], el = document.createElement('div');
     el.className = 'ot-pino ot-pino-' + tipo;
-    el.style.background = t.cor;
-    el.textContent = t.letra;
+    el.style.background = (mk && mk.cor) || t.cor;
+    el.textContent = (mk && mk.letra) || t.letra;
     return el;
   }
 
@@ -164,12 +188,13 @@
           mapTypeControl: true, mapTypeControlOptions: { mapTypeIds: ['hybrid', 'satellite', 'roadmap', 'terrain'] },
           streetViewControl: false, fullscreenControl: true, clickableIcons: false, gestureHandling: 'cooperative'
         });
-        var info = new maps.InfoWindow(), linhas = [], marcas = {}, ocultos = {}, clique = null, chaveViagem = null;
+        var info = new maps.InfoWindow(), linhas = [], poligonos = [], marcas = {}, ocultos = {}, clique = null, chaveViagem = null;
         if (aoFalhar) aoRecusar(aoFalhar);  // a recusa pode chegar antes ou depois de o mapa existir
         mapa.addListener('click', function (ev) { if (clique && ev.latLng) clique(ev.latLng.lat(), ev.latLng.lng()); });
 
         function limpar() {
           linhas.forEach(function (l) { l.setMap(null); }); linhas = [];
+          poligonos.forEach(function (p) { p.setMap(null); }); poligonos = [];
           Object.keys(marcas).forEach(function (k) { marcas[k].setMap ? marcas[k].setMap(null) : (marcas[k].map = null); });
           marcas = {};
         }
@@ -177,12 +202,12 @@
         function marcar(mk) {
           var pos = { lat: mk.lat, lng: mk.lon }, t = TIPOS[mk.tipo], obj;
           if (avancado) {
-            obj = new marker.AdvancedMarkerElement({ position: pos, map: mapa, title: mk.titulo, content: pino(mk.tipo), gmpClickable: true, zIndex: mk.tipo === 'caminhao' ? 10 : 1 });
+            obj = new marker.AdvancedMarkerElement({ position: pos, map: mapa, title: mk.titulo, content: pino(mk.tipo, mk), gmpClickable: true, zIndex: mk.tipo === 'caminhao' ? 10 : 1 });
             obj.addEventListener('gmp-click', function () { info.setContent(detalheNo(mk)); info.open({ map: mapa, anchor: obj }); });
           } else {
             obj = new marker.Marker({ position: pos, map: mapa, title: mk.titulo, zIndex: mk.tipo === 'caminhao' ? 10 : 1,
-              icon: { path: raiz.google.maps.SymbolPath.CIRCLE, scale: mk.tipo === 'caminhao' ? 10 : 8, fillColor: t.cor, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
-              label: t.letra ? { text: t.letra, color: '#fff', fontSize: '10px', fontWeight: '700' } : null });
+              icon: { path: raiz.google.maps.SymbolPath.CIRCLE, scale: mk.tipo === 'caminhao' ? 10 : 8, fillColor: mk.cor || t.cor, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+              label: (mk.letra || t.letra) ? { text: mk.letra || t.letra, color: '#fff', fontSize: '10px', fontWeight: '700' } : null });
             obj.addListener('click', function () { info.setContent(detalheNo(mk)); info.open({ map: mapa, anchor: obj }); });
           }
           if (ocultos[mk.grupo]) mostrar(obj, false);
@@ -199,6 +224,12 @@
               linhas.push(new maps.Polyline({ path: caminho, map: mapa, strokeColor: '#0b1f3a', strokeOpacity: 0.9, strokeWeight: 8 }));
               linhas.push(new maps.Polyline({ path: caminho, map: mapa, strokeColor: '#38bdf8', strokeOpacity: 1, strokeWeight: 4 }));
             }
+            (dados.areas || []).forEach(function (ar) {
+              var pg = new maps.Polygon({ paths: ar.pontos.map(function (p) { return { lat: p[0], lng: p[1] }; }), map: ocultos[ar.grupo] ? null : mapa,
+                strokeColor: ar.cor, strokeOpacity: 0.9, strokeWeight: 2, fillColor: ar.cor, fillOpacity: 0.14, clickable: false });
+              pg.__grupo = ar.grupo;
+              poligonos.push(pg);
+            });
             dados.marcadores.forEach(marcar);
             if (idViagem !== chaveViagem) {
               chaveViagem = idViagem;
@@ -210,6 +241,7 @@
           },
           visivel: function (grp, sim) {
             ocultos[grp] = !sim;
+            poligonos.forEach(function (pg) { if (pg.__grupo === grp) pg.setMap(sim ? mapa : null); });
             Object.keys(marcas).forEach(function (k) { if (marcas[k].__dados.grupo === grp) mostrar(marcas[k], sim); });
           },
           focar: function (id) {
@@ -226,7 +258,7 @@
     });
   }
 
-  var api = { TIPOS: TIPOS, GRUPOS: GRUPOS, ROTULO_LANC: ROTULO_LANC, camadas: camadas, pontoNoKm: pontoNoKm, posicaoAtual: posicaoAtual, criar: criar };
+  var api = { TIPOS: TIPOS, GRUPOS: GRUPOS, ROTULO_LANC: ROTULO_LANC, COR_GRAVIDADE: COR_GRAVIDADE, ROTULO_GRAVIDADE: ROTULO_GRAVIDADE, TIPO_ALERTA: TIPO_ALERTA, camadas: camadas, pontoNoKm: pontoNoKm, posicaoAtual: posicaoAtual, criar: criar };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else raiz.OTMapa = api;
 })(typeof window !== 'undefined' ? window : globalThis);
