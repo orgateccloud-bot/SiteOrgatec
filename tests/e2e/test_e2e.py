@@ -1992,6 +1992,83 @@ def test_janela_celular_alvos_de_toque_e_menu_de_setores(navegador, servidor):
     assert not erros, erros
 
 
+def _variar_regioes(b):
+    """O boletim de teste usa o mesmo MET em todos os polos; aqui as regiões ganham estados diferentes em colheita e animais."""
+    for i, r in enumerate(b["regioes"]):
+        r["ops"]["colheita"][0] = "atencao" if i % 2 else "ok"
+        r["ops"]["animais"][0] = "ok" if i % 3 else "atencao"
+        for op in ("pulv", "plantio", "maquinas"):
+            r["ops"][op][0] = {"pulv": "atencao", "plantio": "ok", "maquinas": "ok"}[op]
+    return b
+
+
+@pytest.mark.parametrize("largura", [320, 375, 768, 1280])
+def test_janela_grade_das_regioes_sem_rolagem_horizontal(navegador, servidor, largura):
+    b = _variar_regioes(_boletim_automatico())
+    ctx = navegador.new_context(viewport={"width": largura, "height": 800})
+    pg = ctx.new_page()
+    for padrao, f in _rotas_campo(b).items():
+        pg.route(padrao, f)
+    pg.goto(f"{servidor}/rural/janela-de-campo.html")
+    pg.wait_for_selector(".campo-op")
+    if not pg.locator("[data-campo-comparar]").evaluate("e => e.open"):
+        pg.click("[data-campo-comparar] summary")
+    assert pg.locator(".campo-regioes tbody tr").count() == len(b["regioes"])
+    assert pg.locator(".campo-regioes .campo-celula").count() == len(b["regioes"]) * 5
+    assert pg.evaluate("document.documentElement.scrollWidth") <= largura
+    rolagem = pg.locator(".campo-regioes").evaluate("t => { const r = t.closest('.campo-matriz-rolagem'); return r.scrollWidth - r.clientWidth; }")
+    assert rolagem <= 1, rolagem  # a grade cabe sem rolar nem por dentro
+    assert min(pg.locator(".campo-regioes .campo-celula, .campo-regiao").evaluate_all("els => els.map(e => e.getBoundingClientRect().height)")) >= 44
+
+
+def test_janela_grade_diz_igual_em_todas_so_nas_colunas_iguais(navegador, servidor):
+    b = _variar_regioes(_boletim_automatico())
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-regioes")
+    iguais = pg.locator(".campo-regioes thead th").evaluate_all("els => els.map(e => !!e.querySelector('.campo-igual'))")
+    assert iguais == [False, True, True, False, False, True]  # região, pulv, plantio, colheita, animais, máquinas
+    expect(pg.locator(".campo-igual-texto")).to_have_text("Igual em todas as regiões: pulverização (com restrição), plantio (favorável) e máquinas (favorável).")
+    assert not erros, erros
+
+
+def test_janela_grade_tocar_na_regiao_ou_na_celula_escolhe(navegador, servidor):
+    b = _variar_regioes(_boletim_automatico())
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-regioes")
+    pg.click(".campo-regiao[data-r=sul]")
+    expect(pg.locator("#campoRegiao")).to_have_text("Sul")
+    expect(pg.locator(".campo-regioes tr[data-r=sul]")).to_have_class(re.compile("selecionada"))
+    pg.click(".campo-celula[data-r=ne][data-o=animais]")
+    expect(pg.locator("#campoRegiao")).to_have_text("Nordeste e Matopiba")
+    expect(pg.locator(".campo-op[data-o=animais]")).to_have_attribute("aria-expanded", "true")
+    expect(pg.locator(".campo-celula[data-r=ne][data-o=animais]")).to_have_attribute("aria-pressed", "true")
+    assert not erros, erros
+
+
+def test_janela_grade_regiao_sem_previsao_tem_glifo_proprio(navegador, servidor):
+    b = _variar_regioes(_boletim_automatico())
+    b["regioes"][0]["ops"]["colheita"] = ["atencao", "Sem previsão para as horas úteis de hoje (05h às 20h).", "Veja os avisos do INMET."]
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-regioes")
+    celula = pg.locator(f".campo-celula[data-r={b['regioes'][0]['id']}][data-o=colheita]")
+    expect(celula).to_have_attribute("aria-label", re.compile("sem previsão"))
+    expect(celula.locator(".glifo-sem")).to_have_count(1)
+    assert not erros, erros
+
+
+def test_janela_boletim_vencido_fica_em_cinza(navegador, servidor):
+    sem_auto = {"**/dados/campo/*.json": lambda rota: rota.fulfill(status=404, body="")}
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=sem_auto)  # o boletim manual de 28/10 já venceu
+    pg.wait_for_selector(".campo-regioes")
+    expect(pg.locator("[data-campo]")).to_have_class(re.compile("campo-arquivo"))
+    assert pg.locator(".campo-card").first.evaluate("e => getComputedStyle(e).filter") == "grayscale(1)"
+    b = _boletim_automatico()
+    pg2, erros2 = _abrir(navegador, servidor, "rural/janela-de-campo.html", "desktop", rotas=_rotas_campo(b))
+    pg2.wait_for_selector(".campo-regioes")
+    assert "campo-arquivo" not in (pg2.locator("[data-campo]").get_attribute("class") or "")
+    assert not erros and not erros2, (erros, erros2)
+
+
 # ---------- Página Agro: resumo do dia, pontos da reforma recolhidos por tema (Fase 4)
 
 def _agro(navegador, servidor, vp="desktop", boletim=None, rotas=None):

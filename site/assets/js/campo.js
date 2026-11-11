@@ -233,17 +233,29 @@
     '</div>';
   }
 
+  /* Grade região x operação só com glifos (cabe em 320 px, sem rolar para o lado). Colunas iguais em todas as regiões são ditas
+     uma vez, em vez de repetir o mesmo glifo seis vezes. */
+  var ABREV = { pulv: 'Pulv.', plantio: 'Plant.', colheita: 'Colh.', animais: 'Anim.', maquinas: 'Máq.' };  // cabeçalho da grade em telas de 320 px
   function matrizHtml() {
-    return '<div class="flex flex-wrap gap-3 text-sm my-3" aria-label="Legenda">' + selo('ok') + selo('atencao') + selo('evitar') + '</div>' +
-      '<div class="campo-matriz-rolagem"><table class="campo-matriz"><thead><tr><th scope="col">Região</th>' +
-      OPERACOES.map(function (o) { return '<th scope="col">' + esc(o.nome) + '</th>'; }).join('') + '</tr></thead><tbody>' +
-      b.regioes.map(function (r) {
-        return '<tr data-r="' + esc(r.id) + '"><th scope="row">' + esc(r.nome) + '<small>' + esc(r.uf.split(' · ').slice(0, 3).join(' · ')) + '</small></th>' +
-          OPERACOES.map(function (o) {
-            var s = r.ops[o.id][0];
-            return '<td><button type="button" class="campo-celula" data-r="' + esc(r.id) + '" data-o="' + o.id + '" aria-label="' + esc(r.nome + ', ' + o.nome + ': ' + ESTADOS[s].rotulo) + '">' + selo(s) + '</button></td>';
+    var linhas = b.regioes.map(function (r) { return VD.itensDaRegiao(r); });
+    var cols = VD.colunasIguais(linhas), igual = VD.fraseIguais(cols);
+    var rot = function (e) { return VD.ROTULOS[e] || 'sem previsão'; };
+    return '<div class="campo-legenda-glifos" aria-label="Legenda">' + ['ok', 'atencao', 'evitar', 'sem'].map(function (e) {
+        return '<span>' + glifoSvg(e) + esc(rot(e).charAt(0).toUpperCase() + rot(e).slice(1)) + '</span>'; }).join('') + '</div>' +
+      '<div class="campo-matriz-rolagem"><table class="campo-matriz campo-regioes"><thead><tr><th scope="col">Região</th>' +
+      OPERACOES.map(function (o, k) {
+        return '<th scope="col"><span class="campo-col-largo" aria-hidden="true">' + esc(VD.OPS[k].curto) + '</span><span class="campo-col-estreito" aria-hidden="true">' + esc(ABREV[o.id]) + '</span><span class="sr-only">' + esc(o.nome) + '</span>' +
+          (cols[k].igual ? '<small class="campo-igual">igual em todas</small>' : '') + '</th>';
+      }).join('') + '</tr></thead><tbody>' +
+      b.regioes.map(function (r, i) {
+        return '<tr data-r="' + esc(r.id) + '"><th scope="row"><button type="button" class="campo-regiao" data-r="' + esc(r.id) + '">' + esc(r.nome) +
+          '<small>' + esc(r.uf.split(' · ').slice(0, 3).join(' · ')) + '</small></button></th>' +
+          OPERACOES.map(function (o, k) {
+            var s = linhas[i][k].estado;
+            return '<td><button type="button" class="campo-celula" data-r="' + esc(r.id) + '" data-o="' + o.id + '" aria-label="' + esc(r.nome + ', ' + o.nome + ': ' + rot(s)) + '">' + glifoSvg(s) + '</button></td>';
           }).join('') + '</tr>';
-      }).join('') + '</tbody></table></div>';
+      }).join('') + '</tbody></table></div>' +
+      (igual ? '<p class="campo-igual-texto">' + esc(igual) + '</p>' : '');
   }
 
   function painelHoras() {
@@ -312,6 +324,7 @@
     ajustarSelecao();
     mapaMontado = false;
     var sit = textoSituacao(), vigente = sit[0] === 'vigente';
+    alvo.classList.toggle('campo-arquivo', !vigente);  // boletim vencido ou desatualizado: tudo em cinza, só para consulta
     var temMapa = !!(b.polos && O.campoMapa);
     var abas = [['horas', 'Horas', painelHoras()], ['semana', b.proximos ? '7 dias' : 'Próximos dias', painelSemana()]];
     if (temMapa) abas.push(['satelite', 'Satélite', painelSatelite()]);
@@ -500,7 +513,7 @@
     ajustarSelecao();
     desenhar();
     if (bt.hasAttribute('data-p')) fecharFolha();
-    if (bt.classList.contains('campo-celula') && !largo.matches) {
+    if ((bt.classList.contains('campo-celula') || bt.classList.contains('campo-regiao')) && !largo.matches) {
       var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       document.getElementById('campoHoje').scrollIntoView({ behavior: calmo ? 'auto' : 'smooth', block: 'start' });
     }

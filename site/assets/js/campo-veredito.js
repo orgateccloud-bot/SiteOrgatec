@@ -116,6 +116,18 @@
     return { janela: item.janela, texto: 'menor restrição' + (item.motivo ? ' · ' + item.motivo : '') };
   }
 
-  return { OPS: OPS, HORAS_UTEIS: HORAS_UTEIS, janelaCurta: janelaCurta, faixa: faixa, trechos: trechos, descreverFaixa: descreverFaixa,
+  /* Colunas da grade das regiões em que todas as regiões têm o mesmo estado. linhas: itens de cada região (itensDaRegiao). */
+  function colunasIguais(linhas) {
+    return OPS.map(function (o, k) {
+      var e0 = linhas[0] && linhas[0][k].estado;
+      return { op: o.id, estado: e0, igual: linhas.length > 1 && linhas.every(function (l) { return l[k].estado === e0; }) };
+    });
+  }
+  function fraseIguais(colunas) {
+    var it = colunas.filter(function (c) { return c.igual; }).map(function (c) { return nome(c.op) + ' (' + ROTULOS[c.estado] + ')'; });
+    return it.length ? 'Igual em todas as regiões: ' + lista(it) + '.' : '';
+  }
+
+  return { OPS: OPS, ROTULOS: ROTULOS, colunasIguais: colunasIguais, fraseIguais: fraseIguais, HORAS_UTEIS: HORAS_UTEIS, janelaCurta: janelaCurta, faixa: faixa, trechos: trechos, descreverFaixa: descreverFaixa,
     itensDoPolo: itensDoPolo, itensDaRegiao: itensDaRegiao, veredito: veredito, legendaJanela: legendaJanela, maiuscula: maiuscula, lista: lista };
 });

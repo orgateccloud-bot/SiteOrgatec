@@ -904,6 +904,26 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .campo-menu-lista{{position:absolute;right:0;top:calc(100% + 6px);display:grid;min-width:230px;padding:6px;border:1px solid var(--line);border-radius:14px;background:var(--surface2);box-shadow:0 18px 40px -12px rgba(0,0,0,.45)}}
 .campo-menu-lista a{{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:10px;color:var(--ink);font-weight:600;text-decoration:none}}
 .campo-menu-lista a[aria-current="page"]{{background:var(--brand-soft);color:var(--brand)}}
+/* Janela de Campo 2 (V2): grade de glifos das regiões e boletim de arquivo em cinza */
+.campo-matriz.campo-regioes{{min-width:0;width:100%;table-layout:fixed}}
+.campo-regioes thead th{{padding:8px 2px;text-align:center;vertical-align:bottom;font:600 12px var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted)}}
+.campo-regioes thead th:first-child{{width:36%;padding-left:12px;text-align:left}}
+.campo-regioes .campo-igual{{display:none;margin-top:2px;font-weight:400;color:var(--hl)}}
+.campo-col-largo{{display:none}}
+@media (min-width:400px){{.campo-col-largo{{display:inline}}.campo-col-estreito{{display:none}}}}
+.campo-regioes tbody th{{padding:0;white-space:normal}}
+@media (min-width:640px){{.campo-regioes .campo-igual{{display:block}}.campo-regioes thead th{{font-size:13px}}.campo-regioes thead th:first-child{{width:30%}}}}
+.campo-regiao{{display:block;width:100%;min-height:48px;padding:6px 12px;border:0;background:transparent;color:var(--ink);font:600 14px var(--f-body);text-align:left;cursor:pointer}}
+.campo-regiao small{{display:block;font:400 12px var(--f-body);color:var(--muted)}}
+.campo-regiao:focus-visible{{outline:2px solid var(--focus);outline-offset:-2px}}
+.campo-regioes .campo-celula{{justify-content:center;min-height:48px;padding:4px}}
+.campo-regioes .glifo{{width:26px;height:26px}}
+.campo-celula.ativa .glifo{{outline:2px solid var(--ink);outline-offset:3px;border-radius:50%}}
+.campo-legenda-glifos{{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0;font-size:13px;color:var(--muted)}}
+.campo-legenda-glifos span{{display:inline-flex;align-items:center;gap:6px}}
+.campo-legenda-glifos .glifo{{width:18px;height:18px}}
+.campo-igual-texto{{margin:10px 0 0;font-size:13px;color:var(--muted)}}
+.campo-arquivo .campo-card,.campo-arquivo .campo-glifo,.campo-arquivo .campo-regioes .glifo,.campo-arquivo .campo-faixa{{filter:grayscale(1);opacity:.72}}
 .campo-comparar>summary{{cursor:pointer;font-weight:600;padding:10px 0}}
 .campo-comparar>summary:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
 .campo-abas-painel{{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}}

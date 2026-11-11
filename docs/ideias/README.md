@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Janela de Campo 2, V2: grade de glifos das regiões e boletim de arquivo em cinza](campo-visual-2b.md) | implementada em 11/11/2026; suíte verde; aguarda prévia e aprovação | `ideia/campo-visual-2` | — |
 | [Score de compliance na Janela Empresarial (nota de 0 a 100 por frente)](janela-score.md) | integrada na desenvolvimento em 11/11/2026; falta lançar | removida | [link](https://orgatec-site--ideia-janela-score-vmjjy32j.web.app/empresarial/janela.html) |
 | [Janela de Campo 2, V1: veredito, barra do local e cartões com faixa horária](campo-visual-1.md) | aprovada em 11/11/2026 e junta na desenvolvimento; falta lançar | `ideia/campo-visual-1` | [link](https://orgatec-site--ideia-campo-visual-1-ho4o5rf4.web.app/rural/janela-de-campo.html) |
 | [Janela de Campo 2: veredito primeiro, legível ao sol e uma só língua visual (planejamento)](campo-visual-2.md) | V0 concluída em 11/11/2026 (opção A escolhida); a V1 aguarda "execute"; nenhum código alterado | `ideia/campo-visual-1` a `-4` (a criar) | — |
