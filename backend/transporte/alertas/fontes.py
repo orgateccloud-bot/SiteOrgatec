@@ -31,7 +31,8 @@ INMET_URL = "https://apiprevmet3.inmet.gov.br/avisos/ativos"
 INMET_LINK = "https://avisos.inmet.gov.br/{id}"
 INMET_CREDITO = "INMET, avisos meteorológicos (apiprevmet3.inmet.gov.br)"
 FIRMS_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv/{chave}/{fonte}/{w:.3f},{s:.3f},{e:.3f},{n:.3f}/1"
-FIRMS_FONTES = ("VIIRS_NOAA20_NRT", "VIIRS_SNPP_NRT")
+# O Suomi NPP parou de transmitir em 02/11/2026 (aviso do FIRMS): só NOAA-20 e NOAA-21.
+FIRMS_FONTES = ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT")
 FIRMS_CREDITO = "NASA FIRMS (focos de fogo VIIRS, dados CC0)"
 INPE_URL = "https://dataserver-coids.inpe.br/queimadas/queimadas/focos/csv/10min/"
 INPE_CREDITO = "INPE, Programa Queimadas (focos a cada 10 min)"

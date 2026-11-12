@@ -386,3 +386,8 @@ def test_webhook_whatsapp_verifica_token_assinatura_e_nao_regride_estado(amb):
     assert com["estado"] == "lida" and [x["estado"] for x in com["historico"]] == ["enviada", "lida", "entregue"]
     lista = cli.get(f"/api/transporte/comunicacoes?viagem_id={v['id']}", headers=amb["h"]()).json()
     assert lista[0]["estado"] == "lida" and "99999" not in json.dumps(lista)
+
+
+def test_firms_nao_usa_o_suomi_npp_desativado():
+    """O FIRMS avisou que o Suomi NPP parou em 02/11/2026; os focos vêm do NOAA-20 e do NOAA-21."""
+    assert fontes.FIRMS_FONTES == ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT")
