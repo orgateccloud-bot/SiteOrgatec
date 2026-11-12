@@ -6,7 +6,7 @@
    Pontuação: 'sim' soma o peso; 'nao' e 'nao_sei' entram no máximo e viram pendência; 'na' e as não
    respondidas ficam fora da conta. O resultado é um nível de atenção, NÃO uma probabilidade de autuação.
 
-   PESOS e FAIXAS são provisórios até a revisão técnica (pendência V11). Em produção, enquanto
+   PESOS e FAIXAS aprovados na revisão técnica de 12/11/2026 (pendência V11). Em produção, enquanto
    REVISAO.status não for 'aprovada', a página não mostra o termômetro. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -16,7 +16,7 @@
 
   /* Revisão das perguntas, pesos e faixas: vale para o conjunto todo. tools/aplicar_revisao.py grava aqui o responsável, a
      data e o hash do conjunto aprovado (não edite à mão). */
-  var REVISAO = { status: 'pendente', por: null, em: null };
+  var REVISAO = {"status": "aprovada", "por": "ORGATEC", "em": "2026-11-12", "hash": "a4bd667db18841cbddef370b0bba20c6196b4cdf5a0e083f6cfcdda4c31350c2"};
   var RESPOSTAS = { sim: 'Sim', nao: 'Não', nao_sei: 'Não sei', na: 'Não se aplica' };
   // percentual mínimo de cada nível (do maior para o menor)
   var FAIXAS = [
@@ -231,7 +231,7 @@
   /* Pesos por perfil (estudo, frente 3.2). Cada ajuste traz justificativa e fonte; enquanto `status` não for
      'aprovada', o peso padrão da pergunta continua valendo. O julgamento fica escrito para o responsável técnico revisar. */
   var PESOS_PERFIL = {
-    status: 'proposta', por: null, em: null,
+    status: "aprovada", por: "ORGATEC", em: "2026-11-12", hash: "da27aa3686231f3b425bbb514b9275b8601b94f06163faacbc80b4026a481f45",
     ajustes: {
       simples: {
         'i-codigo': { peso: 1, fontes: ['dec11129_2022'], justificativa: 'O art. 57, § 1º, I e II, manda considerar o porte: número de empregados, faturamento e o fato de ser ME ou EPP.' },

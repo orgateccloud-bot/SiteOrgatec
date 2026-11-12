@@ -119,6 +119,9 @@ def test_aprovado_que_muda_de_texto_e_revogado(js, tmp_path):
 
 
 def test_termometro_so_aprova_com_o_conjunto_inteiro(js, tmp_path):
+    termo = js / "termometro.js"  # o site já tem a V11 aprovada (12/11/2026): o teste parte do estado pendente
+    texto = ar.REVISAO.sub("var REVISAO = " + ar.PENDENTE_REVISAO + ";", termo.read_text(encoding="utf-8"))
+    termo.write_text(ar.PESOS.sub(lambda m: m.group(1) + ar.PENDENTE_PESOS + m.group(3), texto), encoding="utf-8")
     atuais = ar.hashes_atuais(js)
     perguntas = atuais["perguntas"]["ids"]
     ar.aplicar(_registro(atuais, perguntas[:-1]), js, tmp_path / "reg", gravar=True)  # falta uma

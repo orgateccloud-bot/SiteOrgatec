@@ -107,7 +107,7 @@
           (ev.semProva.length ? '<ul class="grid gap-1 text-sm mt-2">' + ev.semProva.map(function (p) { return '<li data-sem-prova="' + p.id + '">' + K.esc(T.CAMADAS[p.id].prova) + '</li>'; }).join('') + '</ul>' : '')
           : '<p class="text-sm text-tinta-suave">Responda "sim" a uma pergunta principal para ver a camada de prova.</p>') +
         '<p class="text-xs text-tinta-fraca mt-2">O percentual acima mede o que foi declarado. Um controle só está comprovado quando funciona na prática e deixa registro.</p></div>' +
-      '<p class="text-xs text-tinta-fraca mt-6">Resultado orientativo, calculado só no seu navegador. Não é parecer nem probabilidade de autuação. Pesos e faixas em revisão técnica.</p>';
+      '<p class="text-xs text-tinta-fraca mt-6">Resultado orientativo, calculado só no seu navegador. Não é parecer nem probabilidade de autuação. Pesos e faixas aprovados na revisão técnica de 12/11/2026.</p>';
     relatorio(r, ativos, pct);
     if (resumo) {
       resumo.innerHTML = '<span>Resultado: <strong data-resumo-percentual>' + (pct == null ? '—' : pct + '%') + '</strong></span>' +
@@ -139,7 +139,7 @@
       (linhasPend ? '<h2>O que corrigir ou verificar, por prioridade</h2><ol>' + linhasPend + '</ol>' : '<p>Nenhuma pendência nas respostas dadas.</p>') +
       (function () { var ev = T.evidencia(respostas, T.PERGUNTAS.filter(function (p) { return ativos.indexOf(p.pilar) >= 0 && T.perguntaVale(p, perfil); }));
         return ev.declaradas ? '<h2>Prova do que foi declarado</h2><p>' + ev.comProva + ' de ' + ev.declaradas + ' respostas "sim" nas perguntas principais têm prática e registro confirmados.</p>' : ''; })() +
-      '<p class="relatorio-aviso">Orientação geral, calculada no navegador a partir das respostas do próprio visitante. Não é parecer, não é diagnóstico e não indica probabilidade de autuação. Pesos e faixas em revisão técnica. Fale com o escritório para o diagnóstico: orgatec.io.</p>';
+      '<p class="relatorio-aviso">Orientação geral, calculada no navegador a partir das respostas do próprio visitante. Não é parecer, não é diagnóstico e não indica probabilidade de autuação. Pesos e faixas aprovados na revisão técnica de 12/11/2026. Fale com o escritório para o diagnóstico: orgatec.io.</p>';
   }
   // ---------- Plano de ação em .ics: pendências com prazo legal, no calendário do visitante (sem envio de dados)
   var plano = [], botaoIcs = $('[data-termometro-ics]', raiz);

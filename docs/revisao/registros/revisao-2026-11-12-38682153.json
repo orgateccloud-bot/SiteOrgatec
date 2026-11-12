@@ -1,0 +1,358 @@
+{
+  "versao": 1,
+  "responsavel": "ORGATEC",
+  "data": "2026-11-12",
+  "decisoes": [
+    {
+      "id": "pergunta:t-docs-fiscais",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "10150797441bb538e18a3ebe2cbace731cb6804171bfc6dc30f23831262f7782"
+    },
+    {
+      "id": "pergunta:t-obrigacoes-2026",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "967daae728fbc3f8c6c42b0209e862c493501a4a052dd0d3c69f6df117d7ff61"
+    },
+    {
+      "id": "pergunta:t-inconsistencias",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "0af00871be382ae94f806cdeb505a2697f554515f9d3a486f2e3e9cb74167f68"
+    },
+    {
+      "id": "pergunta:t-contador-responsavel",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "a4fcdfded120b599daf1ac175190c542222b011778f8147b055422ca574cb632"
+    },
+    {
+      "id": "pergunta:t-produtor-2027",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "5345a5bfbf896064eceeb8b7323c20fbc52db185a1d3e96cd186a7af7226e7f6"
+    },
+    {
+      "id": "pergunta:p-enquadramento",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "25423407ef2490b70f432968e876435113a1a22e2018928a08653c9321109408"
+    },
+    {
+      "id": "pergunta:p-cadastro",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "146780196a1cdd8149edcb6d687911b058c53eff84e724a558f112334ca0444e"
+    },
+    {
+      "id": "pergunta:p-controles",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "ab8544db0674797846e92e6f388553cf14ed5e1e6291f86497c2d9e849b2ec60"
+    },
+    {
+      "id": "pergunta:p-comunicacao",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "6d31d65fcec7318034b37a21a5c7d9f6603dce3508cf07ee6fc9c07be7f361f8"
+    },
+    {
+      "id": "pergunta:l-registro",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "862882a7011876b317e778de07edf8beabd1339642e2189d688ec0d4045baf2d"
+    },
+    {
+      "id": "pergunta:l-encarregado",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "12fa4598ec7569195645f40c60d6ac93540d4b9ab789c7b15551cf4197ef6996"
+    },
+    {
+      "id": "pergunta:l-seguranca",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "8c4a5d6001e41c70980badb138452d25fff0ea415be96bdfae534c18a7d850dd"
+    },
+    {
+      "id": "pergunta:l-incidente",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "2daa3cb9a7ed8fcda789fa3eb2c2e0099ed6949ba9d16c913925bfd378c5716d"
+    },
+    {
+      "id": "pergunta:i-codigo",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "bbedcd16fe2bf230cbf8235dfaa6a5e8b45cd1680fb290dbde6a6136d0cfc153"
+    },
+    {
+      "id": "pergunta:i-riscos",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "02434d13dc1b2b512dcf05bba79a6a9172412c4d382be0eb56fca881d4d63e7c"
+    },
+    {
+      "id": "pergunta:i-contrato-publico",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "d75b32a35fdbda236a79fa13012f2546aaf7b9de23237fc888ae2278c477cd15"
+    },
+    {
+      "id": "pergunta:i-alta-direcao",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "a479f50225d366ad38013712a539ce51c805facc4479bb512f9ba8d4d65d27a4"
+    },
+    {
+      "id": "pergunta:i-relatos-tratados",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "0bb031b5eade400ba2eaae125f597a71ee80328c1340852b8cea7fcb1638979c"
+    },
+    {
+      "id": "pergunta:i-remediacao",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "cf40fff3ec93fcf911ab40bdc87cd5ff1f90c8f678d53eb68fed9d8c04f1970a"
+    },
+    {
+      "id": "pergunta:i-monitoramento",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "78c87f342264526bbb6aaa6f35b2f19b3f857c2d17581cf887b8b21dc891f57f"
+    },
+    {
+      "id": "pergunta:tr-rntrc",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "e0408bf8e7fb5fbb8820823b0fb022bdec619a996a8c394063b66bc2ab8fc2b6"
+    },
+    {
+      "id": "pergunta:tr-ciot",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "3460c19d5b4082a3c34c66c4b67fae9d124de14bf37be7dc784c885052c4b127"
+    },
+    {
+      "id": "pergunta:tr-piso",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "5f5ad2973965ee69498725be281f6375272c1824511580a587476dbf54e1a86c"
+    },
+    {
+      "id": "pergunta:tr-pagamento-tac",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "faa313b7339857e6c3b1b30c58bf9a9dfe178a8706de3da7e4cc9f1b569acaff"
+    },
+    {
+      "id": "pergunta:tr-vale-pedagio",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "1df65d71793de628f703a3d7cf65d7e533251333760000748e27ee20417488ff"
+    },
+    {
+      "id": "pergunta:tr-jornada",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "8838a7ac5e16c61b2985f89be23e47f03ced3bd645dd1a7decb488bf89f7d2ee"
+    },
+    {
+      "id": "pergunta:tr-toxicologico",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "663b38e9fe0867c7319095a64fcbe4f543e7a4e0750adc5d27ed45ba05e14d6d"
+    },
+    {
+      "id": "pergunta:ru-car",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "79db9aee3b6bae87a149ab0a3edf1eb339abd38f135af7313af1923ace82f089"
+    },
+    {
+      "id": "pergunta:ru-itr",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "09e1a2b40655a1e36ce24135ab41ad73c2fb3238979123b6283836a96ec45886"
+    },
+    {
+      "id": "pergunta:ru-funrural",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "053cdc963dcf2c3f0350248c7a6dc9e4382428de427cc831864e375b9d43eba9"
+    },
+    {
+      "id": "pergunta:ru-nr31",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "904136c719d5f1b7f90c4c29050e17f6c52caeaca79d824067952f1c6e27c75d"
+    },
+    {
+      "id": "pergunta:ru-eudr",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "e35286ee41a74ebf34ba82ffad20acb896a0b74291e8723fc843f643f476e2c2"
+    },
+    {
+      "id": "pergunta:pq-mei-limite",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "15f5864836b1cec368f94ee4658224c9ed4d6f3dbf423c6bbfc1fadbea6dc088"
+    },
+    {
+      "id": "pergunta:pq-mei-remissao",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "9c09cd416a0ae9fb0c80d2fb68688072703e1a4c6b26c4103b8f3e098e3b1085"
+    },
+    {
+      "id": "pergunta:pq-nanoempreendedor",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "160979ffaedb397faeac5d5996cc7f4ac05ac3c4203a86ab62c879d9f7173f95"
+    },
+    {
+      "id": "pergunta:pq-cadastro-pf",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "29a11ace5e4af67b28b04d3442fb83a22d8fed7ed1773a48ad178d2f79907df1"
+    },
+    {
+      "id": "pergunta:pq-profissao-30",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "4c6537986ad32f9a899e295cc0b0e22580c5c5e8f078b000d46792be101c632b"
+    },
+    {
+      "id": "pergunta:pq-simples-opcao",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "d7319e1d3cf4c3cb7aa0f07b47f175499c2737e8c0568340c20ee31728fd3f7d"
+    },
+    {
+      "id": "pergunta:pq-simples-docs-2027",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "fc16dc1587dc3ea28159d291d7fe36aadbd161f3e7b44f78457962ae6b42f91f"
+    },
+    {
+      "id": "pergunta:pq-simples-locacao",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "50727cbc7be49efafdc96ae389eca424b9bf88cfa04de4dc7b7f8299efe45124"
+    },
+    {
+      "id": "pergunta:tc-estoque",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "25b1ac1e4c57494dd541a9167914103d7c00ae5589aea58721cb9bb2f8e67160"
+    },
+    {
+      "id": "pergunta:tc-saldo-icms",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "cbea577080efc3c5705d1963c6b6078ae5b85b1b74cced8e3a176845def876d4"
+    },
+    {
+      "id": "pergunta:ts-reducao-60",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "5efb8e5830808a8fb2dba768e861281fa7a534cb8a84e28b8004ff9deec3f194"
+    },
+    {
+      "id": "pergunta:ts-profissao-30",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "abf9db4ae1a176161a5d999ed6131fae09dbbd6b2925df0a508bf26814de746e"
+    },
+    {
+      "id": "pergunta:im-enquadramento",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "b20ef1d80d15d0844da8d8a74c598147d15c85b660a48e68a86c9ec6e1071a45"
+    },
+    {
+      "id": "pergunta:im-temporada",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "3496730ae203197aa4764ad3132a1e3704dd741c5207f299de1c244d5ab2197b"
+    },
+    {
+      "id": "pergunta:im-redutor",
+      "tipo": "Pergunta",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "2dbe03008dbadddc3d62d0db664de3e1b966cf9c3f74f883f3483aa380ddeeeb"
+    },
+    {
+      "id": "peso:simples:i-codigo",
+      "tipo": "Peso por perfil",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "92616b89416b0db4d2dbb6f366d4d4a27ebb07be72209be046b19cd3778030d2"
+    },
+    {
+      "id": "peso:simples:i-riscos",
+      "tipo": "Peso por perfil",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "2906c7c81f3f60a5043a3d7ba06202bb05fc14770c8f8412779419795312edf8"
+    },
+    {
+      "id": "peso:transportador:i-riscos",
+      "tipo": "Peso por perfil",
+      "decisao": "aprovada",
+      "nota": "V11 aprovada pelo responsável técnico em 12/11/2026 (pesos, pesos por perfil e faixas: em dia a partir de 85%, atenção a partir de 60%).",
+      "conteudoHash": "bfb7279dcd2e344a5fb141ddf73c84d0f3ca96c208c52c57328c06eb8a437d20"
+    }
+  ],
+  "audit_hash": "386821536067d9e132c00da986b3a3437bcc7971d0a48f64edd2d95449bcc5a4"
+}

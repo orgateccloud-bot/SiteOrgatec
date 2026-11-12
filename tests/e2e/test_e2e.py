@@ -281,6 +281,14 @@ def _abrir(navegador, servidor, caminho, vp="desktop", rotas=None):
     return pg, erros
 
 
+def _termometro_pendente():
+    """termometro.js com a revisão V11 de volta a pendente: simula um texto que mudou depois da revisão."""
+    termo = (RAIZ / "site" / "assets" / "js" / "termometro.js").read_text(encoding="utf-8")
+    revisao = re.search(r"var REVISAO = \{[^}\n]*\};", termo).group(0)
+    corpo = termo.replace(revisao, "var REVISAO = { status: 'pendente', por: null, em: null };")
+    return revisao, (lambda rota: rota.fulfill(status=200, content_type="application/javascript", body=corpo))
+
+
 def _config_alterada(substituicoes):
     texto = (RAIZ / "site" / "assets" / "js" / "config.js").read_text(encoding="utf-8")
     for a, b in substituicoes:
@@ -1108,7 +1116,9 @@ def test_termometro_abre_so_a_frente_da_ancora_e_some_em_producao(navegador, ser
     expect(pg.locator("#frente-lgpd")).to_be_visible()
     expect(pg.locator("#frente-tributario")).to_be_hidden()
     rota = _config_alterada([("ambiente: 'homologacao'", "ambiente: 'producao'")])
-    pg2, erros2 = _abrir(navegador, servidor, "compliance/termometro.html", rotas={"**/assets/js/config.js": rota})
+    _, pendente = _termometro_pendente()
+    pg2, erros2 = _abrir(navegador, servidor, "compliance/termometro.html",
+                         rotas={"**/assets/js/config.js": rota, "**/assets/js/termometro.js": pendente})
     assert pg2.locator("[data-pergunta]").count() == 0  # pesos sem revisão técnica (V11)
     expect(pg2.locator("[data-termometro]")).to_contain_text("revisão técnica")
     assert not erros and not erros2, erros + erros2
@@ -2554,13 +2564,20 @@ def test_janela_do_score_graficos_alertas_e_historico(navegador, servidor, vp):
 
 
 def test_janela_do_score_some_em_producao_sem_revisao(navegador, servidor):
-    if (RAIZ / "site" / "assets" / "js" / "termometro.js").read_text(encoding="utf-8").count("status: 'aprovada'"):
-        pytest.skip("revisão V11 aprovada: o score aparece em produção")
+    """A trava continua valendo: com a V11 voltando a pendente (texto mudou depois da revisão), o score some em produção.
+    Com a V11 aprovada (12/11/2026), o medidor aparece em produção."""
     rota = _config_alterada([("ambiente: 'homologacao'", "ambiente: 'producao'")])
-    pg, erros = _abrir(navegador, servidor, "empresarial/score.html", rotas={"**/assets/js/config.js": rota})
+    revisao, pendente = _termometro_pendente()
+    pg, erros = _abrir(navegador, servidor, "empresarial/score.html",
+                       rotas={"**/assets/js/config.js": rota, "**/assets/js/termometro.js": pendente})
     expect(pg.locator("[data-score-revisao]")).to_contain_text("revisão técnica")
     expect(pg.locator("[data-medidor]")).to_have_count(0)
     assert not erros, erros
+    if '"status": "aprovada"' in revisao:
+        pg, erros = _abrir(navegador, servidor, "empresarial/score.html", rotas={"**/assets/js/config.js": rota})
+        expect(pg.locator("[data-medidor]")).to_have_count(1)
+        expect(pg.locator("[data-score-revisao]")).to_have_count(0)
+        assert not erros, erros
 
 
 def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, servidor):

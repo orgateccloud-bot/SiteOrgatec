@@ -16,14 +16,14 @@ test('perguntas de cultura e relatos: integridade, com fonte do decreto', () => 
 
 test('pesos por perfil: só valem depois de aprovados', () => {
   const p = T.PERGUNTAS.find((x) => x.id === 'i-codigo');
-  assert.equal(T.PESOS_PERFIL.status, 'proposta');
-  assert.equal(T.pesoDe(p, 'simples'), p.peso);
-  const aprovada = Object.assign({}, T.PESOS_PERFIL, { status: 'aprovada' });
-  assert.equal(T.pesoDe(p, 'simples', aprovada), 1);
-  assert.equal(T.pesoDe(p, 'comercio', aprovada), p.peso);
+  assert.equal(T.PESOS_PERFIL.status, 'aprovada');  // V11, revisão técnica de 12/11/2026
+  const proposta = Object.assign({}, T.PESOS_PERFIL, { status: 'proposta' });
+  assert.equal(T.pesoDe(p, 'simples', proposta), p.peso);
+  assert.equal(T.pesoDe(p, 'simples'), 1);
+  assert.equal(T.pesoDe(p, 'comercio'), p.peso);
   const r = { 'i-codigo': 'sim', 'i-riscos': 'nao' };
-  assert.equal(T.avaliar(r, ['integridade'], 'simples').maximo, 4);
-  assert.equal(T.avaliar(r, ['integridade'], 'simples', aprovada).maximo, 2);
+  assert.equal(T.avaliar(r, ['integridade'], 'simples', proposta).maximo, 4);
+  assert.equal(T.avaliar(r, ['integridade'], 'simples').maximo, 2);
 });
 
 test('validar cobre os pesos por perfil', () => {
@@ -45,8 +45,9 @@ test('boletim: mudanças do histórico por público, da mais recente para a mais
 
 test('revisão: registro com hash do conteúdo e audit_hash estável', async () => {
   const O = { reformaItens: RI, complianceItens: CI, termometro: T };
-  const itens = R.pendentes(O);
+  const itens = R.todos(O);
   assert.ok(itens.some((i) => i.tipo === 'Peso por perfil'));
+  assert.ok(!R.pendentes(O).some((i) => i.tipo === 'Peso por perfil' || i.tipo === 'Pergunta'));  // V11 aprovada
   const id = itens[0].id;
   const reg = await R.registro('Responsável Teste', '2026-11-07', [{ id, decisao: 'aprovada' }], itens);
   assert.match(reg.audit_hash, /^[0-9a-f]{64}$/);

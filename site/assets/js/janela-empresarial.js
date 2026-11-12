@@ -57,7 +57,7 @@
   /* Score de compliance (nota de 0 a 100, geral e por frente), calculado por termometro.js com as respostas que o visitante
      deu no termômetro, nesta aba. Função pura: T = termometro.js; nomes = conteudo.PILARES; fontesPorId = fontes.porId.
      Estados: 'revisao' (produção sem a revisão V11: sem nota), 'sem-resposta' (convite ao termômetro) e 'nota'. */
-  var AVISO_SCORE = 'Calculado só no seu navegador, com as respostas do termômetro. Não é parecer nem probabilidade de autuação. Pesos e faixas em revisão técnica.';
+  var AVISO_SCORE = 'Calculado só no seu navegador, com as respostas do termômetro. Não é parecer nem probabilidade de autuação. Pesos e faixas aprovados na revisão técnica de 12/11/2026.';
   function cartaoScore(T, respostas, atividade, ambiente, nomes, fontesPorId) {
     nomes = nomes || {}; fontesPorId = fontesPorId || {};
     var perfil = T.perfilDaAtividade(atividade), rotulo = T.PERFIS[perfil].rotulo;

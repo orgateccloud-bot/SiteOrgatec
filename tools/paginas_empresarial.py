@@ -102,7 +102,7 @@ def score() -> None:
               '<div data-score-alertas aria-live="polite"></div></article>'
               '\n                <p class="text-sm text-tinta-suave mt-3" data-score-status role="status"></p>'
               '\n                <p class="text-xs text-tinta-fraca mt-2">Calculado só no seu navegador, com as respostas do termômetro. O histórico guarda só as notas, neste navegador, '
-              'e só quando você registra. Não é parecer nem probabilidade de autuação. Pesos e faixas em revisão técnica.</p>')
+              'e só quando você registra. Não é parecer nem probabilidade de autuação. Pesos e faixas aprovados na revisão técnica de 12/11/2026.</p>')
     corpo = "\n".join([
         gp.hero("Empresarial · Score", "O score de compliance da sua empresa.",
                 "A nota de 0 a 100 nas regras de compliance do seu perfil, como ela evolui e os alertas de prazo e de frente em risco, com a fonte de cada ponto.",

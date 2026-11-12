@@ -63,9 +63,11 @@ test('filtrar frentes muda o total considerado', () => {
   assert.equal(T.avaliar({}).total, T.PERGUNTAS.length);
 });
 
-test('em produção, sem revisão técnica dos pesos (V11), o termômetro não aparece', () => {
-  assert.equal(T.REVISAO.status, 'pendente');
-  assert.equal(T.publicavel('producao'), false);
+test('com a revisão técnica dos pesos aprovada (V11), o termômetro aparece também em produção', () => {
+  assert.equal(T.REVISAO.status, 'aprovada');
+  assert.equal(T.REVISAO.por, 'ORGATEC');
+  assert.equal(T.REVISAO.em, '2026-11-12');
+  assert.equal(T.publicavel('producao'), true);
   assert.equal(T.publicavel('homologacao'), true);
 });
 
