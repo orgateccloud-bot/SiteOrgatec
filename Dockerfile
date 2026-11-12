@@ -32,6 +32,8 @@ COPY site/ site/
 COPY --from=dados /dados-abertos /app/dados-abertos
 # Rotinas de LGPD: a retenção roda como tarefa agendada com esta mesma imagem (docs/publicacao.md)
 COPY tools/lgpd.py tools/lgpd.py
+# Alertas de clima e desastres na rota: job orgatec-alertas a cada 15 min com esta mesma imagem (docs/ideias/alertas-rota.md)
+COPY tools/transporte_alertas.py tools/transporte_alertas.py
 
 # Usuário sem privilégios; /dados é o único diretório gravável
 RUN useradd --create-home --uid 10001 orgatec \

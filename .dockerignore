@@ -8,6 +8,7 @@ backend/dados
 tests
 tools
 !tools/lgpd.py
+!tools/transporte_alertas.py
 !tools/transporte_dados_abertos.py
 docs
 dist
