@@ -602,6 +602,29 @@ def test_nenhum_link_para_as_secoes_antigas_da_home():
         assert 'href="#simulador"' not in html and 'href="#calendario"' not in html, caminho
 
 
+CABECALHO_JS = """() => {
+    const c = document.querySelector('header > div');
+    const logo = c.querySelector('a'), nav = c.querySelector('nav'), direita = c.lastElementChild;
+    const r = e => e.getBoundingClientRect();
+    return { logoInteiro: logo.scrollWidth <= logo.clientWidth + 1,
+             navNaoCobreLogo: getComputedStyle(nav).display === 'none' || r(nav).left >= r(logo).right - 1,
+             direitaNaoCobreNav: getComputedStyle(nav).display === 'none' || r(direita).left >= r(nav).right - 1,
+             caixaSemSobra: c.scrollWidth <= c.clientWidth + 1,
+             paginaSemRolagemLateral: document.documentElement.scrollWidth <= innerWidth };
+}"""
+
+
+@pytest.mark.parametrize("largura", [1024, 1279, 1280, 1366, 1440, 1536, 1920])
+def test_cabecalho_nao_se_sobrepoe_em_nenhuma_largura_de_desktop(navegador, servidor, largura):
+    """O menu do desktop não pode cobrir o nome ORGATEC (o ícone Início ficava sobre ele em 1280 px)."""
+    for caminho in ("inicio.html", "rural/janela-de-campo.html"):
+        pg = navegador.new_context(viewport={"width": largura, "height": 800}).new_page()
+        pg.goto(f"{servidor}/{caminho}")
+        pg.wait_for_selector("header > div")  # abaixo de 1280 px o menu fica escondido (só o ☰), e o teste vale também ali
+        medidas = pg.evaluate(CABECALHO_JS)
+        assert all(medidas.values()), (largura, caminho, medidas)
+
+
 def test_menu_e_rodape_iguais_em_todas_as_paginas():
     """Cabeçalho e rodapé vêm todos de tools/layout.py: mesmos rótulos e destinos (fora o prefixo ../)."""
     def assinatura(caminho):
