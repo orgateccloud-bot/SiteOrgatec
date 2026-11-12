@@ -17,6 +17,7 @@ def hub() -> None:
         gp.cartao("Lucro real e presumido", "CBS no lugar de PIS e Cofins", "Créditos, saldos e a transição de 2027 a 2033 para quem não está no Simples.", "{p}empresarial/lucro-real.html"),
         gp.cartao("Simples Nacional", "IBS e CBS dentro ou fora do DAS", "Quando vale apurar IBS e CBS no regime regular e as janelas de opção.", "{p}reforma/simples-hibrido.html"),
         gp.cartao("Compliance", "O que cada público precisa cumprir", "Obrigações por público, com prazo e fonte, e o termômetro de conformidade.", "{p}compliance/publicos.html"),
+        gp.cartao("Score da empresa", "Nota de 0 a 100 por frente", "Medidor, evolução no tempo e alertas de prazo, calculados no seu navegador a partir do termômetro.", "{p}empresarial/score.html"),
     ]
     corpo = "\n".join([
         gp.hero("Área Empresarial", "Reforma tributária para a sua empresa ou transportadora.",
@@ -25,7 +26,7 @@ def hub() -> None:
                 '<a href="{p}ferramentas/simulador.html" class="og-btn og-btn-sobre-palco og-btn-lg">Testar Simulador Tributário</a>', compacto=True),
         gp.secao("Quem atendemos", "Por onde começar",
                  '                <p class="text-tinta-suave max-w-3xl mb-6">Escolha o caminho mais próximo da sua operação. Os textos orientam; a decisão do seu caso passa pelo contador responsável.</p>\n'
-                 + gp.grade(cartoes), "bg-fundo", "caminhos", compacto=True),
+                 + gp.grade(cartoes, "md:grid-cols-2 lg:grid-cols-3"), "bg-fundo", "caminhos", compacto=True),
         gp.faixa_cta("Comece pelo diagnóstico", "Em uma conversa, levantamos regime, atividade e fornecedores e indicamos o que precisa de decisão ainda em 2026.", compacto=True),
     ])
     gp.pagina("empresarial/index.html", "Área Empresarial: reforma tributária",

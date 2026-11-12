@@ -399,6 +399,7 @@ def termometro() -> None:
                     <div data-termometro-resultado></div>
                     <div class="flex flex-wrap gap-3 mt-6">
                         <a {gp.WHATS} data-msg="Olá! Fiz o termômetro de conformidade no site da ORGATEC e quero conversar sobre o resultado." class="og-btn og-btn-contato og-btn-md">Conversar sobre o resultado</a>
+                        <a href="{{p}}empresarial/score.html" class="og-btn og-btn-primario og-btn-md" data-termometro-score>Ver o score da empresa</a>
                         <button type="button" class="og-btn og-btn-contorno og-btn-md" data-termometro-imprimir>Imprimir ou salvar em PDF</button>
                         <button type="button" class="og-btn og-btn-contorno og-btn-md" data-termometro-ics hidden>Baixar plano de ação (.ics)</button>
                         <button type="button" class="og-btn og-btn-contorno og-btn-md" data-termometro-limpar>Limpar respostas</button>

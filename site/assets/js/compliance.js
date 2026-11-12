@@ -68,6 +68,9 @@
     var ps = T.pilaresDoPerfil(perfil);
     filtros.forEach(function (c) { c.checked = ps.indexOf(c.value) >= 0; });
     $$('[data-perfil]', raiz).forEach(function (r) { r.checked = r.value === perfil; });
+    // o botão do score abre a janela do score já na atividade do perfil (sem atividade própria = qualquer empresa)
+    var linkScore = document.querySelector('[data-termometro-score]');
+    if (linkScore) linkScore.setAttribute('href', linkScore.getAttribute('href').split('#')[0] + (T.ATIVIDADE_PERFIL[perfil] ? '#perfil-' + perfil : ''));
   }
 
   // ---------- Resultado ao vivo
