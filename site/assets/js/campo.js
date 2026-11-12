@@ -323,6 +323,7 @@
       divisas: alvo.getAttribute('data-campo-divisas') || null,
       polos: b.polos,
       estado: function (p) { return p.ops[selO] ? p.ops[selO].estado : 'ok'; },
+      atual: function () { return selP; },  // o polo da barra do local fica em destaque no mapa
       rotulo: function (p) { var o = p.ops[selO]; return p.nome + ' (' + p.uf + '): ' + ESTADOS[o.estado].rotulo + (o.janela ? ', ' + (o.tipoJanela === 'ok' ? 'janela ' : 'com restrição ') + o.janela : ''); },
       aoEscolher: function (p) {
         selR = p.regiao; selP = p.id; desenhar();

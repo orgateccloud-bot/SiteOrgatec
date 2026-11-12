@@ -2427,6 +2427,82 @@ def test_satelite_so_carrega_quando_aparece_na_tela(navegador, servidor):
     assert pedidas_m
 
 
+def test_satelite_visual_novo_cartao_glifos_polo_escolhido_e_contagem(navegador, servidor):
+    """Mapa de satélite modernizado (12/11/2026): um cartão, polos com os glifos da página, polo da barra do local em destaque
+    e a contagem dos polos por estado sobre a imagem."""
+    pg, erros = _satelite(navegador, servidor)
+    b = _boletim_automatico()
+    pg.wait_for_selector(".mapa-cartao .mapa-satelite")
+    # camada em controle segmentado, chuva e divisas em chaves (continuam sendo caixas de marcar para o leitor de tela)
+    assert pg.locator(".mapa-seg [data-camada]").count() == 2
+    expect(pg.locator(".mapa-seg [data-camada=infravermelho]")).to_have_attribute("aria-pressed", "true")
+    assert pg.locator(".mapa-chave input[type=checkbox]").count() == 2
+    # cada polo traz o glifo do estado (o mesmo desenho dos cartões), não só a cor
+    assert pg.locator(".mapa-polo .glifo").count() == len(b["polos"])
+    for estado in ("ok", "atencao", "evitar"):
+        assert pg.locator(f".mapa-polo-{estado}").count() == pg.locator(f".mapa-polo-{estado} .glifo-{estado}").count()
+    # a contagem sobre a imagem soma todos os polos e muda com a operação
+    def contagem():
+        return pg.evaluate("[...document.querySelectorAll('[data-mapa-resumo] b')].map(e => Number(e.textContent))")
+    antes = pg.locator("[data-mapa-resumo]").inner_text()
+    assert sum(contagem()) == len(b["polos"])
+    assert pg.locator("[data-mapa-resumo] .glifo").count() == len(contagem())
+    pg.locator(".campo-op[data-o=colheita]").click()
+    assert sum(contagem()) == len(b["polos"])
+    esperado = pg.evaluate("""() => { const n = {}; document.querySelectorAll('.mapa-polo').forEach(e => { const k = [...e.classList].find(c => /^mapa-polo-(ok|atencao|evitar|sem)$/.test(c)); n[k] = (n[k] || 0) + 1; }); return Object.values(n).sort(); }""")
+    assert sorted(contagem()) == esperado, (antes, contagem(), esperado)
+    # o polo escolhido na página fica em destaque no mapa, com o nome à vista; trocar de polo move o destaque
+    pg.click("[data-polo='palmas']")
+    atual = pg.locator(".mapa-polo-atual")
+    expect(atual).to_have_count(1)
+    expect(atual).to_have_attribute("data-polo", "palmas")
+    expect(atual).to_have_attribute("aria-current", "true")
+    expect(atual.locator(".mapa-polo-nome")).to_have_css("opacity", "1")
+    expect(atual.locator(".mapa-polo-nome")).to_contain_text("Palmas")
+    pg.click("[data-polo='sorriso']")
+    expect(pg.locator(".mapa-polo-atual")).to_have_attribute("data-polo", "sorriso")
+    # nenhum nome de polo sai do mapa (os da metade direita abrem para a esquerda)
+    fora = pg.evaluate("""() => { const f = document.querySelector('.mapa-satelite').getBoundingClientRect();
+        return [...document.querySelectorAll('.mapa-polo-nome')].filter(e => { const r = e.getBoundingClientRect(); return r.left < f.left - 1 || r.right > f.right + 1; }).map(e => e.textContent); }""")
+    assert not fora, fora
+    assert not erros, erros
+
+
+def test_satelite_animacao_troca_os_quadros_por_transicao_e_o_botao_diz_o_que_faz(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor)
+    play = pg.locator("[data-mapa-play]")
+    expect(play).to_have_attribute("aria-label", "Animar as últimas 2 horas")
+    expect(pg.locator(".mapa-satelite")).not_to_have_attribute("data-carregando", "")  # o brilho de carregamento sai com a imagem
+    assert pg.locator(".mapa-quadro.on").count() == 1
+    play.click()
+    expect(play).to_have_attribute("aria-label", "Pausar a animação")
+    expect(pg.locator("[data-mapa-quadro]")).not_to_have_value("11")  # a animação andou (o último quadro é o 11)
+    assert pg.locator(".mapa-quadro").count() == 12 and pg.locator(".mapa-quadro.on").count() == 1  # um quadro à vista por vez
+    assert pg.locator("[data-mapa-quadro]").evaluate("e => e.style.getPropertyValue('--p')").endswith("%")
+    play.click()
+    expect(play).to_have_attribute("aria-label", "Animar as últimas 2 horas")
+    # cor real: uma imagem só, à vista
+    pg.click("[data-camada=cor]")
+    assert pg.locator(".mapa-quadro.on").count() == 1
+    assert not erros, erros
+
+
+def test_satelite_celular_cartao_cabe_e_todo_botao_tem_44_px(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor, "mobile")
+    pg.wait_for_selector(".mapa-cartao .mapa-polo")
+    baixos = pg.evaluate("""() => [...document.querySelectorAll('.mapa-cartao button:not(.mapa-polo)')]
+        .filter(e => e.offsetParent && e.getBoundingClientRect().height < 43.5).map(e => (e.getAttribute('aria-label') || e.textContent) + ' ' + Math.round(e.getBoundingClientRect().height))""")
+    assert not baixos, baixos
+    chaves = pg.evaluate("[...document.querySelectorAll('.mapa-chave span')].map(e => Math.round(e.getBoundingClientRect().height))")
+    assert chaves and all(h >= 44 for h in chaves), chaves
+    caixa = pg.locator(".mapa-cartao").bounding_box()
+    assert caixa["x"] >= 0 and caixa["x"] + caixa["width"] <= 375
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    # no celular a contagem mostra só o número ao lado do glifo; o texto continua para o leitor de tela
+    assert pg.locator("[data-mapa-resumo] .mapa-resumo-txt").first.inner_text().strip() != ""
+    assert not erros, erros
+
+
 def test_satelite_celular_controle_de_tempo_facil_de_tocar_e_sem_rolagem_lateral(navegador, servidor):
     pg, erros = _satelite(navegador, servidor, "mobile")
     pg.wait_for_selector("[data-mapa-quadro]", state="attached")

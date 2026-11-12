@@ -33,3 +33,15 @@ test('escala da chuva: 7 faixas em mm/h, de verde a bordô, valores crescentes',
   assert.equal(c[0][0], '#00991a');
   assert.equal(c[c.length - 1][0], '#580000');
 });
+
+test('resumo dos polos: conta por estado, na ordem da legenda, sem os zerados, e trata estado desconhecido como sem previsão', () => {
+  assert.deepEqual(M.resumoDosPolos(['ok', 'atencao', 'ok', 'evitar', 'atencao', 'ok']), [
+    { estado: 'ok', n: 3, texto: '3 favoráveis' },
+    { estado: 'atencao', n: 2, texto: '2 com restrição' },
+    { estado: 'evitar', n: 1, texto: '1 a evitar' },
+  ]);
+  assert.deepEqual(M.resumoDosPolos(['ok']), [{ estado: 'ok', n: 1, texto: '1 favorável' }]);
+  assert.deepEqual(M.resumoDosPolos(['sem', 'qualquer']), [{ estado: 'sem', n: 2, texto: '2 sem previsão' }]);
+  assert.deepEqual(M.resumoDosPolos([]), []);
+  assert.deepEqual(M.resumoDosPolos(undefined), []);
+});
