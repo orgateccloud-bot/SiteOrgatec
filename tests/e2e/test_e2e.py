@@ -2500,8 +2500,7 @@ def test_satelite_modelo_3d_de_vidro_liga_gira_e_os_polos_continuam_clicaveis(na
     expect(figura).to_have_attribute("tabindex", "0")
     expect(pg.locator("[data-mapa-dica]")).to_be_visible()
     expect(placa).to_have_css("transform-style", "preserve-3d")
-    pg.wait_for_timeout(900)  # a placa leva 0,7 s para inclinar
-    assert placa.evaluate("e => getComputedStyle(e).transform").startswith("matrix3d(")
+    expect(placa).to_have_css("transform", re.compile(r"^matrix3d[(]"))  # a placa leva 0,7 s para inclinar; a espera é do expect
     assert pg.locator(".mapa-lado").first.evaluate("e => getComputedStyle(e).display") == "block"  # espessura de vidro
     assert pg.locator(".mapa-polo-pe").count() == 20
     giro = lambda: placa.evaluate("e => [e.style.getPropertyValue('--rx'), e.style.getPropertyValue('--rz')]")
@@ -2535,8 +2534,7 @@ def test_satelite_modelo_3d_de_vidro_liga_gira_e_os_polos_continuam_clicaveis(na
     chave.uncheck()
     expect(figura).not_to_have_class(re.compile(r"\bmapa-3d\b"))
     assert figura.get_attribute("tabindex") is None
-    pg.wait_for_timeout(900)
-    assert placa.evaluate("e => getComputedStyle(e).transform") == "none"
+    expect(placa).to_have_css("transform", "none")  # com a máquina ocupada a volta passa de 0,9 s: o expect espera o quanto precisar
     assert giro() == ["54deg", "-22deg"]
     assert not erros, erros
 
