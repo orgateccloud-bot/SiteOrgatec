@@ -1,7 +1,7 @@
 # Janela de Campo: mapa de satélite com visual novo
 
-- **Situação:** implementada em 12/11/2026 na branch `ideia/campo-mapa-moderno`; **aguarda a sua aprovação da prévia**. Não publicada.
-- **Branch:** `ideia/campo-mapa-moderno` (parte da `desenvolvimento`)
+- **Situação:** aprovada em 12/11/2026 e junta na `desenvolvimento` (mapa novo e modelo 3D de vidro do mapa); **falta lançar**. Os cartões das operações em vidro 3D foram feitos e desfeitos a pedido ("mantém o formato anterior"); ficaram guardados no stash do git "cartoes das operacoes em vidro 3D".
+- **Branch:** `ideia/campo-mapa-moderno` (removida depois do merge)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) (expira em 12/12/2026). Usa o boletim real do ar.
 
 ## Problema
