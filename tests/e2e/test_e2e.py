@@ -785,7 +785,7 @@ def test_painel_de_fontes_oficiais(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "inicio.html")
     orgaos = pg.locator("[data-orgao]")
     assert orgaos.count() >= 5
-    planalto = pg.evaluate("window.Orgatec.fontes.lista.filter(f => f.url && /planalto\.gov\.br/.test(f.url)).length")
+    planalto = pg.evaluate(r"window.Orgatec.fontes.lista.filter(f => f.url && /planalto\.gov\.br/.test(f.url)).length")
     expect(orgaos.first).to_contain_text(f"{planalto} dispositivos citados")
     expect(pg.locator("#fontes")).to_contain_text("não indica parceria")
     # No vidro azul (paleta padrão) a seção é transparente de propósito: os cartões de vidro desfocam a logo que passa atrás
