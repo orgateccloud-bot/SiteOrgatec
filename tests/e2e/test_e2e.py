@@ -2499,6 +2499,23 @@ def test_janela_e_score_a_vista_no_menu_no_mapa_e_no_transporte(navegador, servi
     assert not [e for e in erros if "atual.json" not in e], erros
 
 
+def test_central_de_viagem_tem_link_mas_continua_fora_do_google(navegador, servidor):
+    """Desde 12/11/2026 a Central e o portal de viagens têm link (menu Empresarial, transporte e Área do cliente), com o selo
+    de acesso restrito; as duas telas de login seguem com noindex e fora do sitemap."""
+    mapa = (RAIZ / "site" / "sitemap.xml").read_text(encoding="utf-8")
+    for pagina in ("transporte/central.html", "transporte/portal.html"):
+        assert 'content="noindex' in (RAIZ / "site" / pagina).read_text(encoding="utf-8"), pagina
+        assert pagina not in mapa, pagina
+    pg, erros = _abrir(navegador, servidor, "empresarial/transporte.html")
+    assert pg.locator("nav a[href$='transporte/central.html']").count() >= 1
+    expect(pg.locator("#central [data-acesso-central]")).to_have_attribute("href", "../transporte/central.html")
+    expect(pg.locator("#central [data-acesso-portal]")).to_have_attribute("href", "../transporte/portal.html")
+    expect(pg.locator("#central")).to_contain_text("acesso restrito")
+    pg2, erros2 = _abrir(navegador, servidor, "cliente/index.html")
+    expect(pg2.locator("#acessos [data-acesso-central]")).to_have_attribute("href", "../transporte/central.html")
+    assert not erros and not erros2, erros + erros2
+
+
 def test_janela_empresarial_marca_atrasado_e_indisponivel(navegador, servidor):
     janela = {"geradoEm": "2026-01-01T05:00-03:00", "proximaAtualizacao": "hoje às 11h", "aviso": "Não substitui a SEFAZ, a ANTT nem o contador.",
               "perfis": [], "cartoes": [

@@ -1,6 +1,7 @@
 """Central de Viagem e portal do cliente (site/transporte/central.html e portal.html), Fase 5 de docs/ideias/reestruturacao-transporte.md.
 
-Páginas com noindex, FORA do menu, do hub e do mapa do site até a decisão R4 (login e área do cliente). Os fragmentos de tela vêm de
+Páginas com noindex e fora do mapa do site (são telas de login). Desde 12/11/2026, por pedido da ORGATEC, têm link no menu Empresarial,
+na página do transporte e na Área do cliente, com o selo "acesso restrito". Os fragmentos de tela vêm de
 tools/transporte_modelos/ (a lógica é a do módulo de referência de docs/ideias/anexos/central-viagem-v0.1/). A API só responde com
 ORGATEC_TRANSPORTE=1 no servidor; sem isso, a tela mostra o aviso de recurso desligado.
 """

@@ -32,7 +32,7 @@ COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de confor
               ("Proteção de dados (LGPD)", "compliance/protecao-de-dados.html"), ("Integridade e anticorrupção", "compliance/integridade.html")]
 EMPRESARIAL = [("Visão geral", "empresarial/index.html"), ("Transporte", "empresarial/transporte.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
                ("Simples Nacional", "reforma/simples-hibrido.html"), ("Janela da semana", "empresarial/janela.html"),
-               ("Score da empresa", "empresarial/score.html")]
+               ("Score da empresa", "empresarial/score.html"), ("Central de Viagem (clientes)", "transporte/central.html")]
 NAV = [
     ("tributario", "Consultoria", "consultoria-tributaria.html", []),
     ("reforma", "Reforma", "reforma/index.html", []),

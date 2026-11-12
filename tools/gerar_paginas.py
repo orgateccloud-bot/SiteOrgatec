@@ -527,6 +527,14 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta:
                '                <p class="flex flex-wrap gap-3"><a href="{p}empresarial/janela.html#perfil-transportador" class="og-btn og-btn-primario og-btn-lg" data-atalho-janela>Abrir a janela da semana</a>'
                '<a href="{p}empresarial/score.html#perfil-transportador" class="og-btn og-btn-contorno og-btn-lg">Ver o score da transportadora</a></p>',
                "bg-fundo", "acompanhe") if slug == "transporte" else ""),
+        (secao("Para clientes transportadores", "Central de Viagem e portal de viagens",
+               '                <p class="text-tinta-suave max-w-3xl mb-6">Para transportadoras clientes da ORGATEC, com login individual: lance a rota e veja despesas, tempo, bloqueios e clima do trajeto; '
+               'acompanhe as viagens, os alertas e a posição do veículo. A posição do veículo é dado pessoal do motorista e fica restrita à transportadora.</p>\n'
+               '                <p class="flex flex-wrap items-center gap-3"><a href="{p}transporte/central.html" class="og-btn og-btn-primario og-btn-lg" data-acesso-central>Entrar na Central de Viagem</a>'
+               '<a href="{p}transporte/portal.html" class="og-btn og-btn-contorno og-btn-lg" data-acesso-portal>Portal de viagens</a>'
+               '<span class="og-selo og-selo-pendente">acesso restrito</span></p>\n'
+               f'                <p class="text-sm text-tinta-suave mt-4">Ainda sem acesso? <a {WHATS} data-msg="Olá! Sou transportadora e quero acesso à Central de Viagem da ORGATEC." class="og-link">Peça pelo WhatsApp</a>.</p>',
+               "bg-superficie", "central") if slug == "transporte" else ""),
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
     ])
     pagina(f"{'empresarial' if slug == 'transporte' else 'setores'}/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "empresarial" if slug == "transporte" else "setores", "captação + autoridade", corpo,
@@ -898,7 +906,11 @@ def cliente() -> None:
         f'<div class="og-cartao"><span class="og-cartao-ref">Para empresas</span><h3 class="og-cartao-titulo">Gestão financeira</h3>'
         f'<p class="og-cartao-texto mb-3">Lançamentos, extratos, notas e projeção de CBS e IBS por empresa. O acompanhamento de crédito entra aqui quando a operação começar; ainda não há oferta de crédito.</p><p class="flex flex-wrap items-center gap-3">{acesso("gestaoFinanceira", "og-btn og-btn-primario og-btn-md")}'
         f'<a href="{{p}}solucoes/index.html" class="og-link text-sm">Saiba mais</a></p></div>',
-    ], "md:grid-cols-2 lg:grid-cols-3")
+        '<div class="og-cartao"><span class="og-cartao-ref">Para transportadoras</span><h3 class="og-cartao-titulo">Central de Viagem</h3>'
+        '<p class="og-cartao-texto mb-3">Rota com despesas, tempo, bloqueios e clima do trajeto; viagens, alertas e posição do veículo, com login individual.</p><p class="flex flex-wrap items-center gap-3">'
+        '<a href="{p}transporte/central.html" class="og-btn og-btn-primario og-btn-md" data-acesso-central>Entrar</a>'
+        '<a href="{p}transporte/portal.html" class="og-link text-sm">Portal de viagens</a><span class="og-selo og-selo-pendente">acesso restrito</span></p></div>',
+    ], "md:grid-cols-2")
     corpo = "\n".join([
         intro("Área do cliente", "Documentos, guias e relatórios no portal", "", portal),
         secao("Acessos", "Outros sistemas da ORGATEC", acessos + '\n                <p class="text-sm text-tinta-suave mt-4">Cada sistema tem endereço e login próprios. O botão “Entrar” aparece quando o acesso estiver liberado para clientes.</p>', id_="acessos"),
