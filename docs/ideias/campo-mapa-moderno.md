@@ -2,7 +2,7 @@
 
 - **Situação:** implementada em 12/11/2026 na branch `ideia/campo-mapa-moderno`; **aguarda a sua aprovação da prévia**. Não publicada.
 - **Branch:** `ideia/campo-mapa-moderno` (parte da `desenvolvimento`)
-- **Prévia:** ver o índice em [README.md](README.md)
+- **Prévia:** [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) (expira em 12/12/2026). Usa o boletim real do ar.
 
 ## Problema
 
