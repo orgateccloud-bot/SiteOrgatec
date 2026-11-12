@@ -522,6 +522,11 @@ def setor(slug: str, nome: str, titulo: str, lead: str, porque: str, ferramenta:
         (secao("Obrigações do transportador", "RNTRC, CIOT, piso de frete e vale-pedágio",
                '                <p class="text-tinta-suave max-w-3xl mb-6">Cada ponto traz a norma, a data de consulta e o status da revisão técnica. Não substitui a ANTT nem o parecer do contador.</p>\n'
                + itens(destino="publico-transportador", recolher=True, inicial=6), "bg-superficie", "obrigacoes") if slug == "transporte" else ""),
+        (secao("Acompanhe", "A semana da transportadora",
+               '                <p class="text-tinta-suave max-w-3xl mb-6">Prazos dos próximos 7 dias, mudanças da reforma e as obrigações do transportador, com fonte e hora da coleta, e a nota de compliance da sua empresa.</p>\n'
+               '                <p class="flex flex-wrap gap-3"><a href="{p}empresarial/janela.html#perfil-transportador" class="og-btn og-btn-primario og-btn-lg" data-atalho-janela>Abrir a janela da semana</a>'
+               '<a href="{p}empresarial/score.html#perfil-transportador" class="og-btn og-btn-contorno og-btn-lg">Ver o score da transportadora</a></p>',
+               "bg-fundo", "acompanhe") if slug == "transporte" else ""),
         faixa_cta(f"Diagnóstico para {nome.lower()}", "Levantamos as operações, os fornecedores e os créditos e mostramos o efeito ano a ano."),
     ])
     pagina(f"{'empresarial' if slug == 'transporte' else 'setores'}/{slug}.html", f"Reforma tributária no {nome.lower()}", lead, "empresarial" if slug == "transporte" else "setores", "captação + autoridade", corpo,
@@ -1262,6 +1267,7 @@ def abertura() -> None:
 MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("index.html", "captação: tela de abertura"), ("inicio.html", "captação"), ("consultoria-tributaria.html", "captação + autoridade"), ("reforma/index.html", "autoridade + retenção"),
     ("rural/index.html", "captação + autoridade"), ("empresarial/transporte.html", "captação + autoridade"), ("reforma/alertas-regionais.html", "autoridade"), ("rural/janela-de-campo.html", "retenção"),
+    ("empresarial/janela.html", "retenção"), ("empresarial/score.html", "retenção"),
     ("rural/cotacoes.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
     ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),

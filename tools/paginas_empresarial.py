@@ -17,6 +17,7 @@ def hub() -> None:
         gp.cartao("Lucro real e presumido", "CBS no lugar de PIS e Cofins", "Créditos, saldos e a transição de 2027 a 2033 para quem não está no Simples.", "{p}empresarial/lucro-real.html"),
         gp.cartao("Simples Nacional", "IBS e CBS dentro ou fora do DAS", "Quando vale apurar IBS e CBS no regime regular e as janelas de opção.", "{p}reforma/simples-hibrido.html"),
         gp.cartao("Compliance", "O que cada público precisa cumprir", "Obrigações por público, com prazo e fonte, e o termômetro de conformidade.", "{p}compliance/publicos.html"),
+        gp.cartao("Janela da semana", "Prazos e mudanças por perfil", "Prazos dos próximos 7 dias, mudanças da reforma e, para o transportador, as obrigações do setor, com fonte e hora da coleta.", "{p}empresarial/janela.html"),
         gp.cartao("Score da empresa", "Nota de 0 a 100 por frente", "Medidor, evolução no tempo e alertas de prazo, calculados no seu navegador a partir do termômetro.", "{p}empresarial/score.html"),
     ]
     corpo = "\n".join([
@@ -59,7 +60,8 @@ ATIVIDADES = [("", "Escolha"), ("transportador", "Transportador de cargas"), ("c
 
 
 def janela() -> None:
-    """Janela Empresarial e do Transporte. Fica FORA do menu, do hub e do mapa do site (noindex) até a decisão R3 e a semana de sombra."""
+    """Janela Empresarial e do Transporte. No menu, no hub e no mapa do site desde 12/11/2026, por pedido da ORGATEC.
+    O arquivo de dados (site/dados/empresarial/atual.json) é refeito a cada publicação (tools/publicar.py → preparar_dados)."""
     opcoes_pub = "".join(f'<option value="{v}">{r}</option>' for v, r in ATIVIDADES)
     regimes = "".join(f'<option value="{v}"{" selected" if v == "real" else ""}>{r}</option>' for v, r in
                       (("simples", "Simples Nacional"), ("presumido", "Lucro presumido"), ("real", "Lucro real")))
@@ -80,13 +82,13 @@ def janela() -> None:
     ])
     gp.pagina("empresarial/janela.html", "Janela Empresarial e do Transporte",
               "Score de compliance, prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.",
-              "empresarial", "retenção", corpo, indexar=False, extra=["termometro.js", "janela-empresarial.js"],
+              "empresarial", "retenção", corpo, extra=["termometro.js", "janela-empresarial.js"],
               trilha=[("Empresarial", "empresarial/index.html"), ("Janela", None)])
 
 
 def score() -> None:
     """Janela do score da empresa: medidor, evolução das notas registradas e alertas (site/assets/js/score-empresa.js).
-    Fora do menu e noindex, como a Janela; aberta pelo cartão do score da Janela (score.html#perfil-<id>)."""
+    No menu, no hub e no mapa do site; o cartão do score da Janela abre score.html#perfil-<id>."""
     opcoes = "".join(f'<option value="{v}">{"Qualquer empresa" if not v else r}</option>' for v, r in ATIVIDADES)
     controles = ('<div class="flex flex-wrap items-end gap-3 mb-4">'
                  f'<div class="og-campo"><label class="og-campo-rotulo" for="sAtividade">Minha atividade</label>'
@@ -113,7 +115,7 @@ def score() -> None:
     ])
     gp.pagina("empresarial/score.html", "Score de compliance da empresa",
               "Nota de compliance de 0 a 100, evolução e alertas de prazo e de frente em risco, calculados no navegador.",
-              "empresarial", "retenção", corpo, indexar=False,
+              "empresarial", "retenção", corpo,
               extra=["compliance-itens.js", "calendario.js", "termometro.js", "score-empresa.js"],
               trilha=[("Empresarial", "empresarial/index.html"), ("Janela", "empresarial/janela.html"), ("Score", None)])
 

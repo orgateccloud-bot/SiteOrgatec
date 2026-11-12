@@ -440,7 +440,7 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg.select_option("#pdStatus", "")
     pg.uncheck("#pdBloqueia")
     assert pg.locator("[data-pendencias] article").count() > abertas  # inclui as resolvidas (V8)
-    assert pg.locator("tbody a.og-link").count() == 39  # mapa de páginas
+    assert pg.locator("tbody a.og-link").count() == 41  # mapa de páginas (Janela e score entraram em 12/11/2026)
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
 
@@ -2481,6 +2481,22 @@ def test_transporte_mostra_as_obrigacoes_do_transportador_e_sem_link_de_alertas(
     expect(pg.locator("#obrigacoes .lista-itens > *").first).to_be_visible()  # itens do transportador (RNTRC, CIOT, piso, vale-pedágio)
     expect(pg.locator("[data-subnav-setores] a[href$='alertas-regionais.html']")).to_have_count(0)
     assert not erros, erros
+
+
+def test_janela_e_score_a_vista_no_menu_no_mapa_e_no_transporte(navegador, servidor):
+    """Desde 12/11/2026 a Janela e o score ficam no menu Empresarial, no mapa do site e sem noindex; a página do transporte
+    leva à Janela já no perfil do transportador."""
+    mapa = (RAIZ / "site" / "sitemap.xml").read_text(encoding="utf-8")
+    for pagina in ("empresarial/janela.html", "empresarial/score.html"):
+        assert f"https://orgatec.io/{pagina}" in mapa, pagina
+        assert 'content="noindex' not in (RAIZ / "site" / pagina).read_text(encoding="utf-8"), pagina
+    pg, erros = _abrir(navegador, servidor, "empresarial/transporte.html",
+                       rotas={"**/dados/empresarial/atual.json": lambda r: r.fulfill(status=404, body="")})
+    assert pg.locator("nav a[href$='empresarial/janela.html']").count() >= 1
+    pg.click("[data-atalho-janela]")
+    pg.wait_for_url("**/empresarial/janela.html#perfil-transportador")
+    expect(pg.locator("#jAtividade")).to_have_value("transportador")
+    assert not [e for e in erros if "atual.json" not in e], erros
 
 
 def test_janela_empresarial_marca_atrasado_e_indisponivel(navegador, servidor):

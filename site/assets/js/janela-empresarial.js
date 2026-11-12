@@ -120,6 +120,9 @@
         (O.conteudo || {}).PILARES, (O.fontes || {}).porId);
     }
     function desenhar() { desenharScore(); if (janela) alvo.innerHTML = renderizar(janela, estado, new Date()); }
+    // #perfil-<atividade> (vindo da página do transporte, por exemplo) escolhe a atividade, como na janela do score
+    var pedido = (location.hash || '').replace('#perfil-', ''), seletor = document.getElementById('jAtividade');
+    if (pedido && seletor && Array.prototype.some.call(seletor.options, function (o) { return o.value === pedido; })) seletor.value = pedido;
     document.querySelectorAll('[data-filtro-janela]').forEach(function (s) {
       estado[s.getAttribute('data-filtro-janela')] = s.value;  // o navegador pode restaurar a escolha ao voltar
       s.addEventListener('change', function () { estado[s.getAttribute('data-filtro-janela')] = s.value; desenhar(); });
