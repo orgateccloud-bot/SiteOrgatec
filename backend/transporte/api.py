@@ -27,7 +27,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
-from backend.transporte.alertas.envio import id_comunicacao
+from backend.transporte.alertas.envio import SISTEMA, id_comunicacao
 from backend.transporte.autenticacao import autenticador_firebase
 from backend.transporte.dominio import (
     FONTE_MANUAL,
@@ -411,6 +411,15 @@ def listar_comunicacoes(viagem_id: str, ctx: Contexto = Depends(GESTOR), s: Serv
     coms.sort(key=lambda c: utc(c["enviada_em"]), reverse=True)
     return [{**{k: c.get(k) for k in ("id", "alerta_rota_id", "canal", "estado", "destino", "gravidade", "texto", "detalhe", "historico")},
              "enviada_em": utc(c["enviada_em"]).isoformat()} for c in coms[:100]]
+
+
+@router.get("/alertas-publicos")
+def alertas_publicos(s: Servicos = Depends(alertas_ligados)) -> JSONResponse:  # noqa: B008
+    """Sem login: o mapa público da Janela do Transporte. Só avisos do INMET, focos do FIRMS e o resumo por rodovia
+    (backend/transporte/alertas/publico.py); nenhuma viagem, posição ou dado de transportadora. Cache de 5 min na CDN."""
+    reg = (s.repo.listar(SISTEMA, "alertas_publicos") or [None])[0]
+    corpo = {k: v for k, v in reg.items() if k not in ("id", "transportadora_id")} if reg else {"atualizado_em": None, "avisos": [], "focos": [], "rodovias": [], "fontes": {}}
+    return JSONResponse(corpo, headers={"Cache-Control": "public, max-age=60, s-maxage=300"})
 
 
 @router.get("/alertas-termo")

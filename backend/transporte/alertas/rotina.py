@@ -5,6 +5,7 @@
 3. Cruza cada alerta com o trecho que falta de cada viagem e grava em `alertas_rota` (um registro por alerta e viagem).
 4. Avisa o motorista quando o alerta chega a "Perigo" ou sobe de gravidade, e manda o SMS de reserva quando cabe.
 5. Grava o estado das fontes por transportadora (`alertas_estado/atual`): o painel mostra "fonte indisponível" em vez de silêncio.
+6. Grava o resumo público da região (`_sistema/alertas_publicos/atual`, publico.py) para o mapa da Janela do Transporte, mesmo sem viagem.
 
 Ligada por ORGATEC_TRANSPORTE_ALERTAS=1. Fontes e canais têm flags próprias (`configurar`).
 """
@@ -18,6 +19,7 @@ from decimal import Decimal
 from typing import Any
 
 from backend.transporte.alertas import cruzamento as cz
+from backend.transporte.alertas import publico
 from backend.transporte.alertas.envio import SISTEMA, Envio, SmsZenvia, WhatsAppCloud
 from backend.transporte.alertas.fontes import AvisosInmet, FocosFirms, FocosInpe, ResultadoFonte, rank
 from backend.transporte.dominio import utc
@@ -80,7 +82,8 @@ def configurar(env: dict[str, str], repo: RepositorioBase, transporte: Any = Non
 
 
 def _caixa_total(rotas: list[cz.RotaViagem]) -> tuple[float, float, float, float]:
-    cs = [r.caixa for r in rotas]
+    """Retângulo das rotas somado à região do mapa público (o FIRMS é pedido uma vez para os dois usos)."""
+    cs = [r.caixa for r in rotas] + [publico.REGIAO]
     m = 0.1  # ~10 km de folga
     return (min(c[0] for c in cs) - m, min(c[1] for c in cs) - m, max(c[2] for c in cs) + m, max(c[3] for c in cs) + m)
 
@@ -130,10 +133,13 @@ def executar(repo: RepositorioBase, cfg: Configuracao, agora: datetime | None = 
     resumo: dict[str, Any] = {"viagens": len(rotas), "afetacoes": 0, "mensagens": 0, "fontes": {}}
     for tid in tids:
         reter(repo, tid, agora)
-    if not rotas:
-        return resumo
     fontes = _buscar(cfg, rotas, repo, agora)
     resumo["fontes"] = {k: r.estado for k, r in fontes.items()}
+    publico_ = publico.montar(fontes, agora)
+    repo.inserir(SISTEMA, "alertas_publicos", publico_, id_="atual")
+    resumo["publico"] = {"avisos": len(publico_["avisos"]), "focos": len(publico_["focos"])}
+    if not rotas:
+        return resumo
     alertas = [a for r in fontes.values() for a in r.alertas]
     focos = [f for r in fontes.values() for f in r.focos]
     ok = {k for k, r in fontes.items() if r.estado == "ok"}
