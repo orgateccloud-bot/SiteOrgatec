@@ -118,6 +118,30 @@ class MotoristaEntrada(BaseModel):
     usuario_id: str | None = Field(default=None, max_length=64)
 
 
+VERSAO_TERMO_ALERTAS = "alertas-rota-2026-11-11"
+TERMO_ALERTAS = ("Aceito receber da ORGATEC, em nome da minha transportadora, alertas de clima e desastres na rota das minhas viagens "
+                 "pelos canais marcados. Posso cancelar a qualquer momento pedindo à transportadora.")
+
+
+class ContatoMotorista(BaseModel):
+    """Telefone para os alertas de rota. Só com o consentimento do motorista, colhido pela transportadora com o texto TERMO_ALERTAS."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    telefone: str = Field(pattern=r"^\+55[1-9][0-9]9?[0-9]{8}$")
+    canais: list[Literal["whatsapp", "sms"]] = Field(min_length=1, max_length=2)
+    consentimento_do_motorista: Literal[True]
+    versao_termo: Literal["alertas-rota-2026-11-11"]
+
+    @field_validator("telefone", mode="before")
+    @classmethod
+    def _normalizar_telefone(cls, v: Any) -> Any:
+        if not isinstance(v, str):
+            return v
+        digitos = "".join(c for c in v if c.isdigit())
+        return "+" + (digitos if digitos.startswith("55") and len(digitos) >= 12 else "55" + digitos)
+
+
 class LancarViagem(BaseModel):
     veiculo_id: str
     motorista_id: str | None = None

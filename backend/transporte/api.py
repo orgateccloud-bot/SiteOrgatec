@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -23,15 +24,19 @@ from typing import Any, Literal
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
+from backend.transporte.alertas.envio import id_comunicacao
 from backend.transporte.autenticacao import autenticador_firebase
 from backend.transporte.dominio import (
     FONTE_MANUAL,
     PARAMETROS_META,
     AjusteDespesa,
+    TERMO_ALERTAS,
+    VERSAO_TERMO_ALERTAS,
     AlertaEntrada,
+    ContatoMotorista,
     Contexto,
     LancamentoEntrada,
     LancarViagem,
@@ -86,6 +91,8 @@ class Servicos:
     traccar: bool = False  # ORGATEC_TRANSPORTE_TRACCAR=1: aceita o app Traccar Client (teste com celular), ver receber_traccar
     mapa: dict[str, str] | None = None  # chave pública do Maps JavaScript API (restrita por domínio no Console) e Map ID opcional
     limite_ip: Callable[[Request], Any] | None = None  # limite por IP do site: só tentativas de acesso NEGADAS gastam dele
+    alertas: bool = False  # ORGATEC_TRANSPORTE_ALERTAS=1: alertas de clima e desastres na rota (backend/transporte/alertas)
+    whatsapp_webhook: dict[str, str] | None = None  # token de verificação e segredo do app da Meta (status de entrega)
     # Limite por usuário logado (o painel consulta a cada 15 s; o limite por IP do site, feito para formulários, não serve aqui)
     limitador_usuario: ingestao.Limitador = field(default_factory=lambda: ingestao.Limitador(maximo=600, janela_s=60.0))
 
@@ -119,8 +126,11 @@ def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador
     chave_mapa = e.get("ORGATEC_TRANSPORTE_MAPS_CHAVE_WEB", "").strip()
     mapa = {"provedor": "google", "chave": chave_mapa, **({"map_id": e["ORGATEC_TRANSPORTE_MAPS_ID"].strip()}
                                                           if e.get("ORGATEC_TRANSPORTE_MAPS_ID", "").strip() else {})} if chave_mapa else None
+    verificacao = e.get("ORGATEC_TRANSPORTE_WHATSAPP_VERIFICACAO", "").strip()
+    segredo_app = e.get("ORGATEC_TRANSPORTE_WHATSAPP_APP_SEGREDO", "").strip()
     return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip, mapa=mapa,
-                    traccar=e.get("ORGATEC_TRANSPORTE_TRACCAR", "0") == "1")
+                    traccar=e.get("ORGATEC_TRANSPORTE_TRACCAR", "0") == "1", alertas=e.get("ORGATEC_TRANSPORTE_ALERTAS", "0") == "1",
+                    whatsapp_webhook={"verificacao": verificacao, "segredo_app": segredo_app} if verificacao and segredo_app else None)
 
 
 def servicos(request: Request) -> Servicos:
@@ -235,7 +245,7 @@ def como_entrar(s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B00
 @router.get("/contexto")
 def ver_contexto(ctx: Contexto = Depends(contexto), s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B008
     return {"papel": ctx.papel, "usuario_id": ctx.usuario_id, "ambiente": "producao" if s.producao else "desenvolvimento", "entrada": s.entrada.get("modo"),
-            "flags": {"provedores_reais": s.provedores.reais(), "sensores_ativo": s.cofre is not None},
+            "flags": {"provedores_reais": s.provedores.reais(), "sensores_ativo": s.cofre is not None, "alertas_ativo": s.alertas},
             "mapa": s.mapa}  # só depois do login: a chave é pública, mas não precisa ficar exposta a quem não entrou
 
 
@@ -265,7 +275,8 @@ def criar_veiculo(entrada: VeiculoEntrada, ctx: Contexto = Depends(GESTOR), s: S
 
 @router.get("/motoristas")
 def listar_motoristas(ctx: Contexto = Depends(GESTOR), s: Servicos = Depends(servicos)) -> list[dict[str, Any]]:  # noqa: B008
-    return [{"id": m["id"], "nome": m["nome"]} for m in s.repo.listar(ctx.transportadora_id, "motoristas")]
+    return [{"id": m["id"], "nome": m["nome"], "alertas_canais": (m.get("contato") or {}).get("canais", [])}
+            for m in s.repo.listar(ctx.transportadora_id, "motoristas")]
 
 
 @router.post("/motoristas", status_code=201)
@@ -350,6 +361,124 @@ def criar_alerta(entrada: AlertaEntrada, ctx: Contexto = Depends(LANCA), s: Serv
     dados = entrada.model_dump()
     dados["inicio"], dados["fim"] = utc(entrada.inicio), utc(entrada.fim) if entrada.fim else None
     return {"id": s.repo.inserir(ctx.transportadora_id, "alertas", dados)["id"]}
+
+
+# ---------- Alertas de clima e desastres na rota (flag ORGATEC_TRANSPORTE_ALERTAS; a rotina agendada grava, a API só lê) ----------
+def alertas_ligados(s: Servicos = Depends(servicos)) -> Servicos:  # noqa: B008
+    if not s.alertas:
+        raise RecursoDesligado("alertas desligados")
+    return s
+
+
+ORDEM_GRAVIDADE = ("potencial", "perigo", "grande_perigo")
+
+
+def _alerta_rota_dict(a: dict[str, Any]) -> dict[str, Any]:
+    al = a["alerta"]
+    return {**{k: a.get(k) for k in ("id", "viagem_id", "km_ini", "km_fim", "chegada_prevista", "lat", "lon", "grupo", "posicao_fonte",
+                                      "avisar_motorista", "estado", "visto", "avisado_gravidade", "criado_em", "atualizado_em")},
+            "alerta": {k: al.get(k) for k in ("id", "origem", "fonte", "tipo", "gravidade", "titulo", "inicio", "fim", "poligonos", "pontos",
+                                              "riscos", "instrucoes", "link")}}
+
+
+@router.get("/alertas-rota")
+def listar_alertas_rota(viagem_id: str | None = None, ctx: Contexto = Depends(contexto),  # noqa: B008
+                        s: Servicos = Depends(alertas_ligados)) -> dict[str, Any]:  # noqa: B008
+    """Alertas ativos e recém-encerrados, com o estado de cada fonte. Com `viagem_id`, só os dessa viagem. O motorista só vê os dele."""
+    tid = ctx.transportadora_id
+    if viagem_id:
+        permitidas: set[str] | None = {_viagem_visivel(s, ctx, viagem_id)["id"]}
+    elif ctx.papel == "motorista":
+        m = _motorista_do_usuario(s, ctx)
+        permitidas = {v["id"] for v in s.repo.listar(tid, "viagens") if m and v["motorista_id"] == m["id"]}
+    else:
+        permitidas = None
+    itens = [a for a in s.repo.listar(tid, "alertas_rota") if a["estado"] != "arquivado" and (permitidas is None or a["viagem_id"] in permitidas)]
+    itens.sort(key=lambda a: (a["estado"] != "ativo", -ORDEM_GRAVIDADE.index(a["alerta"]["gravidade"]), a["chegada_prevista"]))
+    estado = next(iter(s.repo.listar(tid, "alertas_estado")), None) or {}
+    return {"fontes": estado.get("fontes", {}), "atualizado_em": estado.get("atualizado_em"), "alertas": [_alerta_rota_dict(a) for a in itens[:200]]}
+
+
+@router.post("/alertas-rota/{alerta_id}/visto")
+def marcar_alerta_visto(alerta_id: str, ctx: Contexto = Depends(GESTOR), s: Servicos = Depends(alertas_ligados)) -> dict[str, Any]:  # noqa: B008
+    return _alerta_rota_dict(s.repo.atualizar(ctx.transportadora_id, "alertas_rota", alerta_id, {"visto": True, "visto_por": ctx.usuario_id}))
+
+
+@router.get("/comunicacoes")
+def listar_comunicacoes(viagem_id: str, ctx: Contexto = Depends(GESTOR), s: Servicos = Depends(alertas_ligados)) -> list[dict[str, Any]]:  # noqa: B008
+    v = _viagem_visivel(s, ctx, viagem_id)
+    coms = [c for c in s.repo.listar(ctx.transportadora_id, "comunicacoes") if c["viagem_id"] == v["id"]]
+    coms.sort(key=lambda c: utc(c["enviada_em"]), reverse=True)
+    return [{**{k: c.get(k) for k in ("id", "alerta_rota_id", "canal", "estado", "destino", "gravidade", "texto", "detalhe", "historico")},
+             "enviada_em": utc(c["enviada_em"]).isoformat()} for c in coms[:100]]
+
+
+@router.get("/alertas-termo")
+def termo_alertas(_ctx: Contexto = Depends(GESTOR), _s: Servicos = Depends(alertas_ligados)) -> dict[str, str]:  # noqa: B008
+    return {"versao": VERSAO_TERMO_ALERTAS, "texto": TERMO_ALERTAS}
+
+
+@router.put("/motoristas/{motorista_id}/contato")
+def salvar_contato(motorista_id: str, entrada: ContatoMotorista, ctx: Contexto = Depends(GESTOR),  # noqa: B008
+                   s: Servicos = Depends(alertas_ligados)) -> dict[str, Any]:  # noqa: B008
+    """Telefone e canais dos alertas, com o registro do consentimento (quem registrou, quando e qual texto). LGPD: só isso."""
+    contato = {"telefone": entrada.telefone, "canais": sorted(set(entrada.canais)), "versao_termo": entrada.versao_termo,
+               "consentimento_em": datetime.now(UTC).isoformat(), "registrado_por": ctx.usuario_id}
+    m = s.repo.atualizar(ctx.transportadora_id, "motoristas", motorista_id, {"contato": contato})
+    return {"id": m["id"], "nome": m["nome"], "alertas_canais": contato["canais"]}
+
+
+@router.delete("/motoristas/{motorista_id}/contato")
+def remover_contato(motorista_id: str, ctx: Contexto = Depends(GESTOR), s: Servicos = Depends(alertas_ligados)) -> dict[str, Any]:  # noqa: B008
+    """Revogação: o telefone sai do cadastro na hora e nenhuma mensagem nova é enviada."""
+    m = s.repo.atualizar(ctx.transportadora_id, "motoristas", motorista_id,
+                         {"contato": None, "contato_revogado_em": datetime.now(UTC).isoformat(), "contato_revogado_por": ctx.usuario_id})
+    return {"id": m["id"], "nome": m["nome"], "alertas_canais": []}
+
+
+ESTADO_WHATSAPP = {"sent": "enviada", "delivered": "entregue", "read": "lida", "failed": "falhou"}
+ORDEM_ENTREGA = ("enviada", "entregue", "lida")
+
+
+@router.get("/whatsapp/webhook")
+def verificar_webhook(request: Request, s: Servicos = Depends(alertas_ligados)) -> PlainTextResponse:  # noqa: B008
+    """Verificação da Meta: devolve hub.challenge quando o token confere."""
+    cfg, q = s.whatsapp_webhook, request.query_params
+    if not cfg or q.get("hub.mode") != "subscribe" or not hmac.compare_digest(q.get("hub.verify_token", "").encode(), cfg["verificacao"].encode()):
+        raise AcessoNegado()
+    return PlainTextResponse(q.get("hub.challenge", ""))
+
+
+@router.post("/whatsapp/webhook")
+async def receber_webhook(request: Request, s: Servicos = Depends(alertas_ligados)) -> dict[str, int]:  # noqa: B008
+    """Status de entrega do WhatsApp. Assinatura X-Hub-Signature-256 = "sha256=" + HMAC-SHA256 do corpo com o segredo do app."""
+    cfg = s.whatsapp_webhook
+    corpo = await request.body()
+    if not cfg or len(corpo) > ingestao.TAMANHO_MAX_CORPO:
+        raise AcessoNegado()
+    esperado = "sha256=" + hmac.new(cfg["segredo_app"].encode(), corpo, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(request.headers.get("X-Hub-Signature-256", "").encode(), esperado.encode()):
+        raise AcessoNegado()
+    try:
+        dados = json.loads(corpo)
+        status = [st for en in dados.get("entry", []) for ch in en.get("changes", []) for st in (ch.get("value") or {}).get("statuses", [])]
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise EntradaInvalida("Corpo inesperado.") from exc
+    atualizados = 0
+    for st in status:
+        recebido = ESTADO_WHATSAPP.get(str(st.get("status")))
+        com = s.repo.comunicacao_global(id_comunicacao("whatsapp", str(st.get("id", ""))))
+        if not recebido or com is None:
+            continue
+        novo = recebido
+        if novo in ORDEM_ENTREGA and com["estado"] in ORDEM_ENTREGA and ORDEM_ENTREGA.index(novo) < ORDEM_ENTREGA.index(com["estado"]):
+            novo = com["estado"]  # os avisos chegam fora de ordem: "lida" não volta para "entregue"
+        em = datetime.fromtimestamp(int(st.get("timestamp") or time.time()), UTC).isoformat()
+        detalhe = "; ".join(str(e.get("title", "")) for e in st.get("errors", []) if isinstance(e, dict))[:200]
+        s.repo.atualizar(com["transportadora_id"], "comunicacoes", com["id"],
+                         {"estado": novo, "historico": [*com.get("historico", []), {"estado": recebido, "em": em}], **({"detalhe": detalhe} if detalhe else {})})
+        atualizados += 1
+    return {"atualizados": atualizados}
 
 
 # ---------- Lançamentos manuais da viagem (abastecimento, pedágio pago, parada, ocorrência, posição informada) ----------

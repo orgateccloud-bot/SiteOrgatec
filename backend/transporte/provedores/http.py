@@ -36,6 +36,13 @@ class ClienteHttp:
 
     def requisitar(self, metodo: str, url: str, **kwargs: Any) -> Any:
         """Devolve o JSON da resposta. Levanta ErroProvedor tipado quando não há como completar."""
+        return self._requisitar(metodo, url, True, **kwargs)
+
+    def requisitar_texto(self, metodo: str, url: str, **kwargs: Any) -> str:
+        """Igual a `requisitar`, mas devolve o corpo em texto (CSV, HTML de listagem)."""
+        return self._requisitar(metodo, url, False, **kwargs)
+
+    def _requisitar(self, metodo: str, url: str, como_json: bool, **kwargs: Any) -> Any:
         ultimo: httpx.Response | None = None
         for tentativa in range(1, self.tentativas + 1):
             try:
@@ -58,6 +65,8 @@ class ClienteHttp:
                 break
             if resp.status_code >= 400:
                 raise ProvedorRespostaInvalida(self.provedor, f"HTTP {resp.status_code}")
+            if not como_json:
+                return resp.text
             try:
                 return resp.json()
             except ValueError as exc:

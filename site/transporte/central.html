@@ -104,6 +104,20 @@
         <form id="formParametros" novalidate><div id="camposParametros" class="carregando">Carregando…</div><div id="msgParametros"></div>
           <div class="acoes"><button type="submit">Salvar parâmetros</button></div></form>
       </details>
+      <details class="cartao" id="boxAlertas" hidden><summary>Alertas para o motorista (WhatsApp e SMS)</summary>
+        <ul class="lista-mapa" id="listaContatos"></ul>
+        <form id="formAlertas" novalidate>
+          <label for="aMotorista">Motorista</label><select id="aMotorista"></select>
+          <label for="aTelefone">Celular com DDD</label><input id="aTelefone" type="tel" inputmode="tel" autocomplete="off" placeholder="(62) 99999-0000">
+          <div class="linha"><label><input type="checkbox" id="aCanal-whatsapp" checked style="width:auto"> WhatsApp</label>
+            <label><input type="checkbox" id="aCanal-sms" checked style="width:auto"> SMS (só alerta grave)</label></div>
+          <p class="fonte" id="termoAlertas"></p>
+          <label><input type="checkbox" id="aConsentimento" style="width:auto"> O motorista leu e aceitou o texto acima</label>
+          <div id="msgAlertas"></div>
+          <div class="acoes"><button type="submit">Salvar telefone</button></div>
+        </form>
+        <p class="fonte">LGPD: guardamos só o telefone, os canais e o registro do aceite. Cancelar apaga o telefone na hora.</p>
+      </details>
       <div class="cartao"><h2>Viagens recentes</h2><ul class="lista-viagens" id="lista"></ul></div>
     </div>
     <section id="resultado" aria-live="polite"><div class="cartao vazio">Lance uma rota para ver despesas, tempo, bloqueios e clima.</div></section>

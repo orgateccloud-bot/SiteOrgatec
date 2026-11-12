@@ -61,3 +61,21 @@ test('legenda cobre todos os tipos de marcador', () => {
   const grupos = new Set(M.GRUPOS.map((g) => g[0]));
   Object.keys(M.TIPOS).forEach((t) => assert.ok(grupos.has(['origem', 'destino', 'parada'].includes(t) ? 'pontos' : t), t));
 });
+
+test('alerta de rota ativo vira marcador na cor da gravidade e área; encerrado não aparece', () => {
+  const alerta = (id, estado, gravidade) => ({
+    id, estado, lat: -15.0, lon: -49.1, km_ini: 120, km_fim: 160, chegada_prevista: '2026-11-12T15:00:00+00:00',
+    alerta: { tipo: 'tempestade', gravidade, titulo: 'Tempestade (Perigo)', fim: '2026-11-13T02:59:00+00:00', fonte: 'INMET',
+      poligonos: [[[-15.2, -49.3], [-15.2, -48.9], [-14.8, -48.9], [-15.2, -49.3]]] }
+  });
+  const c = M.camadas(resultado, { alertas: [alerta('a1', 'ativo', 'grande_perigo'), alerta('a2', 'encerrado', 'perigo')] });
+  const mk = c.marcadores.filter((m) => m.tipo === 'alerta');
+  assert.equal(mk.length, 1);
+  assert.equal(mk[0].id, 'alerta-a1');
+  assert.equal(mk[0].cor, M.COR_GRAVIDADE.grande_perigo);
+  assert.equal(mk[0].letra, 'T');
+  assert.equal(mk[0].fonte, 'INMET');
+  assert.equal(c.areas.length, 1);
+  assert.equal(c.areas[0].grupo, 'alerta');
+  assert.deepEqual(M.camadas(resultado, {}).areas, []);
+});
