@@ -77,10 +77,18 @@ def janela() -> None:
         gp.secao("Janela", "Seu painel", controles + '\n                <div data-janela-score aria-live="polite" class="mb-4"></div>'
                  '\n                <div data-janela-empresarial data-origem="{p}dados/empresarial/atual.json">'
                  '<div data-janela-lista aria-live="polite"><p class="og-cartao-texto">Carregando a janela…</p></div></div>', "bg-fundo", "janela", compacto=True),
+        # Mapa público de alertas (janela-transporte-mapa.js): avisos do INMET, focos do FIRMS e rodovias, pela rotina dos alertas
+        gp.secao("Transporte · Clima e fogo", "Alertas nas rodovias de GO, TO e PA",
+                 '<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a BR-153, '
+                 'a BR-060, a BR-010 e a BR-230, verificados a cada 15 minutos. Para os alertas da sua própria viagem, com a hora em que o caminhão '
+                 'chega a cada área, use a Central de Viagem.</p>'
+                 '\n                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" '
+                 'data-rodovias="{p}assets/geo/rodovias-corredores.json" data-divisas="{p}assets/img/divisas-ufs.svg"></div>',
+                 "bg-superficie", "alertas-rodovias", compacto=True),
     ])
     gp.pagina("empresarial/janela.html", "Janela Empresarial e do Transporte",
               "Score de compliance, prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.",
-              "empresarial", "retenção", corpo, indexar=False, extra=["termometro.js", "janela-empresarial.js"],
+              "empresarial", "retenção", corpo, indexar=False, extra=["termometro.js", "janela-empresarial.js", "janela-transporte-mapa.js"],
               trilha=[("Empresarial", "empresarial/index.html"), ("Janela", None)])
 
 
