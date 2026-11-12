@@ -63,3 +63,10 @@ O traçado das rodovias **não** vem do Google. Os termos do Google Maps proíbe
 - Focos reais do FIRMS no mapa (a chave fica só no Secret Manager).
 - A CDN do Firebase guardando a resposta de verdade.
 - O job em produção gravando o resumo.
+
+## No ar (12/11/2026)
+
+- Site na tag `publicado-20261112-1405`, API `orgatec-api-00021-pdq`; os jobs `orgatec-alertas` e `orgatec-retencao` usam a mesma imagem.
+- Primeira execução: 3 avisos do INMET na região (1 valendo agora e 2 dos próximos dias, todos "Perigo potencial" de tempestade) e 2.010 focos reais do FIRMS. Por rodovia, a BR-010 tinha 19 focos a até 5 km e a BR-230 tinha 53. A chave do FIRMS não aparece nos registros.
+- `orgatec.io/api/transporte/alertas-publicos` responde com `X-Cache: HIT` (a CDN guarda por 5 min).
+- Na página publicada, o mapa desenhou as 3 áreas, os 2.010 focos e as 4 rodovias, com as 12 imagens da NASA carregadas e sem rolagem lateral.

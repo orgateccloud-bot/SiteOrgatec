@@ -4,7 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Mapa público de alertas nas rodovias (Janela do Transporte)](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação (na prévia o mapa fica "indisponível" até a API nova subir) | `ideia/mapa-alertas-publico` | [link](https://orgatec-site--ideia-mapa-alertas-publico-1ohyff7t.web.app/empresarial/janela.html#alertas-rodovias) |
+| [Mapa público de alertas nas rodovias (Janela do Transporte)](mapa-alertas-publico.md) | no ar em 12/11/2026 (site publicado-20261112-1405, API orgatec-api-00021-pdq); falta confirmar a licença da BC250 do IBGE | `ideia/mapa-alertas-publico` | [link](https://orgatec-site--ideia-mapa-alertas-publico-1ohyff7t.web.app/empresarial/janela.html#alertas-rodovias) |
 | [Cabeçalho: ícone Início cobria o nome ORGATEC no desktop](cabecalho-inicio.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/cabecalho-inicio` | [link](https://orgatec-site--ideia-cabecalho-inicio-8qc7n6xz.web.app/inicio.html) |
 | [Alertas de clima e desastres na rota da Central de Viagem](alertas-rota.md) | implementada em 11/11/2026 atrás de flag; suíte verde; no ar em 12/11/2026 só no painel (job a cada 15 min, sem mensagens); falta chave do FIRMS, WhatsApp e SMS | `ideia/alertas-rota` | só local |
 | [Janela do score da empresa: medidor, evolução e alertas](score-empresa.md) | integrada na desenvolvimento em 11/11/2026; falta lançar | removida | [link](https://orgatec-site--ideia-score-empresa-mc5dskwg.web.app/empresarial/score.html) |
