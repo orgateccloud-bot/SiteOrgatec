@@ -391,3 +391,16 @@ def test_webhook_whatsapp_verifica_token_assinatura_e_nao_regride_estado(amb):
 def test_firms_nao_usa_o_suomi_npp_desativado():
     """O FIRMS avisou que o Suomi NPP parou em 02/11/2026; os focos vêm do NOAA-20 e do NOAA-21."""
     assert fontes.FIRMS_FONTES == ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT")
+
+
+def test_rotina_nao_registra_a_url_com_a_chave_do_firms(monkeypatch):
+    """A URL do FIRMS leva a chave; o log INFO do httpx a mandaria para o Cloud Logging."""
+    import logging
+    import runpy
+    from pathlib import Path
+
+    monkeypatch.delenv("ORGATEC_TRANSPORTE_ALERTAS", raising=False)
+    ferramenta = Path(__file__).resolve().parents[3] / "tools" / "transporte_alertas.py"
+    modulo = runpy.run_path(str(ferramenta))
+    assert modulo["main"]([]) == 0
+    assert logging.getLogger("httpx").level >= logging.WARNING

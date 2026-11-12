@@ -29,6 +29,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--confirmar", action="store_true", help="envia as mensagens (sem isto, só atualiza o painel)")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+    # O httpx registra a URL de cada chamada em INFO, e a URL do FIRMS leva a chave: no Cloud Logging, só avisos e erros dele.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     env = dict(os.environ)
     if not rotina.ligado(env):
         print("alertas desligados (ORGATEC_TRANSPORTE_ALERTAS=1 liga)")
