@@ -62,7 +62,7 @@ def tema(p: str) -> str:
 
 def botao_cores() -> str:
     # Abaixo de 375 px o botão sai do cabeçalho (o nome ORGATEC encostava nele) e fica no menu ☰ (item_cores)
-    return f'<button id="btnCores" type="button" class="tema-btn hidden min-[375px]:inline-flex" aria-label="Escolher cores">{ICONE_CORES}<span class="hidden md:inline">Cores</span></button>'
+    return f'<button id="btnCores" type="button" class="tema-btn hidden min-[375px]:inline-flex" aria-label="Escolher cores">{ICONE_CORES}<span class="hidden md:inline xl:hidden">Cores</span></button>'
 
 
 ITEM_CORES = '<button type="button" class="py-2 text-left min-[375px]:hidden" data-abrir-cores>Cores</button>'
@@ -116,13 +116,13 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
         marca = ' aria-current="page"' if chave == ativo else ""
         return f'<a href="{p}{caminho}" class="py-2{" text-acao font-semibold" if chave == ativo else ""}"{marca}>{rotulo}</a>'
 
-    # "Início" (vitrine): ícone de casa no desktop, para caber em 1280 px sem encostar no logotipo; o texto aparece
-    # a partir de 2xl (1536 px). No menu ☰ é o primeiro item, escrito.
+    # "Início" (vitrine): ícone de casa no desktop, em qualquer largura, para o cabeçalho caber na caixa de 1280 px (max-w-7xl)
+    # sem cobrir o logotipo nem sair pela direita; o texto fica só para leitor de tela e no title. No menu ☰ é o primeiro item, escrito.
     na_vitrine = atual == INICIO
     marca_ini = ' aria-current="page"' if na_vitrine else ""
     destaque_ini = " text-acao font-semibold" if na_vitrine else ""
     inicio = (f'<a href="{p}{INICIO}" class="hover:text-acao transition inline-flex items-center gap-1.5{destaque_ini}" title="Início"{marca_ini}>'
-              f'{ICONE_INICIO}<span class="sr-only 2xl:not-sr-only">Início</span></a>')
+              f'{ICONE_INICIO}<span class="sr-only">Início</span></a>')
     inicio_movel = f'<a href="{p}{INICIO}" class="py-2{destaque_ini}"{marca_ini}>Início</a>'
     nav = "\n                ".join([inicio] + [item(*n) for n in NAV])
     nav_movel = "\n                ".join([inicio_movel] + [item_movel(*n) for n in NAV])
@@ -131,20 +131,20 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
     </div>
     <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-linha">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
-            <a href="{p}{INICIO}" class="flex items-center gap-3 min-w-0" aria-label="ORGATEC — início">
+            <a href="{p}{INICIO}" class="flex items-center gap-3 shrink-0" aria-label="ORGATEC — início">
                 <img src="{p}assets/marca/orgatec-original.png" alt="" width="40" height="44" class="h-9 w-8 sm:h-11 sm:w-10 shrink-0">
                 <div class="min-w-0">
                     <span class="block text-lg sm:text-xl font-display font-extrabold tracking-tight text-tinta leading-none whitespace-nowrap">ORGATEC</span>
                     <span class="hidden sm:block text-[10px] text-descritor uppercase tracking-widest mt-1 whitespace-nowrap">Inteligência Tributária</span>
                 </div>
             </a>
-            <nav class="hidden xl:flex items-center gap-6 text-sm font-medium text-tinta-suave whitespace-nowrap" aria-label="Principal">
+            <nav class="hidden xl:flex items-center gap-4 text-sm font-medium text-tinta-suave whitespace-nowrap" aria-label="Principal">
                 {nav}
             </nav>
             <div class="flex items-center gap-2 sm:gap-3">
                 <a href="{p}cliente/index.html" class="hidden sm:inline-flex items-center whitespace-nowrap text-sm font-medium text-tinta-texto hover:text-acao px-4 py-2 rounded-lg border border-linha-campo hover:border-acao transition">Área do cliente</a>
                 {botao_cores()}
-                <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-md"><span class="sm:hidden">WhatsApp</span><span class="hidden sm:inline">Falar no WhatsApp</span></a>
+                <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-md"><span class="sm:hidden xl:inline">WhatsApp</span><span class="hidden sm:inline xl:hidden">Falar no WhatsApp</span></a>
                 <button id="btnMenu" type="button" class="xl:hidden p-2 rounded-lg border border-linha-campo text-tinta-texto" aria-controls="menuMobile" aria-expanded="false" aria-label="Abrir menu">☰</button>
             </div>
         </div>

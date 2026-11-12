@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Cabeçalho: ícone Início cobria o nome ORGATEC no desktop](cabecalho-inicio.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/cabecalho-inicio` | (gerando) |
 | [Alertas de clima e desastres na rota da Central de Viagem](alertas-rota.md) | implementada em 11/11/2026 atrás de flag; suíte verde; junta na desenvolvimento em 12/11/2026; falta configurar fontes, canais e job | `ideia/alertas-rota` | só local |
 | [Janela do score da empresa: medidor, evolução e alertas](score-empresa.md) | integrada na desenvolvimento em 11/11/2026; falta lançar | removida | [link](https://orgatec-site--ideia-score-empresa-mc5dskwg.web.app/empresarial/score.html) |
 | [Janela de Campo 2, V4: cartão das redes com o veredito e botão de compartilhar no WhatsApp](campo-visual-4.md) | implementada em 11/11/2026; suíte verde; aprovada em 11/11/2026 e junta na desenvolvimento; falta lançar | `ideia/campo-visual-4` | [link](https://orgatec-site--ideia-campo-visual-4-eixx9ujt.web.app/rural/janela-de-campo.html) |
