@@ -173,6 +173,42 @@ def test_main_mudou_durante_a_suite_nao_publica(monkeypatch, tmp_path, capsys):
     assert "mudou durante a suíte" in capsys.readouterr().out
 
 
+def test_publicacao_prepara_os_dados_antes_do_deploy(monkeypatch, tmp_path, capsys):
+    ordem = []
+    monkeypatch.setattr(P, "RAIZ", tmp_path)
+    for nome in ("motivo_para_nao_publicar", "motivo_remoto", "conferir_acesso"):
+        monkeypatch.setattr(P, nome, lambda: None)
+    monkeypatch.setattr(P, "commit_atual", lambda: "aaa")
+    monkeypatch.setattr(P, "rodar_suite", lambda: None)
+    trava_original = P.trava
+    monkeypatch.setattr(P, "trava", lambda quem: trava_original(quem, tmp_path))
+    monkeypatch.setattr(P, "preparar_dados", lambda: ordem.append("dados"))
+    monkeypatch.setattr(P, "implantar", lambda: ordem.append("deploy"))
+    monkeypatch.setattr(P, "git", lambda *a, **k: "")
+    assert P.main([]) == 0
+    assert ordem == ["dados", "deploy"]
+
+
+def test_agendador_tambem_prepara_os_dados(monkeypatch, tmp_path):
+    import gerar_boletim_campo as G
+    ordem = []
+    monkeypatch.setattr(P, "motivo_para_nao_publicar", lambda: None)
+    monkeypatch.setattr(P, "motivo_codigo_nao_publicado", lambda: None)
+    trava_original = P.trava
+    monkeypatch.setattr(P, "trava", lambda quem: trava_original(quem, tmp_path))
+    monkeypatch.setattr(P, "preparar_dados", lambda: ordem.append("dados"))
+    monkeypatch.setattr(P, "implantar", lambda: ordem.append("deploy"))
+    G.publicar()
+    assert ordem == ["dados", "deploy"]
+
+
+def test_falha_nos_dados_nao_derruba_a_publicacao(monkeypatch, capsys):
+    import gerar_janela_empresarial as J
+    monkeypatch.setattr(J, "gerar", lambda: (_ for _ in ()).throw(OSError("disco cheio")))
+    P.preparar_dados()
+    assert "Janela Empresarial não atualizada" in capsys.readouterr().out
+
+
 def test_boletim_nao_publica_codigo_sem_suite(monkeypatch):
     import gerar_boletim_campo as G
     monkeypatch.setattr(P, "motivo_para_nao_publicar", lambda: None)

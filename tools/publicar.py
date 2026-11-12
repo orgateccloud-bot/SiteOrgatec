@@ -184,6 +184,20 @@ def conferir_acesso(raiz: Path = RAIZ) -> str | None:
     return None if r.returncode == 0 else explicar_falha(r)
 
 
+def preparar_dados() -> None:
+    """Dados de site/dados (fora do git) que saem só do conteúdo do próprio site, refeitos a cada publicação, manual
+    ou do agendador (5h, 11h e 17h, os mesmos horários que a página promete): hoje, a Janela Empresarial.
+    Falhar aqui não impede a publicação: o arquivo anterior continua no ar, e o aviso fica no log."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import gerar_janela_empresarial as J
+        j = J.gerar()
+        ok = sum(1 for c in j["cartoes"] if c["estado"] == "ok")
+        print(f"dados: Janela Empresarial gerada ({ok} cartões ok, {len(j['cartoes']) - ok} indisponíveis)", flush=True)
+    except Exception as erro:  # dado de apoio: não derruba a publicação  # noqa: BLE001
+        print(f"aviso: Janela Empresarial não atualizada ({type(erro).__name__}: {erro})", flush=True)
+
+
 def implantar(raiz: Path = RAIZ) -> None:
     r = _firebase("deploy", "--only", "hosting", raiz=raiz)
     if r.returncode != 0:
@@ -233,6 +247,7 @@ def main(argv: list[str] | None = None) -> int:
             if commit_atual() != testado or motivo_para_nao_publicar():
                 print("não publicado: a main mudou durante a suíte; rode de novo")
                 return 1
+            preparar_dados()
             implantar()
             tag = datetime.now().strftime("publicado-%Y%m%d-%H%M")
             git("tag", tag)

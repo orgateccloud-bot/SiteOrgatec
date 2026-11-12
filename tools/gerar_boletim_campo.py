@@ -225,6 +225,7 @@ def publicar() -> None:
     if motivo:
         raise RuntimeError(f"publicação bloqueada: {motivo}")
     with P.trava("agendador do boletim"):
+        P.preparar_dados()  # Janela Empresarial: mesmos horários do boletim
         P.implantar()
     log.info("publicado no Firebase Hosting")
 
