@@ -2,7 +2,7 @@
 
 - **Situação:** implementada em 12/11/2026 na branch `ideia/cabecalho-inicio`; suíte e bandit verdes; **aguarda a sua aprovação da prévia**. Não publicada.
 - **Branch:** `ideia/cabecalho-inicio` (parte da `desenvolvimento`)
-- **Prévia:** ver o índice em [README.md](README.md)
+- **Prévia:** [link](https://orgatec-site--ideia-cabecalho-inicio-8qc7n6xz.web.app/inicio.html) (expira em 12/12/2026)
 
 ## Problema
 
