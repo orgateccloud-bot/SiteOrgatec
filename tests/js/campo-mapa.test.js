@@ -33,3 +33,28 @@ test('escala da chuva: 7 faixas em mm/h, de verde a bordô, valores crescentes',
   assert.equal(c[0][0], '#00991a');
   assert.equal(c[c.length - 1][0], '#580000');
 });
+
+test('resumo dos polos: conta por estado, na ordem da legenda, sem os zerados, e trata estado desconhecido como sem previsão', () => {
+  assert.deepEqual(M.resumoDosPolos(['ok', 'atencao', 'ok', 'evitar', 'atencao', 'ok']), [
+    { estado: 'ok', n: 3, texto: '3 favoráveis' },
+    { estado: 'atencao', n: 2, texto: '2 com restrição' },
+    { estado: 'evitar', n: 1, texto: '1 a evitar' },
+  ]);
+  assert.deepEqual(M.resumoDosPolos(['ok']), [{ estado: 'ok', n: 1, texto: '1 favorável' }]);
+  assert.deepEqual(M.resumoDosPolos(['sem', 'qualquer']), [{ estado: 'sem', n: 2, texto: '2 sem previsão' }]);
+  assert.deepEqual(M.resumoDosPolos([]), []);
+  assert.deepEqual(M.resumoDosPolos(undefined), []);
+});
+
+test('giro do modelo 3D: arrastar para os lados gira sem fim, para cima e para baixo inclina dentro do limite', () => {
+  assert.deepEqual(M.GIRO_INICIAL, { rx: 54, rz: -22 });
+  assert.deepEqual(M.girar(M.GIRO_INICIAL, 0, 0), M.GIRO_INICIAL);
+  assert.deepEqual(M.girar({ rx: 54, rz: 0 }, 100, 0), { rx: 54, rz: 40 });     // 0,4 grau por px
+  assert.deepEqual(M.girar({ rx: 54, rz: 0 }, 0, 20), { rx: 48, rz: 0 });       // 0,3 grau por px; arrastar para baixo deita menos
+  assert.equal(M.girar({ rx: 54, rz: 0 }, 0, -500).rx, 70);                     // limite de cima
+  assert.equal(M.girar({ rx: 54, rz: 0 }, 0, 500).rx, 28);                      // limite de baixo: nunca vira vista de cima
+  assert.equal(M.girar({ rx: 54, rz: 170 }, 100, 0).rz, -150);                  // dá a volta
+  assert.equal(M.girar({ rx: 54, rz: -170 }, -100, 0).rz, 150);
+  const g = M.girar({ rx: 54, rz: 0 }, 2000, 0);
+  assert.ok(g.rz >= -180 && g.rz < 180);
+});
