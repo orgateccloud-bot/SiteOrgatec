@@ -1039,7 +1039,7 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .mapa-opcoes{{display:flex;flex-wrap:wrap;gap:8px;align-items:center}}
 .mapa-chave{{position:relative;display:inline-flex}}
 .mapa-chave[hidden]{{display:none}}
-.mapa-chave input{{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}}
+.mapa-chave input{{position:absolute;inset:0;z-index:1;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}}
 .mapa-chave span{{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px 0 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font:600 14px var(--f-body);white-space:nowrap;transition:background .2s,color .2s,border-color .2s}}
 .mapa-chave i{{position:relative;flex:none;width:30px;height:18px;border-radius:999px;background:var(--line);transition:background .2s}}
 .mapa-chave i::after{{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(4,10,22,.4);transition:transform .2s}}
@@ -1047,6 +1047,7 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .mapa-chave input:checked+span i{{background:var(--brand)}}
 .mapa-chave input:checked+span i::after{{transform:translateX(12px)}}
 .mapa-chave input:focus-visible+span{{outline:2px solid var(--focus);outline-offset:2px}}
+.mapa-chave .mapa-so-largo{{display:inline;min-height:0;padding:0;border:0;gap:0}}
 .mapa-satelite{{position:relative;isolation:isolate;margin:0;width:100%;overflow:hidden;border-radius:14px;border:1px solid var(--line);background:#0b1220}}
 .mapa-satelite::after{{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 70px rgba(4,10,22,.5)}}
 .mapa-satelite[data-carregando]::before{{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.09) 50%,transparent 65%);background-size:220% 100%;animation:mapa-brilho 1.5s linear infinite}}
@@ -1120,12 +1121,48 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 @media (max-width:639px){{
 .mapa-cartao{{padding:8px;border-radius:18px}}
 .mapa-seg button{{padding:0 14px}}
+.mapa-chave span{{padding:0 12px 0 10px;gap:6px}}
+.mapa-chave .mapa-so-largo{{display:none}}
+.mapa-opcoes{{gap:6px}}
 .mapa-polo{{width:22px;height:22px;margin:-11px 0 0 -11px}}
 .mapa-polo .glifo{{width:18px;height:18px}}
 .mapa-resumo-txt{{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}}
 .mapa-resumo-item{{padding-right:9px}}
 .mapa-play{{width:44px;height:44px}}
 }}
+/* Mapa de satélite em 3D (chave "3D" do campo-mapa.js): a placa com a imagem inclina e gira (--rx e --rz), com espessura de
+   vidro nas bordas, uma folha de vidro com as divisas acima dela, os polos como pinos que sempre encaram quem olha (a altura
+   cresce com a restrição) e um piso em grade. A contagem e a hora ficam fora da placa, sem girar. */
+.mapa-placa{{position:absolute;inset:0;transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
+.mapa-palco{{overflow:hidden}}
+.mapa-piso,.mapa-lado,.mapa-vidro,.mapa-polo-pe,.mapa-dica{{display:none}}
+.mapa-3d{{perspective:1100px;perspective-origin:50% 28%;background:radial-gradient(120% 90% at 50% 12%,color-mix(in srgb,var(--brand) 28%,#0b1220),#050a14 72%);cursor:grab;touch-action:pan-y;-webkit-user-select:none;user-select:none}}
+.mapa-3d.arrastando{{cursor:grabbing}}
+.mapa-3d:focus-visible{{outline:3px solid var(--focus);outline-offset:2px}}
+.mapa-3d::after{{box-shadow:inset 0 0 90px rgba(4,10,22,.6)}}
+.mapa-3d .mapa-placa{{transform-style:preserve-3d;transform:translateY(1%) scale(.7) rotateX(var(--rx,54deg)) rotateZ(var(--rz,-22deg))}}
+.mapa-3d .mapa-placa::before{{content:"";position:absolute;inset:6%;transform:translateZ(-70px);border-radius:50%;background:color-mix(in srgb,var(--brand) 60%,transparent);filter:blur(38px);opacity:.6;pointer-events:none}}
+.mapa-3d.arrastando .mapa-placa,.mapa-3d.arrastando .mapa-polo{{transition:none}}
+.mapa-3d .mapa-palco{{border-radius:8px;background:#0b1220;box-shadow:0 0 0 1px rgba(255,255,255,.38)}}
+.mapa-3d .mapa-piso{{display:block;position:absolute;inset:-48%;transform:translateZ(-72px);background-image:linear-gradient(color-mix(in srgb,var(--brand) 42%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--brand) 42%,transparent) 1px,transparent 1px);background-size:46px 46px;-webkit-mask-image:radial-gradient(closest-side,#000 30%,transparent 100%);mask-image:radial-gradient(closest-side,#000 30%,transparent 100%);pointer-events:none}}
+.mapa-3d .mapa-lado{{display:block;position:absolute;background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 58%,rgba(255,255,255,.38)),color-mix(in srgb,var(--brand) 26%,rgba(8,17,31,.72)));border:1px solid rgba(255,255,255,.32);pointer-events:none}}
+.mapa-lado-s{{left:0;right:0;top:100%;height:18px;transform-origin:top;transform:rotateX(-90deg)}}
+.mapa-lado-n{{left:0;right:0;bottom:100%;height:18px;transform-origin:bottom;transform:rotateX(90deg)}}
+.mapa-lado-l{{top:0;bottom:0;left:100%;width:18px;transform-origin:left;transform:rotateY(90deg)}}
+.mapa-lado-o{{top:0;bottom:0;right:100%;width:18px;transform-origin:right;transform:rotateY(-90deg)}}
+.mapa-3d .mapa-vidro{{display:block;position:absolute;inset:0;border-radius:8px;transform:translateZ(20px);background:linear-gradient(125deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.04) 32%,rgba(255,255,255,0) 60%,rgba(255,255,255,.12) 100%);border:1px solid rgba(255,255,255,.45);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 26px color-mix(in srgb,var(--brand) 38%,transparent);pointer-events:none}}
+.mapa-3d .mapa-divisas{{transform:translateZ(20px);opacity:.95}}
+.mapa-3d .mapa-pontos{{transform-style:preserve-3d}}
+.mapa-3d .mapa-polo-pe{{display:block;position:absolute;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:rgba(255,255,255,.92);box-shadow:0 0 0 3px rgba(8,17,31,.45);transform:translateZ(21px);pointer-events:none}}
+.mapa-3d .mapa-polo{{--alt:30px;--esc:1.25;transition:transform .7s cubic-bezier(.2,.8,.2,1);transform:translateZ(calc(var(--alt) + 20px)) rotateZ(calc(var(--rz,-22deg)*-1)) rotateX(calc(var(--rx,54deg)*-1)) scale(var(--esc))}}
+.mapa-3d .mapa-polo-ok{{--alt:26px}}
+.mapa-3d .mapa-polo-atencao{{--alt:42px}}
+.mapa-3d .mapa-polo-evitar{{--alt:60px}}
+.mapa-3d .mapa-polo-atual,.mapa-3d .mapa-polo:hover,.mapa-3d .mapa-polo:focus-visible{{--esc:1.6}}
+.mapa-3d .mapa-polo::before{{content:"";position:absolute;left:50%;top:50%;z-index:-1;width:2px;margin-left:-1px;height:calc(var(--alt)*var(--sen,.81)/var(--esc));background:linear-gradient(180deg,#fff,rgba(255,255,255,.3));pointer-events:none}}
+.mapa-dica{{position:absolute;z-index:4;right:10px;bottom:10px;padding:5px 12px;border-radius:999px;background:rgba(8,17,31,.82);color:#fff;font:500 12px var(--f-body);pointer-events:none}}
+.mapa-3d .mapa-dica:not([hidden]){{display:block}}
+@media (max-width:639px){{.mapa-3d .mapa-polo{{--esc:1}}.mapa-3d .mapa-polo-atual,.mapa-3d .mapa-polo:hover,.mapa-3d .mapa-polo:focus-visible{{--esc:1.35}}.mapa-3d .mapa-hora{{right:auto;max-width:calc(100% - 20px)}}.mapa-3d .mapa-dica{{bottom:auto;top:10px}}}}
 /* Janela do Transporte: mapa público de alertas (janela-transporte-mapa.js). Mapa à esquerda, painel à direita no desktop. */
 .jtm{{display:grid;gap:20px;align-items:start}}
 @media (min-width:900px){{.jtm{{grid-template-columns:minmax(0,440px) minmax(0,1fr)}}}}

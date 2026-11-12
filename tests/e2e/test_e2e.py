@@ -2436,7 +2436,7 @@ def test_satelite_visual_novo_cartao_glifos_polo_escolhido_e_contagem(navegador,
     # camada em controle segmentado, chuva e divisas em chaves (continuam sendo caixas de marcar para o leitor de tela)
     assert pg.locator(".mapa-seg [data-camada]").count() == 2
     expect(pg.locator(".mapa-seg [data-camada=infravermelho]")).to_have_attribute("aria-pressed", "true")
-    assert pg.locator(".mapa-chave input[type=checkbox]").count() == 2
+    assert pg.locator(".mapa-chave input[type=checkbox]").count() == 3  # chuva, divisas e 3D
     # cada polo traz o glifo do estado (o mesmo desenho dos cartões), não só a cor
     assert pg.locator(".mapa-polo .glifo").count() == len(b["polos"])
     for estado in ("ok", "atencao", "evitar"):
@@ -2487,13 +2487,81 @@ def test_satelite_animacao_troca_os_quadros_por_transicao_e_o_botao_diz_o_que_fa
     assert not erros, erros
 
 
+def test_satelite_modelo_3d_de_vidro_liga_gira_e_os_polos_continuam_clicaveis(navegador, servidor):
+    """Chave "3D": a placa inclina (matrix3d), arrastar e as setas giram, os polos viram pinos e continuam abrindo a região."""
+    pg, erros = _satelite(navegador, servidor)
+    pg.wait_for_selector(".mapa-cartao .mapa-polo")
+    figura, placa, chave = pg.locator(".mapa-satelite"), pg.locator("[data-mapa-placa]"), pg.locator("[data-mapa-3d]")
+    expect(chave).not_to_be_checked()  # o mapa abre plano; o 3D é escolha de quem olha
+    assert placa.evaluate("e => getComputedStyle(e).transform") == "none"
+    assert pg.locator(".mapa-lado").first.evaluate("e => getComputedStyle(e).display") == "none"
+    chave.check()
+    expect(figura).to_have_class(re.compile(r"\bmapa-3d\b"))
+    expect(figura).to_have_attribute("tabindex", "0")
+    expect(pg.locator("[data-mapa-dica]")).to_be_visible()
+    expect(placa).to_have_css("transform-style", "preserve-3d")
+    pg.wait_for_timeout(900)  # a placa leva 0,7 s para inclinar
+    assert placa.evaluate("e => getComputedStyle(e).transform").startswith("matrix3d(")
+    assert pg.locator(".mapa-lado").first.evaluate("e => getComputedStyle(e).display") == "block"  # espessura de vidro
+    assert pg.locator(".mapa-polo-pe").count() == 20
+    giro = lambda: placa.evaluate("e => [e.style.getPropertyValue('--rx'), e.style.getPropertyValue('--rz')]")
+    assert giro() == ["54deg", "-22deg"]
+    # arrastar com o mouse gira e inclina; a dica some
+    figura.evaluate("e => e.scrollIntoView({block: 'center', behavior: 'instant'})")  # o site rola suave: sem isto a caixa é medida no meio do caminho
+    caixa = figura.bounding_box()
+    x, y = caixa["x"] + caixa["width"] * 0.5, caixa["y"] + caixa["height"] * 0.12  # alto da cena, fora dos pinos e das etiquetas
+    pg.mouse.move(x, y)
+    pg.mouse.down()
+    pg.mouse.move(x + 100, y - 20, steps=5)
+    expect(figura).to_have_class(re.compile(r"\barrastando\b"))
+    pg.mouse.up()
+    expect(figura).not_to_have_class(re.compile(r"\barrastando\b"))
+    assert giro() == ["60deg", "18deg"]
+    expect(pg.locator("[data-mapa-dica]")).to_be_hidden()
+    # teclado: com o mapa em foco, as setas giram
+    figura.focus()
+    pg.keyboard.press("ArrowLeft")
+    assert giro() == ["60deg", "6deg"]
+    pg.keyboard.press("ArrowDown")
+    assert giro() == ["51deg", "6deg"]
+    # os pinos continuam sendo botões: o clique abre a região do polo
+    pg.locator("[data-polo='palmas']").click()
+    expect(pg.locator("#campoRegiao")).to_have_text("Norte e Tocantins")
+    expect(pg.locator(".mapa-polo-atual")).to_have_attribute("data-polo", "palmas")
+    # a contagem e a hora ficam fora da placa (não giram) e a página não ganha rolagem lateral
+    assert pg.locator("[data-mapa-placa] [data-mapa-resumo], [data-mapa-placa] [data-mapa-hora]").count() == 0
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS["desktop"][0]
+    # desligar volta ao mapa plano e ao giro inicial
+    chave.uncheck()
+    expect(figura).not_to_have_class(re.compile(r"\bmapa-3d\b"))
+    assert figura.get_attribute("tabindex") is None
+    pg.wait_for_timeout(900)
+    assert placa.evaluate("e => getComputedStyle(e).transform") == "none"
+    assert giro() == ["54deg", "-22deg"]
+    assert not erros, erros
+
+
+def test_satelite_modelo_3d_no_celular_gira_com_o_dedo_e_deixa_a_pagina_rolar(navegador, servidor):
+    pg, erros = _satelite(navegador, servidor, "mobile")
+    pg.wait_for_selector(".mapa-cartao .mapa-polo")
+    pg.locator("[data-mapa-3d]").evaluate("e => e.scrollIntoView({block: 'center', behavior: 'instant'})")  # fora da barra fixa de baixo
+    pg.check("[data-mapa-3d]")
+    figura = pg.locator(".mapa-satelite")
+    expect(figura).to_have_class(re.compile(r"\bmapa-3d\b"))
+    expect(figura).to_have_css("touch-action", "pan-y")  # o arrasto vertical continua sendo a rolagem da página
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    caixa = pg.locator(".mapa-cartao").bounding_box()
+    assert caixa["x"] >= 0 and caixa["x"] + caixa["width"] <= 375
+    assert not erros, erros
+
+
 def test_satelite_celular_cartao_cabe_e_todo_botao_tem_44_px(navegador, servidor):
     pg, erros = _satelite(navegador, servidor, "mobile")
     pg.wait_for_selector(".mapa-cartao .mapa-polo")
     baixos = pg.evaluate("""() => [...document.querySelectorAll('.mapa-cartao button:not(.mapa-polo)')]
         .filter(e => e.offsetParent && e.getBoundingClientRect().height < 43.5).map(e => (e.getAttribute('aria-label') || e.textContent) + ' ' + Math.round(e.getBoundingClientRect().height))""")
     assert not baixos, baixos
-    chaves = pg.evaluate("[...document.querySelectorAll('.mapa-chave span')].map(e => Math.round(e.getBoundingClientRect().height))")
+    chaves = pg.evaluate("[...document.querySelectorAll('.mapa-chave > span')].map(e => Math.round(e.getBoundingClientRect().height))")
     assert chaves and all(h >= 44 for h in chaves), chaves
     caixa = pg.locator(".mapa-cartao").bounding_box()
     assert caixa["x"] >= 0 and caixa["x"] + caixa["width"] <= 375

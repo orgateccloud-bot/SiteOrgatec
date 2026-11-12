@@ -143,6 +143,15 @@
       '<div class="mapa-escala-marcas" aria-hidden="true">' + ESCALA_CHUVA.map(function (p, i) { return '<span style="left:' + pct(i / (n - 1) * 100) + '">' + p[1] + '</span>'; }).join('') + '</div></div>';
   }
 
+  /* Giro do modelo 3D: rx é a inclinação da placa (0 = vista de cima) e rz, a volta em torno do eixo vertical, em graus.
+     Arrastar para os lados gira (0,4° por px, sem fim); para cima e para baixo, inclina (0,3° por px, entre 28° e 70°). */
+  var GIRO_INICIAL = { rx: 54, rz: -22 };
+  function girar(g, dx, dy) {
+    var rz = ((g.rz + dx * 0.4 + 180) % 360 + 360) % 360 - 180;
+    var rx = Math.min(70, Math.max(28, g.rx - dy * 0.3));
+    return { rx: Math.round(rx * 10) / 10, rz: Math.round(rz * 10) / 10 };
+  }
+
   var estadoMapa = null;
 
   function montar(el, op) {
@@ -156,18 +165,27 @@
               (CAMADAS[k].curto !== CAMADAS[k].rotulo ? '<span class="sr-only"> (infravermelho)</span>' : '') + '</button>';
           }).join('') + '</div>' +
           '<div class="mapa-opcoes">' +
-            '<label class="mapa-chave" title="Chuva estimada (NASA IMERG), uma imagem por dia"><input type="checkbox" data-mapa-chuva><span><i aria-hidden="true"></i>Chuva estimada</span></label>' +
+            '<label class="mapa-chave" title="Chuva estimada (NASA IMERG), uma imagem por dia"><input type="checkbox" data-mapa-chuva><span><i aria-hidden="true"></i>Chuva<span class="mapa-so-largo">&nbsp;estimada</span></span></label>' +
             (op.divisas ? '<label class="mapa-chave" title="Divisas dos estados (IBGE)"><input type="checkbox" data-mapa-divisas-chave checked><span><i aria-hidden="true"></i>Divisas</span></label>' : '') +
+            '<label class="mapa-chave" title="Modelo em 3D de vidro: arraste para girar"><input type="checkbox" data-mapa-3d><span><i aria-hidden="true"></i>3D</span></label>' +
           '</div>' +
         '</div>' +
         '<div class="mapa-aviso" data-mapa-aviso role="status" hidden>' +
           '<p data-mapa-aviso-txt></p><button type="button" class="og-btn og-btn-contorno og-btn-md" data-mapa-tentar>Tentar de novo</button>' +
         '</div>' +
         '<figure class="mapa-satelite" data-mapa-figura data-carregando style="aspect-ratio:' + Math.round(LARG) + '/' + Math.round(ALT) + '">' +
-          '<div class="mapa-palco" data-mapa-palco role="img" aria-label="Imagem de satélite do Brasil com os polos agrícolas da Janela de Campo"></div>' +
-          (op.divisas ? '<img class="mapa-divisas" data-mapa-divisas src="' + esc(op.divisas) + '" alt="" decoding="async">' : '') +
-          '<div class="mapa-pontos" data-mapa-pontos></div>' +
+          // A placa é o que gira no modo 3D: imagem embaixo, folha de vidro com as divisas acima e os polos como pinos.
+          '<div class="mapa-placa" data-mapa-placa>' +
+            '<i class="mapa-piso" aria-hidden="true"></i>' +
+            '<i class="mapa-lado mapa-lado-n" aria-hidden="true"></i><i class="mapa-lado mapa-lado-s" aria-hidden="true"></i>' +
+            '<i class="mapa-lado mapa-lado-l" aria-hidden="true"></i><i class="mapa-lado mapa-lado-o" aria-hidden="true"></i>' +
+            '<div class="mapa-palco" data-mapa-palco role="img" aria-label="Imagem de satélite do Brasil com os polos agrícolas da Janela de Campo"></div>' +
+            '<i class="mapa-vidro" aria-hidden="true"></i>' +
+            (op.divisas ? '<img class="mapa-divisas" data-mapa-divisas src="' + esc(op.divisas) + '" alt="" decoding="async">' : '') +
+            '<div class="mapa-pontos" data-mapa-pontos></div>' +
+          '</div>' +
           '<p class="mapa-resumo" data-mapa-resumo role="status"></p>' +
+          '<span class="mapa-dica" data-mapa-dica hidden>Arraste para girar</span>' +
           '<figcaption class="mapa-hora" data-mapa-hora aria-live="polite">carregando imagem…</figcaption>' +
         '</figure>' +
         '<div class="mapa-tempo" data-mapa-tempo hidden>' +
@@ -329,13 +347,53 @@
       chaveDivisas.addEventListener('change', function () { imgDivisas.hidden = !chaveDivisas.checked; });
       imgDivisas.addEventListener('error', function () { imgDivisas.hidden = true; chaveDivisas.closest('label').hidden = true; });  // arquivo do próprio site: sem ele, só some a opção
     }
+    /* Modo 3D: a placa inclina e gira (variáveis --rx e --rz, lidas pelo CSS); arrastar com o mouse gira e inclina, com o dedo
+       só gira (o arrasto vertical continua rolando a página) e, com o mapa em foco, as setas do teclado fazem o mesmo. */
+    var placa = el.querySelector('[data-mapa-placa]'), chave3d = el.querySelector('[data-mapa-3d]'), dica = el.querySelector('[data-mapa-dica]');
+    var giro = GIRO_INICIAL, arrasto = null;
+    function aplicarGiro() {
+      placa.style.setProperty('--rx', giro.rx + 'deg');
+      placa.style.setProperty('--rz', giro.rz + 'deg');
+      placa.style.setProperty('--sen', String(Math.round(Math.sin(giro.rx * Math.PI / 180) * 1000) / 1000));  // altura dos pinos vista de frente
+    }
+    function ligar3d(ligado) {
+      giro = GIRO_INICIAL; aplicarGiro();
+      figura.classList.toggle('mapa-3d', ligado);
+      dica.hidden = !ligado;
+      if (ligado) { figura.setAttribute('tabindex', '0'); figura.setAttribute('aria-label', 'Mapa em 3D. Arraste ou use as setas do teclado para girar.'); }
+      else { figura.removeAttribute('tabindex'); figura.removeAttribute('aria-label'); }
+    }
+    function soltar() { arrasto = null; figura.classList.remove('arrastando'); }
+    aplicarGiro();
+    chave3d.addEventListener('change', function () { ligar3d(chave3d.checked); });
+    figura.addEventListener('pointerdown', function (ev) {
+      if (!figura.classList.contains('mapa-3d') || ev.target.closest('.mapa-polo') || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+      arrasto = { x: ev.clientX, y: ev.clientY, de: giro, toque: ev.pointerType === 'touch' };
+      figura.classList.add('arrastando');
+      try { figura.setPointerCapture(ev.pointerId); } catch (e) { /* sem captura: o arrasto vale enquanto o ponteiro estiver sobre o mapa */ }
+    });
+    figura.addEventListener('pointermove', function (ev) {
+      if (!arrasto) return;
+      giro = girar(arrasto.de, ev.clientX - arrasto.x, arrasto.toque ? 0 : ev.clientY - arrasto.y);
+      aplicarGiro(); dica.hidden = true;
+    });
+    figura.addEventListener('pointerup', soltar);
+    figura.addEventListener('pointercancel', soltar);
+    figura.addEventListener('keydown', function (ev) {
+      var passo = { ArrowLeft: [-30, 0], ArrowRight: [30, 0], ArrowUp: [0, -30], ArrowDown: [0, 30] }[ev.key];
+      if (!passo || ev.target !== figura || !figura.classList.contains('mapa-3d')) return;
+      ev.preventDefault();
+      giro = girar(giro, passo[0], passo[1]); aplicarGiro(); dica.hidden = true;
+    });
+
     if (calmo) play.title = 'Animação desligada pela preferência de movimento reduzido; use o controle de horário.';
     if (calmo) play.hidden = true;
 
     pontos.innerHTML = op.polos.map(function (p) {
       var x = (px(p.lon) - X0) / LARG * 100, y = (py(p.lat) - Y0) / ALT * 100;
       // o nome abre para a esquerda nos polos da metade direita, para não sair do mapa
-      return '<button type="button" class="mapa-polo" data-polo="' + p.id + '"' + (x > 62 ? ' data-lado="esq"' : '') + ' style="left:' + pct(x) + ';top:' + pct(y) + '">' +
+      return '<i class="mapa-polo-pe" aria-hidden="true" style="left:' + pct(x) + ';top:' + pct(y) + '"></i>' +  // onde o pino toca a placa no modo 3D
+        '<button type="button" class="mapa-polo" data-polo="' + p.id + '"' + (x > 62 ? ' data-lado="esq"' : '') + ' style="left:' + pct(x) + ';top:' + pct(y) + '">' +
         '<span class="mapa-polo-glifo" data-mapa-glifo></span><span class="mapa-polo-nome">' + esc(p.nome) + (p.uf ? ' · ' + esc(p.uf) : '') + '</span></button>';
     }).join('');
     atualizar();
@@ -364,5 +422,5 @@
     }).join('');
   }
 
-  (root.Orgatec = root.Orgatec || {}).campoMapa = { montar: montar, atualizar: atualizar, resumoDosPolos: resumoDosPolos, CAIXA: CAIXA, TILES: TILES, ESCALA_IR: ESCALA_IR, ESCALA_CHUVA: ESCALA_CHUVA };
+  (root.Orgatec = root.Orgatec || {}).campoMapa = { montar: montar, atualizar: atualizar, resumoDosPolos: resumoDosPolos, girar: girar, GIRO_INICIAL: GIRO_INICIAL, CAIXA: CAIXA, TILES: TILES, ESCALA_IR: ESCALA_IR, ESCALA_CHUVA: ESCALA_CHUVA };
 })(typeof window !== 'undefined' ? window : this);

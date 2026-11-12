@@ -20,6 +20,20 @@ O mapa de satélite da Janela de Campo ("Satélite e polos agrícolas") tinha a 
 8. **Carregamento.** Enquanto a NASA não responde, a área do mapa mostra um brilho de carregamento no lugar do retângulo escuro parado.
 9. **Legenda enxuta.** A barra de temperatura fica mais fina e o parágrafo vira duas legendas nas pontas ("Do ciano ao vermelho: topos mais frios e altos, nuvens de grande desenvolvimento" e "Cinza: nuvens baixas e a superfície").
 
+## Modelo 3D de vidro (chave "3D")
+
+Pedido em 12/11/2026: "monte um modelo em 3d interativo vidro". O mapa abre plano, como sempre, e a chave **3D** (ao lado de "Chuva" e "Divisas") transforma a imagem num modelo que dá para girar:
+
+- **Placa de vidro com espessura.** A imagem do satélite vira a face de cima de uma placa inclinada, com as quatro bordas em vidro azul, um brilho embaixo e um piso em grade.
+- **Folha de vidro com as divisas.** As divisas dos estados sobem para uma folha transparente 20 px acima da imagem; ao girar, as duas camadas se deslocam uma em relação à outra.
+- **Polos como pinos.** Cada polo vira um pino com haste, que sempre encara quem olha. A altura cresce com a restrição (favorável mais baixo, com restrição no meio, evitar mais alto), além do glifo, que continua igual. O polo escolhido fica maior.
+- **Giro.** Arrastar com o mouse gira e inclina (entre 28° e 70°; a volta é livre). No celular, arrastar para os lados gira e o arrasto vertical continua rolando a página. Com o mapa em foco, as setas do teclado fazem o mesmo. Desligar a chave volta ao mapa plano e ao ângulo inicial.
+- **O que fica parado.** A contagem por estado e a hora da imagem ficam fora da placa, sempre de frente. A animação das 2 horas, a chuva, a troca de camada e o clique nos polos funcionam igual nos dois modos.
+
+Sem biblioteca: só transformações 3D de CSS e cerca de 40 linhas de JavaScript para o giro. Com "movimento reduzido" ligado no aparelho, o modelo liga sem a transição de entrada.
+
+**Limites do 3D:** a placa ocupa cerca de 70% da largura do mapa para caber girada em qualquer ângulo, então a imagem fica menor que no modo plano; os polos próximos se sobrepõem mais; o nome do polo escolhido pode ser cortado na borda em alguns ângulos. Por isso o modo plano continua sendo o padrão e o 3D não é lembrado entre visitas (nenhuma chave nova no aparelho).
+
 ## O que não muda
 
 Fontes e horários das imagens (NASA GIBS, GOES-East, IMERG), o recorte do Brasil, as divisas do IBGE e o crédito, a hora de cada imagem, o aviso de falha da NASA com "Tentar de novo", a chuva só pedida quando ligada, o carregamento só quando o mapa aparece, o clique no polo abrindo a região, o formato do boletim, as regras de estado (sem verde e sem vermelho; nunca só por cor) e a política de privacidade. Nenhuma biblioteca nova e nenhum pedido de rede novo.
@@ -33,6 +47,7 @@ Fontes e horários das imagens (NASA GIBS, GOES-East, IMERG), o recorte do Brasi
 
 - Unitário (+1): contagem dos polos por estado.
 - E2E (+3): cartão com controle segmentado e chaves, glifo em cada polo, contagem que soma os 20 polos e muda com a operação, destaque do polo escolhido, nomes dentro do mapa; animação por transição com um quadro à vista por vez e rótulo do botão; no celular, cartão dentro da tela e botões com 44 px.
+- Modelo 3D: unitário (+1, giro com limites e volta completa) e E2E (+2): a chave liga a placa em 3D, arrastar e as setas giram, os pinos continuam abrindo a região, desligar volta ao plano; no celular, o arrasto vertical continua rolando a página e nada sai da tela.
 - Os testes do satélite que já existiam (divisas, hora e legendas, falha da NASA, imagem parcial, carregamento adiado, celular) continuam verdes sem mudança.
 
 ## Pronto quando
