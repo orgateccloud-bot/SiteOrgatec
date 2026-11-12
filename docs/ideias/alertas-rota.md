@@ -120,6 +120,14 @@ gcloud scheduler jobs create http orgatec-alertas-15min --location southamerica-
 
 Sem `--confirmar`, o job só atualiza o painel e não envia mensagem: serve para a semana de observação.
 
+O agendador chama o job com a conta `orgatec-api`, que precisa do papel `roles/run.invoker` **no job** (sem ele, o Scheduler recebe código 7, permissão negada):
+
+```bash
+gcloud run jobs add-iam-policy-binding orgatec-alertas --region southamerica-east1 --member serviceAccount:orgatec-api@orgatec-site.iam.gserviceaccount.com --role roles/run.invoker
+```
+
+**Em produção desde 12/11/2026** (fase de observação): API `orgatec-api-00017-f8k` com `ORGATEC_TRANSPORTE_ALERTAS=1`; job `orgatec-alertas` sem `--confirmar` (só painel), agendado por `orgatec-alertas-15min` (`*/15 * * * *`, America/Sao_Paulo). Primeira execução: 5 viagens, 2 alertas na rota, INMET ok, FIRMS e INPE desligados, 0 mensagens. Ao trocar a imagem da API, atualizar também a imagem dos jobs `orgatec-alertas` e `orgatec-retencao`.
+
 Custo: o Scheduler é o 5º job da conta (US$ 0,10/mês acima dos 3 gratuitos, [preços](https://cloud.google.com/scheduler/pricing)). As execuções de 15 em 15 min usam a cota gratuita do Cloud Run jobs (estimativa, não medida). A rotina lê `alertas_rota` e `comunicacoes` de cada transportadora com viagem ativa a cada execução.
 
 ## 10. O que foi testado e o que não foi
