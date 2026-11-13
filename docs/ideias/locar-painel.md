@@ -32,6 +32,8 @@ Os itens do catálogo citam ids de `fontes.js` (LC 214/2025, ADCT, Ato Conjunto 
 
 ## Atualização de 13/11/2026: Operação do grupo (`ideia/locar-operacao`)
 
+- **Situação:** aprovada e junta na `desenvolvimento` em 13/11/2026 (branch removida); falta lançar.
+
 - Seção **Operação do grupo** no painel, com três cartões:
   - **Tempo nas regiões do grupo:** os polos da Janela de Campo onde o grupo opera (`polos` gravados no grupo pela carga; sem eles, os polos de GO, TO e PA). Mostra o dia, a janela de pulverização, os próximos 3 dias e o crédito do MET Norway (CC BY 4.0). Boletim de outro dia aparece com selo.
   - **Alertas nas rodovias:** avisos meteorológicos vigentes do INMET e focos de fogo da NASA FIRMS, do resumo público `/api/transporte/alertas-publicos`, com link para o mapa.
