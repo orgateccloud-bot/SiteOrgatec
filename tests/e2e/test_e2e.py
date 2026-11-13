@@ -1841,13 +1841,57 @@ def test_subnav_dos_setores_inclui_cotacoes_e_noticias(navegador, servidor):
 
 # ---------- Janela de Campo: nova ordem (Fase 3 do plano de modernização do agro)
 
+# Limites do celular (375 x 812) com o boletim de teste, depois do ajuste de 13/11/2026 (botão de compartilhar depois dos cartões,
+# fatos do dia em duas colunas, seções de fechamento compactas). Com folga pequena, para acusar se a página voltar a crescer.
+LIMITE_PRIMEIRA_OPERACAO = 760
+LIMITE_ALTURA_JANELA = 4800
+
+
+def test_janela_barra_do_local_grudada_tem_fundo_proprio(navegador, servidor):
+    """Grudada sob o cabeçalho, a barra do local não deixa mais o texto de trás aparecer nos vãos dela."""
+    b = _boletim_automatico()
+    for vp in ("desktop", "mobile"):
+        pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", vp, rotas=_rotas_campo(b))
+        pg.wait_for_selector(".campo-op")
+        barra = pg.locator("[data-campo-barra]")
+        alfa = "e => { const m = getComputedStyle(e).backgroundColor.match(/[\\d.]+/g) || []; return m.length < 4 ? (getComputedStyle(e).backgroundColor.includes('/') ? Number(m[m.length - 1]) : 1) : Number(m[3]); }"
+        antes = barra.bounding_box()
+        assert barra.evaluate("e => getComputedStyle(e).backgroundColor") in ("rgba(0, 0, 0, 0)", "transparent")  # solta, a barra não tem fundo
+        pg.evaluate("window.scrollTo({top: 700, behavior: 'instant'})")
+        expect(barra).to_have_class(re.compile(r"fixo"))
+        assert barra.evaluate(alfa) >= 0.9, (vp, barra.evaluate("e => getComputedStyle(e).backgroundColor"))
+        assert barra.evaluate("e => getComputedStyle(e).backdropFilter || getComputedStyle(e).webkitBackdropFilter").startswith("blur(")
+        caixa = barra.bounding_box()
+        # o conteúdo continua logo abaixo do cabeçalho (81 px) e a barra não passa da largura da tela
+        assert 74 <= caixa["y"] <= 82, (vp, caixa)
+        assert caixa["x"] >= 0 and caixa["x"] + caixa["width"] <= VIEWPORTS[vp][0], (vp, caixa)
+        assert abs(caixa["height"] - antes["height"]) <= 13  # só os 6 px de moldura de cada lado
+        assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
+        assert not erros, (vp, erros)
+
+
+def test_janela_compartilhar_fica_depois_dos_cartoes_e_fatos_em_duas_colunas_no_celular(navegador, servidor):
+    b = _boletim_automatico()
+    pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(b))
+    pg.wait_for_selector(".campo-op")
+    # o botão leva o veredito, mas não fica mais entre ele e os cartões
+    assert pg.locator("[data-campo-veredito] [data-campo-compartilhar]").count() == 0
+    expect(pg.locator("[data-campo-compartilhar]")).to_have_count(1)
+    assert pg.evaluate("document.querySelector('[data-campo-compartilhar]').getBoundingClientRect().top >= document.querySelector('.campo-hoje').getBoundingClientRect().bottom")
+    # fatos do dia (céu, temperatura, chuva e vento) lado a lado, dois por linha
+    tops = pg.evaluate("[...document.querySelectorAll('.campo-fatos > *')].map(e => Math.round(e.getBoundingClientRect().top))")
+    assert len(tops) == 4 and tops[0] == tops[1] and tops[2] == tops[3] and tops[2] > tops[0], tops
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+    assert not erros, erros
+
+
 def test_janela_primeira_decisao_na_primeira_tela_do_celular(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "rural/janela-de-campo.html", "mobile", rotas=_rotas_campo(_boletim_automatico()))
     pg.wait_for_selector(".campo-op")
     assert pg.locator(".campo-op").count() == 5
     topo = pg.evaluate("document.querySelector('.campo-op').getBoundingClientRect().top + scrollY")
-    assert topo <= 812, topo
-    assert pg.evaluate("document.documentElement.scrollHeight") <= 5000
+    assert topo <= LIMITE_PRIMEIRA_OPERACAO, topo
+    assert pg.evaluate("document.documentElement.scrollHeight") <= LIMITE_ALTURA_JANELA
     assert pg.evaluate("document.documentElement.scrollWidth") <= 375
     # resumo curto por operação e comparação das regiões recolhida
     assert all(len(t) <= 90 for t in pg.locator(".campo-op-txt").all_inner_texts())
@@ -2003,9 +2047,10 @@ def test_janela_barra_do_local_gruda_ao_rolar_e_mostra_os_glifos(navegador, serv
     assert "fixo" not in (barra.get_attribute("class") or "")
     pg.evaluate("window.scrollTo(0, 1400)")
     expect(barra).to_have_class(re.compile("fixo"))
-    topo = pg.evaluate("document.querySelector('[data-campo-barra]').getBoundingClientRect().top")
+    # o conteúdo da barra (o botão do local) fica colado logo abaixo do cabeçalho do site; a moldura de vidro de 6 px sobe por baixo dele
+    topo = pg.evaluate("document.querySelector('[data-campo-barra] .campo-local-botao').getBoundingClientRect().top")
     cabecalho = pg.evaluate("document.querySelector('body > header').getBoundingClientRect().height")
-    assert abs(topo - cabecalho) <= 2, (topo, cabecalho)  # colada logo abaixo do cabeçalho do site
+    assert abs(topo - cabecalho) <= 2, (topo, cabecalho)
     expect(pg.locator("[data-campo-mini] .glifo")).to_have_count(5)
     assert not erros, erros
 
