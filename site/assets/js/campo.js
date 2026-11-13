@@ -377,6 +377,7 @@
             '<div><h3 id="campoPolo" class="text-lg font-bold text-tinta" data-campo-titulo></h3><p class="campo-quem"><span id="campoRegiao"></span> · <span data-campo-uf></span></p></div>' +
             '<ul class="campo-hoje" data-campo-hoje></ul>' +
             '<div class="flex flex-wrap gap-2" data-campo-alertas></div>' +
+            '<div class="campo-compartilhar-area" data-campo-compartilhar-area></div>' +  // depois dos cartões: a primeira operação fica mais perto do topo
           '</section>' +
         '</div>' +
         '<div class="campo-dir">' +
@@ -455,8 +456,10 @@
       vd.linhas.map(function (l) { return '<p class="campo-veredito-linha">' + esc(l) + '</p>'; }).join('') +
       (vd.tipo === 'normal' ? '<p class="campo-veredito-fonte">' + vd.contagem.favoraveis + ' de ' + vd.contagem.total + ' favoráveis · ' + esc(local) +
         (vd.parcial ? ' · <span class="campo-veredito-aviso">previsão parcial: ' + vd.parcial.de + ' de ' + vd.parcial.total + ' horas</span>' : '') +
-        (b.automatico ? ' · MET Norway' : '') + '</p>' +
-        '<a class="og-btn og-btn-contorno og-btn-md campo-compartilhar" data-campo-compartilhar target="_blank" rel="noopener" href="' + esc(linkWhatsApp(vd, local)) + '">Compartilhar no WhatsApp</a>' : '');
+        (b.automatico ? ' · MET Norway' : '') + '</p>' : '');
+    // O botão de compartilhar leva o veredito, mas fica depois dos cartões; boletim vencido ou desatualizado não tem botão
+    q('[data-campo-compartilhar-area]').innerHTML = vd.tipo === 'normal'
+      ? '<a class="og-btn og-btn-contorno og-btn-md campo-compartilhar" data-campo-compartilhar target="_blank" rel="noopener" href="' + esc(linkWhatsApp(vd, local)) + '">Compartilhar no WhatsApp</a>' : '';
     q('[data-campo-glifos]').innerHTML = vd.glifos.map(function (g) {
       var nome = OPERACOES.filter(function (x) { return x.id === g.op; })[0].nome, rot = g.estado === 'sem' ? 'sem previsão' : ESTADOS[g.estado].rotulo;
       return '<li><button type="button" class="campo-glifo campo-glifo-' + g.estado + '" data-o="' + g.op + '" aria-pressed="' + (g.op === selO) + '" aria-label="' + esc(nome + ': ' + rot) + '">' +

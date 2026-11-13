@@ -676,8 +676,8 @@ def janela_de_campo() -> None:
         </section>""",
         secao("Mercado", "Minha atividade", f"""                <p class="text-tinta-suave max-w-3xl mb-6">Escolha a sua atividade: o indicador do CEPEA, as notícias e a legislação dela estão na página de cotações e notícias.</p>
                 <div class="og-campo max-w-xs mb-6"><label class="og-campo-rotulo" for="minhaAtividade">Minha atividade</label><select id="minhaAtividade" class="og-campo-controle og-campo-md" data-minha-atividade><option value="">Todas as atividades</option>{opcoes_atividades}</select></div>
-                <a href="{{p}}rural/cotacoes.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie"),
-        faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe."),
+                <a href="{{p}}rural/cotacoes.html" class="og-btn og-btn-primario og-btn-lg" data-agro-mercado>Ver cotações e notícias</a>""", "bg-superficie", compacto=True),
+        faixa_cta("O clima também mexe no caixa", "Safra frustrada, colheita atrasada e perda de insumos mudam a receita e a despesa do ano, e com elas o planejamento tributário do produtor. Converse com a equipe.", compacto=True),
     ])
     pagina("rural/janela-de-campo.html", "Janela de Campo: boletim para o produtor rural",
            "Boletim agrometeorológico para o produtor rural: janela do dia por região e operação (pulverização, plantio, colheita, animais e máquinas), com as fontes.",
