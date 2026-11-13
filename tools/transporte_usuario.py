@@ -38,7 +38,17 @@ def definir_acesso(cliente: httpx.Client, projeto: str, email: str, transportado
     if not usuarios:
         raise SystemExit(f"Não existe usuário com esse e-mail no projeto {projeto}. Crie primeiro no Firebase Authentication.")
     uid = usuarios[0]["localId"]
-    declaracoes = {} if transportadora is None else {"transportadora_id": transportadora, "papel": papel}
+    # Preserva as declarações de outros módulos (ex.: locar_grupo e locar_papel, de tools/locar_usuario.py): só as do Transporte mudam.
+    try:
+        declaracoes = json.loads(usuarios[0].get("customAttributes") or "{}")
+    except ValueError:
+        declaracoes = {}
+    if not isinstance(declaracoes, dict):
+        declaracoes = {}
+    declaracoes.pop("transportadora_id", None)
+    declaracoes.pop("papel", None)
+    if transportadora is not None:
+        declaracoes |= {"transportadora_id": transportadora, "papel": papel}
     r = cliente.post(BASE.format(projeto=projeto) + ":update", headers=cab, json={"localId": uid, "customAttributes": json.dumps(declaracoes)})
     r.raise_for_status()
     return "acesso removido" if transportadora is None else f"acesso concedido: papel {papel}, transportadora {transportadora}"

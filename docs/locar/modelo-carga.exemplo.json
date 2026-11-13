@@ -1,0 +1,97 @@
+{
+  "_leia": "MODELO COM DADOS FICTÍCIOS. Copie para D:\\01_Projetos_Ativos\\SiteOrgatec-dados-privados\\locar\\carga.json (fora do git), troque pelos dados reais e rode: python tools/locar_carregar.py --arquivo <caminho> --listar. A ferramenta recusa arquivos dentro de um repositório git. Os CNPJs abaixo são os fictícios do documento de planejamento.",
+  "grupo": {
+    "id": "11111111-1111-4111-8111-111111111111",
+    "nome": "Grupo Exemplo"
+  },
+  "entidades": [
+    {
+      "id": "e-transporte",
+      "nome": "Exemplo Transporte Ltda",
+      "tipo": "pj",
+      "status": "em_incorporacao",
+      "sucessora_id": "e-transportadora",
+      "regime": "lucro_real",
+      "documento": "98.900.460/0001-70"
+    },
+    {
+      "id": "e-transportadora",
+      "nome": "Exemplo Transportadora Ltda",
+      "tipo": "pj",
+      "status": "ativa",
+      "regime": "lucro_real",
+      "documento": "78.213.159/0001-81"
+    },
+    {
+      "id": "e-servicos",
+      "nome": "Exemplo Serviços Ltda",
+      "tipo": "pj",
+      "status": "ativa",
+      "regime": "simples",
+      "documento": "67.025.451/0001-54"
+    },
+    {
+      "id": "e-maquinas",
+      "nome": "Exemplo Máquinas Ltda",
+      "tipo": "pj",
+      "status": "ativa",
+      "regime": "lucro_real",
+      "documento": "85.346.964/0001-49"
+    },
+    {
+      "id": "e-produtor-1",
+      "nome": "Produtor Exemplo 1 (pessoa física)",
+      "tipo": "produtor_pf",
+      "status": "ativa",
+      "regime": "produtor_rural_pf",
+      "titulares": ["uid-do-produtor-1"]
+    }
+  ],
+  "itens": [
+    {
+      "id": "i-ciot-transporte",
+      "entidade_id": "e-transporte",
+      "tipo": "obrigacao",
+      "titulo": "Conferir o registro do CIOT nas operações com autônomos",
+      "prazo": "2026-12-15",
+      "responsavel": "equipe",
+      "fonte_id": "res_antt_6090",
+      "modelo_id": "ciot_obrigatorio"
+    },
+    {
+      "id": "i-marco-incorporacao",
+      "entidade_id": "e-transporte",
+      "tipo": "marco_societario",
+      "titulo": "Alteração contratual da incorporação",
+      "prazo_a_confirmar": true,
+      "responsavel": "equipe"
+    },
+    {
+      "id": "i-cbs-2027",
+      "tipo": "evento_reforma",
+      "titulo": "CBS no lugar de PIS e Cofins",
+      "prazo": "2027-01-01",
+      "fonte_id": "adct_126",
+      "modelo_id": "cbs_2027"
+    },
+    {
+      "id": "i-livro-caixa-produtor-1",
+      "entidade_id": "e-produtor-1",
+      "tipo": "obrigacao",
+      "titulo": "Entregar o livro caixa digital do período",
+      "prazo": "2026-12-20",
+      "responsavel": "equipe"
+    }
+  ],
+  "acessos": [
+    {
+      "usuario_id": "uid-da-equipe-1",
+      "papel": "equipe"
+    },
+    {
+      "usuario_id": "uid-do-diretor-1",
+      "papel": "diretor",
+      "entidades": ["e-transporte", "e-transportadora", "e-servicos", "e-maquinas"]
+    }
+  ]
+}

@@ -40,3 +40,6 @@ docs/mapeamento-seguranca-*
 
 # trava de publicação (tools/publicar.py e agendador do boletim)
 .publicando.lock
+
+# Dados reais do grupo LOCAR (carga local): ficam FORA do repositório, em SiteOrgatec-dados-privados
+dados-privados/
