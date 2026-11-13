@@ -18,7 +18,8 @@
   var QUADROS = 12, PASSO_QUADRO = 600000, ATRASO_GOES = 3600000;  // GOES-East a cada 10 min, publicado com ~50 min de atraso
   var SAT = { cor: ['GOES-East_ABI_GeoColor', 'GoogleMapsCompatible_Level7', 7, 1], ir: ['GOES-East_ABI_Band13_Clean_Infrared', 'GoogleMapsCompatible_Level6', 6, 0.8] };
   var COR = { potencial: '#facc15', perigo: '#f97316', grande_perigo: '#ef4444' };
-  var COR_TEMPORAL = { forte: '#a855f7', muito_forte: '#7e22ce' };
+  // chuva em azul (o fogo é magenta e o satélite à noite fica roxo: as três coisas não podem se misturar)
+  var COR_TEMPORAL = { forte: '#3b82f6', muito_forte: '#1d4ed8' };
   // fogo em magenta: amarelo, laranja e vermelho são a escala dos avisos do INMET e não podem ser confundidos com ela
   var COR_FOGO = { foco: '#ff2e93', borda: '#fdf2f8' };
   var CHUVA_SAT = 'IMERG_Precipitation_Rate_30min', PASSO_CHUVA = 1800000, ATRASO_CHUVA = 6 * 3600000;
@@ -76,19 +77,25 @@
   }
   /* Chuva forte prevista no Sul: só as células com chuva forte, como pontos no centro da célula. O mapa as desenha como manchas
      redondas e esfumadas do tamanho da célula (sem os quadrados que pareciam pixels e passavam para o mar). */
-  function geoTemporal(t) {
+  function geoTemporal(t, dia) {
     if (!t || t.estado === 'indisponivel' && !(t.pontos || []).length) return colecao([]);
-    return colecao((t.pontos || []).filter(function (p) { return p[3]; }).map(function (p) {
-      return { type: 'Feature', properties: { nivel: p[3], uf: p[2], inicio: p[4] || '' }, geometry: { type: 'Point', coordinates: [p[1], p[0]] } };
+    return colecao((t.pontos || []).map(function (p) { return [p, nivelNoDia(p, dia)]; }).filter(function (x) { return x[1]; }).map(function (x) {
+      return { type: 'Feature', properties: { nivel: x[1], uf: x[0][2], inicio: x[0][4] || '' }, geometry: { type: 'Point', coordinates: [x[0][1], x[0][0]] } };
     }));
+  }
+  /* Nível da célula no dia escolhido (p[7] = {dia: nível}); dado antigo, sem os dias, vale para as 48 h inteiras. */
+  function nivelNoDia(p, dia) {
+    if (!dia || !p[7] || typeof p[7] !== 'object') return p[3] || '';
+    return p[7][dia] || '';
   }
   /* Raio, em pixels no zoom 0, da mancha de uma célula de `passo` graus (Web Mercator: 256 px = 360° no zoom 0). Passa um pouco da
      célula para as vizinhas se emendarem. */
   function raioCelula(passo) { return (passo || 0.75) * 1.3 * 256 / 360; }
   /* A célula da chuva forte que contém o ponto (o balão diz o nível dela), ou null. */
-  function celulaTemporal(t, lat, lon) {
+  function celulaTemporal(t, lat, lon, dia) {
     var m = ((t || {}).passo || 0.75) / 2;
-    return ((t || {}).pontos || []).filter(function (p) { return p[3] && Math.abs(p[0] - lat) <= m && Math.abs(p[1] - lon) <= m; })
+    return ((t || {}).pontos || []).filter(function (p) { return nivelNoDia(p, dia) && Math.abs(p[0] - lat) <= m && Math.abs(p[1] - lon) <= m; })
+      .map(function (p) { var c = p.slice(); c[3] = nivelNoDia(p, dia); return c; })
       .sort(function (a, b) { return (b[3] === 'muito_forte') - (a[3] === 'muito_forte'); })[0] || null;
   }
   /* Último horário da chuva de 30 min na lista de domínios da NASA GIBS ("início/fim/PT30M"); sem ela, um palpite com 6 h de folga. */
@@ -180,14 +187,16 @@
     return carregando;
   }
 
-  /* Cria o mapa dentro de `caixa`. op = { previsao: URL da API ou '', aoEscolherUf(uf), aoMarcarRodovia(sigla), avisoPorId(id) }.
-     Devolve { desenhar(estado), mapa }. estado = { uf, caixaUf, ufs, federais, rodovias, locais, focosPerto, nac, avisos, ocultos, rodovia }. */
+  /* Cria o mapa dentro de `caixa`. op = { previsao: URL da API ou '', aoEscolherUf(uf), aoMarcarRodovia(sigla, manter), avisoPorId(id),
+     camadas: o grupo de botões das camadas, que vai para dentro do mapa }.
+     Devolve { desenhar(estado), mapa }. estado = { uf, caixaUf, ufs, federais, rodovias, locais, focosPerto, nac, avisos, ocultos, rodovia, dia }. */
   function criar(caixa, op) {
     var gl = window.maplibregl, calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var satInicial = 'cor';  // à noite a GeoColor já mostra as nuvens em infravermelho, sem as cores que parecem radar
     caixa.innerHTML = '<div class="jtg-mapa" data-jtg-mapa></div>' +
       '<div class="jtg-tempo">' +
         '<div class="campo-abas" role="group" aria-label="Imagem de satélite">' + [['cor', 'Satélite'], ['ir', 'Nuvens'], ['', 'Sem satélite']].map(function (s) {
-          return '<button type="button" class="campo-aba" data-jtg-sat="' + s[0] + '" aria-pressed="' + (s[0] === 'cor') + '">' + s[1] + '</button>';
+          return '<button type="button" class="campo-aba" data-jtg-sat="' + s[0] + '" aria-pressed="' + (s[0] === satInicial) + '">' + s[1] + '</button>';
         }).join('') + '</div>' +
         '<button type="button" class="jtm-limpar" data-jtg-play aria-pressed="false">▶ Animar 2 h</button>' +
         '<div class="jtg-linha-tempo"><input type="range" min="0" max="' + (QUADROS - 1) + '" step="1" value="' + (QUADROS - 1) + '" data-jtg-quadro aria-label="Horário da imagem de satélite">' +
@@ -207,9 +216,18 @@
     mapa.touchZoomRotate.disableRotation();
     if (window.ResizeObserver) new ResizeObserver(function () { mapa.resize(); }).observe(alvo);  // a coluna muda de largura com o painel
     mapa.addControl(new gl.NavigationControl({ showCompass: false }), 'top-right');
+    /* Camadas num botão dentro do mapa: os 5 botões em duas linhas acima dele tiravam altura do mapa (e, no celular, a primeira tela). */
+    if (op.camadas) {
+      var painelCamadas = document.createElement('details');
+      painelCamadas.className = 'maplibregl-ctrl jtg-camadas';
+      painelCamadas.innerHTML = '<summary>Camadas</summary>';
+      painelCamadas.appendChild(op.camadas);
+      mapa.addControl({ onAdd: function () { return painelCamadas; }, onRemove: function () { painelCamadas.remove(); } }, 'top-left');
+      mapa.on('click', function () { painelCamadas.open = false; });
+    }
     mapa.addControl(new gl.ScaleControl({ unit: 'metric' }), 'bottom-left');
     var pronto = false, pendente = null, ultimo = {}, marcadores = [], popup = null, cachePrev = {};
-    var sat = 'cor', quadro = QUADROS - 1, tempos = temposSatelite(Date.now()), carregados = 0, tocando = null;
+    var sat = satInicial, quadro = QUADROS - 1, tempos = temposSatelite(Date.now()), carregados = 0, tocando = null;
     var chuvaHora = null, chuvaPedida = false;
     /* A chuva por satélite só é buscada quando a pessoa liga a camada: primeiro o horário mais novo publicado, depois as imagens. */
     function ligarChuva() {
@@ -259,7 +277,8 @@
     }
     function mostrarQuadro(i) {
       quadro = i; barra.value = String(i);
-      saida.textContent = sat ? 'Imagem de ' + horaBR(tempos[i]) + ' (Brasília)' : 'Sem imagem de satélite';
+      saida.textContent = sat ? 'Satélite de ' + horaBR(tempos[i]) + ' (Brasília)' +
+        (sat === 'ir' ? '. As cores marcam o topo frio das nuvens altas, onde pode haver tempestade; não é o radar da chuva no chão.' : '') : 'Sem imagem de satélite';
       marcaIni.textContent = sat ? horaBR(tempos[0]).slice(6) : '';
       marcaFim.textContent = sat ? horaBR(tempos[QUADROS - 1]).slice(6) : '';
       for (var k = 0; k < QUADROS; k++) if (mapa.getLayer('sat' + k)) mapa.setPaintProperty('sat' + k, 'raster-opacity', k === i ? SAT[sat][3] : 0);
@@ -291,9 +310,9 @@
       var r0 = raioCelula(0.75);
       mapa.addSource('temporal', { type: 'geojson', data: vazio });
       // mancha contínua: células vizinhas se somam; o raio acompanha o zoom para a mancha ter sempre o tamanho da área no chão
-      mapa.addLayer({ id: 'temporal', type: 'heatmap', source: 'temporal', paint: { 'heatmap-weight': ['match', ['get', 'nivel'], 'muito_forte', 1, 0.5], 'heatmap-intensity': 1,
+      mapa.addLayer({ id: 'temporal', type: 'heatmap', source: 'temporal', paint: { 'heatmap-weight': ['match', ['get', 'nivel'], 'muito_forte', 1, 0.6], 'heatmap-intensity': 1.8,
         'heatmap-radius': ['interpolate', ['exponential', 2], ['zoom'], 0, r0, 11, r0 * 2048],
-        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(168,85,247,0)', 0.1, 'rgba(168,85,247,.3)', 0.35, 'rgba(168,85,247,.48)', 0.7, 'rgba(126,34,206,.6)', 1, 'rgba(107,33,168,.7)'] } });
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(96,165,250,0)', 0.1, 'rgba(96,165,250,.42)', 0.35, 'rgba(96,165,250,.6)', 0.7, 'rgba(59,130,246,.72)', 1, 'rgba(37,99,235,.82)'] } });
       mapa.addSource('calor', { type: 'geojson', data: vazio });
       mapa.addLayer({ id: 'calor', type: 'heatmap', source: 'calor', maxzoom: 10, paint: {
         'heatmap-weight': ['interpolate', ['linear'], ['get', 'n'], 0, 0, 40, 1], 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 3, 0.8, 8, 2.2],
@@ -373,7 +392,11 @@
       var o = e.ocultos || {}, mudouUf = ultimo.uf !== e.uf;
       dados('ufs', e.ufs, geoUfs);
       dados('calor', e.nac, geoCalor);
-      dados('temporal', (e.nac || {}).temporal, geoTemporal);
+      var t = (e.nac || {}).temporal;
+      if (ultimo.temporalT !== t || ultimo.temporalDia !== e.dia) {  // a mancha segue o dia escolhido no painel
+        ultimo.temporalT = t; ultimo.temporalDia = e.dia;
+        mapa.getSource('temporal').setData(geoTemporal(t, e.dia));
+      }
       dados('avisos', e.avisos, geoAvisos);
       dados('rodovias', e.uf ? e.rodovias && e.rodovias.rodovias : e.federais && e.federais.rodovias, geoLinhas);
       dados('locais', e.uf && !o.locais ? e.locais : null, geoLocais);
@@ -423,23 +446,24 @@
         return;
       }
       var via = !(e.ocultos || {}).rodovias && mapa.queryRenderedFeatures(ev.point, { layers: ['rodovias-alvo'] })[0];
-      if (via) { op.aoMarcarRodovia(via.properties.sigla); return; }
+      // na rodovia: destaca e abre o balão com os avisos e a previsão dali (quem toca na estrada quer saber do tempo nela)
+      if (via) { op.aoMarcarRodovia(via.properties.sigla, true); balao(ev.lngLat, ultimo.estado || e, via.properties.sigla); return; }
       balao(ev.lngLat, e);
     });
-    function balao(lngLat, e) {
+    function balao(lngLat, e, sigla) {
       var ids = {}, avisos = mapa.queryRenderedFeatures(mapa.project(lngLat), { layers: ['avisos'] }).map(function (f) { return f.properties.id; })
         .filter(function (id) { return !ids[id] && (ids[id] = 1); }).map(op.avisoPorId).filter(Boolean);
-      var cel = !(e.ocultos || {}).temporal && celulaTemporal((e.nac || {}).temporal, lngLat.lat, lngLat.lng);
+      var cel = !(e.ocultos || {}).temporal && celulaTemporal((e.nac || {}).temporal, lngLat.lat, lngLat.lng, e.dia);
       var temporal = cel ? { properties: { nivel: cel[3], inicio: cel[4] || '' } } : null;
       var el = document.createElement('div');
       el.className = 'jtg-balao';
-      el.innerHTML = (avisos.length ? avisos.map(function (a) {
+      el.innerHTML = (sigla ? '<p class="jtg-via">' + esc(sigla) + '</p>' : '') + (avisos.length ? avisos.map(function (a) {
         return '<p class="jtg-aviso" style="--g:' + (COR[a.gravidade] || COR.perigo) + '"><b>' + esc(op.nomeAviso(a)) + '</b><small>' +
           (a.vigente !== false ? 'Valendo agora, até ' + esc(horaBR(a.fim)) : 'De ' + esc(horaBR(a.inicio)) + ' até ' + esc(horaBR(a.fim))) + ' · INMET</small></p>';
       }).join('') : '<p class="jtg-fraco">Sem aviso do INMET neste ponto.</p>') +
         (temporal ? '<p class="jtg-aviso" style="--g:' + (COR_TEMPORAL[temporal.properties.nivel] || COR_TEMPORAL.forte) + '"><b>' + esc(NIVEL_TEMPORAL[temporal.properties.nivel] || 'Chuva forte prevista') +
           ' na região</b><small>Em algum ponto da área de uns 80 km ao redor' + (temporal.properties.inicio ? ', a partir de ' + esc(horaBR(temporal.properties.inicio)) : '') +
-          ' · previsão MET Norway, próximas 48 h. O ponto exato pode ter menos chuva.</small></p>' : '') +
+          ' · previsão MET Norway' + (e.dia ? ' para ' + esc(rotuloDia(e.dia, Date.now()).toLowerCase()) : ', próximas 48 h') + '. O ponto exato pode ter menos chuva.</small></p>' : '') +
         '<div data-jtg-prev>' + (op.previsao ? '<p class="jtg-fraco">Carregando a previsão…</p>' : '') + '</div>';
       if (popup) popup.remove();
       popup = new gl.Popup({ maxWidth: '320px', focusAfterOpen: false }).setLngLat(lngLat).setDOMContent(el).addTo(mapa);
@@ -470,6 +494,6 @@
 
   return { suportado: suportado, carregar: carregar, criar: criar, geoLinhas: geoLinhas, geoLocais: geoLocais, geoAvisos: geoAvisos, geoCalor: geoCalor,
     geoPontos: geoPontos, geoUfs: geoUfs, geoTemporal: geoTemporal, temposSatelite: temposSatelite, pontoArredondado: pontoArredondado,
-    raioCelula: raioCelula, celulaTemporal: celulaTemporal, horaChuva: horaChuva, semColisao: semColisao, ajusteBalao: ajusteBalao,
+    raioCelula: raioCelula, celulaTemporal: celulaTemporal, nivelNoDia: nivelNoDia, horaChuva: horaChuva, semColisao: semColisao, ajusteBalao: ajusteBalao,
     htmlPrevisao: htmlPrevisao, rotuloDia: rotuloDia, QUADROS: QUADROS };
 });

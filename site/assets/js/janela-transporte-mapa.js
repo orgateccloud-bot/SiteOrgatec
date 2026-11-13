@@ -30,6 +30,8 @@
     ['temporal', 'Chuva forte no Sul (previsão)'], ['chuva', 'Chuva por satélite']];
   var SO_GL = { temporal: 1, chuva: 1 };  // camadas que só o mapa interativo desenha
   var NIVEL_TEMPORAL = { forte: 'Chuva forte prevista', muito_forte: 'Chuva muito forte prevista' };
+  var COR_TEMPORAL = { forte: '#3b82f6', muito_forte: '#1d4ed8' };  // igual a janela-transporte-gl.js
+  var ORDEM_TEMPORAL = { forte: 1, muito_forte: 2 };
   var UFS_SUL = ['PR', 'SC', 'RS'];
   var NE = ' vector-effect="non-scaling-stroke"';
 
@@ -272,30 +274,40 @@
     return { nivel: nivel, frases: frases };
   }
   /* Chuva forte prevista no Sul por estado (nac.temporal, gravado pela rotina a partir do MET Norway). Vazio sem dado. */
-  function temporalSul(nac) {
+  function temporalSul(nac, dia) {
     var t = (nac || {}).temporal;
     if (!t || !t.ufs) return [];
     return UFS_SUL.filter(function (uf) { return t.ufs[uf]; }).map(function (uf) {
-      var u = t.ufs[uf];
-      return { uf: uf, nivel: u.nivel || '', inicio: u.inicio || '', pontos: u.pontos || 0, total: (t.pontos || []).filter(function (p) { return p[2] === uf; }).length };
+      var u = t.ufs[uf], total = (t.pontos || []).filter(function (p) { return p[2] === uf; }).length;
+      if (dia && u.dias) {  // por dia (dado novo): o nível e as áreas daquele dia
+        var d = u.dias[dia] || {};
+        return { uf: uf, nivel: d.nivel || '', inicio: '', pontos: d.pontos || 0, total: total, porDia: true };
+      }
+      return { uf: uf, nivel: u.nivel || '', inicio: u.inicio || '', pontos: u.pontos || 0, total: total };
     });
   }
-  function htmlTemporal(nac, so) {
+  /* Pior nível de chuva forte prevista no dia: no estado (só PR, SC e RS) ou, sem estado, no Sul todo. '' sem chuva forte ou sem dado por dia. */
+  function chuvaNoDia(nac, dia, uf) {
+    if (uf && UFS_SUL.indexOf(uf) < 0) return '';
+    return temporalSul(nac, dia).filter(function (l) { return l.porDia && (!uf || l.uf === uf); })
+      .reduce(function (n, l) { return (ORDEM_TEMPORAL[l.nivel] || 0) > (ORDEM_TEMPORAL[n] || 0) ? l.nivel : n; }, '');
+  }
+  function htmlTemporal(nac, so, dia, rot) {
     var t = (nac || {}).temporal;
     if (!t) return '';
-    var linhas = temporalSul(nac).filter(function (l) { return !so || l.uf === so; });
+    var linhas = temporalSul(nac, dia).filter(function (l) { return !so || l.uf === so; }), porDia = linhas.some(function (l) { return l.porDia; });
     var corpo = t.estado === 'indisponivel'
       ? '<p class="jtm-alerta" role="status">A previsão do MET Norway não respondeu na última tentativa' + (t.atualizado_em ? ': os dados abaixo são de ' + esc(horaBR(t.atualizado_em)) : '') +
         '. Sem previsão em dia, a falta de risco não quer dizer que não há.</p>'
       : '';
     corpo += '<div class="jtm-vias">' + linhas.map(function (l) {
-      var cor = l.nivel === 'muito_forte' ? '#7e22ce' : '#a855f7';
+      var cor = COR_TEMPORAL[l.nivel] || COR_TEMPORAL.forte;
       return '<button type="button" class="jtm-via-cartao" data-jtm-uf="' + esc(l.uf) + '"><span class="jtm-via-sigla">' + esc(l.uf) + '</span>' +
         '<span>' + (l.nivel ? '<span class="jtm-tag jtm-tag-temporal" style="--g:' + cor + '">' + esc(NIVEL_TEMPORAL[l.nivel]) + '</span>' : '<span class="jtm-tag jtm-tag-ok">sem chuva forte prevista</span>') + '</span>' +
         (l.inicio ? '<span class="jtm-fraco">a partir de ' + esc(horaBR(l.inicio)) + '</span>' : '') +
         '<span class="jtm-fraco">' + l.pontos + ' de ' + l.total + ' áreas do estado</span></button>';
     }).join('') + '</div>';
-    return '<h3 class="jtm-titulo">Chuva forte no Sul nas próximas 48 h <span class="jtm-fraco">(previsão)</span></h3>' + corpo +
+    return '<h3 class="jtm-titulo">' + (porDia ? 'Chuva forte no Sul: ' + esc(rot ? rot.toLowerCase() : dia) : 'Chuva forte no Sul nas próximas 48 h') + ' <span class="jtm-fraco">(previsão)</span></h3>' + corpo +
       '<p class="jtm-fraco">Chuva prevista pelo modelo do MET Norway em áreas de cerca de 80 km: forte com 10 mm em uma hora, muito forte com 20 mm. ' +
       'Essa previsão não traz trovoada, granizo nem rajada: para tempestade, tornado e ventania, siga os avisos do INMET e a Defesa Civil' +
       (t.atualizado_em ? '. Previsão de ' + esc(horaBR(t.atualizado_em)) : '') + '.</p>';
@@ -337,9 +349,10 @@
   }
   function htmlDias(nac, agora, sel, uf) {
     return '<div class="jtm-dias" role="group" aria-label="Dia dos avisos">' + dias(agora).map(function (dia) {
-      var av = avisosDoDia(nac, dia.chave, uf), g = pior(av);
+      var av = avisosDoDia(nac, dia.chave, uf), g = pior(av), chuva = chuvaNoDia(nac, dia.chave, uf);
       return '<button type="button" class="jtm-dia" data-jtm-dia="' + dia.chave + '" aria-pressed="' + (sel.dia === dia.chave) + '">' + esc(dia.rotulo) +
-        '<small>' + (av.length ? '<i class="jtm-ponto" style="--g:' + (COR[g] || COR.perigo) + '" aria-hidden="true"></i>' + av.length + (av.length === 1 ? ' aviso' : ' avisos') : 'sem aviso') + '</small></button>';
+        '<small>' + (av.length ? '<i class="jtm-ponto" style="--g:' + (COR[g] || COR.perigo) + '" aria-hidden="true"></i>' + av.length + (av.length === 1 ? ' aviso' : ' avisos') : 'sem aviso') + '</small>' +
+        (chuva ? '<small><i class="jtm-ponto" style="--g:' + COR_TEMPORAL[chuva] + '" aria-hidden="true"></i>' + (chuva === 'muito_forte' ? 'chuva muito forte' : 'chuva forte') + (uf ? '' : ' no Sul') + '</small>' : '') + '</button>';
     }).join('') + '</div>';
   }
   function cartao(atributo, titulo, sub, l, pressionado, raio) {
@@ -398,7 +411,7 @@
     sel = sel || {};
     var s = { dia: sel.dia || diaBR(agora.getTime()) }, lista = avisosDoDia(nac, s.dia), rot = rotuloDia(agora, s.dia);
     return (semTopo ? '' : htmlTopo(vereditoBrasil(nac, agora), avisosEstado(nac, agora))) + htmlDias(nac, agora, s) + htmlEstados(nac, s, nomes) +
-      htmlTemporal(nac) +
+      htmlTemporal(nac, null, s.dia, rot) +
       '<h3 class="jtm-titulo">Avisos de ' + esc(rot) + ' no Brasil <span class="jtm-fraco">(' + lista.length + ')</span></h3>' +
       listaAvisos(lista, 'Nenhum aviso do INMET para ' + rot + '.') + rodape(nac);
   }
@@ -419,7 +432,7 @@
       '<h3 class="jtm-titulo">Avisos de ' + esc(rot) + (s.rodovia ? ' na ' + esc(s.rodovia) : ' no estado') + ' <span class="jtm-fraco">(' + lista.length + ')</span>' +
         (s.rodovia ? ' <button type="button" class="jtm-limpar" data-jtm-rodovia="' + esc(s.rodovia) + '">ver todas as rodovias</button>' : '') + '</h3>' +
       listaAvisos(lista, 'Nenhum aviso do INMET ' + (s.rodovia ? 'no traçado da ' + s.rodovia : 'sobre rodovias do estado') + ' para ' + rot + '.') +
-      (UFS_SUL.indexOf(uf) >= 0 ? htmlTemporal(nac, uf) : '') + rodape(est.atualizado_em ? est : nac);
+      (UFS_SUL.indexOf(uf) >= 0 ? htmlTemporal(nac, uf, s.dia, rot) : '') + rodape(est.atualizado_em ? est : nac);
   }
 
   var CREDITOS = 'Avisos: INMET (avisos meteorológicos, apiprevmet3.inmet.gov.br). Focos de fogo: NASA FIRMS, sensores VIIRS dos satélites NOAA-20 e NOAA-21 (dados CC0). ' +
@@ -456,7 +469,7 @@
             return '<span data-jtm-leg="avisos"><i style="background:' + COR[g] + '"></i>' + ROTULO[g] + '</span>';
           }).join('') + '<span data-jtm-leg="avisos"><i class="jtm-futuro"></i>Ainda não começou</span><span data-jtm-leg="focos"><i class="jtm-mancha"></i>Focos de fogo na região</span>' +
             '<span data-jtm-leg="focos" data-jtm-leg-uf><i class="jtm-foco"></i>Foco junto a rodovia</span>' +
-            '<span data-jtm-leg="temporal" data-jtm-so-gl hidden><i style="background:#a855f7"></i>Chuva forte prevista (Sul)</span><span data-jtm-leg="temporal" data-jtm-so-gl hidden><i style="background:#7e22ce"></i>Chuva muito forte prevista</span>' +
+            '<span data-jtm-leg="temporal" data-jtm-so-gl hidden><i style="background:#3b82f6"></i>Chuva forte prevista (Sul)</span><span data-jtm-leg="temporal" data-jtm-so-gl hidden><i style="background:#1d4ed8"></i>Chuva muito forte prevista</span>' +
             '<span data-jtm-leg="chuva" data-jtm-so-gl hidden><i class="jtm-chuva-sat"></i>Chuva por satélite: fraca a forte</span></div>' +
           '<p class="jtm-fraco jtm-dica" data-jtm-dica></p>' +
           '<details class="mapa-creditos"><summary>Créditos e fontes</summary><p>' + esc(CREDITOS) + '</p></details>' +
@@ -467,6 +480,11 @@
     var balao = el.querySelector('[data-jtm-balao]'), figura = el.querySelector('.jtm-mapa'), topo = el.querySelector('[data-jtm-topo]'), tela = el.querySelector('[data-jtm-locais]');
     var dica = el.querySelector('[data-jtm-dica]'), botaoLocais = el.querySelector('[data-jtm-camada="locais"]');
     var legenda = Array.prototype.slice.call(el.querySelectorAll('[data-jtm-leg]'));
+    // celular: a barra fixa "Simular / Diagnóstico" cobre a base do mapa; some enquanto o mapa está na tela
+    var barraMovel = document.querySelector('[data-barra-movel]');
+    if (barraMovel && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { barraMovel.classList.toggle('recolhida-mapa', es[0].isIntersecting); }, { threshold: 0.25 }).observe(figura);
+    }
     function fecharBalao() { balao.hidden = true; balao.innerHTML = ''; }
     function caixaUf(u) { var e = (ufs || []).filter(function (x) { return x.uf === u; })[0]; return e ? { sul: e.caixa[0], oeste: e.caixa[1], norte: e.caixa[2], leste: e.caixa[3] } : null; }
 
@@ -507,7 +525,7 @@
       var d = nac || {}, agora = new Date(), u = uf ? doUf(uf) : null, est = (u && u.est) || {};
       if (gl) {
         gl.desenhar({ uf: uf, caixaUf: uf ? caixaUf(uf) : null, ufs: ufs, federais: federais, rodovias: u && u.rodovias, locais: u && u.locais, focosPerto: est.focos_perto,
-          nac: nac, avisos: nac ? avisosDoDia(nac, sel.dia, uf) : [], ocultos: ocultos, rodovia: sel.rodovia });
+          nac: nac, avisos: nac ? avisosDoDia(nac, sel.dia, uf) : [], ocultos: ocultos, rodovia: sel.rodovia, dia: sel.dia || diaBR(agora.getTime()) });
       } else {
         trocarVista();
         svg.innerHTML = uf ? svgEstado(d, est, { ufs: ufs, rodovias: u.rodovias }, ocultos, sel, uf) : svgBrasil(d, { ufs: ufs, federais: federais }, ocultos, sel);
@@ -527,7 +545,7 @@
       else if (u.erro) alvo.innerHTML = '<div class="jtm-linha"><button type="button" class="jtm-limpar" data-jtm-voltar>← Brasil</button></div><p class="jtm-alerta" role="status">Os dados deste estado estão indisponíveis no momento. Sem verificação, a falta de alerta não quer dizer que não há risco.</p>';
       else if (!u.est) alvo.innerHTML = '<div class="jtm-linha"><button type="button" class="jtm-limpar" data-jtm-voltar>← Brasil</button></div><p class="jtm-fraco">Carregando ' + esc(nomes[uf] || uf) + '…</p>';
       else alvo.innerHTML = painelEstado(nac, est, agora, sel, uf, nomes[uf], u.rodovias ? u.rodovias.rodovias.map(function (r) { return r.sigla; }) : [], true, busca);
-      hora.textContent = nac.atualizado_em ? 'verificado ' + horaBR(nac.atualizado_em) : 'sem verificação';
+      hora.textContent = nac.atualizado_em ? (gl ? 'alertas de ' : 'verificado ') + horaBR(nac.atualizado_em) : 'sem verificação';
     }
     function carregarUf(u, forcar) {
       var reg = doUf(u);
@@ -543,7 +561,7 @@
       var fora = figura.getBoundingClientRect && figura.getBoundingClientRect().top < 0;
       if (uf && el.scrollIntoView && (fora || window.matchMedia && window.matchMedia('(max-width: 899px)').matches)) topo.scrollIntoView({ block: 'start' });
     }
-    function marcarRodovia(sigla) { sel.rodovia = sel.rodovia === sigla ? null : sigla; fecharBalao(); desenhar(); }
+    function marcarRodovia(sigla, manter) { sel.rodovia = manter || sel.rodovia !== sigla ? sigla : null; fecharBalao(); desenhar(); }
 
     el.querySelectorAll('[data-jtm-camada]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -607,7 +625,7 @@
         figura.style.aspectRatio = '';
         el.querySelector('.mapa-palco').hidden = true;
         caixa.hidden = false;
-        gl = GL.criar(caixa, { previsao: op.previsao || '', aoEscolherUf: escolherUf, aoMarcarRodovia: marcarRodovia,
+        gl = GL.criar(caixa, { previsao: op.previsao || '', aoEscolherUf: escolherUf, aoMarcarRodovia: marcarRodovia, camadas: el.querySelector('.jtm-mapa-col > .campo-abas'),
           avisoPorId: function (id) { return ((nac || {}).avisos || []).filter(function (a) { return a.id === id; })[0]; },
           nomeAviso: function (a) { return (TIPO[a.tipo] || 'Alerta') + ' · ' + (ROTULO[a.gravidade] || a.gravidade); } });
         Object.keys(SO_GL).forEach(function (c) { el.querySelector('[data-jtm-camada="' + c + '"]').hidden = false; });
@@ -648,5 +666,5 @@
   }
   return { BRASIL: BRASIL, vista: vista, xy: xy, horaBR: horaBR, estadoDados: estadoDados, dias: dias, avisosDoDia: avisosDoDia, svgBrasil: svgBrasil, svgEstado: svgEstado,
     resumoEstados: resumoEstados, resumoRodovias: resumoRodovias, veredito: veredito, vereditoBrasil: vereditoBrasil, avisosEstado: avisosEstado,
-    painelBrasil: painelBrasil, painelEstado: painelEstado, htmlRodovias: htmlRodovias, temporalSul: temporalSul, htmlTemporal: htmlTemporal };
+    painelBrasil: painelBrasil, painelEstado: painelEstado, htmlRodovias: htmlRodovias, temporalSul: temporalSul, chuvaNoDia: chuvaNoDia, htmlTemporal: htmlTemporal };
 });

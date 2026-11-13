@@ -158,3 +158,15 @@ Pedida pelo usuário depois da análise ("Alta e média"):
 - **Fogo em magenta** (manchas, pontos e barras do painel), para não confundir com amarelo, laranja e vermelho dos avisos do INMET.
 - **Rótulos sem colisão:** siglas que encostam somem até aproximar (estados maiores e a rodovia marcada têm prioridade).
 - **Malha discreta de longe;** chuva forte do Sul como mancha contínua (heatmap) em vez de quadrados; créditos sempre recolhidos no ⓘ; horário do primeiro e do último quadro na barra da animação; legenda só com as camadas ligadas; no desktop o mapa encolhe para a coluna fixa caber na tela.
+
+## Segunda revisão do mapa (13/11/2026 noite, branch `ideia/mapa-alertas-v2`)
+
+Análise em produção, com dado real e à noite. Pedido do usuário: "Sim, as 8".
+
+- **Chuva forte do Sul por dia:** `previsao.risco` devolve `dias` (dia de Brasília → nível); cada ponto ganha `p[7]` e cada estado `ufs[uf].dias[dia] = {nivel, pontos}`. Os botões de dia marcam "chuva forte" (no Sul, no Brasil), a mancha e o balão seguem o dia escolhido e os cartões dizem "Chuva forte no Sul: <dia>". Dado antigo (sem `dias`) continua valendo para as 48 h. **Exige subir a API junto com o site.**
+- **Chuva em azul** (fogo segue magenta; o satélite à noite fica roxo).
+- **Tocar numa rodovia** destaca e abre o balão com a sigla, os avisos e a previsão dali.
+- **Camadas num botão dentro do mapa** (desktop e celular): o mapa sobe na página e ganha altura.
+- **Barra fixa do celular** some enquanto o mapa está na tela.
+- **Horas rotuladas:** "alertas de HH:MM" no mapa e "Satélite de HH:MM" embaixo.
+- **Item 8 (abrir nas nuvens à noite) desfeito depois de testar:** a camada de infravermelho da GIBS é colorida (verde, amarelo e vermelho no topo frio das nuvens) e parece radar de chuva; no RS pintou vermelho onde a previsão dava céu limpo. A GeoColor à noite já mostra as nuvens. Em vez disso, ao escolher "Nuvens" o mapa explica as cores.

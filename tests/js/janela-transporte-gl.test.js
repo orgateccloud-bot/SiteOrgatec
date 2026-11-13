@@ -126,3 +126,32 @@ test('veredito do Brasil cita a chuva muito forte prevista sem chamar de aviso o
   assert.match(v.frases.join(' '), /Previsão de chuva muito forte em RS nas próximas 48 h, a partir de 13\/11 15:00 \(modelo do MET Norway, não é aviso oficial\)/);
   assert.strictEqual(M.vereditoBrasil(base, new Date(agora)).nivel, 'ok');
 });
+
+const porDia = { estado: 'ok', atualizado_em: '2026-11-13T09:00:00+00:00', passo: 0.75,
+  pontos: [[-30, -51, 'RS', 'muito_forte', '2026-11-14T18:00:00+00:00', 40, 22, { '2026-11-14': 'muito_forte', '2026-11-15': 'forte' }],
+    [-27, -50, 'SC', 'forte', '2026-11-15T03:00:00+00:00', 20, 11, { '2026-11-15': 'forte' }], [-25, -50, 'PR', '', null, 0, 0, {}]],
+  ufs: { PR: { nivel: '', inicio: null, pontos: 0, dias: {} }, SC: { nivel: 'forte', inicio: '2026-11-15T03:00:00+00:00', pontos: 1, dias: { '2026-11-15': { nivel: 'forte', pontos: 1 } } },
+    RS: { nivel: 'muito_forte', inicio: '2026-11-14T18:00:00+00:00', pontos: 1, dias: { '2026-11-14': { nivel: 'muito_forte', pontos: 1 }, '2026-11-15': { nivel: 'forte', pontos: 1 } } } } };
+
+test('chuva forte do Sul segue o dia escolhido; dado antigo vale para as 48 h', () => {
+  assert.strictEqual(G.geoTemporal(porDia, '2026-11-13').features.length, 0);
+  assert.deepStrictEqual(G.geoTemporal(porDia, '2026-11-14').features.map(f => f.properties.nivel), ['muito_forte']);
+  assert.deepStrictEqual(G.geoTemporal(porDia, '2026-11-15').features.map(f => [f.properties.uf, f.properties.nivel]), [['RS', 'forte'], ['SC', 'forte']]);
+  assert.strictEqual(G.geoTemporal(temporal, '2026-11-15').features.length, 2);  // sem p[7]: 48 h inteiras
+  assert.strictEqual(G.celulaTemporal(porDia, -30.2, -51.1, '2026-11-15')[3], 'forte');
+  assert.strictEqual(G.celulaTemporal(porDia, -30.2, -51.1, '2026-11-13'), null);
+});
+
+test('painel: os dias marcam a chuva forte e os cartões do Sul mostram o dia', () => {
+  const nac = { temporal: porDia, avisos: [] };
+  assert.strictEqual(M.chuvaNoDia(nac, '2026-11-14'), 'muito_forte');
+  assert.strictEqual(M.chuvaNoDia(nac, '2026-11-14', 'SC'), '');
+  assert.strictEqual(M.chuvaNoDia(nac, '2026-11-15', 'SC'), 'forte');
+  assert.strictEqual(M.chuvaNoDia(nac, '2026-11-15', 'GO'), '');
+  assert.strictEqual(M.chuvaNoDia({ temporal }, '2026-11-14'), '');  // dado antigo não marca dia
+  const h = M.htmlTemporal(nac, null, '2026-11-15', 'Domingo');
+  assert.match(h, /Chuva forte no Sul: domingo/);
+  assert.match(h, /data-jtm-uf="RS"[\s\S]*Chuva forte prevista[\s\S]*1 de 1 áreas/);
+  const brasil = M.painelBrasil(nac, new Date(agora), { dia: '2026-11-14' }, {}, true);
+  assert.match(brasil, /chuva muito forte no Sul/);
+});
