@@ -1,4 +1,7 @@
-"""Página "Como os sistemas são construídos" (site/solucoes/plataforma.html): mapa por módulo do OrgConc e do OrgAudi.
+"""Página "Como os sistemas são construídos" (site/solucoes/plataforma.html): mapa por módulo de cada sistema público.
+
+Hoje só o OrgConc. O OrgAudi fica de fora enquanto é de uso interno (decisão de 13/11/2026; "publico" em plataforma_curar.SISTEMAS).
+Os textos da página acompanham o número de sistemas: com um só, falam "do sistema de ..."; com mais, "dos sistemas".
 
 Os números vêm de tools/plataforma_grafo.json, que tools/plataforma_curar.py tira do grafo de código do Graphify. O mapa é
 desenhado aqui, em SVG estático: a página não carrega script nem biblioteca de grafo (CSP script-src 'self') e funciona
@@ -115,21 +118,27 @@ def gerar() -> None:
                   f'<a class="og-link" href="{{p}}{s["pagina"]}">Conhecer a solução →</a></p>')
         secoes.append(gp.secao("Mapa do sistema", s["nome"], resumo + "\n" + mapa_svg(chave, s) + "\n" + lista_texto(s),
                                "bg-superficie" if i % 2 else "bg-fundo", f"mapa-{chave}"))
+    varios = len(dados["sistemas"]) > 1
+    nomes = " e ".join(s["nome"].lower() for s in dados["sistemas"].values())
     corpo = "\n".join([
         gp.intro("Soluções · Por dentro", "Como os sistemas da ORGATEC são construídos",
-                 "Um mapa de cada sistema, módulo por módulo: o que cada parte faz e com quais outras ela conversa. "
+                 ("Um mapa de cada sistema" if varios else f"Um mapa do sistema de {nomes}")
+                 + ", módulo por módulo: o que cada parte faz e com quais outras ela conversa. "
                  "É o mesmo mapa que a equipe usa para revisar e evoluir o código."),
         *secoes,
         gp.secao("Como este mapa é feito", "Lido do código, sem inteligência artificial", gp.lista([
-            ("Leitura do código-fonte", f'A ferramenta de código aberto Graphify (versão {escape(dados["graphify"])}) lê o código de cada sistema e monta o grafo de quem chama, importa ou herda de quem. Nessa leitura nenhum modelo de IA é usado e nenhum código sai do escritório.'),
+            ("Leitura do código-fonte", f'A ferramenta de código aberto Graphify (versão {escape(dados["graphify"])}) lê o código-fonte e monta o grafo de quem chama, importa ou herda de quem. Nessa leitura nenhum modelo de IA é usado e nenhum código sai do escritório.'),
             ("Só o nível de módulo", "Nomes de arquivos, funções e tabelas ficam de fora. A página mostra apenas os módulos, quantos arquivos têm e quantas ligações existem entre eles."),
             ("Lido ou deduzido", "Cada ligação é marcada como lida no código ou deduzida pela ferramenta. As deduzidas aparecem tracejadas quando são muitas."),
             ("Limite conhecido", "A ferramenta ainda deixa passar algumas chamadas entre classes herdadas, então o número real de ligações pode ser um pouco maior. O mapa mostra a estrutura, não prova que o sistema está correto."),
         ]), "bg-superficie" if len(secoes) % 2 else "bg-fundo", "metodo"),
         f'                <p class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-xs text-tinta-fraca" data-plataforma-data>Mapa gerado em {dados["gerado"]}.</p>',
-        gp.faixa_solucao("Quer ver um desses sistemas funcionando?", "Na demonstração, a equipe mostra o sistema com dados fictícios.",
-                         "Olá! Quero ver uma demonstração dos sistemas da ORGATEC.", "Solicitar demonstração"),
+        gp.faixa_solucao("Quer ver um desses sistemas funcionando?" if varios else "Quer ver o sistema funcionando?",
+                         "Na demonstração, a equipe mostra o sistema com dados fictícios.",
+                         "Olá! Quero ver uma demonstração dos sistemas da ORGATEC." if varios
+                         else f"Olá! Quero ver uma demonstração do sistema de {nomes} da ORGATEC.", "Solicitar demonstração"),
     ])
     gp.pagina("solucoes/plataforma.html", "Como os sistemas são construídos",
-              "Mapa por módulo dos sistemas da ORGATEC (conciliação bancária e auditoria forense rural), lido do código-fonte.",
+              f"Mapa por módulo dos sistemas da ORGATEC ({nomes}), lido do código-fonte." if varios
+              else f"Mapa por módulo do sistema de {nomes} da ORGATEC, lido do código-fonte.",
               "solucoes", "autoridade", corpo, trilha=[("Soluções", "solucoes/index.html"), ("Como os sistemas são construídos", None)])

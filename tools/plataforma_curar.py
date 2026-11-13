@@ -1,6 +1,7 @@
 """Reduz o grafo de código do Graphify ao nível de módulo, para a página solucoes/plataforma.html.
 
-Uso:  python tools/plataforma_curar.py --orgconc <graph.json do OrgConc> --orgaudi <graph.json do OrgAudi>
+Uso:  python tools/plataforma_curar.py --orgconc <graph.json do OrgConc>
+      (--orgaudi <graph.json do OrgAudi> só quando o OrgAudi voltar a ser público; ver "publico" em SISTEMAS)
 
 Gere cada graph.json no repositório do sistema, só com código e sem nenhum modelo de IA:
     GRAPHIFY_BACKEND=none GRAPHIFY_QUERY_LOG_DISABLE=1 graphify extract . --code-only --no-viz
@@ -23,8 +24,10 @@ LIGACAO_MINIMA = 3  # ligações abaixo disso são ruído no desenho
 IGNORAR = {"contains", "method", "rationale_for"}  # estrutura interna de um mesmo arquivo, não ligação entre módulos
 
 # (prefixo do caminho no repositório, id público). O primeiro prefixo que casar vence: do mais específico ao mais geral.
+# "publico": só os sistemas marcados como públicos vão para o JSON e para a página.
 SISTEMAS = {
     "orgconc": {
+        "publico": True,
         "nome": "Conciliação bancária",
         "pagina": "solucoes/conciliacao.html",
         "modulos": {
@@ -43,6 +46,9 @@ SISTEMAS = {
                      ("api/core/", "nucleo"), ("api/db/", "dados"), ("api/infra/", "dados"), ("api/", "app")],
     },
     "orgaudi": {
+        # Fora da página por decisão do usuário em 13/11/2026: o OrgAudi é de uso interno. O mapeamento fica aqui para,
+        # quando ele puder aparecer, bastar trocar para True e rodar o curador com --orgaudi.
+        "publico": False,
         "nome": "Auditoria forense rural",
         "pagina": "solucoes/auditoria-rural.html",
         "modulos": {
@@ -103,12 +109,14 @@ def curar(grafo: dict, cfg: dict) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--orgconc", required=True, type=Path)
-    ap.add_argument("--orgaudi", required=True, type=Path)
+    publicos = [chave for chave, cfg in SISTEMAS.items() if cfg["publico"]]
+    for chave in SISTEMAS:
+        ap.add_argument(f"--{chave}", required=chave in publicos, type=Path,
+                        help=None if chave in publicos else "ignorado enquanto o sistema não for público")
     ap.add_argument("--versao", default="", help="versão do Graphify usada (graphify --version)")
     args = ap.parse_args()
     saida = {"gerado": date.today().isoformat(), "graphify": args.versao, "sistemas": {}}
-    for chave in SISTEMAS:
+    for chave in publicos:
         grafo = json.loads(getattr(args, chave).read_text(encoding="utf-8"))
         saida["graphify"] = saida["graphify"] or (grafo.get("graph") or {}).get("graphify_version", "")
         saida["sistemas"][chave] = curar(grafo, SISTEMAS[chave])
