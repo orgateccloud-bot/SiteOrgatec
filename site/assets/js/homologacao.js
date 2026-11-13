@@ -213,9 +213,9 @@
     { id: 'V30', categoria: 'validacao', responsavel: 'rt', bloqueia: false, titulo: 'Revisar a base legal, os papéis e a guarda da trilha do painel do grupo LOCAR',
       onde: 'docs/lgpd/locar-grupo.md',
       descricao: 'O painel guarda a agenda de obrigações por entidade e uma trilha de quem alterou o quê. A base legal (execução do contrato de serviços contábeis e obrigação legal), a divisão entre controlador e operador, o tratamento dos produtores rurais pessoa física e o prazo de guarda da trilha estão em rascunho. Os itens do catálogo do painel seguem em revisão técnica (V1).' },
-    { id: 'T30', categoria: 'tecnico', responsavel: 'dev', bloqueia: false, titulo: 'Ligar o painel do grupo LOCAR em produção (Fase 2)',
+    { id: 'T30', categoria: 'tecnico', responsavel: 'dev', bloqueia: false, titulo: 'Abrir o painel do grupo LOCAR para a equipe (Fase 2)',
       onde: 'docs/ideias/locar-painel.md; backend/locar; tools/locar_usuario.py; tools/locar_carregar.py', depende: ['D30', 'V30'],
-      descricao: 'O painel está pronto no código e desligado. Ligar exige autorização, conferir o login por e-mail e senha no Firebase Authentication, carregar os dados reais de um arquivo fora do git e liberar o acesso da equipe.' },
+      descricao: 'O painel está no ar desde 13/11/2026, ainda sem dados e sem nenhum acesso liberado. Falta carregar os dados reais de um arquivo fora do git e liberar o acesso da equipe.' },
     { id: 'T9', categoria: 'tecnico', responsavel: 'dev', bloqueia: false, titulo: 'Virar o site para produção',
       onde: "site/assets/js/config.js → ambiente: 'producao'", depende: ['todas as que bloqueiam'],
       verifica: function (c) { return { resolvida: c.config.ambiente === 'producao', detalhe: 'Ambiente atual: ' + c.config.ambiente + '.' }; } }
