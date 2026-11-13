@@ -613,7 +613,7 @@
       if ('IntersectionObserver' in window) {
         var olho = new IntersectionObserver(function (vistos) {
           if (vistos.some(function (v) { return v.isIntersecting; })) { olho.disconnect(); ligarGL(); }
-        }, { rootMargin: '600px 0px' });
+        }, { rootMargin: '1200px 0px' });
         olho.observe(el);
       } else ligarGL();
     }

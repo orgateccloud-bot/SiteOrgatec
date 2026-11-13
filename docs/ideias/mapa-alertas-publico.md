@@ -130,7 +130,7 @@ Pedido do usuário: mapas realistas, previsão do tempo, tornados no Sul, dinami
 
 **Fase 1, mapa interativo (`site/assets/js/janela-transporte-gl.js`):**
 - MapLibre GL JS 4.7.1 hospedado em `site/assets/vendor/maplibre-gl-4.7.1/`, versão "csp" (sem `eval`, worker do próprio site). Integridade do pacote do npm conferida (`LEIA-ME.md` da pasta). Cache de 1 ano (`/assets/vendor/**`).
-- Só carrega com WebGL e quando o mapa chega a 600 px da tela. Sem WebGL, ou se a biblioteca falhar, fica o mapa em SVG (testado).
+- Só carrega com WebGL e quando o mapa chega a 1.200 px da tela. Sem WebGL, ou se a biblioteca falhar, fica o mapa em SVG (testado).
 - CSP só da página `/empresarial/janela.html` (`CSP_JANELA` em backend/app.py e `csp_janela` em tools/preparar_firebase.py, testadas iguais): `connect-src` + `https://gibs.earthdata.nasa.gov` (o MapLibre baixa as imagens por fetch) e `img-src` + `blob:`. O resto do site não muda.
 - Zoom livre (Ctrl + rolagem ou dois dedos, para não prender a rolagem da página), satélite GOES-East ao vivo (cor real ou nuvens) com animação das últimas 2 h (os 11 quadros antigos só baixam quando a pessoa anima), chuva por satélite (IMERG de anteontem), avisos, manchas e focos, estados clicáveis, rodovias com sigla e estradas locais.
 - O painel de cartões, o veredito, os dias e a busca continuam os mesmos, para o mapa e para quem usa leitor de tela.
