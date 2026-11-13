@@ -132,6 +132,10 @@
     if (regimeUrl && R.ROTULO_REGIME[regimeUrl]) $('simRegime').value = regimeUrl;
     $('taxSimulatorForm').addEventListener('submit', function (ev) { ev.preventDefault(); runSimulation(); });
     $('leadForm').addEventListener('submit', enviarLead);
+    // WhatsApp do pedido: a mensagem é montada no clique, com o cenário e o que foi escolhido em porte e origem
+    $('ctaWhatsSim').addEventListener('click', function () {
+      if (ultimaSimulacao) this.href = linkWhats(mensagemPedido(ultimaSimulacao.entrada, 'lead'));
+    });
     // Simulação rápida da página inicial: o faturamento vem pela memória da aba (nunca pela URL) e é apagado ao ler
     var rapida = null;
     try { rapida = JSON.parse(sessionStorage.getItem('orgatec.simulacaoRapida') || 'null'); sessionStorage.removeItem('orgatec.simulacaoRapida'); } catch (e) { rapida = null; }
@@ -155,9 +159,8 @@
     var ul = $('resultAlertas'); ul.innerHTML = '';
     res.alertas.forEach(function (a) { ul.appendChild(alertaNode(a)); });
 
-    var s = R.setor(entrada.setor), u = U.porSigla[entrada.uf];
-    $('ctaWhatsSim').href = linkWhats('Olá, fiz a simulação no site da ORGATEC (' + s.rotulo + ', ' +
-      R.ROTULO_REGIME[entrada.regime] + ', ' + u.sigla + ') e gostaria de uma análise completa do meu CNPJ.');
+    $('ctaWhatsSim').href = linkWhats(mensagemPedido(entrada, 'lead'));
+    guardarCenario(entrada);
     $('simResult').classList.remove('hidden');
     $('simResult').scrollIntoView({ behavior: 'smooth' });
   }
@@ -222,27 +225,91 @@
     alvo.appendChild(el('a', { href: linkWhats(textoWhats), target: '_blank', rel: 'noopener', class: 'underline font-semibold', text: 'abrir conversa' }));
   }
 
-  function enviarLead(ev) {
-    ev.preventDefault();
-    var f = ev.target, alvo = $('leadMsg');
-    var nome = $('leadNome').value.trim(), email = $('leadEmail').value.trim(), whats = $('leadWhats').value.trim();
-    if (!ultimaSimulacao) return msg(alvo, 'Gere a simulação antes de enviar.', false);
+  /* ---------- Pedido de proposta do diagnóstico (Modelo C) ----------
+     O mesmo pedido sai do resultado do simulador (campos lead*) e da página de proposta (campos pr*).
+     O cenário passa de uma página à outra pela memória da aba, nunca pela URL. A mensagem do WhatsApp leva
+     setor, regime, perfil, UF, porte e origem; não leva faturamento nem dado de contato. */
+  var CHAVE_CENARIO = 'orgatec.cenario';
+  var ROTULO_PERFIL = { b2b: 'clientes empresas (B2B)', b2c: 'consumidor final (B2C)' };
+
+  function guardarCenario(en) {
+    try {
+      sessionStorage.setItem(CHAVE_CENARIO, JSON.stringify({ setor: en.setor, regime: en.regime, perfil: en.perfil, uf: en.uf,
+        faturamento: isFinite(en.faturamento) ? en.faturamento : null }));
+    } catch (e) { /* sem memória da aba: a página de proposta pede o cenário de novo */ }
+  }
+  function lerCenario() {
+    var c = null;
+    try { c = JSON.parse(sessionStorage.getItem(CHAVE_CENARIO) || 'null'); } catch (e) { c = null; }
+    if (!c || !R.setor(c.setor) || !R.ROTULO_REGIME[c.regime] || !ROTULO_PERFIL[c.perfil] || !U.porSigla[c.uf]) return null;
+    return c;
+  }
+  function rotuloEscolhido(id) {
+    var s = $(id);
+    return s && s.value ? s.options[s.selectedIndex].text : '';
+  }
+  function mensagemPedido(en, pfx) {
+    var partes = [R.setor(en.setor).rotulo, R.ROTULO_REGIME[en.regime], ROTULO_PERFIL[en.perfil], U.porSigla[en.uf].sigla];
+    var texto = 'Olá, ORGATEC. Quero a proposta do Diagnóstico de Impacto da Reforma. Cenário: ' + partes.join(', ') + '.';
+    var porte = rotuloEscolhido(pfx + 'Porte'), origem = rotuloEscolhido(pfx + 'Origem');
+    if (porte) texto += ' Porte: ' + porte + '.';
+    if (origem) texto += ' Como conheci: ' + origem + '.';
+    return texto;
+  }
+  function enviarPedido(pfx, form, simulacao, finalidade, textoWhats) {
+    var alvo = $(pfx + 'Msg');
+    var nome = $(pfx + 'Nome').value.trim(), email = $(pfx + 'Email').value.trim(), whats = $(pfx + 'Whats').value.trim();
     if (nome.length < 2) return msg(alvo, 'Informe seu nome.', false);
     var e = validarContato(email, whats); if (e) return msg(alvo, e, false);
-    if (!$('leadConsent').checked) return msg(alvo, 'É necessário autorizar o uso dos dados (LGPD) para enviar.', false);
-    var en = ultimaSimulacao.entrada;
+    if (!$(pfx + 'Consent').checked) return msg(alvo, 'É necessário autorizar o uso dos dados (LGPD) para enviar.', false);
     var corpo = {
-      website: f.elements.website.value, nome: nome, email: email || null, whatsapp: whats || null,
-      empresa: $('leadEmpresa').value.trim() || null,
-      consentimento: consentimento('contato sobre diagnóstico tributário a partir do simulador'),
-      simulacao: { setor: en.setor, regime: en.regime, perfil: en.perfil, uf: en.uf,
-        faturamento_anual: isFinite(en.faturamento) ? en.faturamento : null,
-        alertas: ultimaSimulacao.alertas.map(function (a) { return a.id; }) }
+      website: form.elements.website.value, nome: nome, email: email || null, whatsapp: whats || null,
+      empresa: $(pfx + 'Empresa').value.trim() || null,
+      consentimento: consentimento(finalidade), simulacao: simulacao
     };
+    // Porte e origem só seguem quando escolhidos: assim o pedido sem eles continua aceito por uma API anterior ao Modelo C
+    var porte = $(pfx + 'Porte').value, origem = $(pfx + 'Origem').value;
+    if (porte) corpo.porte = porte;
+    if (origem) corpo.origem = origem;
     postar('/api/leads', corpo).then(function (r) {
       msg(alvo, 'Recebido. Protocolo ' + r.protocolo + '. Um especialista entrará em contato.', true);
-      f.querySelector('button[type=submit]').disabled = true;
-    }).catch(function (err) { falhaEnvio(alvo, err, 'Olá, fiz a simulação no site da ORGATEC e gostaria de uma análise completa do meu CNPJ.'); });
+      form.querySelector('button[type=submit]').disabled = true;
+    }).catch(function (err) { falhaEnvio(alvo, err, textoWhats); });
+  }
+
+  function enviarLead(ev) {
+    ev.preventDefault();
+    if (!ultimaSimulacao) return msg($('leadMsg'), 'Gere a simulação antes de enviar.', false);
+    var en = ultimaSimulacao.entrada;
+    enviarPedido('lead', ev.target, {
+      setor: en.setor, regime: en.regime, perfil: en.perfil, uf: en.uf,
+      faturamento_anual: isFinite(en.faturamento) ? en.faturamento : null,
+      alertas: ultimaSimulacao.alertas.map(function (a) { return a.id; })
+    }, 'contato sobre diagnóstico tributário a partir do simulador', mensagemPedido(en, 'lead'));
+  }
+
+  function initProposta() {
+    var selSetor = $('prSetor');
+    R.SETORES.forEach(function (s) { selSetor.appendChild(el('option', { value: s.id, text: s.rotulo })); });
+    preencherUfs($('prUf'), 'GO');
+    var c = lerCenario();
+    if (c) {
+      selSetor.value = c.setor; $('prRegime').value = c.regime; $('prPerfil').value = c.perfil; $('prUf').value = c.uf;
+      $('prCenario').textContent = 'Cenário recebido da simulação feita nesta aba. Confira e ajuste se precisar.';
+    }
+    function entrada() { return { setor: selSetor.value, regime: $('prRegime').value, perfil: $('prPerfil').value, uf: $('prUf').value }; }
+    // O faturamento só segue se o cenário escolhido aqui ainda for o que foi simulado
+    function faturamento(en) {
+      return c && c.faturamento != null && c.setor === en.setor && c.regime === en.regime && c.perfil === en.perfil && c.uf === en.uf ? c.faturamento : null;
+    }
+    $('ctaWhatsProposta').href = linkWhats(mensagemPedido(entrada(), 'pr'));
+    $('ctaWhatsProposta').addEventListener('click', function () { this.href = linkWhats(mensagemPedido(entrada(), 'pr')); });
+    $('propostaForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var en = entrada();
+      enviarPedido('pr', ev.target, { setor: en.setor, regime: en.regime, perfil: en.perfil, uf: en.uf, faturamento_anual: faturamento(en), alertas: [] },
+        'proposta do diagnóstico de impacto da reforma', mensagemPedido(en, 'pr'));
+    });
   }
 
   /* ---------- Calendário ---------- */
@@ -411,4 +478,5 @@
   if ($('xmlTabela')) renderDemos();
   if ($('listaRegional')) initRegional();
   if ($('contatoForm')) initContato();
+  if ($('propostaForm')) initProposta();
 })();

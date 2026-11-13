@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import unquote
 
 import httpx
 import pytest
@@ -440,7 +441,7 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg.select_option("#pdStatus", "")
     pg.uncheck("#pdBloqueia")
     assert pg.locator("[data-pendencias] article").count() > abertas  # inclui as resolvidas (V8)
-    assert pg.locator("tbody a.og-link").count() == 41  # mapa de páginas (Janela e score entraram em 12/11/2026)
+    assert pg.locator("tbody a.og-link").count() == 43  # mapa de páginas (diagnóstico e proposta entraram com o Modelo C)
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
 
@@ -651,7 +652,8 @@ def test_home_curta_no_celular(navegador, servidor):
 
 def test_menu_com_grupos_desktop_e_celular(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "reforma/index.html")
-    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(2)  # Setores, Empresarial, Ferramentas
+    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(0)  # Simular, Diagnóstico, Reforma, Setores, Compliance, Serviços
+    expect(grupo.locator("summary")).to_have_text("Simular")
     grupo.locator("summary").click()
     expect(grupo.locator(".nav-sub a[href$='simulador.html']")).to_be_visible()
     pg.keyboard.press("Escape")
@@ -1024,8 +1026,8 @@ def test_auditoria_rural_laudo_de_exemplo_ficticio(navegador, servidor, vp):
 
 def test_menu_tem_solucoes_e_atalhos_levam_as_solucoes(navegador, servidor):
     pg, erros = _abrir(navegador, servidor, "inicio.html")
-    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(3)  # Setores, Empresarial, Ferramentas, Soluções
-    expect(grupo.locator("summary")).to_have_text("Soluções")
+    grupo = pg.locator("nav[aria-label=Principal] [data-nav-grupo]").nth(5)  # Simular, Diagnóstico, Reforma, Setores, Compliance, Serviços
+    expect(grupo.locator("summary")).to_have_text("Serviços")
     grupo.locator("summary").click()
     expect(grupo.locator(".nav-sub a[href='solucoes/auditoria-rural.html']")).to_be_visible()
     expect(pg.locator("#ferramentas a[href='solucoes/index.html']")).to_be_visible()
@@ -2642,7 +2644,7 @@ def test_janela_e_score_a_vista_no_menu_no_mapa_e_no_transporte(navegador, servi
 
 
 def test_central_de_viagem_tem_link_mas_continua_fora_do_google(navegador, servidor):
-    """Desde 12/11/2026 a Central e o portal de viagens têm link (menu Empresarial, transporte e Área do cliente), com o selo
+    """Desde 12/11/2026 a Central e o portal de viagens têm link (menu Setores, transporte e Área do cliente), com o selo
     de acesso restrito; as duas telas de login seguem com noindex e fora do sitemap."""
     mapa = (RAIZ / "site" / "sitemap.xml").read_text(encoding="utf-8")
     for pagina in ("transporte/central.html", "transporte/portal.html"):
@@ -2813,4 +2815,103 @@ def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, se
     form.locator("button[type=submit]").click()
     expect(pg.locator("#dev")).to_be_hidden()
     assert vistos["google"] == 1 and vistos["auth"][-1] == "Bearer ID-TOKEN-TESTE" and vistos["auth"][0] is None
+    assert not erros, erros
+
+
+# ---------- Modelo C (12/11/2026): simulador → diagnóstico com escopo → proposta (docs/ideias/modelo-c.md) ----------
+
+DIAGNOSTICO, PROPOSTA = "diagnostico-reforma.html", "proposta/index.html"
+
+
+def test_modelo_c_menu_e_botao_do_diagnostico(navegador, servidor):
+    pg, erros = _pagina(navegador, servidor, "desktop", "inicio.html")
+    grupos = pg.locator("nav[aria-label=Principal] [data-nav-grupo] > summary").all_inner_texts()
+    assert grupos == ["Simular", "Diagnóstico", "Reforma", "Setores", "Compliance", "Serviços"], grupos
+    botao = pg.locator("header [data-cta-diagnostico]")
+    expect(botao).to_be_visible()
+    assert botao.get_attribute("href") == DIAGNOSTICO
+    # O cabeçalho cabe em 1280 px: o menu não encosta no logotipo e nada passa da borda
+    caixa = pg.evaluate("""() => {
+        const logo = document.querySelector('header a[aria-label^="ORGATEC"]').getBoundingClientRect();
+        const nav = document.querySelector('nav[aria-label=Principal]').getBoundingClientRect();
+        const acoes = document.querySelector('header [data-cta-diagnostico]').parentElement.getBoundingClientRect();
+        return {folgaLogo: nav.left - logo.right, folgaAcoes: acoes.left - nav.right, direita: acoes.right, largura: innerWidth};
+    }""")
+    assert caixa["folgaLogo"] >= 8 and caixa["folgaAcoes"] >= 8 and caixa["direita"] <= caixa["largura"], caixa
+    pg2, erros2 = _pagina(navegador, servidor, "mobile", "inicio.html")
+    expect(pg2.locator("header [data-cta-diagnostico]")).to_be_hidden()  # no celular o atalho fica na barra fixa e no menu ☰
+    assert pg2.locator(f"[data-barra-movel] a[href='{DIAGNOSTICO}']").count() == 1
+    pg2.click("#btnMenu")
+    expect(pg2.locator(f"#menuMobile a[href='{DIAGNOSTICO}']").first).to_be_visible()
+    assert not erros and not erros2, erros + erros2
+
+
+@pytest.mark.parametrize("vp", list(VIEWPORTS))
+def test_modelo_c_pagina_do_diagnostico(navegador, servidor, vp):
+    pg, erros = _pagina(navegador, servidor, vp, DIAGNOSTICO)
+    expect(pg.locator("h1")).to_contain_text("documentos")
+    expect(pg.locator("#condicoes")).to_contain_text("5 dias")
+    expect(pg.locator("#condicoes")).to_contain_text("valor segue na proposta")
+    assert pg.locator(f"main a[href='{PROPOSTA}']").count() >= 2
+    expect(pg.locator("nav[aria-label=Principal] a[aria-current=page]")).to_have_count(1)  # o menu marca a página atual (no celular ele existe, só fica oculto)
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
+    mapa = (RAIZ / "site" / "sitemap.xml").read_text(encoding="utf-8")
+    assert f"https://orgatec.io/{DIAGNOSTICO}" in mapa and f"https://orgatec.io/{PROPOSTA}" in mapa
+    assert not erros, erros
+
+
+def test_modelo_c_pedido_no_resultado_do_simulador(navegador, servidor):
+    pg, erros = _pagina(navegador, servidor)
+    pg.select_option("#simSector", index=0)
+    pg.fill("#simFaturamento", "2.400.000")
+    pg.click("#btnSimular")
+    expect(pg.locator("#leadForm h2")).to_have_text("Receba a proposta do diagnóstico deste cenário")
+    expect(pg.locator(f"#leadForm a[href='../{DIAGNOSTICO}']")).to_be_visible()
+    pg.fill("#leadNome", "Teste E2E")
+    pg.fill("#leadWhats", "(62) 99999-0000")
+    pg.select_option("#leadPorte", "pequeno")
+    pg.select_option("#leadOrigem", "indicacao")
+    pg.check("#leadConsent")
+    pg.locator("#ctaWhatsSim").evaluate("a => { a.addEventListener('click', e => e.preventDefault()); a.click(); }")
+    href = unquote(pg.get_attribute("#ctaWhatsSim", "href"))
+    assert "Diagnóstico de Impacto da Reforma" in href and "Pequeno porte" in href and "Indicação" in href
+    assert "Teste" not in href and "99999" not in href and "2400000" not in href and "2.400.000" not in href  # sem dado pessoal nem faturamento
+    pg.click("#leadForm button[type=submit]")
+    expect(pg.locator("#leadMsg")).to_contain_text("Protocolo LD-")
+    assert not erros, erros
+
+
+def test_modelo_c_proposta_recebe_o_cenario_da_aba_e_envia(navegador, servidor):
+    pg, erros = _pagina(navegador, servidor)
+    pg.select_option("#simRegime", "real")
+    pg.select_option("#simUf", "TO")
+    pg.fill("#simFaturamento", "9.000.000")
+    pg.click("#btnSimular")
+    expect(pg.locator("#simResult")).to_be_visible()
+    setor = pg.input_value("#simSector")
+    pg.goto(f"{servidor}/{PROPOSTA}")
+    pg.wait_for_selector("#prSetor option", state="attached")
+    assert "9000000" not in pg.url and "?" not in pg.url  # o cenário vem pela memória da aba, nunca pela URL
+    expect(pg.locator("#prCenario")).to_contain_text("Cenário recebido")
+    assert (pg.input_value("#prSetor"), pg.input_value("#prRegime"), pg.input_value("#prUf")) == (setor, "real", "TO")
+    expect(pg.locator("#propostaForm .og-consentimento")).not_to_contain_text("resultado da simulação")  # quem chega pelo menu pode não ter simulado
+    pg.fill("#prNome", "Teste E2E")
+    pg.fill("#prEmail", "teste@example.com")
+    pg.click("#propostaForm button[type=submit]")
+    expect(pg.locator("#prMsg")).to_contain_text("autorizar")
+    pg.check("#prConsent")
+    pg.select_option("#prPorte", "medio")
+    pg.click("#propostaForm button[type=submit]")
+    expect(pg.locator("#prMsg")).to_contain_text("Protocolo LD-")
+    assert not erros, erros
+
+
+def test_modelo_c_proposta_sem_simulacao_pede_o_cenario(navegador, servidor):
+    pg, erros = _pagina(navegador, servidor, "mobile", PROPOSTA)
+    pg.wait_for_selector("#prSetor option", state="attached")
+    expect(pg.locator("#prCenario")).to_contain_text("Escolha o cenário")
+    assert pg.locator("#prUf").input_value() == "GO"
+    href = unquote(pg.get_attribute("#ctaWhatsProposta", "href"))
+    assert href.startswith("https://wa.me/5562992949161?text=") and "Diagnóstico de Impacto da Reforma" in href
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS["mobile"][0]
     assert not erros, erros
