@@ -30,7 +30,9 @@ BRASILIA = timezone(timedelta(hours=-3))
 INMET_URL = "https://apiprevmet3.inmet.gov.br/avisos/ativos"
 INMET_LINK = "https://avisos.inmet.gov.br/{id}"
 INMET_CREDITO = "INMET, avisos meteorológicos (apiprevmet3.inmet.gov.br)"
-FIRMS_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv/{chave}/{fonte}/{w:.3f},{s:.3f},{e:.3f},{n:.3f}/1"
+# Dois dias: no FIRMS, "1" é só o dia corrente em UTC, que começa vazio às 21h de Brasília (o mapa mostrava zero foco à noite).
+# Quem usa os focos filtra pela hora: 24 h no mapa público, 12 h no cruzamento com a rota.
+FIRMS_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv/{chave}/{fonte}/{w:.3f},{s:.3f},{e:.3f},{n:.3f}/2"
 # O Suomi NPP parou de transmitir em 02/11/2026 (aviso do FIRMS): só NOAA-20 e NOAA-21.
 FIRMS_FONTES = ("VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT")
 FIRMS_CREDITO = "NASA FIRMS (focos de fogo VIIRS, dados CC0)"
@@ -96,6 +98,9 @@ class ResultadoFonte:
 
 
 def _texto(v: Any) -> str:
+    """Texto corrido. O INMET manda `riscos` e `instrucoes` como lista de frases: junta em vez de mostrar colchetes e aspas."""
+    if isinstance(v, (list, tuple)):
+        v = " ".join(str(x).strip() for x in v if x)
     return re.sub(r"\s+", " ", str(v or "")).strip()
 
 
@@ -172,7 +177,7 @@ class FocosFirms:
         self._http, self._chave, self._fontes = cliente, chave, fontes
 
     def buscar(self, caixa: tuple[float, float, float, float]) -> list[Foco]:
-        """caixa = (sul, oeste, norte, leste). Um pedido por satélite, último dia."""
+        """caixa = (sul, oeste, norte, leste). Um pedido por satélite, dois últimos dias (UTC)."""
         s, w, n, e = caixa
         focos: list[Foco] = []
         for fonte in self._fontes:

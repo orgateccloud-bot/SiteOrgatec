@@ -144,3 +144,19 @@ def test_gerador_das_rodovias_separa_siglas_e_junta_trechos():
     linhas = sorted(gerar_rodovias.juntar(partes), key=len)
     assert linhas[0] == [(5.0, 5.0), (6.0, 6.0)]
     assert sorted(linhas[1]) == [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0)]
+
+
+def test_firms_pede_dois_dias_para_nao_zerar_na_virada_do_dia_utc():
+    """No FIRMS, 1 dia é só o dia corrente em UTC: às 21h de Brasília o mapa ficava sem nenhum foco, com a fonte "ok"."""
+    assert fontes.FIRMS_URL.endswith("/2")
+
+
+def test_inmet_manda_riscos_e_instrucoes_como_lista_de_frases():
+    """Formato real de apiprevmet3 (conferido em 12/11/2026): a tela e a mensagem ao motorista mostravam "['...', '...']"."""
+    bruto = {"hoje": [{"id": 1, "descricao": "Tempestade", "severidade": "Perigo Potencial", "inicio": "2026-11-12 08:50", "fim": "2026-11-12 23:59",
+                       "encerrado": False, "poligono": '{"type":"Polygon","coordinates":[[[-49,-12],[-48,-12],[-48,-11],[-49,-12]]]}',
+                       "riscos": ["Chuva de até 50 mm/dia. ", "Ventos de 40 a 60 km/h."], "instrucoes": ["Não se abrigue debaixo de árvores. ", "Ligue 199."]}],
+             "futuro": []}
+    aviso = fontes.interpretar_inmet(bruto)[0]
+    assert aviso.riscos == "Chuva de até 50 mm/dia. Ventos de 40 a 60 km/h."
+    assert aviso.instrucoes == "Não se abrigue debaixo de árvores. Ligue 199."

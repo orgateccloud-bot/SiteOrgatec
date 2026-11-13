@@ -59,19 +59,77 @@
     return (agora.getTime() - t) / 60000 > VERIFICACAO_ATRASADA_MIN ? 'atrasado' : 'ok';
   }
 
-  /* Camadas do SVG. `rodovias` é o JSON do IBGE; `ocultos` = { avisos: true, ... }. */
-  function svgCamadas(d, rodovias, ocultos) {
-    ocultos = ocultos || {};
+  /* ---------- Dias (horário de Brasília) ---------- */
+  var SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  function diaBR(t) { return new Date((typeof t === 'number' ? t : Date.parse(t)) - 3 * 3600000).toISOString().slice(0, 10); }
+  /* Hoje, amanhã e depois: o INMET publica os avisos com até dois dias de antecedência. */
+  function dias(agora) {
+    return [0, 1, 2].map(function (i) {
+      var t = agora.getTime() + i * 86400000, chave = diaBR(t), d = new Date(t - 3 * 3600000);
+      return { chave: chave, rotulo: i === 0 ? 'Hoje' : i === 1 ? 'Amanhã' : SEMANA[d.getUTCDay()] + ' ' + chave.slice(8, 10) + '/' + chave.slice(5, 7) };
+    });
+  }
+  function avisosDoDia(d, chave) {
+    return (d.avisos || []).filter(function (a) { return diaBR(a.inicio) <= chave && chave <= diaBR(a.fim); });
+  }
+  function pior(avisos) {
+    return avisos.reduce(function (g, a) { return (ORDEM[a.gravidade] || 0) > (ORDEM[g] || 0) ? a.gravidade : g; }, '');
+  }
+  function unicos(lista) { return lista.filter(function (t, i, arr) { return arr.indexOf(t) === i; }); }
+  function enumerar(itens) { return itens.length < 2 ? itens.join('') : itens.slice(0, -1).join(', ') + ' e ' + itens[itens.length - 1]; }
+
+  /* ---------- Focos: perto das rodovias viram pontos; o resto vira mancha por célula de ~27 km ---------- */
+  var PASSO_CELULA = 0.25, LIMIAR_FOGO = 10;
+  function distKm(p, a, b) {
+    var k = Math.cos(p[0] * Math.PI / 180), ax = (a[1] - p[1]) * k, ay = a[0] - p[0], bx = (b[1] - p[1]) * k, by = b[0] - p[0];
+    var dx = bx - ax, dy = by - ay, c = dx * dx + dy * dy, t = c ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / c)) : 0;
+    return Math.sqrt(Math.pow(ax + t * dx, 2) + Math.pow(ay + t * dy, 2)) * 111.2;
+  }
+  function separarFocos(focos, rodovias, raioKm) {
+    var folga = raioKm / 100 + 0.02, linhas = [];
+    ((rodovias || {}).rodovias || []).forEach(function (r) {
+      r.linhas.forEach(function (ln) {
+        var la = ln.map(function (p) { return p[0]; }), lo = ln.map(function (p) { return p[1]; });
+        linhas.push({ pts: ln, s: Math.min.apply(null, la) - folga, n: Math.max.apply(null, la) + folga, w: Math.min.apply(null, lo) - folga, e: Math.max.apply(null, lo) + folga });
+      });
+    });
+    var perto = [], celulas = {};
+    (focos || []).forEach(function (f) {
+      if (!dentroDaCaixa(f[0], f[1])) return;
+      var junto = linhas.some(function (l) {
+        if (f[0] < l.s || f[0] > l.n || f[1] < l.w || f[1] > l.e) return false;
+        for (var i = 1; i < l.pts.length; i++) if (distKm(f, l.pts[i - 1], l.pts[i]) <= raioKm) return true;
+        return false;
+      });
+      if (junto) { perto.push([f[0], f[1]]); return; }
+      var ci = Math.floor(f[0] / PASSO_CELULA), cj = Math.floor(f[1] / PASSO_CELULA), k = ci + ':' + cj;
+      (celulas[k] = celulas[k] || { lat: ci * PASSO_CELULA, lon: cj * PASSO_CELULA, n: 0 }).n++;
+    });
+    return { perto: perto, celulas: Object.keys(celulas).map(function (k) { return celulas[k]; }) };
+  }
+
+  /* Camadas do SVG. `rodovias` é o JSON do IBGE; `ocultos` = { avisos: true, ... }; `sel` = { dia: 'AAAA-MM-DD', rodovia: 'BR-153' }.
+     Sem sel.dia, mostra todos os avisos (os de agora cheios, os futuros tracejados). `focos` aceita o resultado de separarFocos já calculado. */
+  function svgCamadas(d, rodovias, ocultos, sel, focos) {
+    ocultos = ocultos || {}; sel = sel || {};
     var s = '';
+    if (!ocultos.focos) {
+      var sep = focos || separarFocos(d.focos, rodovias, d.raio_fogo_km || 5);
+      sep.celulas.forEach(function (c) {
+        var a = xy(c.lat + PASSO_CELULA, c.lon), b = xy(c.lat, c.lon + PASSO_CELULA);
+        s += '<rect class="jtm-calor" x="' + a[0] + '" y="' + a[1] + '" width="' + r1(b[0] - a[0]) + '" height="' + r1(b[1] - a[1]) + '" rx="2" fill="#ff5a1f" fill-opacity="' +
+          (Math.round((0.18 + 0.5 * Math.min(1, c.n / 20)) * 100) / 100) + '" pointer-events="none"><title>' + c.n + ' foco(s)</title></rect>';
+      });
+    }
     if (!ocultos.avisos) {
-      // os dos próximos dias embaixo, tracejados; entre os de agora, o mais grave por cima
-      (d.avisos || []).slice().sort(function (a, b) {
+      // os que ainda não começaram embaixo, tracejados; entre os de agora, o mais grave por cima
+      (sel.dia ? avisosDoDia(d, sel.dia) : (d.avisos || []).slice()).sort(function (a, b) {
         return (vigente(a) - vigente(b)) || ((ORDEM[a.gravidade] || 0) - (ORDEM[b.gravidade] || 0));
       }).forEach(function (a) {
         var cor = COR[a.gravidade] || COR.perigo, ja = vigente(a);
         (a.poligonos || []).forEach(function (anel) {
-          s += '<polygon data-aviso="' + esc(a.id) + '" data-vigente="' + ja + '" points="' + anel.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ') +
-            '" fill="' + cor + '" fill-opacity="' + (ja ? '.16' : '0') + '" stroke="' + cor + '" stroke-width="1.5" stroke-linejoin="round"' +
+          s += '<polygon class="jtm-area" data-aviso="' + esc(a.id) + '" data-vigente="' + ja + '" points="' + anel.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ') +
+            '" fill="' + cor + '" fill-opacity="' + (ja ? '.16' : sel.dia ? '.08' : '0') + '" stroke="' + cor + '" stroke-width="1.5" stroke-linejoin="round"' +
             (ja ? '' : ' stroke-dasharray="5 4"') + '><title>' + esc((TIPO[a.tipo] || 'Alerta') + ' · ' + (ROTULO[a.gravidade] || a.gravidade) + ' · ' +
             (ja ? 'até ' + horaBR(a.fim) : 'a partir de ' + horaBR(a.inicio))) + '</title></polygon>';
         });
@@ -79,70 +137,49 @@
     }
     if (!ocultos.rodovias && rodovias) {
       rodovias.rodovias.forEach(function (r) {
+        var marcada = sel.rodovia === r.sigla, apagada = sel.rodovia && !marcada;
         r.linhas.forEach(function (linha) {
           var pts = linha.map(function (p) { return xy(p[0], p[1]).join(','); }).join(' ');
-          s += '<polyline points="' + pts + '" fill="none" stroke="#0b1220" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" opacity=".7"/>' +
-            '<polyline data-rodovia="' + esc(r.sigla) + '" points="' + pts + '" fill="none" stroke="#f8fafc" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><title>' + esc(r.sigla) + '</title></polyline>';
+          s += '<polyline points="' + pts + '" fill="none" stroke="#0b1220" stroke-width="' + (marcada ? 6 : 4) + '" stroke-linejoin="round" stroke-linecap="round" opacity=".7" pointer-events="none"/>' +
+            '<polyline data-rodovia="' + esc(r.sigla) + '"' + (marcada ? ' data-marcada="1"' : '') + ' points="' + pts + '" fill="none" stroke="' + (marcada ? '#38bdf8' : '#f8fafc') +
+            '" stroke-width="' + (marcada ? 3.4 : 2) + '" stroke-linejoin="round" stroke-linecap="round"' + (apagada ? ' opacity=".5"' : '') + ' pointer-events="none"/>' +
+            '<polyline class="jtm-alvo" data-rodovia-alvo="' + esc(r.sigla) + '" points="' + pts + '" fill="none" stroke="transparent" stroke-width="14" pointer-events="stroke"><title>' + esc(r.sigla) + '</title></polyline>';
         });
         var maior = r.linhas.slice().sort(function (a, b) { return b.length - a.length; })[0];
         if (maior && maior.length) {
           var meio = xy(maior[Math.floor(maior.length / 2)][0], maior[Math.floor(maior.length / 2)][1]);
-          s += '<g class="jtm-rotulo" transform="translate(' + meio.join(',') + ')"><rect x="-21" y="-8" width="42" height="16" rx="3"/><text text-anchor="middle" y="4">' + esc(r.sigla) + '</text></g>';
+          s += '<g class="jtm-rotulo' + (marcada ? ' jtm-rotulo-marcado' : '') + '" transform="translate(' + meio.join(',') + ')" pointer-events="none"><rect x="-21" y="-8" width="42" height="16" rx="3"/><text text-anchor="middle" y="4">' + esc(r.sigla) + '</text></g>';
         }
       });
     }
     if (!ocultos.focos) {
-      (d.focos || []).forEach(function (f) {
-        if (!dentroDaCaixa(f[0], f[1])) return;
+      (focos || separarFocos(d.focos, rodovias, d.raio_fogo_km || 5)).perto.forEach(function (f) {
         var c = xy(f[0], f[1]);
-        s += '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="2.6" fill="#ff3d00" stroke="#fff7ed" stroke-width=".8"/>';
+        s += '<circle class="jtm-foco-perto" cx="' + c[0] + '" cy="' + c[1] + '" r="3" fill="#ff3d00" stroke="#fff7ed" stroke-width="1" pointer-events="none"/>';
       });
     }
     return s;
   }
 
-  /* Linhas da tabela por rodovia: maior gravidade dos avisos que cruzam o traçado e focos a até 5 km. */
-  function linhasRodovias(d) {
-    var porId = {};
-    (d.avisos || []).forEach(function (a) { porId[a.id] = a; });
+  /* Por rodovia, no dia escolhido: pior aviso que cruza o traçado, se já vale, e os focos a até 5 km (sempre das últimas 24 h). */
+  function resumoRodovias(d, chave) {
+    var doDia = {};
+    avisosDoDia(d, chave).forEach(function (a) { doDia[a.id] = a; });
+    var maximo = Math.max.apply(null, [1].concat((d.rodovias || []).map(function (r) { return r.focos_5km || 0; })));
     return (d.rodovias || []).map(function (r) {
-      var avisos = (r.avisos || []).map(function (id) { return porId[id]; }).filter(Boolean);
-      return { sigla: r.sigla, gravidade: r.gravidade || '', proxima: r.gravidade_proxima || '', proximoInicio: r.proximo_inicio || '',
-        avisos: avisos.filter(function (a) { return vigente(a); }), focos: r.focos_5km || 0 };
+      var av = (r.avisos || []).map(function (id) { return doDia[id]; }).filter(Boolean), valendo = av.filter(function (a) { return vigente(a); });
+      var base = valendo.length ? valendo : av;
+      return { sigla: r.sigla, gravidade: pior(base), valendo: valendo.length > 0, tipos: unicos(base.map(function (a) { return TIPO[a.tipo] || 'Alerta'; })),
+        inicio: valendo.length || !av.length ? '' : av.map(function (a) { return a.inicio; }).sort()[0], focos: r.focos_5km || 0, parte: (r.focos_5km || 0) / maximo };
     });
-  }
-
-  function etiqueta(g) {
-    if (!g) return '<span class="jtm-tag jtm-tag-ok">sem aviso</span>';
-    return '<span class="jtm-tag" style="--g:' + (COR[g] || COR.perigo) + '">' + esc(ROTULO[g] || g) + '</span>';
-  }
-
-  function tabelaRodovias(d) {
-    var linhas = linhasRodovias(d);
-    if (!linhas.length) return '';
-    return '<div class="jtm-rolagem"><table class="jtm-tabela"><thead><tr><th>Rodovia</th><th>Aviso do INMET no traçado</th><th>Focos a até ' +
-      esc(d.raio_fogo_km || 5) + ' km (24 h)</th></tr></thead><tbody>' + linhas.map(function (l) {
-        var tipos = l.avisos.map(function (a) { return TIPO[a.tipo] || 'Alerta'; }).filter(function (t, i, arr) { return arr.indexOf(t) === i; });
-        return '<tr><th scope="row">' + esc(l.sigla) + '</th><td>' + etiqueta(l.gravidade) + (tipos.length ? ' <span class="jtm-fraco">' + esc(tipos.join(', ')) + '</span>' : '') +
-          (l.proxima ? '<div class="jtm-fraco">' + esc(ROTULO[l.proxima] || l.proxima) + ' a partir de ' + esc(horaBR(l.proximoInicio)) + '</div>' : '') + '</td><td>' + (l.focos ? '<b>' + l.focos + '</b>' : '0') + '</td></tr>';
-      }).join('') + '</tbody></table></div>';
-  }
-
-  function listaAvisos(avisos, vazio) {
-    if (!avisos.length) return '<p class="jtm-fraco">' + vazio + '</p>';
-    return '<ul class="jtm-avisos">' + avisos.map(function (a) {
-      return '<li style="--g:' + (COR[a.gravidade] || COR.perigo) + '"><div><b>' + esc(TIPO[a.tipo] || 'Alerta') + '</b> ' + etiqueta(a.gravidade) + '</div>' +
-        '<small>de ' + esc(horaBR(a.inicio)) + ' até ' + esc(horaBR(a.fim)) + ' (horário de Brasília)</small>' +
-        ((a.riscos || a.instrucoes) ? '<details><summary>Riscos e o que fazer</summary>' + (a.riscos ? '<p>' + esc(a.riscos) + '</p>' : '') +
-          (a.instrucoes ? '<p><b>' + esc(a.instrucoes) + '</b></p>' : '') + '</details>' : '') +
-        (/^https:\/\//.test(a.link || '') ? '<a class="og-link" href="' + esc(a.link) + '" target="_blank" rel="noopener noreferrer">Ver no portal do INMET</a>' : '') + '</li>';
-    }).join('') + '</ul>';
   }
 
   var ROTULO_FONTE = { inmet: 'INMET', firms: 'NASA FIRMS' };
   var ESTADO_FONTE = { ok: 'ok', indisponivel: 'indisponível', desligada: 'desligada' };
+  var NIVEL = { ok: ['Sem alerta agora', '#22c55e'], atencao: ['Atenção', '#facc15'], perigo: ['Perigo', '#f97316'], grave: ['Grande perigo', '#ef4444'],
+    incerto: ['Verificação incompleta', '#94a3b8'] };
 
-  /* Cabeçalho: estado de cada fonte e da verificação. Devolve '' só quando tudo está em dia. */
+  /* Avisos de fonte fora do ar e de verificação atrasada. Vazio só quando tudo está em dia. */
   function avisosEstado(d, agora) {
     var est = estadoDados(d, agora), saida = [];
     if (est === 'sem_dados') return ['A verificação automática ainda não rodou. Sem verificação, a falta de alerta não quer dizer que não há risco.'];
@@ -155,19 +192,96 @@
     return saida;
   }
 
-  function painel(d, agora) {
-    var ja = (d.avisos || []).filter(function (a) { return vigente(a); }), depois = (d.avisos || []).filter(function (a) { return !vigente(a); });
-    var chips = Object.keys(d.fontes || {}).map(function (k) {
-      var e = d.fontes[k].estado;
-      return '<span class="jtm-fonte">' + esc(ROTULO_FONTE[k] || k) + ' <span class="jtm-tag ' + (e === 'ok' ? 'jtm-tag-ok' : 'jtm-tag-erro') + '">' + esc(ESTADO_FONTE[e] || e) + '</span></span>';
-    }).join('');
-    var avisos = avisosEstado(d, agora).map(function (t) { return '<p class="jtm-alerta" role="status">' + esc(t) + '</p>'; }).join('');
-    return '<div class="jtm-fontes">' + chips + (d.atualizado_em ? '<span class="jtm-fraco">verificado em ' + esc(horaBR(d.atualizado_em)) + '</span>' : '') + '</div>' + avisos +
-      '<h3 class="jtm-titulo">Por rodovia</h3>' + tabelaRodovias(d) +
-      '<h3 class="jtm-titulo">Avisos do INMET valendo agora <span class="jtm-fraco">(' + ja.length + ')</span></h3>' +
-        listaAvisos(ja, 'Nenhum aviso do INMET valendo agora na região.') +
-      (depois.length ? '<h3 class="jtm-titulo">Próximos dias <span class="jtm-fraco">(' + depois.length + '; tracejados no mapa)</span></h3>' +
-        listaAvisos(depois, '') : '');
+  /* A frase do topo. Com verificação incompleta, nunca diz "sem alerta". */
+  function veredito(d, agora) {
+    if (avisosEstado(d, agora).length) return { nivel: 'incerto', frases: ['Sem verificação em dia, a falta de alerta não quer dizer que não há risco.'] };
+    var rs = d.rodovias || [], frases = [], nivel = 'ok';
+    var graves = rs.filter(function (r) { return (ORDEM[r.gravidade] || 0) >= 2; }), leves = rs.filter(function (r) { return r.gravidade === 'potencial'; });
+    var fogo = rs.filter(function (r) { return (r.focos_5km || 0) >= LIMIAR_FOGO; }).sort(function (a, b) { return b.focos_5km - a.focos_5km; });
+    if (graves.length) {
+      var g = pior(graves);
+      nivel = g === 'grande_perigo' ? 'grave' : 'perigo';
+      frases.push(enumerar(graves.map(function (r) { return r.sigla; })) + ' sob aviso de ' + ROTULO[g] + ' do INMET agora.');
+    }
+    if (fogo.length) {
+      if (nivel === 'ok') nivel = 'atencao';
+      frases.push(fogo[0].sigla + ': ' + fogo[0].focos_5km + ' focos de fogo a até ' + (d.raio_fogo_km || 5) + ' km nas últimas 24 h. Atenção à fumaça.' +
+        (fogo.length > 1 ? ' Também ' + enumerar(fogo.slice(1).map(function (r) { return r.sigla + ' (' + r.focos_5km + ')'; })) + '.' : ''));
+    }
+    if (!graves.length && leves.length) {
+      if (nivel === 'ok') nivel = 'atencao';
+      frases.push('Aviso de perigo potencial do INMET em ' + (leves.length === rs.length ? 'todas as rodovias' : enumerar(leves.map(function (r) { return r.sigla; }))) + ', sem aviso grave agora.');
+    }
+    if (!frases.length) frases.push('Sem aviso do INMET e sem concentração de focos de fogo perto das rodovias agora.');
+    return { nivel: nivel, frases: frases };
+  }
+
+  function etiqueta(g) {
+    if (!g) return '<span class="jtm-tag jtm-tag-ok">sem aviso</span>';
+    return '<span class="jtm-tag" style="--g:' + (COR[g] || COR.perigo) + '">' + esc(ROTULO[g] || g) + '</span>';
+  }
+
+  function htmlVeredito(d, agora) {
+    var v = veredito(d, agora), n = NIVEL[v.nivel];
+    return '<div class="jtm-veredito" style="--g:' + n[1] + '" data-nivel="' + v.nivel + '" role="status"><span class="jtm-veredito-rotulo"><i class="jtm-ponto" aria-hidden="true"></i>' + esc(n[0]) + '</span>' +
+      v.frases.map(function (f) { return '<p>' + esc(f) + '</p>'; }).join('') + '</div>';
+  }
+
+  function htmlTopo(d, agora) {
+    return htmlVeredito(d, agora) + avisosEstado(d, agora).map(function (t) { return '<p class="jtm-alerta" role="status">' + esc(t) + '</p>'; }).join('');
+  }
+
+  function htmlDias(d, agora, sel) {
+    return '<div class="jtm-dias" role="group" aria-label="Dia dos avisos">' + dias(agora).map(function (dia) {
+      var av = avisosDoDia(d, dia.chave), g = pior(av);
+      return '<button type="button" class="jtm-dia" data-jtm-dia="' + dia.chave + '" aria-pressed="' + (sel.dia === dia.chave) + '">' + esc(dia.rotulo) +
+        '<small>' + (av.length ? '<i class="jtm-ponto" style="--g:' + (COR[g] || COR.perigo) + '" aria-hidden="true"></i>' + av.length + (av.length === 1 ? ' aviso' : ' avisos') : 'sem aviso') + '</small></button>';
+    }).join('') + '</div>';
+  }
+
+  function htmlRodovias(d, sel) {
+    var linhas = resumoRodovias(d, sel.dia);
+    if (!linhas.length) return '';
+    return '<div class="jtm-vias" role="group" aria-label="Rodovias">' + linhas.map(function (l) {
+      return '<button type="button" class="jtm-via-cartao" data-jtm-rodovia="' + esc(l.sigla) + '" aria-pressed="' + (sel.rodovia === l.sigla) + '">' +
+        '<span class="jtm-via-sigla">' + esc(l.sigla) + '</span>' +
+        '<span>' + etiqueta(l.gravidade) + (l.tipos.length ? ' <span class="jtm-fraco">' + esc(l.tipos.join(', ')) + '</span>' : '') + '</span>' +
+        (l.inicio ? '<span class="jtm-fraco">a partir de ' + esc(horaBR(l.inicio)) + '</span>' : '') +
+        '<span class="jtm-via-fogo"><b>' + l.focos + '</b> <span class="jtm-fraco">foco(s) a até ' + esc(d.raio_fogo_km || 5) + ' km em 24 h</span></span>' +
+        '<span class="jtm-barra" aria-hidden="true"><i style="width:' + Math.round(l.parte * 100) + '%"></i></span></button>';
+    }).join('') + '</div>';
+  }
+
+  function listaAvisos(avisos, vazio) {
+    if (!avisos.length) return '<p class="jtm-fraco">' + esc(vazio) + '</p>';
+    return '<ul class="jtm-avisos">' + avisos.map(function (a) {
+      return '<li style="--g:' + (COR[a.gravidade] || COR.perigo) + '"><div><b>' + esc(TIPO[a.tipo] || 'Alerta') + '</b> ' + etiqueta(a.gravidade) +
+        (vigente(a) ? ' <span class="jtm-tag jtm-tag-ok">valendo agora</span>' : '') + '</div>' +
+        '<small>de ' + esc(horaBR(a.inicio)) + ' até ' + esc(horaBR(a.fim)) + ' (horário de Brasília)</small>' +
+        ((a.riscos || a.instrucoes) ? '<details><summary>Riscos e o que fazer</summary>' + (a.riscos ? '<p>' + esc(a.riscos) + '</p>' : '') +
+          (a.instrucoes ? '<p><b>' + esc(a.instrucoes) + '</b></p>' : '') + '</details>' : '') +
+        (/^https:\/\//.test(a.link || '') ? '<a class="og-link" href="' + esc(a.link) + '" target="_blank" rel="noopener noreferrer">Ver no portal do INMET</a>' : '') + '</li>';
+    }).join('') + '</ul>';
+  }
+
+  /* Coluna da direita: veredito, avisos de estado, dias, rodovias, avisos do dia (da rodovia marcada, se houver) e as fontes. */
+  function painel(d, agora, sel, semTopo) {
+    sel = sel || {};
+    var dia = sel.dia || diaBR(agora.getTime()), s = { dia: dia, rodovia: sel.rodovia || null };
+    var rotulo = (dias(agora).filter(function (x) { return x.chave === dia; })[0] || { rotulo: dia }).rotulo.toLowerCase();
+    var lista = avisosDoDia(d, dia);
+    if (s.rodovia) {
+      var ids = ((d.rodovias || []).filter(function (r) { return r.sigla === s.rodovia; })[0] || {}).avisos || [];
+      lista = lista.filter(function (a) { return ids.indexOf(a.id) >= 0; });
+    }
+    var fontes = Object.keys(d.fontes || {}).map(function (k) { return (ROTULO_FONTE[k] || k) + ' ' + (ESTADO_FONTE[d.fontes[k].estado] || d.fontes[k].estado); });
+    // semTopo: na página, o veredito e os avisos de estado ficam acima do mapa (no celular, antes de tudo)
+    return (semTopo ? '' : htmlTopo(d, agora)) +
+      htmlDias(d, agora, s) + htmlRodovias(d, s) +
+      '<h3 class="jtm-titulo">Avisos de ' + esc(rotulo) + (s.rodovia ? ' na ' + esc(s.rodovia) : '') + ' <span class="jtm-fraco">(' + lista.length + ')</span>' +
+        (s.rodovia ? ' <button type="button" class="jtm-limpar" data-jtm-rodovia="' + esc(s.rodovia) + '">ver todas as rodovias</button>' : '') + '</h3>' +
+      listaAvisos(lista, 'Nenhum aviso do INMET ' + (s.rodovia ? 'no traçado da ' + s.rodovia : 'na região') + ' para ' + rotulo + '.') +
+      '<p class="jtm-rodape">' + esc(fontes.join(' · ')) + (d.atualizado_em ? ' · verificado em ' + esc(horaBR(d.atualizado_em)) : '') + '</p>';
   }
 
   var CREDITOS = 'Avisos: INMET (avisos meteorológicos, apiprevmet3.inmet.gov.br). Focos de fogo: NASA FIRMS, sensores VIIRS dos satélites NOAA-20 e NOAA-21 (dados CC0). ' +
@@ -177,7 +291,7 @@
 
   function montar(el, op) {
     if (!el || typeof document === 'undefined') return;
-    var ocultos = {}, dados = null, rodovias = null;
+    var ocultos = {}, dados = null, rodovias = null, sel = { dia: diaBR(Date.now()), rodovia: null }, focos = null, focosDe = null;
     var divisas = op.divisas ? (function () {
       var l = (px(CAIXA_DIVISAS.oeste) - X0) / LARG * 100, t = (py(CAIXA_DIVISAS.norte) - Y0) / ALT * 100;
       var w = (px(CAIXA_DIVISAS.leste) - px(CAIXA_DIVISAS.oeste)) / LARG * 100, h = (py(CAIXA_DIVISAS.sul) - py(CAIXA_DIVISAS.norte)) / ALT * 100;
@@ -185,38 +299,78 @@
     })() : '';
     el.innerHTML =
       '<div class="jtm">' +
+        '<div class="jtm-topo" data-jtm-topo></div>' +
         '<div class="jtm-mapa-col">' +
-          '<div class="mapa-opcoes" role="group" aria-label="Camadas do mapa">' + CAMADAS.map(function (c) {
-            return '<label class="og-consentimento"><input type="checkbox" data-jtm-camada="' + c[0] + '" checked><span>' + c[1] + '</span></label>';
+          '<div class="campo-abas" role="group" aria-label="Camadas do mapa">' + CAMADAS.map(function (c) {
+            return '<button type="button" class="campo-aba" data-jtm-camada="' + c[0] + '" aria-pressed="true">' + c[1] + '</button>';
           }).join('') + '</div>' +
           '<figure class="mapa-satelite jtm-mapa" style="aspect-ratio:' + Math.round(LARG) + '/' + Math.round(ALT) + '">' +
-            '<div class="mapa-palco" role="img" aria-label="Mapa de Goiás, Tocantins e Pará com os avisos do INMET, os focos de fogo e as rodovias BR-153, BR-060, BR-010 e BR-230">' +
+            '<div class="mapa-palco" role="img" aria-label="Mapa de Goiás, Tocantins e Pará com os avisos do INMET, os focos de fogo e as rodovias BR-153, BR-060, BR-010 e BR-230. As mesmas informações estão nos cartões ao lado.">' +
               '<div class="mapa-camada">' + TILES.map(function (t) {
                 return '<img alt="" decoding="async" referrerpolicy="no-referrer" src="' + GIBS + FUNDO.id + '/default/' + FUNDO.matriz + '/' + Z + '/' + t[1] + '/' + t[0] + '.' + FUNDO.ext + '" style="left:' +
                   pct((t[0] * TAM - X0) / LARG * 100) + ';top:' + pct((t[1] * TAM - Y0) / ALT * 100) + ';width:' + pct(TAM / LARG * 100) + ';height:' + pct(TAM / ALT * 100) + '">';
               }).join('') + '</div>' + divisas +
               '<svg class="jtm-svg" viewBox="0 0 ' + r1(LARG) + ' ' + r1(ALT) + '" preserveAspectRatio="none" aria-hidden="true" data-jtm-svg></svg>' +
             '</div>' +
+            '<div class="jtm-balao" data-jtm-balao role="status" hidden></div>' +
             '<figcaption class="mapa-hora" data-jtm-hora aria-live="polite">carregando…</figcaption>' +
           '</figure>' +
           '<div class="jtm-legenda" aria-hidden="true">' + ['potencial', 'perigo', 'grande_perigo'].map(function (g) {
             return '<span><i style="background:' + COR[g] + '"></i>' + ROTULO[g] + '</span>';
-          }).join('') + '<span><i class="jtm-futuro"></i>Próximos dias</span><span><i class="jtm-foco"></i>Foco de fogo</span><span><i class="jtm-via"></i>Rodovia</span></div>' +
+          }).join('') + '<span><i class="jtm-futuro"></i>Ainda não começou</span><span><i class="jtm-foco"></i>Foco junto à rodovia</span><span><i class="jtm-mancha"></i>Focos na região</span></div>' +
+          '<p class="jtm-fraco jtm-dica">Toque numa rodovia ou numa área de aviso para ver o detalhe.</p>' +
           '<details class="mapa-creditos"><summary>Créditos e fontes</summary><p>' + esc(CREDITOS) + '</p></details>' +
         '</div>' +
-        '<div class="jtm-painel" data-jtm-painel aria-live="polite"><p class="jtm-fraco">Carregando os alertas…</p></div>' +
+        '<div class="jtm-painel" data-jtm-painel><p class="jtm-fraco">Carregando os alertas…</p></div>' +
       '</div>';
     var svg = el.querySelector('[data-jtm-svg]'), alvo = el.querySelector('[data-jtm-painel]'), hora = el.querySelector('[data-jtm-hora]');
+    var balao = el.querySelector('[data-jtm-balao]'), figura = el.querySelector('.jtm-mapa'), topo = el.querySelector('[data-jtm-topo]'), topoHtml = '';
+    function fecharBalao() { balao.hidden = true; balao.innerHTML = ''; }
     function desenhar() {
-      svg.innerHTML = svgCamadas(dados || {}, rodovias, ocultos);
+      var d = dados || {};
+      if (focosDe !== dados || !focos || focos.rodovias !== rodovias) {  // 2.000 focos × traçado: calcula uma vez por resumo
+        focos = separarFocos(d.focos, rodovias, d.raio_fogo_km || 5); focos.rodovias = rodovias; focosDe = dados;
+      }
+      svg.innerHTML = svgCamadas(d, rodovias, ocultos, sel, focos);
       if (dados) {
-        alvo.innerHTML = painel(dados, new Date());
+        var agora = new Date(), novoTopo = htmlTopo(dados, agora);
+        if (novoTopo !== topoHtml) { topo.innerHTML = topoHtml = novoTopo; }  // só muda quando os dados mudam: o leitor de tela não repete a cada toque
+        alvo.innerHTML = painel(dados, agora, sel, true);
         hora.textContent = dados.atualizado_em ? 'verificado ' + horaBR(dados.atualizado_em) : 'sem verificação';
       }
     }
-    el.querySelectorAll('[data-jtm-camada]').forEach(function (c) {
-      c.addEventListener('change', function () { ocultos[c.getAttribute('data-jtm-camada')] = !c.checked; desenhar(); });
+    function marcarRodovia(sigla) { sel.rodovia = sel.rodovia === sigla ? null : sigla; fecharBalao(); desenhar(); }
+    el.querySelectorAll('[data-jtm-camada]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var ligada = b.getAttribute('aria-pressed') !== 'true';
+        b.setAttribute('aria-pressed', String(ligada));
+        ocultos[b.getAttribute('data-jtm-camada')] = !ligada;
+        fecharBalao(); desenhar();
+      });
     });
+    alvo.addEventListener('click', function (ev) {
+      var b = ev.target.closest ? ev.target.closest('[data-jtm-rodovia],[data-jtm-dia]') : null;
+      if (!b) return;
+      var via = b.getAttribute('data-jtm-rodovia'), dia = b.getAttribute('data-jtm-dia');
+      if (via) marcarRodovia(via); else { sel.dia = dia; fecharBalao(); desenhar(); }
+      var de_novo = alvo.querySelector(via ? '.jtm-via-cartao[data-jtm-rodovia="' + via + '"]' : '[data-jtm-dia="' + dia + '"]');
+      if (de_novo) de_novo.focus();  // o painel é redesenhado: devolve o foco ao botão usado
+    });
+    svg.addEventListener('click', function (ev) {
+      var t = ev.target, via = t.getAttribute && t.getAttribute('data-rodovia-alvo'), id = t.getAttribute && t.getAttribute('data-aviso');
+      if (via) { marcarRodovia(via); return; }
+      var a = id && dados ? (dados.avisos || []).filter(function (x) { return x.id === id; })[0] : null;
+      if (!a) { fecharBalao(); return; }
+      var cx = figura.getBoundingClientRect(), x = ev.clientX - cx.left, y = ev.clientY - cx.top;
+      balao.style.setProperty('--g', COR[a.gravidade] || COR.perigo);
+      balao.innerHTML = '<button type="button" aria-label="Fechar" data-jtm-fechar>×</button><b>' + esc(TIPO[a.tipo] || 'Alerta') + '</b> · ' + esc(ROTULO[a.gravidade] || a.gravidade) +
+        '<br>' + (vigente(a) ? 'Valendo agora, até ' + esc(horaBR(a.fim)) : 'De ' + esc(horaBR(a.inicio)) + ' até ' + esc(horaBR(a.fim))) + (a.instrucoes ? '<br><span>' + esc(a.instrucoes) + '</span>' : '');
+      balao.hidden = false;
+      balao.style.left = Math.max(8, Math.min(x - 20, cx.width - balao.offsetWidth - 8)) + 'px';
+      balao.style.top = Math.max(8, Math.min(y + 12, cx.height - balao.offsetHeight - 8)) + 'px';
+    });
+    balao.addEventListener('click', function (ev) { if (ev.target.hasAttribute('data-jtm-fechar')) fecharBalao(); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !balao.hidden) fecharBalao(); });
     var imgDiv = el.querySelector('.jtm-divisas');
     if (imgDiv) imgDiv.addEventListener('error', function () { imgDiv.hidden = true; });
     el.querySelectorAll('.mapa-camada img').forEach(function (img) {
@@ -246,6 +400,6 @@
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
   }
-  return { CAIXA: CAIXA, TILES: TILES, xy: xy, horaBR: horaBR, estadoDados: estadoDados, svgCamadas: svgCamadas, linhasRodovias: linhasRodovias,
-    avisosEstado: avisosEstado, painel: painel, LARG: LARG, ALT: ALT };
+  return { CAIXA: CAIXA, TILES: TILES, xy: xy, horaBR: horaBR, estadoDados: estadoDados, svgCamadas: svgCamadas, resumoRodovias: resumoRodovias, dias: dias,
+    avisosDoDia: avisosDoDia, separarFocos: separarFocos, veredito: veredito, avisosEstado: avisosEstado, painel: painel, LARG: LARG, ALT: ALT };
 });

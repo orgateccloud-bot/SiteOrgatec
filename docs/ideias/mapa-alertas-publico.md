@@ -70,3 +70,20 @@ O traçado das rodovias **não** vem do Google. Os termos do Google Maps proíbe
 - Primeira execução: 3 avisos do INMET na região (1 valendo agora e 2 dos próximos dias, todos "Perigo potencial" de tempestade) e 2.010 focos reais do FIRMS. Por rodovia, a BR-010 tinha 19 focos a até 5 km e a BR-230 tinha 53. A chave do FIRMS não aparece nos registros.
 - `orgatec.io/api/transporte/alertas-publicos` responde com `X-Cache: HIT` (a CDN guarda por 5 min).
 - Na página publicada, o mapa desenhou as 3 áreas, os 2.010 focos e as 4 rodovias, com as 12 imagens da NASA carregadas e sem rolagem lateral.
+
+## Modernização visual (12/11/2026, branch `ideia/mapa-alertas-visual`)
+
+Pedido do usuário: "modernize essa página". Só a página mudou; a API e o job seguem iguais, salvo as duas correções abaixo.
+
+- **Veredito no topo**, acima do mapa (no celular, antes de tudo): aviso grave primeiro, depois a rodovia com mais focos (10 ou mais a até 5 km) e o aviso de perigo potencial. Com fonte fora do ar ou verificação atrasada, o veredito vira "Verificação incompleta" e nunca diz "sem alerta".
+- **Dias**: Hoje, Amanhã e depois, no horário de Brasília. O mapa e a lista mostram só os avisos do dia escolhido.
+- **Cartões por rodovia** no lugar da tabela: aviso do dia, início do que ainda não começou, focos em 24 h com barra. Tocar no cartão (ou na rodovia no mapa) destaca o traçado e filtra a lista.
+- **Focos**: só os que estão a até 5 km de uma rodovia continuam como pontos; os demais viram manchas por célula de 0,25° (~27 km), calculadas no navegador.
+- **Balão** ao tocar numa área de aviso, com tipo, gravidade, validade e instrução. Fecha no × ou com Esc.
+- Camadas como botões de 44 px; mapa fixo ao lado do painel no computador.
+
+Correções de dados feitas junto:
+- **Zero foco à noite**: o pedido ao FIRMS cobria "1 dia", que na NASA é o dia corrente em UTC. Das 21h de Brasília em diante o mapa mostrava zero foco com a fonte "ok". Agora pede 2 dias; os filtros de 24 h (mapa) e 12 h (rota) já existiam.
+- **Instruções do INMET com colchetes**: `riscos` e `instrucoes` vêm como lista de frases e apareciam como `['...', '...']` na tela (e iriam assim na mensagem ao motorista). Agora viram texto corrido.
+
+As duas correções exigem subir a API e atualizar a imagem dos jobs.
