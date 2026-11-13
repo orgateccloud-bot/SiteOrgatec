@@ -32,7 +32,8 @@ Os itens do catálogo citam ids de `fontes.js` (LC 214/2025, ADCT, Ato Conjunto 
 
 ## Atualização de 13/11/2026: Operação do grupo (`ideia/locar-operacao`)
 
-- **Situação:** aprovada e junta na `desenvolvimento` em 13/11/2026 (branch removida); falta lançar.
+- **Situação:** aprovada e junta na `desenvolvimento` em 13/11/2026 (branch removida).
+- **No ar em 13/11/2026:** site `publicado-20261113-1023` e API `orgatec-api-00022-cp4` com `ORGATEC_LOCAR=1`, `ORGATEC_LOCAR_AUTH=firebase` e `ORGATEC_LOCAR_BANCO=firestore`. Conferido: `/api/locar/entrada` responde `firebase`, `/api/locar/contexto` sem login dá 403, o painel abre com a Operação do grupo e a CSP de `/locar/`. Nenhum grupo carregado e nenhuma conta com `locar_grupo`: ninguém entra até a carga (`tools/locar_carregar.py`) e a liberação (`tools/locar_usuario.py`), que dependem de D30 e V30.
 
 - Seção **Operação do grupo** no painel, com três cartões:
   - **Tempo nas regiões do grupo:** os polos da Janela de Campo onde o grupo opera (`polos` gravados no grupo pela carga; sem eles, os polos de GO, TO e PA). Mostra o dia, a janela de pulverização, os próximos 3 dias e o crédito do MET Norway (CC BY 4.0). Boletim de outro dia aparece com selo.
