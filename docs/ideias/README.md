@@ -4,6 +4,8 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Mapa de alertas: Brasil inteiro e toda a malha rodoviária, por estado](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação (na prévia os alertas ficam "indisponíveis" até a API nova subir) | `ideia/mapa-alertas-brasil` | [link](https://orgatec-site--ideia-mapa-alertas-brasil-ntfwcrok.web.app/empresarial/janela.html#alertas-rodovias) |
+| [Mapa de alertas: veredito, dias, cartões por rodovia e focos agrupados](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/mapa-alertas-visual` | [link](https://orgatec-site--ideia-mapa-alertas-visual-vbml17me.web.app/empresarial/janela.html#alertas-rodovias) |
 | [Janela de Campo: mapa de satélite com visual novo](campo-mapa-moderno.md) | aprovada em 12/11/2026 e junta na desenvolvimento, com o modelo 3D de vidro do mapa; lançada em 12/11/2026 | removida | [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) |
 | [Painel do grupo LOCAR (v0.1)](locar-painel.md) | no ar em 13/11/2026 (site publicado-20261113-1023, API orgatec-api-00022-cp4 com ORGATEC_LOCAR=1), com a Operação do grupo; sem dado real e sem nenhuma conta liberada | removida | só local (`ORGATEC_LOCAR=1 ORGATEC_LOCAR_DEMO=1`) |
 | [Janela de Campo: mapa de satélite com visual novo](campo-mapa-moderno.md) | aprovada em 12/11/2026 e junta na desenvolvimento, com o modelo 3D de vidro do mapa; falta lançar | removida | [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) |

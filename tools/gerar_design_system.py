@@ -1163,40 +1163,121 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .mapa-dica{{position:absolute;z-index:4;right:10px;bottom:10px;padding:5px 12px;border-radius:999px;background:rgba(8,17,31,.82);color:#fff;font:500 12px var(--f-body);pointer-events:none}}
 .mapa-3d .mapa-dica:not([hidden]){{display:block}}
 @media (max-width:639px){{.mapa-3d .mapa-polo{{--esc:1}}.mapa-3d .mapa-polo-atual,.mapa-3d .mapa-polo:hover,.mapa-3d .mapa-polo:focus-visible{{--esc:1.35}}.mapa-3d .mapa-hora{{right:auto;max-width:calc(100% - 20px)}}.mapa-3d .mapa-dica{{bottom:auto;top:10px}}}}
-/* Janela do Transporte: mapa público de alertas (janela-transporte-mapa.js). Mapa à esquerda, painel à direita no desktop. */
+/* Janela do Transporte: mapa público de alertas (janela-transporte-mapa.js). Mapa fixo à esquerda e painel à direita no desktop;
+   no celular, uma coluna. Veredito no topo, dias e rodovias como botões (44 px ou mais de altura). */
 .jtm{{display:grid;gap:20px;align-items:start}}
-@media (min-width:900px){{.jtm{{grid-template-columns:minmax(0,440px) minmax(0,1fr)}}}}
+@media (min-width:900px){{.jtm{{grid-template-columns:minmax(0,460px) minmax(0,1fr)}}.jtm-mapa-col{{position:sticky;top:96px}}}}
+.jtm-topo{{display:grid;gap:10px;min-width:0;scroll-margin-top:96px}}
+@media (min-width:900px){{.jtm-topo{{grid-column:1/-1}}}}
 .jtm-mapa-col{{display:grid;gap:10px;min-width:0}}
-.jtm-mapa{{max-width:440px}}
+.jtm .campo-aba{{min-height:44px}}
+.jtm-mapa{{max-width:460px;box-shadow:0 18px 40px -18px rgba(0,0,0,.55)}}
 .jtm-divisas{{position:absolute;max-width:none;pointer-events:none;opacity:.85}}
 .jtm-divisas[hidden]{{display:none}}
 .jtm-svg{{position:absolute;inset:0;width:100%;height:100%;overflow:visible}}
+.jtm-area,.jtm-alvo{{cursor:pointer}}
+.jtm-area:hover{{fill-opacity:.3}}
 .jtm-rotulo rect{{fill:#0b1220;opacity:.85}}
 .jtm-rotulo text{{fill:#fff;font:700 9.5px var(--f-mono)}}
+.jtm-rotulo-marcado rect{{fill:#0369a1;opacity:1}}
+.jtm-uf{{cursor:pointer}}
+.jtm-uf:hover{{fill-opacity:.12}}
+.jtm-uf-sigla{{fill:#fff;font:700 9px var(--f-mono);paint-order:stroke;stroke:#0b1220;stroke-width:2.5px;stroke-linejoin:round}}
+.jtm-locais{{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}}
+.jtm-locais[hidden]{{display:none}}
+.jtm-linha{{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}}
+.jtm-linha .jtm-titulo{{margin:0}}
+.jtm-estado-nome{{font-size:20px;flex:1}}
+.jtm-escolha{{display:inline-flex;align-items:center;gap:8px}}
+.jtm-escolha select,.jtm-escolha input{{min-height:44px;max-width:210px}}
+.jtm-linha .jtm-limpar{{min-height:44px;padding:0 14px}}
+.jtm-balao{{position:absolute;z-index:3;width:min(240px,calc(100% - 16px));padding:10px 34px 10px 12px;border-radius:var(--r);border-left:4px solid var(--g,#facc15);background:rgba(8,17,31,.95);color:#fff;font-size:13px;line-height:1.45;box-shadow:0 10px 24px -8px rgba(0,0,0,.6)}}
+.jtm-balao[hidden]{{display:none}}
+.jtm-balao span{{color:#cbd5e1}}
+.jtm-balao button{{position:absolute;top:0;right:0;width:34px;height:34px;border:0;background:none;color:#fff;font-size:18px;line-height:1;cursor:pointer}}
+.jtm-balao button:focus-visible{{outline:2px solid #fff;outline-offset:-4px}}
 .jtm-legenda{{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}}
 .jtm-legenda span{{display:inline-flex;align-items:center;gap:6px}}
 .jtm-legenda i{{display:inline-block;width:14px;height:10px;border-radius:2px;opacity:.85}}
-.jtm-legenda i.jtm-foco{{width:8px;height:8px;border-radius:50%;background:#ff3d00;border:1px solid #fff7ed}}
-.jtm-legenda i.jtm-via{{height:3px;background:#94a3b8}}
+.jtm-legenda i.jtm-foco{{width:8px;height:8px;border-radius:50%;background:#ff2e93;border:1px solid #fdf2f8}}
+.jtm-legenda i.jtm-mancha{{background:#e11d74;opacity:.6}}
 .jtm-legenda i.jtm-futuro{{background:transparent;border:1.5px dashed #94a3b8}}
-.jtm-painel{{display:grid;gap:10px;min-width:0}}
-.jtm-fontes{{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:14px}}
-.jtm-fonte{{font-weight:600;color:var(--ink)}}
+.jtm-dica{{margin:0}}
+.jtm-painel{{display:grid;gap:14px;min-width:0}}
 .jtm-fraco{{color:var(--muted);font-size:14px;font-weight:400}}
-.jtm-titulo{{margin:8px 0 0;font:600 17px var(--f-body);color:var(--ink)}}
+.jtm-ponto{{display:inline-block;flex:none;width:10px;height:10px;border-radius:50%;background:var(--g,#94a3b8)}}
+.jtm-veredito{{display:grid;gap:6px;padding:16px 18px;border:1px solid var(--line);border-left:6px solid var(--g);border-radius:calc(var(--r) + 4px);background:var(--surface);box-shadow:0 14px 30px -20px rgba(0,0,0,.5)}}
+.jtm-veredito-rotulo{{display:inline-flex;align-items:center;gap:8px;font:600 12px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}}
+.jtm-veredito p{{margin:0;font:600 19px/1.35 var(--f-body);color:var(--ink)}}
+.jtm-veredito p+p{{font-weight:400;font-size:15px;color:var(--muted)}}
+.jtm-dias{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}}
+.jtm-vias{{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+.jtm-dia,.jtm-via-cartao{{display:grid;gap:4px;align-content:start;justify-items:start;min-height:56px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);font:600 15px var(--f-body);text-align:left;cursor:pointer;transition:border-color .15s,transform .15s}}
+.jtm-dia:hover,.jtm-via-cartao:hover{{border-color:var(--muted)}}
+.jtm-dia:focus-visible,.jtm-via-cartao:focus-visible,.jtm-limpar:focus-visible{{outline:2px solid var(--focus);outline-offset:2px}}
+.jtm-dia[aria-pressed=true],.jtm-via-cartao[aria-pressed=true]{{border-color:#38bdf8;box-shadow:inset 0 0 0 1px #38bdf8}}
+.jtm-dia small{{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:400;color:var(--muted)}}
+.jtm-via-cartao{{gap:6px;padding:12px 14px}}
+.jtm-via-sigla{{font:700 18px var(--f-mono)}}
+.jtm-via-fogo b{{font:700 20px var(--f-mono)}}
+.jtm-barra{{display:block;width:100%;height:6px;border-radius:999px;background:var(--line);overflow:hidden}}
+.jtm-barra i{{display:block;height:100%;border-radius:999px;background:#e11d74}}
+.jtm-titulo{{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:4px 0 0;font:600 17px var(--f-body);color:var(--ink)}}
+.jtm-limpar{{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font:500 13px var(--f-body);cursor:pointer}}
 .jtm-tag{{display:inline-block;padding:1px 8px;border-radius:999px;font:600 12px var(--f-body);background:var(--g,#64748b);color:#111827}}
 .jtm-tag-ok{{background:#dcfce7;color:#14532d}}
-.jtm-tag-erro{{background:#fef3c7;color:#78350f}}
 .jtm-alerta{{margin:0;padding:10px 14px;border:1px solid var(--warn);border-radius:var(--r);background:var(--warn-soft);color:var(--ink);font-size:15px}}
-.jtm-rolagem{{overflow-x:auto}}
-.jtm-tabela{{width:100%;border-collapse:collapse;font-size:14px}}
-.jtm-tabela th,.jtm-tabela td{{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}}
-.jtm-tabela thead th{{font:500 12px var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}}
 .jtm-avisos{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
+/* Mapa interativo (janela-transporte-gl.js, MapLibre): mapa largo à esquerda no desktop, altura fixa; controles do satélite embaixo.
+   Os seletores levam .jtm na frente para valer sobre o maplibre-gl.css, que é carregado depois. */
+@media (min-width:900px){{.jtm.jtm-com-gl{{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}}}
+.jtm-mapa.jtm-mapa-gl{{max-width:none;overflow:visible;background:none;box-shadow:none}}
+.jtm-mapa-gl .mapa-hora{{z-index:2;top:10px;bottom:auto;left:10px;right:auto}}
+.jtm-gl[hidden],.jtm .mapa-palco[hidden]{{display:none}}
+.jtm-gl{{display:grid;gap:8px}}
+.jtg-mapa{{position:relative;height:clamp(420px,64vh,660px);border-radius:var(--r);overflow:hidden;background:#0b1220;box-shadow:0 18px 40px -18px rgba(0,0,0,.55)}}
+@media (max-width:639px){{.jtg-mapa{{height:min(70vh,520px)}}}}
+/* no desktop a coluna do mapa é fixa (sticky) enquanto o painel rola: o mapa encolhe para a coluna inteira caber na tela */
+@media (min-width:900px){{.jtm.jtm-com-gl .jtg-mapa{{height:clamp(340px,calc(100vh - 420px),660px)}}}}
+.jtg-linha-tempo{{flex:1;min-width:140px;display:grid}}
+.jtg-linha-tempo input[type=range]{{width:100%;min-height:36px;accent-color:#38bdf8}}
+.jtg-marcas{{display:flex;justify-content:space-between;margin-top:-6px;font:500 11px var(--f-mono);color:var(--muted)}}
+.jtg-chuva-hora{{flex-basis:100%;color:#7dd3fc}}
+.jtg-chuva-hora[hidden]{{display:none}}
+.jtm-legenda span[hidden]{{display:none}}
+.jtm-legenda i.jtm-chuva-sat{{width:28px;background:linear-gradient(90deg,#3b82f6,#22c55e,#facc15,#ef4444)}}
+.jtg-tempo{{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}}
+.jtg-tempo .campo-abas{{margin:0}}
+.jtg-tempo .jtm-limpar:disabled,.jtg-tempo input:disabled{{opacity:.45;cursor:default}}
+.jtg-fraco{{margin:0;color:var(--muted);font-size:13px}}
+.jtg-rotulo{{padding:1px 5px;border-radius:3px;background:rgba(11,18,32,.85);color:#fff;font:700 10.5px var(--f-mono);pointer-events:none;white-space:nowrap}}
+.jtg-rotulo-marcado{{background:#0369a1}}
+.jtm .maplibregl-popup-content{{max-height:min(380px,58vh);overflow:auto;overscroll-behavior:contain;padding:12px 14px;border:1px solid rgba(148,163,184,.3);border-radius:12px;background:#0d1628;color:#e8eefc;font:14px/1.45 var(--f-body);box-shadow:0 14px 30px -10px rgba(0,0,0,.8)}}
+.jtm .maplibregl-popup-tip{{border-top-color:#0d1628;border-bottom-color:#0d1628}}
+.jtm .maplibregl-popup-close-button{{width:36px;height:36px;color:#fff;font-size:20px}}
+.jtm .maplibregl-ctrl-group button{{width:40px;height:40px}}
+.jtg-balao{{display:grid;gap:8px;padding-right:14px}}
+.jtg-balao .jtg-fraco{{color:#a9b8d0}}
+.jtg-balao .og-link{{color:#7cc4ff}}
+.jtg-aviso{{margin:0;padding-left:10px;border-left:4px solid var(--g)}}
+.jtg-aviso small{{display:block;color:#a9b8d0}}
+.jtg-prev-titulo{{margin:0;font:600 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:#a9b8d0}}
+.jtg-horas{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;text-align:center}}
+.jtg-horas div{{display:grid;gap:1px;padding:5px 2px;border-radius:8px;background:rgba(255,255,255,.06);font-size:11px;line-height:1.25}}
+.jtg-horas b{{font-size:15px}}
+.jtg-horas small{{color:#a9b8d0}}
+.jtg-dias{{list-style:none;margin:0;padding:0;display:grid;gap:4px}}
+.jtg-dias li{{display:grid;grid-template-columns:62px 1fr;gap:0 8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.06);font-size:12.5px}}
+.jtg-dias li b{{grid-row:span 3}}
+.jtg-cat-trovoada{{box-shadow:inset 3px 0 0 #a855f7}}
+.jtg-cat-chuva_forte{{box-shadow:inset 3px 0 0 #38bdf8}}
+.jtm-tag-temporal{{color:#fff}}
 .jtm-avisos li{{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--g);border-radius:var(--r);background:var(--surface);font-size:14px}}
 .jtm-avisos small{{color:var(--muted)}}
 .jtm-avisos p{{margin:4px 0}}
 .jtm-avisos details>summary{{cursor:pointer;color:var(--muted)}}
+.jtm-rodape{{margin:0;font:400 12px var(--f-mono);color:var(--muted)}}
+@media (prefers-reduced-motion:reduce){{.jtm-dia,.jtm-via-cartao{{transition:none}}}}
 /* Termômetro de conformidade: respostas como chips (rádio acessível por teclado) */
 .chip-opcao{{position:relative;display:inline-flex}}
 .chip-opcao input{{position:absolute;opacity:0;width:1px;height:1px}}

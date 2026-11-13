@@ -79,18 +79,20 @@ def janela() -> None:
         gp.secao("Janela", "Seu painel", controles + '\n                <div data-janela-score aria-live="polite" class="mb-4"></div>'
                  '\n                <div data-janela-empresarial data-origem="{p}dados/empresarial/atual.json">'
                  '<div data-janela-lista aria-live="polite"><p class="og-cartao-texto">Carregando a janela…</p></div></div>', "bg-fundo", "janela", compacto=True),
-        # Mapa público de alertas (janela-transporte-mapa.js): avisos do INMET, focos do FIRMS e rodovias, pela rotina dos alertas
-        gp.secao("Transporte · Clima e fogo", "Alertas nas rodovias de GO, TO e PA",
-                 '<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a BR-153, '
-                 'a BR-060, a BR-010 e a BR-230, verificados a cada 15 minutos. Para os alertas da sua própria viagem, com a hora em que o caminhão '
-                 'chega a cada área, use a Central de Viagem.</p>'
-                 '\n                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" '
-                 'data-rodovias="{p}assets/geo/rodovias-corredores.json" data-divisas="{p}assets/img/divisas-ufs.svg"></div>',
+        # Mapa público de alertas (janela-transporte-mapa.js e, com WebGL, o interativo janela-transporte-gl.js com MapLibre em
+        # assets/vendor/): avisos do INMET, focos do FIRMS, rodovias, satélite ao vivo e previsão do MET Norway, pela rotina dos alertas
+        gp.secao("Transporte · Clima e fogo", "Alertas nas rodovias do Brasil",
+                 '<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a malha '
+                 'rodoviária do país, verificados a cada 15 minutos, com a imagem de satélite ao vivo e a chuva forte prevista no Sul. Aproxime o mapa, escolha um '
+                 'estado para ver as rodovias federais, estaduais e locais e toque num ponto para ver a previsão do tempo ali. Para os alertas da sua própria '
+                 'viagem, com a hora em que o caminhão chega a cada área, use a Central de Viagem.</p>'
+                 '\n                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" data-geo="{p}assets/geo/" '
+                 'data-gl="{p}assets/vendor/maplibre-gl-4.7.1/" data-previsao="/api/transporte/previsao"></div>',
                  "bg-superficie", "alertas-rodovias", compacto=True),
     ])
     gp.pagina("empresarial/janela.html", "Janela Empresarial e do Transporte",
               "Score de compliance, prazos, mudanças da reforma e obrigações do transportador, com fonte, hora da coleta e estado de cada cartão.",
-              "empresarial", "retenção", corpo, extra=["termometro.js", "janela-empresarial.js", "janela-transporte-mapa.js"],
+              "empresarial", "retenção", corpo, extra=["termometro.js", "janela-empresarial.js", "janela-transporte-gl.js", "janela-transporte-mapa.js"],
               trilha=[("Empresarial", "empresarial/index.html"), ("Janela", None)])
 
 

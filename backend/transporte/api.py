@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import os
 import hmac
 import random
@@ -28,6 +29,9 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from backend.transporte.alertas.envio import SISTEMA, id_comunicacao
+from backend.transporte.alertas.previsao import PrevisaoMet, previsao_met
+from backend.transporte.alertas.publico import REGIAO as REGIAO_PUBLICA
+from backend.transporte.alertas.publico import UFS as UFS_PUBLICAS
 from backend.transporte.autenticacao import autenticador_firebase
 from backend.transporte.dominio import (
     FONTE_MANUAL,
@@ -47,7 +51,7 @@ from backend.transporte.dominio import (
     VeiculoEntrada,
     utc,
 )
-from backend.transporte.erros import AcessoNegado, EntradaInvalida, ErroTransporte, NaoEncontrado, RecursoDesligado
+from backend.transporte.erros import AcessoNegado, EntradaInvalida, ErroProvedor, ErroTransporte, NaoEncontrado, RecursoDesligado
 from backend.transporte.geo import acumulado_km, distancia_ponto_rota_km, ponto_no_km
 from backend.transporte.provedores.base import Bloqueio
 from backend.transporte.provedores.registro import Provedores, bloqueio_simulado, provedores_do_ambiente
@@ -93,6 +97,7 @@ class Servicos:
     limite_ip: Callable[[Request], Any] | None = None  # limite por IP do site: só tentativas de acesso NEGADAS gastam dele
     alertas: bool = False  # ORGATEC_TRANSPORTE_ALERTAS=1: alertas de clima e desastres na rota (backend/transporte/alertas)
     whatsapp_webhook: dict[str, str] | None = None  # token de verificação e segredo do app da Meta (status de entrega)
+    previsao: PrevisaoMet | None = None  # ORGATEC_TRANSPORTE_PREVISAO=1: previsão por ponto do MET Norway no mapa público
     # Limite por usuário logado (o painel consulta a cada 15 s; o limite por IP do site, feito para formulários, não serve aqui)
     limitador_usuario: ingestao.Limitador = field(default_factory=lambda: ingestao.Limitador(maximo=600, janela_s=60.0))
 
@@ -130,7 +135,8 @@ def criar_servicos(env: dict[str, str] | None = None, autenticador: Autenticador
     segredo_app = e.get("ORGATEC_TRANSPORTE_WHATSAPP_APP_SEGREDO", "").strip()
     return Servicos(repo, provedores_do_ambiente(e), autenticador, cofre, producao, entrada=entrada, limite_ip=limite_ip, mapa=mapa,
                     traccar=e.get("ORGATEC_TRANSPORTE_TRACCAR", "0") == "1", alertas=e.get("ORGATEC_TRANSPORTE_ALERTAS", "0") == "1",
-                    whatsapp_webhook={"verificacao": verificacao, "segredo_app": segredo_app} if verificacao and segredo_app else None)
+                    whatsapp_webhook={"verificacao": verificacao, "segredo_app": segredo_app} if verificacao and segredo_app else None,
+                    previsao=previsao_met() if e.get("ORGATEC_TRANSPORTE_PREVISAO", "0") == "1" else None)
 
 
 def servicos(request: Request) -> Servicos:
@@ -413,13 +419,49 @@ def listar_comunicacoes(viagem_id: str, ctx: Contexto = Depends(GESTOR), s: Serv
              "enviada_em": utc(c["enviada_em"]).isoformat()} for c in coms[:100]]
 
 
+CACHE_PUBLICO = {"Cache-Control": "public, max-age=60, s-maxage=300"}
+
+
+def _publico(s: Servicos, chave: str, vazio: dict[str, Any]) -> JSONResponse:
+    try:
+        reg = s.repo.obter(SISTEMA, "alertas_publicos", chave)
+    except NaoEncontrado:
+        return JSONResponse(vazio, headers=CACHE_PUBLICO)
+    return JSONResponse({k: v for k, v in reg.items() if k not in ("id", "transportadora_id")}, headers=CACHE_PUBLICO)
+
+
 @router.get("/alertas-publicos")
 def alertas_publicos(s: Servicos = Depends(alertas_ligados)) -> JSONResponse:  # noqa: B008
-    """Sem login: o mapa público da Janela do Transporte. Só avisos do INMET, focos do FIRMS e o resumo por rodovia
-    (backend/transporte/alertas/publico.py); nenhuma viagem, posição ou dado de transportadora. Cache de 5 min na CDN."""
-    reg = (s.repo.listar(SISTEMA, "alertas_publicos") or [None])[0]
-    corpo = {k: v for k, v in reg.items() if k not in ("id", "transportadora_id")} if reg else {"atualizado_em": None, "avisos": [], "focos": [], "rodovias": [], "fontes": {}}
-    return JSONResponse(corpo, headers={"Cache-Control": "public, max-age=60, s-maxage=300"})
+    """Sem login: o mapa público da Janela do Transporte, Brasil inteiro. Só avisos do INMET, manchas de focos do FIRMS e o
+    resumo por estado (backend/transporte/alertas/publico.py); nenhuma viagem, posição ou dado de transportadora. Cache de 5 min na CDN."""
+    return _publico(s, "atual", {"atualizado_em": None, "avisos": [], "calor": [], "ufs": {}, "fontes": {}})
+
+
+@router.get("/alertas-publicos/{uf}")
+def alertas_publicos_do_estado(uf: str, s: Servicos = Depends(alertas_ligados)) -> JSONResponse:  # noqa: B008
+    """Sem login: rodovias com aviso ou foco e os focos junto a rodovias de um estado."""
+    if uf not in UFS_PUBLICAS:
+        raise NaoEncontrado()
+    return _publico(s, uf, {"atualizado_em": None, "uf": uf, "rodovias": [], "focos_perto": [], "fontes": {}})
+
+
+CACHE_PREVISAO = {"Cache-Control": "public, max-age=600, s-maxage=3600"}
+
+
+@router.get("/previsao")
+def previsao_do_ponto(lat: float, lon: float, s: Servicos = Depends(alertas_ligados)) -> JSONResponse:  # noqa: B008
+    """Sem login: previsão do MET Norway para um ponto do Brasil (o balão do mapa público). O ponto é arredondado a 0,1° antes de
+    sair daqui; a resposta fica 1 h na CDN e até 3 h no cache do processo (alertas/previsao.py)."""
+    if s.previsao is None:
+        raise RecursoDesligado("previsão desligada")
+    sul, oeste, norte, leste = REGIAO_PUBLICA
+    if not (math.isfinite(lat) and math.isfinite(lon) and sul <= lat <= norte and oeste <= lon <= leste):
+        raise EntradaInvalida("Ponto fora do Brasil.")
+    try:
+        return JSONResponse(s.previsao.ponto(lat, lon), headers=CACHE_PREVISAO)
+    except ErroProvedor as exc:
+        log.warning("previsão indisponível: %s", exc.estado)
+        return JSONResponse({"detail": "Previsão indisponível no momento."}, status_code=503, headers={"Cache-Control": "no-store"})
 
 
 @router.get("/alertas-termo")

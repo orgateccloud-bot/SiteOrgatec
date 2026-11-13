@@ -112,6 +112,15 @@ def csp_locar(api: str | None) -> str:
     return "; ".join(f"{d} {LOGIN_GOOGLE}" if d.startswith("connect-src ") else d for d in csp(api).split("; "))
 
 
+# Mapa interativo da Janela do Transporte (MapLibre GL em assets/vendor/): igual a backend/app.py (MAPA_JANELA).
+MAPA_JANELA = {"img-src": "blob:", "connect-src": "https://gibs.earthdata.nasa.gov"}
+
+
+def csp_janela(api: str | None) -> str:
+    """Só a página da Janela do Transporte baixa imagens da NASA por fetch; o resto do site mantém a política geral."""
+    return "; ".join(f"{d} {MAPA_JANELA[d.split(' ', 1)[0]]}" if d.split(" ", 1)[0] in MAPA_JANELA else d for d in csp(api).split("; "))
+
+
 CSP_WIDGET = "; ".join([  # mesma do backend (backend/app.py): widget do CEPEA em /cotacoes/, dentro de iframe isolado
     "default-src 'none'",
     "script-src 'self' https://www.cepea.org.br",
@@ -144,12 +153,15 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
             # Depois da regra geral, para valer por cima dela nas páginas do widget do CEPEA
             {"source": "/transporte/**", "headers": [{"key": "Content-Security-Policy", "value": csp_transporte(api)}]},
             {"source": "/locar/**", "headers": [{"key": "Content-Security-Policy", "value": csp_locar(api)}]},
+            {"source": "/empresarial/janela.html", "headers": [{"key": "Content-Security-Policy", "value": csp_janela(api)}]},
             {"source": "/cotacoes/**", "headers": [{"key": "Content-Security-Policy", "value": CSP_WIDGET},
                                                   {"key": "X-Frame-Options", "value": "SAMEORIGIN"}]},
             # Arquivos gerados não levam hash no nome: na homologação, o navegador sempre revalida.
             {"source": "**/*.@(html|js|css|json)", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
             {"source": "/", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},  # a raiz não casa com *.html
             {"source": "**/*.@(png|svg|ico|jpg|webp|woff2)", "headers": [{"key": "Cache-Control", "value": "public, max-age=86400"}]},
+            # Bibliotecas de terceiros com a versão no nome da pasta (assets/vendor/<nome>-<versão>/): nunca mudam no lugar.
+            {"source": "/assets/vendor/**", "headers": [{"key": "Cache-Control", "value": "public, max-age=31536000, immutable"}]},
             # Depois da regra das imagens: o cartão da Janela de Campo (dados/campo/cartao-status.png) muda 3 vezes ao dia
             {"source": "/dados/**", "headers": [{"key": "Cache-Control", "value": "no-cache"}]},
         ],

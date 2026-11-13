@@ -5,7 +5,8 @@
 3. Cruza cada alerta com o trecho que falta de cada viagem e grava em `alertas_rota` (um registro por alerta e viagem).
 4. Avisa o motorista quando o alerta chega a "Perigo" ou sobe de gravidade, e manda o SMS de reserva quando cabe.
 5. Grava o estado das fontes por transportadora (`alertas_estado/atual`): o painel mostra "fonte indisponível" em vez de silêncio.
-6. Grava o resumo público da região (`_sistema/alertas_publicos/atual`, publico.py) para o mapa da Janela do Transporte, mesmo sem viagem.
+6. Grava os resumos públicos (`_sistema/alertas_publicos/atual` e um por estado, publico.py) para o mapa da Janela do Transporte,
+   do Brasil inteiro, mesmo sem viagem.
 
 Ligada por ORGATEC_TRANSPORTE_ALERTAS=1. Fontes e canais têm flags próprias (`configurar`).
 """
@@ -19,11 +20,11 @@ from decimal import Decimal
 from typing import Any
 
 from backend.transporte.alertas import cruzamento as cz
-from backend.transporte.alertas import publico
+from backend.transporte.alertas import previsao, publico
 from backend.transporte.alertas.envio import SISTEMA, Envio, SmsZenvia, WhatsAppCloud
 from backend.transporte.alertas.fontes import AvisosInmet, FocosFirms, FocosInpe, ResultadoFonte, rank
 from backend.transporte.dominio import utc
-from backend.transporte.erros import ErroProvedor, RecursoDesligado
+from backend.transporte.erros import ErroProvedor, NaoEncontrado, RecursoDesligado
 from backend.transporte.provedores.http import ClienteHttp
 from backend.transporte.repositorio_transporte import RepositorioBase
 
@@ -41,6 +42,7 @@ class Configuracao:
     inpe: FocosInpe | None
     envio: Envio | None
     desligadas: dict[str, str] = field(default_factory=dict)
+    met: previsao.PrevisaoMet | None = None  # ORGATEC_TRANSPORTE_PREVISAO=1: chuva forte prevista no Sul (MET Norway)
 
 
 def ligado(env: dict[str, str]) -> bool:
@@ -78,7 +80,8 @@ def configurar(env: dict[str, str], repo: RepositorioBase, transporte: Any = Non
         sms = SmsZenvia(cliente("sms"), exigir("ORGATEC_TRANSPORTE_ZENVIA_TOKEN", "SMS"), exigir("ORGATEC_TRANSPORTE_ZENVIA_REMETENTE", "SMS"),
                         custo_brl=Decimal(env.get("ORGATEC_TRANSPORTE_CUSTO_SMS_BRL", "0.10")))
     envio = Envio(repo, whatsapp, sms, Decimal(env.get("ORGATEC_TRANSPORTE_ALERTAS_TETO_BRL", "50")))
-    return Configuracao(AvisosInmet(cliente("inmet")), firms, inpe, envio, desligadas)
+    met = previsao.previsao_met(transporte) if env.get("ORGATEC_TRANSPORTE_PREVISAO", "0") == "1" else None
+    return Configuracao(AvisosInmet(cliente("inmet")), firms, inpe, envio, desligadas, met)
 
 
 def _caixa_total(rotas: list[cz.RotaViagem]) -> tuple[float, float, float, float]:
@@ -135,9 +138,11 @@ def executar(repo: RepositorioBase, cfg: Configuracao, agora: datetime | None = 
         reter(repo, tid, agora)
     fontes = _buscar(cfg, rotas, repo, agora)
     resumo["fontes"] = {k: r.estado for k, r in fontes.items()}
-    publico_ = publico.montar(fontes, agora)
-    repo.inserir(SISTEMA, "alertas_publicos", publico_, id_="atual")
-    resumo["publico"] = {"avisos": len(publico_["avisos"]), "focos": len(publico_["focos"])}
+    publicos = publico.montar(fontes, agora)
+    publicos["atual"]["temporal"] = _temporal(repo, cfg.met, agora)
+    for chave, registro in publicos.items():  # "atual" (nacional) e um por estado
+        repo.inserir(SISTEMA, "alertas_publicos", registro, id_=chave)
+    resumo["publico"] = {"avisos": len(publicos["atual"]["avisos"]), "focos": publicos["atual"]["focos_total"]}
     if not rotas:
         return resumo
     alertas = [a for r in fontes.values() for a in r.alertas]
@@ -160,6 +165,19 @@ def executar(repo: RepositorioBase, cfg: Configuracao, agora: datetime | None = 
         resumo["mensagens"] += _gravar_e_avisar(repo, cfg.envio, tid, rs, atuais, ok, agora)
         repo.inserir(tid, "alertas_estado", {"fontes": estado_fontes, "atualizado_em": agora.isoformat()}, id_="atual")
     return resumo
+
+
+def _temporal(repo: RepositorioBase, met: previsao.PrevisaoMet | None, agora: datetime) -> dict[str, Any] | None:
+    """Chuva forte prevista no Sul (previsao.temporal_sul): renovada no máximo a cada 3 h e guardada à parte, fora das rotas públicas."""
+    try:
+        guardado: dict[str, Any] | None = repo.obter(SISTEMA, "alertas_publicos", "temporal_sul")
+    except NaoEncontrado:  # primeira execução: ainda não há o que reaproveitar
+        guardado = None
+    guardado = {k: v for k, v in (guardado or {}).items() if k not in ("id", "transportadora_id")} or None
+    novo = previsao.temporal_sul(guardado, met, agora)
+    if novo is not None and novo is not guardado:
+        repo.inserir(SISTEMA, "alertas_publicos", novo, id_="temporal_sul")
+    return novo
 
 
 def _origens_ok(alerta: dict[str, Any], ok: set[str]) -> bool:
