@@ -1167,7 +1167,7 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
    no celular, uma coluna. Veredito no topo, dias e rodovias como botões (44 px ou mais de altura). */
 .jtm{{display:grid;gap:20px;align-items:start}}
 @media (min-width:900px){{.jtm{{grid-template-columns:minmax(0,460px) minmax(0,1fr)}}.jtm-mapa-col{{position:sticky;top:96px}}}}
-.jtm-topo{{display:grid;gap:10px;min-width:0}}
+.jtm-topo{{display:grid;gap:10px;min-width:0;scroll-margin-top:96px}}
 @media (min-width:900px){{.jtm-topo{{grid-column:1/-1}}}}
 .jtm-mapa-col{{display:grid;gap:10px;min-width:0}}
 .jtm .campo-aba{{min-height:44px}}
@@ -1228,6 +1228,42 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .jtm-tag-ok{{background:#dcfce7;color:#14532d}}
 .jtm-alerta{{margin:0;padding:10px 14px;border:1px solid var(--warn);border-radius:var(--r);background:var(--warn-soft);color:var(--ink);font-size:15px}}
 .jtm-avisos{{list-style:none;margin:0;padding:0;display:grid;gap:8px}}
+/* Mapa interativo (janela-transporte-gl.js, MapLibre): mapa largo à esquerda no desktop, altura fixa; controles do satélite embaixo.
+   Os seletores levam .jtm na frente para valer sobre o maplibre-gl.css, que é carregado depois. */
+@media (min-width:900px){{.jtm.jtm-com-gl{{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}}}
+.jtm-mapa.jtm-mapa-gl{{max-width:none;overflow:visible;background:none;box-shadow:none}}
+.jtm-mapa-gl .mapa-hora{{z-index:2;top:10px;bottom:auto;left:10px;right:auto}}
+.jtm-gl[hidden],.jtm .mapa-palco[hidden]{{display:none}}
+.jtm-gl{{display:grid;gap:8px}}
+.jtg-mapa{{position:relative;height:clamp(420px,64vh,660px);border-radius:var(--r);overflow:hidden;background:#0b1220;box-shadow:0 18px 40px -18px rgba(0,0,0,.55)}}
+@media (max-width:639px){{.jtg-mapa{{height:min(70vh,520px)}}}}
+.jtg-tempo{{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}}
+.jtg-tempo .campo-abas{{margin:0}}
+.jtg-tempo input[type=range]{{flex:1;min-width:140px;min-height:44px;accent-color:#38bdf8}}
+.jtg-tempo .jtm-limpar:disabled,.jtg-tempo input:disabled{{opacity:.45;cursor:default}}
+.jtg-fraco{{margin:0;color:var(--muted);font-size:13px}}
+.jtg-rotulo{{padding:1px 5px;border-radius:3px;background:rgba(11,18,32,.85);color:#fff;font:700 10.5px var(--f-mono);pointer-events:none;white-space:nowrap}}
+.jtg-rotulo-marcado{{background:#0369a1}}
+.jtm .maplibregl-popup-content{{max-height:min(380px,58vh);overflow:auto;overscroll-behavior:contain;padding:12px 14px;border:1px solid rgba(148,163,184,.3);border-radius:12px;background:#0d1628;color:#e8eefc;font:14px/1.45 var(--f-body);box-shadow:0 14px 30px -10px rgba(0,0,0,.8)}}
+.jtm .maplibregl-popup-tip{{border-top-color:#0d1628;border-bottom-color:#0d1628}}
+.jtm .maplibregl-popup-close-button{{width:36px;height:36px;color:#fff;font-size:20px}}
+.jtm .maplibregl-ctrl-group button{{width:40px;height:40px}}
+.jtg-balao{{display:grid;gap:8px;padding-right:14px}}
+.jtg-balao .jtg-fraco{{color:#a9b8d0}}
+.jtg-balao .og-link{{color:#7cc4ff}}
+.jtg-aviso{{margin:0;padding-left:10px;border-left:4px solid var(--g)}}
+.jtg-aviso small{{display:block;color:#a9b8d0}}
+.jtg-prev-titulo{{margin:0;font:600 12px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:#a9b8d0}}
+.jtg-horas{{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;text-align:center}}
+.jtg-horas div{{display:grid;gap:1px;padding:5px 2px;border-radius:8px;background:rgba(255,255,255,.06);font-size:11px;line-height:1.25}}
+.jtg-horas b{{font-size:15px}}
+.jtg-horas small{{color:#a9b8d0}}
+.jtg-dias{{list-style:none;margin:0;padding:0;display:grid;gap:4px}}
+.jtg-dias li{{display:grid;grid-template-columns:62px 1fr;gap:0 8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.06);font-size:12.5px}}
+.jtg-dias li b{{grid-row:span 3}}
+.jtg-cat-trovoada{{box-shadow:inset 3px 0 0 #a855f7}}
+.jtg-cat-chuva_forte{{box-shadow:inset 3px 0 0 #38bdf8}}
+.jtm-tag-temporal{{color:#fff}}
 .jtm-avisos li{{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--g);border-radius:var(--r);background:var(--surface);font-size:14px}}
 .jtm-avisos small{{color:var(--muted)}}
 .jtm-avisos p{{margin:4px 0}}

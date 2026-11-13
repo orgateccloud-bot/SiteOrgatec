@@ -127,6 +127,18 @@ def com_mapa_google(politica: str) -> str:
 
 
 CSP_TRANSPORTE = com_mapa_google(CSP)
+# Mapa interativo da Janela do Transporte (empresarial/janela.html, MapLibre GL hospedado em assets/vendor/, versão "csp" sem
+# eval nem worker em blob:): baixa as imagens da NASA GIBS por fetch (connect-src) e as desenha de blob: (img-src).
+# Mesma política em tools/preparar_firebase.py (csp_janela); o teste compara as duas.
+MAPA_JANELA = {"img-src": "blob:", "connect-src": "https://gibs.earthdata.nasa.gov"}
+PAGINA_JANELA = "/empresarial/janela.html"
+
+
+def com_mapa_janela(politica: str) -> str:
+    return "; ".join(f"{d} {MAPA_JANELA[d.split(' ', 1)[0]]}" if d.split(" ", 1)[0] in MAPA_JANELA else d for d in politica.split("; "))
+
+
+CSP_JANELA = com_mapa_janela(CSP)
 # Widget oficial do CEPEA (cotações dos cards Orgatec Audi Agro): só em /cotacoes/, aberto pelos cards num iframe com
 # sandbox="allow-scripts" (origem opaca). É a única página que aceita script de fora, e só o do CEPEA.
 CSP_WIDGET = "; ".join([
@@ -151,13 +163,16 @@ def _corpo_grande(request: Request) -> bool:
 
 
 # Únicas rotas da API que a CDN pode guardar: resumo público sem dado pessoal (mapa da Janela do Transporte, cache de 5 min
-# definido pela própria rota). Qualquer outra resposta da API sai com no-store.
+# definido pela própria rota) e a previsão do MET Norway por ponto (1 h). Qualquer outra resposta da API sai com no-store.
 def _publica_com_cache(caminho: str) -> bool:
+    if caminho == API_PREVISAO:
+        return True
     resto = caminho[len(API_PUBLICA_COM_CACHE):]
     return caminho.startswith(API_PUBLICA_COM_CACHE) and (resto == "" or (len(resto) == 3 and resto[0] == "/" and resto[1:].isalpha() and resto[1:].isupper()))
 
 
 API_PUBLICA_COM_CACHE = "/api/transporte/alertas-publicos"  # e /alertas-publicos/<UF>
+API_PREVISAO = "/api/transporte/previsao"  # ?lat=&lon= (a resposta de erro define no-store na própria rota)
 
 
 @app.middleware("http")
@@ -172,6 +187,8 @@ async def cabecalhos_seguranca(request: Request, call_next):
         h["X-Frame-Options"] = "SAMEORIGIN"
     if request.url.path.startswith("/transporte/"):
         h["Content-Security-Policy"] = CSP_TRANSPORTE
+    if request.url.path == PAGINA_JANELA:
+        h["Content-Security-Policy"] = CSP_JANELA
     h.setdefault("Content-Security-Policy", CSP)
     h.setdefault("X-Content-Type-Options", "nosniff")
     h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -181,7 +198,7 @@ async def cabecalhos_seguranca(request: Request, call_next):
         h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     if not INDEXAR:
         h.setdefault("X-Robots-Tag", "noindex, nofollow")
-    if request.url.path.startswith("/api/") and not _publica_com_cache(request.url.path):
+    if request.url.path.startswith("/api/") and (not _publica_com_cache(request.url.path) or resposta.status_code != 200):
         h["Cache-Control"] = "no-store"  # o Firebase Hosting não guarda respostas da API (protocolos, dados pessoais)
     if request.url.path.startswith("/api/optin/"):
         h["Referrer-Policy"] = "no-referrer"  # o endereço traz o token do link

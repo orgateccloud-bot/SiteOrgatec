@@ -93,8 +93,8 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <p class="eyebrow">Transporte · Clima e fogo</p>
                 <h2 class="text-3xl font-bold text-tinta mt-2 mb-6">Alertas nas rodovias do Brasil</h2>
-<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a malha rodoviária do país, verificados a cada 15 minutos. Escolha um estado para ver as rodovias federais e estaduais dele e, se quiser, as estradas locais. Para os alertas da sua própria viagem, com a hora em que o caminhão chega a cada área, use a Central de Viagem.</p>
-                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" data-geo="../assets/geo/"></div>
+<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a malha rodoviária do país, verificados a cada 15 minutos, com a imagem de satélite ao vivo e a chuva forte prevista no Sul. Aproxime o mapa, escolha um estado para ver as rodovias federais, estaduais e locais e toque num ponto para ver a previsão do tempo ali. Para os alertas da sua própria viagem, com a hora em que o caminhão chega a cada área, use a Central de Viagem.</p>
+                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" data-geo="../assets/geo/" data-gl="../assets/vendor/maplibre-gl-4.7.1/" data-previsao="/api/transporte/previsao"></div>
             </div>
         </section>
     </main>
@@ -136,6 +136,7 @@
     <script src="../assets/js/calculadoras.js"></script>
     <script src="../assets/js/termometro.js"></script>
     <script src="../assets/js/janela-empresarial.js"></script>
+    <script src="../assets/js/janela-transporte-gl.js"></script>
     <script src="../assets/js/janela-transporte-mapa.js"></script>
     <script src="../assets/js/paginas.js"></script>
 </body>

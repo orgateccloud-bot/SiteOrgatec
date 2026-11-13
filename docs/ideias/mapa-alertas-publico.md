@@ -116,3 +116,35 @@ Pedido do usuário: "tem que ser todo o Brasil e toda a malha rodoviária". Esco
 **Limites:**
 - A escala da base é 1:250.000: a malha local é incompleta. O crédito avisa que não serve de guia de rota.
 - Falta conferir os focos reais do FIRMS no país inteiro (a chave fica só no Secret Manager) e o tempo do job em produção.
+
+## Mapa interativo, previsão e chuva forte no Sul (13/11/2026, branch `ideia/mapa-alertas-interativo`)
+
+Pedido do usuário: mapas realistas, previsão do tempo, tornados no Sul, dinamismo e interatividade. Modelo aprovado ("Aprovado, siga") e três fases aprovadas ("Execute as 3 fases"). Parte da branch `ideia/mapa-alertas-brasil` e leva junto as correções dela (FIRMS "/2" e texto do INMET).
+
+**Fontes conferidas em 13/11/2026:**
+- MET Norway (Locationforecast 2.0): dados CC BY 4.0, cobre o Brasil, 9 dias, atualiza a cada 6 h fora da Escandinávia. Termos: User-Agent com o site, coordenada com até 4 casas, sem repetir o mesmo pedido antes de 3 h, menos de 20 pedidos/s, navegador não chama direto (proxy com cache). Os termos pedem que "uma pessoa com autoridade" os leia e aceite: **o usuário precisa ler https://api.met.no/doc/TermsOfService antes de ligar a previsão em produção.**
+- **A série do MET para o Brasil não traz trovoada nem rajada.** Em 16 pontos tropicais (Brasil, Bangkok, Singapura, Jacarta, Houston), num dia de aviso de tempestade do INMET, nenhum símbolo "thunder" apareceu. Por isso a camada do Sul é de **chuva forte prevista** (10 mm em 1 h ou 30 mm em 6 h) e **muito forte** (20 mm em 1 h ou 50 mm em 6 h), e não de "temporal" nem "trovoada".
+- RainViewer (radar): API gratuita só para uso pessoal e educacional. Fora.
+- Open-Meteo: API gratuita proíbe uso comercial; plano pago tem CAPE e rajada. Fora até o usuário decidir o preço.
+- PREVOTS (tempo severo no Sul): só imagem diária, sem licença; os registros são só para uso acadêmico. Fora; pedir autorização por e-mail se quiser.
+
+**Fase 1, mapa interativo (`site/assets/js/janela-transporte-gl.js`):**
+- MapLibre GL JS 4.7.1 hospedado em `site/assets/vendor/maplibre-gl-4.7.1/`, versão "csp" (sem `eval`, worker do próprio site). Integridade do pacote do npm conferida (`LEIA-ME.md` da pasta). Cache de 1 ano (`/assets/vendor/**`).
+- Só carrega com WebGL e quando o mapa chega a 600 px da tela. Sem WebGL, ou se a biblioteca falhar, fica o mapa em SVG (testado).
+- CSP só da página `/empresarial/janela.html` (`CSP_JANELA` em backend/app.py e `csp_janela` em tools/preparar_firebase.py, testadas iguais): `connect-src` + `https://gibs.earthdata.nasa.gov` (o MapLibre baixa as imagens por fetch) e `img-src` + `blob:`. O resto do site não muda.
+- Zoom livre (Ctrl + rolagem ou dois dedos, para não prender a rolagem da página), satélite GOES-East ao vivo (cor real ou nuvens) com animação das últimas 2 h (os 11 quadros antigos só baixam quando a pessoa anima), chuva por satélite (IMERG de anteontem), avisos, manchas e focos, estados clicáveis, rodovias com sigla e estradas locais.
+- O painel de cartões, o veredito, os dias e a busca continuam os mesmos, para o mapa e para quem usa leitor de tela.
+
+**Fase 2, previsão por ponto (`backend/transporte/alertas/previsao.py`):**
+- `GET /api/transporte/previsao?lat=&lon=`: sem login, só dentro do recorte do Brasil (422 fora), ponto arredondado a 0,1°, cache de até 3 h no processo e de 1 h na CDN, no máximo 600 pedidos ao MET a cada 10 min por instância. Erro sai com `no-store`.
+- Balão do mapa (toque num ponto do estado): avisos do INMET ali, chuva forte prevista, próximas horas e 4 dias, com crédito e "não é aviso oficial".
+
+**Fase 3, chuva forte no Sul:**
+- A rotina dos alertas consulta 90 pontos (grade de 0,75° em PR, SC e RS), 4 de cada vez, no máximo a cada 3 h, e grava em `alertas_publicos/temporal_sul`; o resumo nacional leva o resultado em `temporal`. Medido: 90 pedidos em 8 s. Na primeira falha do MET os outros pedidos não saem e o mapa avisa que a previsão está atrasada.
+- Painel: cartões de PR, SC e RS; veredito do Brasil cita só a chuva **muito forte**, sempre como "modelo do MET Norway, não é aviso oficial".
+
+**Para ligar em produção:** `ORGATEC_TRANSPORTE_PREVISAO=1` na API (balão) e no job `orgatec-alertas` (Sul), com `--update-env-vars`. Site e API sobem juntos; atualizar a imagem dos jobs `orgatec-alertas` e `orgatec-retencao`. Sem a variável, o balão mostra só os avisos e o painel não mostra o Sul.
+
+**Testado (13/11/2026):** 13 testes Python novos (`tests/py/transporte/test_previsao.py`) e 10 de JavaScript (`tests/js/janela-transporte-gl.test.js`); navegador de teste (Chromium com SwiftShader) com o servidor local: sem erro de CSP ou de script, Brasil, estado, balão com previsão real do MET, rodovia marcada, estradas locais, animação, nuvens e chuva, celular de 390 px sem rolagem lateral e o SVG sem WebGL. A camada do Sul foi conferida com dados de teste (hoje não há chuva forte prevista no Sul).
+
+**Não testado:** em produção (CDN, Cloud Run, Firestore); celulares reais e GPU real; o job com a variável ligada.

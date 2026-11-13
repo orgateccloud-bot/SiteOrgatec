@@ -1,6 +1,8 @@
 /* Janela do Transporte: mapa público de alertas nas rodovias do Brasil (empresarial/janela.html).
 
-   Dois modos, sem biblioteca (Web Mercator, fundo Blue Marble da NASA GIBS; CSP img-src https://gibs.earthdata.nasa.gov):
+   Com WebGL, o mapa é o interativo de janela-transporte-gl.js (MapLibre, zoom livre, satélite ao vivo, previsão por ponto e
+   chuva forte prevista no Sul); este arquivo cuida do painel, dos dados e do mapa em SVG de reserva, usado sem WebGL ou se a
+   biblioteca não carregar. O mapa em SVG tem dois modos, sem biblioteca (Web Mercator, fundo Blue Marble da NASA GIBS):
    - Brasil: contorno dos estados, rodovias federais, avisos do INMET e manchas de focos de fogo; tocar num estado aproxima nele;
    - Estado: rodovias com sigla (federais e estaduais) com cartões, focos junto a rodovias e, a pedido, as estradas locais
      (sem sigla), desenhadas num canvas.
@@ -24,7 +26,11 @@
   var ORDEM = { potencial: 1, perigo: 2, grande_perigo: 3 };
   var TIPO = { tempestade: 'Tempestade', chuva: 'Chuva forte', vento: 'Vento forte', geada: 'Geada', frio: 'Frio intenso', calor: 'Calor extremo',
     baixa_umidade: 'Umidade muito baixa', fogo: 'Fogo', outro: 'Alerta' };
-  var CAMADAS = [['avisos', 'Avisos do INMET'], ['focos', 'Focos de fogo (24 h)'], ['rodovias', 'Rodovias'], ['locais', 'Estradas locais']];
+  var CAMADAS = [['avisos', 'Avisos do INMET'], ['focos', 'Focos de fogo (24 h)'], ['rodovias', 'Rodovias'], ['locais', 'Estradas locais'],
+    ['temporal', 'Chuva forte no Sul (previsão)'], ['chuva', 'Chuva por satélite']];
+  var SO_GL = { temporal: 1, chuva: 1 };  // camadas que só o mapa interativo desenha
+  var NIVEL_TEMPORAL = { forte: 'Chuva forte prevista', muito_forte: 'Chuva muito forte prevista' };
+  var UFS_SUL = ['PR', 'SC', 'RS'];
   var NE = ' vector-effect="non-scaling-stroke"';
 
   /* ---------- Projeção e vistas ---------- */
@@ -256,8 +262,43 @@
       if (nivel === 'ok') nivel = 'atencao';
       frases.push('Aviso de perigo potencial do INMET sobre rodovias de ' + leves.length + (leves.length === 1 ? ' estado' : ' estados') + ', sem aviso grave agora.');
     }
+    var fortes = temporalSul(nac).filter(function (l) { return l.nivel === 'muito_forte'; });
+    if (fortes.length) {
+      if (nivel === 'ok') nivel = 'atencao';
+      frases.push('Previsão de chuva muito forte em ' + enumerar(fortes.map(function (l) { return l.uf; })) + ' nas próximas 48 h, a partir de ' +
+        horaBR(fortes.map(function (l) { return l.inicio; }).sort()[0]) + ' (modelo do MET Norway, não é aviso oficial).');
+    }
     if (!frases.length) frases.push('Sem aviso do INMET sobre rodovias e sem concentração de focos de fogo junto a elas agora.');
     return { nivel: nivel, frases: frases };
+  }
+  /* Chuva forte prevista no Sul por estado (nac.temporal, gravado pela rotina a partir do MET Norway). Vazio sem dado. */
+  function temporalSul(nac) {
+    var t = (nac || {}).temporal;
+    if (!t || !t.ufs) return [];
+    return UFS_SUL.filter(function (uf) { return t.ufs[uf]; }).map(function (uf) {
+      var u = t.ufs[uf];
+      return { uf: uf, nivel: u.nivel || '', inicio: u.inicio || '', pontos: u.pontos || 0, total: (t.pontos || []).filter(function (p) { return p[2] === uf; }).length };
+    });
+  }
+  function htmlTemporal(nac, so) {
+    var t = (nac || {}).temporal;
+    if (!t) return '';
+    var linhas = temporalSul(nac).filter(function (l) { return !so || l.uf === so; });
+    var corpo = t.estado === 'indisponivel'
+      ? '<p class="jtm-alerta" role="status">A previsão do MET Norway não respondeu na última tentativa' + (t.atualizado_em ? ': os dados abaixo são de ' + esc(horaBR(t.atualizado_em)) : '') +
+        '. Sem previsão em dia, a falta de risco não quer dizer que não há.</p>'
+      : '';
+    corpo += '<div class="jtm-vias">' + linhas.map(function (l) {
+      var cor = l.nivel === 'muito_forte' ? '#7e22ce' : '#a855f7';
+      return '<button type="button" class="jtm-via-cartao" data-jtm-uf="' + esc(l.uf) + '"><span class="jtm-via-sigla">' + esc(l.uf) + '</span>' +
+        '<span>' + (l.nivel ? '<span class="jtm-tag jtm-tag-temporal" style="--g:' + cor + '">' + esc(NIVEL_TEMPORAL[l.nivel]) + '</span>' : '<span class="jtm-tag jtm-tag-ok">sem chuva forte prevista</span>') + '</span>' +
+        (l.inicio ? '<span class="jtm-fraco">a partir de ' + esc(horaBR(l.inicio)) + '</span>' : '') +
+        '<span class="jtm-fraco">' + l.pontos + ' de ' + l.total + ' áreas do estado</span></button>';
+    }).join('') + '</div>';
+    return '<h3 class="jtm-titulo">Chuva forte no Sul nas próximas 48 h <span class="jtm-fraco">(previsão)</span></h3>' + corpo +
+      '<p class="jtm-fraco">Chuva prevista pelo modelo do MET Norway em áreas de cerca de 80 km: forte com 10 mm em uma hora, muito forte com 20 mm. ' +
+      'Essa previsão não traz trovoada, granizo nem rajada: para tempestade, tornado e ventania, siga os avisos do INMET e a Defesa Civil' +
+      (t.atualizado_em ? '. Previsão de ' + esc(horaBR(t.atualizado_em)) : '') + '.</p>';
   }
   /* A frase do topo no estado, pelas rodovias com sigla. */
   function veredito(est, agora) {
@@ -357,6 +398,7 @@
     sel = sel || {};
     var s = { dia: sel.dia || diaBR(agora.getTime()) }, lista = avisosDoDia(nac, s.dia), rot = rotuloDia(agora, s.dia);
     return (semTopo ? '' : htmlTopo(vereditoBrasil(nac, agora), avisosEstado(nac, agora))) + htmlDias(nac, agora, s) + htmlEstados(nac, s, nomes) +
+      htmlTemporal(nac) +
       '<h3 class="jtm-titulo">Avisos de ' + esc(rot) + ' no Brasil <span class="jtm-fraco">(' + lista.length + ')</span></h3>' +
       listaAvisos(lista, 'Nenhum aviso do INMET para ' + rot + '.') + rodape(nac);
   }
@@ -376,18 +418,21 @@
       '<div data-jtm-vias>' + htmlRodovias(est, nac, s, busca, todas) + '</div>' +
       '<h3 class="jtm-titulo">Avisos de ' + esc(rot) + (s.rodovia ? ' na ' + esc(s.rodovia) : ' no estado') + ' <span class="jtm-fraco">(' + lista.length + ')</span>' +
         (s.rodovia ? ' <button type="button" class="jtm-limpar" data-jtm-rodovia="' + esc(s.rodovia) + '">ver todas as rodovias</button>' : '') + '</h3>' +
-      listaAvisos(lista, 'Nenhum aviso do INMET ' + (s.rodovia ? 'no traçado da ' + s.rodovia : 'sobre rodovias do estado') + ' para ' + rot + '.') + rodape(est.atualizado_em ? est : nac);
+      listaAvisos(lista, 'Nenhum aviso do INMET ' + (s.rodovia ? 'no traçado da ' + s.rodovia : 'sobre rodovias do estado') + ' para ' + rot + '.') +
+      (UFS_SUL.indexOf(uf) >= 0 ? htmlTemporal(nac, uf) : '') + rodape(est.atualizado_em ? est : nac);
   }
 
   var CREDITOS = 'Avisos: INMET (avisos meteorológicos, apiprevmet3.inmet.gov.br). Focos de fogo: NASA FIRMS, sensores VIIRS dos satélites NOAA-20 e NOAA-21 (dados CC0). ' +
     'Rodovias e estradas: IBGE, Base Cartográfica Contínua 1:250.000 (BC250) 2023, traçado simplificado e ilustrativo; a malha local é incompleta e não serve de guia de rota. ' +
     'Limites dos estados: IBGE, Malha Municipal Digital 2025, simplificados; o IBGE não define os limites. Imagem de fundo: NASA Blue Marble (NASA GIBS). Licenças do IBGE compatíveis com CC BY 4.0. ' +
+    'Satélite ao vivo: GOES-East (NOAA), cor real e infravermelho, e chuva estimada NASA IMERG, ambos pela NASA GIBS. Previsão do tempo e chuva forte prevista no Sul: dados do MET Norway ' +
+    '(Instituto Meteorológico da Noruega, Locationforecast, licença CC BY 4.0), modelo numérico, não é aviso oficial. Mapa interativo feito com MapLibre GL JS (licença BSD). ' +
     'Este mapa não substitui a Defesa Civil, a PRF nem o DNIT: interdição de rodovia não tem fonte oficial em tempo real e não aparece aqui.';
 
   function montar(el, op) {
     if (!el || typeof document === 'undefined') return;
-    var ocultos = { locais: true }, sel = { dia: diaBR(Date.now()), rodovia: null }, uf = null, busca = '';
-    var nac = null, ufs = null, nomes = {}, federais = null, porUf = {}, vistaAtual = null, chaveVista = '', topoHtml = '';
+    var ocultos = { locais: true, chuva: true }, sel = { dia: diaBR(Date.now()), rodovia: null }, uf = null, busca = '';
+    var nac = null, ufs = null, nomes = {}, federais = null, porUf = {}, vistaAtual = null, chaveVista = '', topoHtml = '', gl = null;
     function json(url) { return fetch(url, { cache: 'no-store' }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
     function doUf(u) { return (porUf[u] = porUf[u] || { est: null, rodovias: null, locais: null, erro: false }); }
     el.innerHTML =
@@ -395,7 +440,7 @@
         '<div class="jtm-topo" data-jtm-topo></div>' +
         '<div class="jtm-mapa-col">' +
           '<div class="campo-abas" role="group" aria-label="Camadas do mapa">' + CAMADAS.map(function (c) {
-            return '<button type="button" class="campo-aba" data-jtm-camada="' + c[0] + '" aria-pressed="' + (c[0] !== 'locais') + '"' + (c[0] === 'locais' ? ' hidden' : '') + '>' + c[1] + '</button>';
+            return '<button type="button" class="campo-aba" data-jtm-camada="' + c[0] + '" aria-pressed="' + !ocultos[c[0]] + '"' + (c[0] === 'locais' || SO_GL[c[0]] ? ' hidden' : '') + '>' + c[1] + '</button>';
           }).join('') + '</div>' +
           '<figure class="mapa-satelite jtm-mapa">' +
             '<div class="mapa-palco" role="img" aria-label="Mapa do Brasil com os avisos do INMET, os focos de fogo e as rodovias. As mesmas informações estão nos cartões ao lado.">' +
@@ -403,12 +448,14 @@
               '<canvas class="jtm-locais" data-jtm-locais hidden></canvas>' +
               '<svg class="jtm-svg" preserveAspectRatio="none" aria-hidden="true" data-jtm-svg></svg>' +
             '</div>' +
+            '<div class="jtm-gl" data-jtm-gl role="region" aria-label="Mapa interativo do Brasil com satélite, avisos, focos de fogo, rodovias e previsão. As mesmas informações estão nos cartões." hidden></div>' +
             '<div class="jtm-balao" data-jtm-balao role="status" hidden></div>' +
             '<figcaption class="mapa-hora" data-jtm-hora aria-live="polite">carregando…</figcaption>' +
           '</figure>' +
           '<div class="jtm-legenda" aria-hidden="true">' + ['potencial', 'perigo', 'grande_perigo'].map(function (g) {
             return '<span><i style="background:' + COR[g] + '"></i>' + ROTULO[g] + '</span>';
-          }).join('') + '<span><i class="jtm-futuro"></i>Ainda não começou</span><span><i class="jtm-mancha"></i>Focos na região</span><span><i class="jtm-foco"></i>Foco junto a rodovia (no estado)</span></div>' +
+          }).join('') + '<span><i class="jtm-futuro"></i>Ainda não começou</span><span><i class="jtm-mancha"></i>Focos na região</span><span><i class="jtm-foco"></i>Foco junto a rodovia (no estado)</span>' +
+            '<span data-jtm-so-gl hidden><i style="background:#a855f7"></i>Chuva forte prevista (Sul)</span><span data-jtm-so-gl hidden><i style="background:#7e22ce"></i>Chuva muito forte prevista</span></div>' +
           '<p class="jtm-fraco jtm-dica" data-jtm-dica></p>' +
           '<details class="mapa-creditos"><summary>Créditos e fontes</summary><p>' + esc(CREDITOS) + '</p></details>' +
         '</div>' +
@@ -454,12 +501,18 @@
     }
     function desenhar() {
       if (!ufs) return;
-      trocarVista();
       var d = nac || {}, agora = new Date(), u = uf ? doUf(uf) : null, est = (u && u.est) || {};
-      svg.innerHTML = uf ? svgEstado(d, est, { ufs: ufs, rodovias: u.rodovias }, ocultos, sel, uf) : svgBrasil(d, { ufs: ufs, federais: federais }, ocultos, sel);
+      if (gl) {
+        gl.desenhar({ uf: uf, caixaUf: uf ? caixaUf(uf) : null, ufs: ufs, federais: federais, rodovias: u && u.rodovias, locais: u && u.locais, focosPerto: est.focos_perto,
+          nac: nac, avisos: nac ? avisosDoDia(nac, sel.dia, uf) : [], ocultos: ocultos, rodovia: sel.rodovia });
+      } else {
+        trocarVista();
+        svg.innerHTML = uf ? svgEstado(d, est, { ufs: ufs, rodovias: u.rodovias }, ocultos, sel, uf) : svgBrasil(d, { ufs: ufs, federais: federais }, ocultos, sel);
+        desenharLocais();
+      }
       botaoLocais.hidden = !uf;
-      dica.textContent = uf ? 'Toque numa rodovia ou numa área de aviso para ver o detalhe.' : 'Toque num estado para aproximar e ver as rodovias dele.';
-      desenharLocais();
+      dica.textContent = uf ? (gl ? 'Toque numa rodovia para destacá-la, ou em qualquer ponto para ver os avisos e a previsão do tempo ali.' : 'Toque numa rodovia ou numa área de aviso para ver o detalhe.')
+        : (gl ? 'Toque num estado para aproximar. Arraste e use os botões + e − (ou Ctrl + rolagem) para explorar o mapa.' : 'Toque num estado para aproximar e ver as rodovias dele.');
       if (!nac) return;
       var novoTopo = uf ? (u.est ? htmlTopo(veredito(est, agora), avisosEstado(est, agora)) : '') : htmlTopo(vereditoBrasil(nac, agora), avisosEstado(nac, agora));
       if (novoTopo !== topoHtml) { topo.innerHTML = topoHtml = novoTopo; }  // só muda quando os dados mudam: o leitor de tela não repete a cada toque
@@ -479,7 +532,9 @@
       uf = u || null; sel.rodovia = null; busca = ''; fecharBalao();
       if (uf) carregarUf(uf);
       desenhar();
-      if (uf && el.scrollIntoView && window.matchMedia && window.matchMedia('(max-width: 899px)').matches) topo.scrollIntoView({ block: 'start' });
+      // no celular o mapa fica acima do painel; no computador, o painel encolhe ao trocar de vista e o mapa pode sair da tela
+      var fora = figura.getBoundingClientRect && figura.getBoundingClientRect().top < 0;
+      if (uf && el.scrollIntoView && (fora || window.matchMedia && window.matchMedia('(max-width: 899px)').matches)) topo.scrollIntoView({ block: 'start' });
     }
     function marcarRodovia(sigla) { sel.rodovia = sel.rodovia === sigla ? null : sigla; fecharBalao(); desenhar(); }
 
@@ -491,7 +546,8 @@
         fecharBalao();
         if (camada === 'locais' && ligada && uf && !doUf(uf).locais) {
           var u = uf;
-          json(op.geo + 'rodovias/' + u + '-locais.json').then(function (j) { doUf(u).locais = j; if (uf === u) desenharLocais(); }).catch(function () { b.setAttribute('aria-pressed', 'false'); ocultos.locais = true; });
+          json(op.geo + 'rodovias/' + u + '-locais.json').then(function (j) { doUf(u).locais = j; if (uf === u) { if (gl) desenhar(); else desenharLocais(); } })
+            .catch(function () { b.setAttribute('aria-pressed', 'false'); ocultos.locais = true; });
         }
         desenhar();
       });
@@ -531,7 +587,36 @@
     });
     balao.addEventListener('click', function (ev) { if (ev.target.hasAttribute('data-jtm-fechar')) fecharBalao(); });
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !balao.hidden) fecharBalao(); });
-    window.addEventListener('resize', function () { if (!tela.hidden) desenharLocais(); });
+    window.addEventListener('resize', function () { if (!gl && !tela.hidden) desenharLocais(); });
+
+    /* Mapa interativo: só com WebGL, e a biblioteca só é baixada quando o mapa chega perto da tela. Falhou, fica o SVG. */
+    var GL = (typeof window !== 'undefined' && window.Orgatec && window.Orgatec.janelaTransporteGL) || null;
+    function ligarGL() {
+      GL.carregar(op.gl).then(function () {
+        var caixa = el.querySelector('[data-jtm-gl]');
+        // o layout largo vem antes do mapa: o MapLibre mede o espaço ao nascer
+        el.querySelector('.jtm').classList.add('jtm-com-gl');
+        figura.classList.add('jtm-mapa-gl');
+        figura.style.aspectRatio = '';
+        el.querySelector('.mapa-palco').hidden = true;
+        caixa.hidden = false;
+        gl = GL.criar(caixa, { previsao: op.previsao || '', aoEscolherUf: escolherUf, aoMarcarRodovia: marcarRodovia,
+          avisoPorId: function (id) { return ((nac || {}).avisos || []).filter(function (a) { return a.id === id; })[0]; },
+          nomeAviso: function (a) { return (TIPO[a.tipo] || 'Alerta') + ' · ' + (ROTULO[a.gravidade] || a.gravidade); } });
+        el.querySelectorAll('[data-jtm-so-gl]').forEach(function (x) { x.hidden = false; });
+        Object.keys(SO_GL).forEach(function (c) { el.querySelector('[data-jtm-camada="' + c + '"]').hidden = false; });
+        fecharBalao();
+        desenhar();
+      }).catch(function () { gl = null; });
+    }
+    if (GL && op.gl && GL.suportado(document)) {
+      if ('IntersectionObserver' in window) {
+        var olho = new IntersectionObserver(function (vistos) {
+          if (vistos.some(function (v) { return v.isIntersecting; })) { olho.disconnect(); ligarGL(); }
+        }, { rootMargin: '600px 0px' });
+        olho.observe(el);
+      } else ligarGL();
+    }
 
     json(op.geo + 'ufs.json').then(function (j) { ufs = j.ufs; ufs.forEach(function (e) { nomes[e.uf] = e.nome; }); desenhar(); })
       .catch(function () { alvo.innerHTML = '<p class="jtm-alerta" role="status">O mapa está indisponível no momento. Confira os avisos no portal do INMET (avisos.inmet.gov.br).</p>'; });
@@ -550,12 +635,12 @@
 
   function iniciar() {
     var el = document.querySelector('[data-janela-transporte-mapa]');
-    if (el) montar(el, { origem: el.getAttribute('data-origem'), geo: el.getAttribute('data-geo') });
+    if (el) montar(el, { origem: el.getAttribute('data-origem'), geo: el.getAttribute('data-geo'), gl: el.getAttribute('data-gl'), previsao: el.getAttribute('data-previsao') });
   }
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
   }
   return { BRASIL: BRASIL, vista: vista, xy: xy, horaBR: horaBR, estadoDados: estadoDados, dias: dias, avisosDoDia: avisosDoDia, svgBrasil: svgBrasil, svgEstado: svgEstado,
     resumoEstados: resumoEstados, resumoRodovias: resumoRodovias, veredito: veredito, vereditoBrasil: vereditoBrasil, avisosEstado: avisosEstado,
-    painelBrasil: painelBrasil, painelEstado: painelEstado, htmlRodovias: htmlRodovias };
+    painelBrasil: painelBrasil, painelEstado: painelEstado, htmlRodovias: htmlRodovias, temporalSul: temporalSul, htmlTemporal: htmlTemporal };
 });
