@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Mapa dos sistemas (Graphify): "Como os sistemas são construídos"](plataforma-grafo.md) | implementada em 12/11/2026; suíte verde em 13/11/2026; aguarda revisão dos textos dos módulos e decisão sobre mostrar o OrgAudi em público | `ideia/plataforma-grafo` | [link](https://orgatec-site--ideia-plataforma-grafo-i1gf2pty.web.app/solucoes/plataforma.html) |
 | [Janela de Campo: mapa de satélite com visual novo](campo-mapa-moderno.md) | aprovada em 12/11/2026 e junta na desenvolvimento, com o modelo 3D de vidro do mapa; lançada em 12/11/2026 | removida | [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) |
 | [Painel do grupo LOCAR (v0.1)](locar-painel.md) | no ar em 13/11/2026 (site publicado-20261113-1023, API orgatec-api-00022-cp4 com ORGATEC_LOCAR=1), com a Operação do grupo; sem dado real e sem nenhuma conta liberada | removida | só local (`ORGATEC_LOCAR=1 ORGATEC_LOCAR_DEMO=1`) |
 | [Janela de Campo: mapa de satélite com visual novo](campo-mapa-moderno.md) | aprovada em 12/11/2026 e junta na desenvolvimento, com o modelo 3D de vidro do mapa; falta lançar | removida | [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) |
