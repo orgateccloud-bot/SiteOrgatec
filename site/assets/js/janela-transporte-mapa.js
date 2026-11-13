@@ -106,7 +106,7 @@
     (nac.calor || []).forEach(function (c) {
       if (!aVista(v, [c[0], c[1], c[0] + passo, c[1] + passo])) return;
       var a = xy(v, c[0] + passo, c[1]), b = xy(v, c[0], c[1] + passo);
-      s += '<rect class="jtm-calor" x="' + a[0] + '" y="' + a[1] + '" width="' + r1(b[0] - a[0]) + '" height="' + r1(b[1] - a[1]) + '" fill="#ff5a1f" fill-opacity="' +
+      s += '<rect class="jtm-calor" x="' + a[0] + '" y="' + a[1] + '" width="' + r1(b[0] - a[0]) + '" height="' + r1(b[1] - a[1]) + '" fill="#e11d74" fill-opacity="' +
         (Math.round((0.18 + 0.5 * Math.min(1, c[2] / 20)) * 100) / 100) + '" pointer-events="none"><title>' + c[2] + ' foco(s)</title></rect>';
     });
     return s;
@@ -194,7 +194,7 @@
     if (!ocultos.focos) {
       (est.focos_perto || []).forEach(function (f) {
         var c = xy(v, f[0], f[1]);
-        s += '<circle class="jtm-foco-perto" cx="' + c[0] + '" cy="' + c[1] + '" r="' + r1(2.2 * v.u) + '" fill="#ff3d00" stroke="#fff7ed" stroke-width=".7"' + NE + ' pointer-events="none"/>';
+        s += '<circle class="jtm-foco-perto" cx="' + c[0] + '" cy="' + c[1] + '" r="' + r1(2.2 * v.u) + '" fill="#ff2e93" stroke="#fdf2f8" stroke-width=".7"' + NE + ' pointer-events="none"/>';
       });
     }
     return s + rotulos;
@@ -453,9 +453,11 @@
             '<figcaption class="mapa-hora" data-jtm-hora aria-live="polite">carregando…</figcaption>' +
           '</figure>' +
           '<div class="jtm-legenda" aria-hidden="true">' + ['potencial', 'perigo', 'grande_perigo'].map(function (g) {
-            return '<span><i style="background:' + COR[g] + '"></i>' + ROTULO[g] + '</span>';
-          }).join('') + '<span><i class="jtm-futuro"></i>Ainda não começou</span><span><i class="jtm-mancha"></i>Focos na região</span><span><i class="jtm-foco"></i>Foco junto a rodovia (no estado)</span>' +
-            '<span data-jtm-so-gl hidden><i style="background:#a855f7"></i>Chuva forte prevista (Sul)</span><span data-jtm-so-gl hidden><i style="background:#7e22ce"></i>Chuva muito forte prevista</span></div>' +
+            return '<span data-jtm-leg="avisos"><i style="background:' + COR[g] + '"></i>' + ROTULO[g] + '</span>';
+          }).join('') + '<span data-jtm-leg="avisos"><i class="jtm-futuro"></i>Ainda não começou</span><span data-jtm-leg="focos"><i class="jtm-mancha"></i>Focos de fogo na região</span>' +
+            '<span data-jtm-leg="focos" data-jtm-leg-uf><i class="jtm-foco"></i>Foco junto a rodovia</span>' +
+            '<span data-jtm-leg="temporal" data-jtm-so-gl hidden><i style="background:#a855f7"></i>Chuva forte prevista (Sul)</span><span data-jtm-leg="temporal" data-jtm-so-gl hidden><i style="background:#7e22ce"></i>Chuva muito forte prevista</span>' +
+            '<span data-jtm-leg="chuva" data-jtm-so-gl hidden><i class="jtm-chuva-sat"></i>Chuva por satélite: fraca a forte</span></div>' +
           '<p class="jtm-fraco jtm-dica" data-jtm-dica></p>' +
           '<details class="mapa-creditos"><summary>Créditos e fontes</summary><p>' + esc(CREDITOS) + '</p></details>' +
         '</div>' +
@@ -464,6 +466,7 @@
     var svg = el.querySelector('[data-jtm-svg]'), alvo = el.querySelector('[data-jtm-painel]'), hora = el.querySelector('[data-jtm-hora]'), fundo = el.querySelector('[data-jtm-fundo]');
     var balao = el.querySelector('[data-jtm-balao]'), figura = el.querySelector('.jtm-mapa'), topo = el.querySelector('[data-jtm-topo]'), tela = el.querySelector('[data-jtm-locais]');
     var dica = el.querySelector('[data-jtm-dica]'), botaoLocais = el.querySelector('[data-jtm-camada="locais"]');
+    var legenda = Array.prototype.slice.call(el.querySelectorAll('[data-jtm-leg]'));
     function fecharBalao() { balao.hidden = true; balao.innerHTML = ''; }
     function caixaUf(u) { var e = (ufs || []).filter(function (x) { return x.uf === u; })[0]; return e ? { sul: e.caixa[0], oeste: e.caixa[1], norte: e.caixa[2], leste: e.caixa[3] } : null; }
 
@@ -511,6 +514,10 @@
         desenharLocais();
       }
       botaoLocais.hidden = !uf;
+      // a legenda mostra só o que está desenhado
+      legenda.forEach(function (x) {
+        x.hidden = !!ocultos[x.getAttribute('data-jtm-leg')] || (x.hasAttribute('data-jtm-so-gl') && !gl) || (x.hasAttribute('data-jtm-leg-uf') && !uf);
+      });
       dica.textContent = uf ? (gl ? 'Toque numa rodovia para destacá-la, ou em qualquer ponto para ver os avisos e a previsão do tempo ali.' : 'Toque numa rodovia ou numa área de aviso para ver o detalhe.')
         : (gl ? 'Toque num estado para aproximar. Arraste e use os botões + e − (ou Ctrl + rolagem) para explorar o mapa.' : 'Toque num estado para aproximar e ver as rodovias dele.');
       if (!nac) return;
@@ -603,7 +610,6 @@
         gl = GL.criar(caixa, { previsao: op.previsao || '', aoEscolherUf: escolherUf, aoMarcarRodovia: marcarRodovia,
           avisoPorId: function (id) { return ((nac || {}).avisos || []).filter(function (a) { return a.id === id; })[0]; },
           nomeAviso: function (a) { return (TIPO[a.tipo] || 'Alerta') + ' · ' + (ROTULO[a.gravidade] || a.gravidade); } });
-        el.querySelectorAll('[data-jtm-so-gl]').forEach(function (x) { x.hidden = false; });
         Object.keys(SO_GL).forEach(function (c) { el.querySelector('[data-jtm-camada="' + c + '"]').hidden = false; });
         fecharBalao();
         desenhar();

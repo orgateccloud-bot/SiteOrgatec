@@ -1199,8 +1199,8 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .jtm-legenda{{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}}
 .jtm-legenda span{{display:inline-flex;align-items:center;gap:6px}}
 .jtm-legenda i{{display:inline-block;width:14px;height:10px;border-radius:2px;opacity:.85}}
-.jtm-legenda i.jtm-foco{{width:8px;height:8px;border-radius:50%;background:#ff3d00;border:1px solid #fff7ed}}
-.jtm-legenda i.jtm-mancha{{background:#ff5a1f;opacity:.55}}
+.jtm-legenda i.jtm-foco{{width:8px;height:8px;border-radius:50%;background:#ff2e93;border:1px solid #fdf2f8}}
+.jtm-legenda i.jtm-mancha{{background:#e11d74;opacity:.6}}
 .jtm-legenda i.jtm-futuro{{background:transparent;border:1.5px dashed #94a3b8}}
 .jtm-dica{{margin:0}}
 .jtm-painel{{display:grid;gap:14px;min-width:0}}
@@ -1221,7 +1221,7 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .jtm-via-sigla{{font:700 18px var(--f-mono)}}
 .jtm-via-fogo b{{font:700 20px var(--f-mono)}}
 .jtm-barra{{display:block;width:100%;height:6px;border-radius:999px;background:var(--line);overflow:hidden}}
-.jtm-barra i{{display:block;height:100%;border-radius:999px;background:#ff5a1f}}
+.jtm-barra i{{display:block;height:100%;border-radius:999px;background:#e11d74}}
 .jtm-titulo{{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:4px 0 0;font:600 17px var(--f-body);color:var(--ink)}}
 .jtm-limpar{{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font:500 13px var(--f-body);cursor:pointer}}
 .jtm-tag{{display:inline-block;padding:1px 8px;border-radius:999px;font:600 12px var(--f-body);background:var(--g,#64748b);color:#111827}}
@@ -1237,9 +1237,17 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .jtm-gl{{display:grid;gap:8px}}
 .jtg-mapa{{position:relative;height:clamp(420px,64vh,660px);border-radius:var(--r);overflow:hidden;background:#0b1220;box-shadow:0 18px 40px -18px rgba(0,0,0,.55)}}
 @media (max-width:639px){{.jtg-mapa{{height:min(70vh,520px)}}}}
+/* no desktop a coluna do mapa é fixa (sticky) enquanto o painel rola: o mapa encolhe para a coluna inteira caber na tela */
+@media (min-width:900px){{.jtm.jtm-com-gl .jtg-mapa{{height:clamp(340px,calc(100vh - 420px),660px)}}}}
+.jtg-linha-tempo{{flex:1;min-width:140px;display:grid}}
+.jtg-linha-tempo input[type=range]{{width:100%;min-height:36px;accent-color:#38bdf8}}
+.jtg-marcas{{display:flex;justify-content:space-between;margin-top:-6px;font:500 11px var(--f-mono);color:var(--muted)}}
+.jtg-chuva-hora{{flex-basis:100%;color:#7dd3fc}}
+.jtg-chuva-hora[hidden]{{display:none}}
+.jtm-legenda span[hidden]{{display:none}}
+.jtm-legenda i.jtm-chuva-sat{{width:28px;background:linear-gradient(90deg,#3b82f6,#22c55e,#facc15,#ef4444)}}
 .jtg-tempo{{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}}
 .jtg-tempo .campo-abas{{margin:0}}
-.jtg-tempo input[type=range]{{flex:1;min-width:140px;min-height:44px;accent-color:#38bdf8}}
 .jtg-tempo .jtm-limpar:disabled,.jtg-tempo input:disabled{{opacity:.45;cursor:default}}
 .jtg-fraco{{margin:0;color:var(--muted);font-size:13px}}
 .jtg-rotulo{{padding:1px 5px;border-radius:3px;background:rgba(11,18,32,.85);color:#fff;font:700 10.5px var(--f-mono);pointer-events:none;white-space:nowrap}}

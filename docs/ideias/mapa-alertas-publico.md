@@ -148,3 +148,13 @@ Pedido do usuário: mapas realistas, previsão do tempo, tornados no Sul, dinami
 **Testado (13/11/2026):** 13 testes Python novos (`tests/py/transporte/test_previsao.py`) e 10 de JavaScript (`tests/js/janela-transporte-gl.test.js`); navegador de teste (Chromium com SwiftShader) com o servidor local: sem erro de CSP ou de script, Brasil, estado, balão com previsão real do MET, rodovia marcada, estradas locais, animação, nuvens e chuva, celular de 390 px sem rolagem lateral e o SVG sem WebGL. A camada do Sul foi conferida com dados de teste (hoje não há chuva forte prevista no Sul).
 
 **Não testado:** em produção (CDN, Cloud Run, Firestore); celulares reais e GPU real; o job com a variável ligada.
+
+### Revisão do mapa interativo (13/11/2026, tarde)
+
+Pedida pelo usuário depois da análise ("Alta e média"):
+
+- **Chuva por satélite:** era o IMERG diário de anteontem, sem data na tela. Agora é o `IMERG_Precipitation_Rate_30min` da GIBS, no horário mais novo publicado (lido da lista de domínios da GIBS ao ligar a camada; atraso medido de cerca de 5 a 6 h). Embaixo do mapa: "estimativa de DD/MM HH:MM, cerca de N h atrás. Não é o radar de agora."
+- **Balão:** a chuva forte do Sul diz "na região", "em algum ponto da área de uns 80 km ao redor" e que o ponto exato pode ter menos chuva. O mapa anda para o balão caber inteiro quando a previsão chega.
+- **Fogo em magenta** (manchas, pontos e barras do painel), para não confundir com amarelo, laranja e vermelho dos avisos do INMET.
+- **Rótulos sem colisão:** siglas que encostam somem até aproximar (estados maiores e a rodovia marcada têm prioridade).
+- **Malha discreta de longe;** chuva forte do Sul como mancha contínua (heatmap) em vez de quadrados; créditos sempre recolhidos no ⓘ; horário do primeiro e do último quadro na barra da animação; legenda só com as camadas ligadas; no desktop o mapa encolhe para a coluna fixa caber na tela.

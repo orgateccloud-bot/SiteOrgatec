@@ -3,7 +3,7 @@
    Usado por janela-transporte-mapa.js quando o navegador tem WebGL; sem ele, ou se a biblioteca não carregar, fica o mapa em SVG.
    A biblioteca (~1 MB) só é baixada quando o mapa chega perto da tela. Camadas:
    - fundo NASA Blue Marble e satélite GOES-East ao vivo (cor real ou nuvens), com os últimos 12 quadros de 10 min para animar;
-   - chuva estimada por satélite (NASA IMERG, dia de anteontem: o produto diário sai com cerca de 2 dias);
+   - chuva estimada por satélite (NASA IMERG de 30 min, o quadro mais novo publicado, com umas 5 a 6 h de atraso; o mapa mostra o horário);
    - avisos do INMET, manchas e focos de fogo (NASA FIRMS), rodovias do IBGE (federais, estaduais e, a pedido, locais);
    - chuva forte prevista no Sul nas próximas 48 h (MET Norway, gravada pela rotina dos alertas; a previsão deles para o Brasil
      não traz trovoada nem rajada, então o mapa não fala em tempestade por ela);
@@ -19,6 +19,9 @@
   var SAT = { cor: ['GOES-East_ABI_GeoColor', 'GoogleMapsCompatible_Level7', 7, 1], ir: ['GOES-East_ABI_Band13_Clean_Infrared', 'GoogleMapsCompatible_Level6', 6, 0.8] };
   var COR = { potencial: '#facc15', perigo: '#f97316', grande_perigo: '#ef4444' };
   var COR_TEMPORAL = { forte: '#a855f7', muito_forte: '#7e22ce' };
+  // fogo em magenta: amarelo, laranja e vermelho são a escala dos avisos do INMET e não podem ser confundidos com ela
+  var COR_FOGO = { foco: '#ff2e93', borda: '#fdf2f8' };
+  var CHUVA_SAT = 'IMERG_Precipitation_Rate_30min', PASSO_CHUVA = 1800000, ATRASO_CHUVA = 6 * 3600000;
   var NIVEL_TEMPORAL = { forte: 'Chuva forte prevista', muito_forte: 'Chuva muito forte prevista' };
   var BRASIL = [[-74.5, -34.0], [-34.5, 5.5]];  // [[oeste, sul], [leste, norte]], mesmo recorte de publico.py
   var SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -71,14 +74,46 @@
       return fs.concat(e.aneis.map(function (a) { return { type: 'Feature', properties: { uf: e.uf }, geometry: { type: 'Polygon', coordinates: [a.map(ll)] } }; }));
     }, []));
   }
-  /* Chuva forte prevista no Sul: só as células com chuva forte, em quadrados de `passo` graus. */
+  /* Chuva forte prevista no Sul: só as células com chuva forte, como pontos no centro da célula. O mapa as desenha como manchas
+     redondas e esfumadas do tamanho da célula (sem os quadrados que pareciam pixels e passavam para o mar). */
   function geoTemporal(t) {
     if (!t || t.estado === 'indisponivel' && !(t.pontos || []).length) return colecao([]);
-    var m = (t.passo || 0.75) / 2;
     return colecao((t.pontos || []).filter(function (p) { return p[3]; }).map(function (p) {
-      var s = p[0] - m, n = p[0] + m, w = p[1] - m, e = p[1] + m;
-      return { type: 'Feature', properties: { nivel: p[3], uf: p[2], inicio: p[4] || '' }, geometry: { type: 'Polygon', coordinates: [[[w, s], [e, s], [e, n], [w, n], [w, s]]] } };
+      return { type: 'Feature', properties: { nivel: p[3], uf: p[2], inicio: p[4] || '' }, geometry: { type: 'Point', coordinates: [p[1], p[0]] } };
     }));
+  }
+  /* Raio, em pixels no zoom 0, da mancha de uma célula de `passo` graus (Web Mercator: 256 px = 360° no zoom 0). Passa um pouco da
+     célula para as vizinhas se emendarem. */
+  function raioCelula(passo) { return (passo || 0.75) * 1.3 * 256 / 360; }
+  /* A célula da chuva forte que contém o ponto (o balão diz o nível dela), ou null. */
+  function celulaTemporal(t, lat, lon) {
+    var m = ((t || {}).passo || 0.75) / 2;
+    return ((t || {}).pontos || []).filter(function (p) { return p[3] && Math.abs(p[0] - lat) <= m && Math.abs(p[1] - lon) <= m; })
+      .sort(function (a, b) { return (b[3] === 'muito_forte') - (a[3] === 'muito_forte'); })[0] || null;
+  }
+  /* Último horário da chuva de 30 min na lista de domínios da NASA GIBS ("início/fim/PT30M"); sem ela, um palpite com 6 h de folga. */
+  function horaChuva(xml, agoraMs) {
+    var m = /<Domain>[^<]*?\/(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)\/PT30M<\/Domain>/.exec(xml || '') || /<Domain>(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ)<\/Domain>/.exec(xml || '');
+    if (m) return m[1];
+    return new Date(Math.floor((agoraMs - ATRASO_CHUVA) / PASSO_CHUVA) * PASSO_CHUVA).toISOString().slice(0, 16) + ':00Z';
+  }
+  /* Esconde os rótulos que encostam num já colocado (a lista vem por prioridade). caixas: [{x, y, w, h}] em pixels. */
+  function semColisao(caixas, folga) {
+    var postos = [], f = folga || 2;
+    return caixas.map(function (c) {
+      var bate = postos.some(function (p) { return c.x < p.x + p.w + f && p.x < c.x + c.w + f && c.y < p.y + p.h + f && p.y < c.y + c.h + f; });
+      if (!bate) postos.push(c);
+      return !bate;
+    });
+  }
+  /* Quanto mover o mapa para o balão caber dentro dele (margens em pixels). c e r: retângulos {left, top, right, bottom}. */
+  function ajusteBalao(c, r, margem) {
+    var m = margem || { cima: 10, baixo: 40, lado: 10 }, dx = 0, dy = 0;
+    if (r.bottom > c.bottom - m.baixo) dy = r.bottom - (c.bottom - m.baixo);
+    if (r.top - dy < c.top + m.cima) dy = r.top - (c.top + m.cima);
+    if (r.right > c.right - m.lado) dx = r.right - (c.right - m.lado);
+    if (r.left - dx < c.left + m.lado) dx = r.left - (c.left + m.lado);
+    return [Math.round(dx), Math.round(dy)];
   }
   /* Os últimos 12 horários do GOES-East já publicados (múltiplos de 10 min, com 1 h de folga), do mais antigo ao mais novo. */
   function temposSatelite(agoraMs) {
@@ -155,10 +190,13 @@
           return '<button type="button" class="campo-aba" data-jtg-sat="' + s[0] + '" aria-pressed="' + (s[0] === 'cor') + '">' + s[1] + '</button>';
         }).join('') + '</div>' +
         '<button type="button" class="jtm-limpar" data-jtg-play aria-pressed="false">▶ Animar 2 h</button>' +
-        '<input type="range" min="0" max="' + (QUADROS - 1) + '" step="1" value="' + (QUADROS - 1) + '" data-jtg-quadro aria-label="Horário da imagem de satélite">' +
+        '<div class="jtg-linha-tempo"><input type="range" min="0" max="' + (QUADROS - 1) + '" step="1" value="' + (QUADROS - 1) + '" data-jtg-quadro aria-label="Horário da imagem de satélite">' +
+          '<div class="jtg-marcas" aria-hidden="true"><span data-jtg-ini></span><span data-jtg-fim></span></div></div>' +
         '<output class="jtg-fraco" data-jtg-hora></output>' +
+        '<output class="jtg-fraco jtg-chuva-hora" data-jtg-chuva hidden></output>' +
       '</div>';
     var alvo = caixa.querySelector('[data-jtg-mapa]'), saida = caixa.querySelector('[data-jtg-hora]'), barra = caixa.querySelector('[data-jtg-quadro]'), play = caixa.querySelector('[data-jtg-play]');
+    var marcaIni = caixa.querySelector('[data-jtg-ini]'), marcaFim = caixa.querySelector('[data-jtg-fim]'), saidaChuva = caixa.querySelector('[data-jtg-chuva]');
     var mapa = new gl.Map({
       container: alvo, center: [-52, -15], zoom: 3.4, minZoom: 2.5, maxZoom: 12, maxBounds: [[-100, -50], [-10, 18]], cooperativeGestures: true, locale: TEXTOS,
       attributionControl: { compact: true }, fadeDuration: 0, dragRotate: false, pitchWithRotate: false, touchPitch: false,
@@ -172,12 +210,43 @@
     mapa.addControl(new gl.ScaleControl({ unit: 'metric' }), 'bottom-left');
     var pronto = false, pendente = null, ultimo = {}, marcadores = [], popup = null, cachePrev = {};
     var sat = 'cor', quadro = QUADROS - 1, tempos = temposSatelite(Date.now()), carregados = 0, tocando = null;
-    var anteontem = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
+    var chuvaHora = null, chuvaPedida = false;
+    /* A chuva por satélite só é buscada quando a pessoa liga a camada: primeiro o horário mais novo publicado, depois as imagens. */
+    function ligarChuva() {
+      if (chuvaPedida) return;
+      chuvaPedida = true;
+      var hoje = new Date(Date.now() - 86400000).toISOString().slice(0, 10) + 'T00:00:00Z--' + new Date(Date.now() + 86400000).toISOString().slice(0, 10) + 'T00:00:00Z';
+      fetch('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/1.0.0/' + CHUVA_SAT + '/default/GoogleMapsCompatible_Level6/all/' + hoje + '.xml')
+        .then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })
+        .then(function (xml) {
+          chuvaHora = horaChuva(xml, Date.now());
+          if (mapa.getLayer('chuva')) mapa.removeLayer('chuva');
+          if (mapa.getSource('chuva')) mapa.removeSource('chuva');
+          mapa.addSource('chuva', { type: 'raster', tileSize: 256, maxzoom: 6, tiles: [GIBS + CHUVA_SAT + '/default/' + chuvaHora + '/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png'] });
+          mapa.addLayer({ id: 'chuva', type: 'raster', source: 'chuva', layout: { visibility: 'visible' }, paint: { 'raster-opacity': 0.8 } }, mapa.getLayer('temporal') ? 'temporal' : undefined);
+          ordenarSatelite();
+          textoChuva();
+          if (ultimo.estado) ver(['chuva'], !(ultimo.estado.ocultos || {}).chuva);
+        });
+    }
+    function textoChuva() {
+      var ligada = mapa.getLayer('chuva') && mapa.getLayoutProperty('chuva', 'visibility') === 'visible';
+      saidaChuva.hidden = !ligada || !chuvaHora;
+      if (chuvaHora) {
+        var h = Math.max(0, Math.round((Date.now() - Date.parse(chuvaHora) - PASSO_CHUVA / 2) / 3600000));
+        saidaChuva.textContent = 'Chuva por satélite: estimativa de ' + horaBR(chuvaHora) + ' (Brasília), cerca de ' + h + ' h atrás. Não é o radar de agora.';
+      }
+    }
+    /* O satélite fica sempre abaixo da chuva e das demais camadas. */
+    function ordenarSatelite() {
+      var acima = mapa.getLayer('chuva') ? 'chuva' : 'temporal';
+      for (var i = 0; i < QUADROS; i++) if (mapa.getLayer('sat' + i)) mapa.moveLayer('sat' + i, acima);
+    }
 
     function camadaSat(i) {
       var c = SAT[sat];
       mapa.addSource('sat' + i, { type: 'raster', tileSize: 256, maxzoom: c[2], tiles: [GIBS + c[0] + '/default/' + tempos[i] + '/' + c[1] + '/{z}/{y}/{x}.png'] });
-      mapa.addLayer({ id: 'sat' + i, type: 'raster', source: 'sat' + i, paint: { 'raster-opacity': i === quadro ? c[3] : 0, 'raster-fade-duration': 0 } }, 'chuva');
+      mapa.addLayer({ id: 'sat' + i, type: 'raster', source: 'sat' + i, paint: { 'raster-opacity': i === quadro ? c[3] : 0, 'raster-fade-duration': 0 } }, mapa.getLayer('chuva') ? 'chuva' : 'temporal');
     }
     /* Só o quadro mais novo é baixado de início; os outros 11, quando a pessoa pede a animação. */
     function montarSatelite(todos) {
@@ -191,6 +260,8 @@
     function mostrarQuadro(i) {
       quadro = i; barra.value = String(i);
       saida.textContent = sat ? 'Imagem de ' + horaBR(tempos[i]) + ' (Brasília)' : 'Sem imagem de satélite';
+      marcaIni.textContent = sat ? horaBR(tempos[0]).slice(6) : '';
+      marcaFim.textContent = sat ? horaBR(tempos[QUADROS - 1]).slice(6) : '';
       for (var k = 0; k < QUADROS; k++) if (mapa.getLayer('sat' + k)) mapa.setPaintProperty('sat' + k, 'raster-opacity', k === i ? SAT[sat][3] : 0);
     }
     function parar() { if (tocando) { clearInterval(tocando); tocando = null; } play.setAttribute('aria-pressed', 'false'); play.textContent = '▶ Animar 2 h'; }
@@ -217,17 +288,17 @@
 
     mapa.on('load', function () {
       var vazio = colecao([]);
-      mapa.addSource('chuva', { type: 'raster', tileSize: 256, maxzoom: 6, tiles: [GIBS + 'IMERG_Precipitation_Rate/default/' + anteontem + '/GoogleMapsCompatible_Level6/{z}/{y}/{x}.png'] });
-      mapa.addLayer({ id: 'chuva', type: 'raster', source: 'chuva', layout: { visibility: 'none' }, paint: { 'raster-opacity': 0.75 } });
+      var r0 = raioCelula(0.75);
       mapa.addSource('temporal', { type: 'geojson', data: vazio });
-      mapa.addLayer({ id: 'temporal', type: 'fill', source: 'temporal', paint: { 'fill-color': ['match', ['get', 'nivel'], 'muito_forte', COR_TEMPORAL.muito_forte, COR_TEMPORAL.forte],
-        'fill-opacity': ['match', ['get', 'nivel'], 'muito_forte', 0.45, 0.25] } });
-      mapa.addLayer({ id: 'temporal-linha', type: 'line', source: 'temporal', filter: ['==', ['get', 'nivel'], 'muito_forte'], paint: { 'line-color': '#e9d5ff', 'line-width': 1, 'line-opacity': 0.7 } });
+      // mancha contínua: células vizinhas se somam; o raio acompanha o zoom para a mancha ter sempre o tamanho da área no chão
+      mapa.addLayer({ id: 'temporal', type: 'heatmap', source: 'temporal', paint: { 'heatmap-weight': ['match', ['get', 'nivel'], 'muito_forte', 1, 0.5], 'heatmap-intensity': 1,
+        'heatmap-radius': ['interpolate', ['exponential', 2], ['zoom'], 0, r0, 11, r0 * 2048],
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(168,85,247,0)', 0.1, 'rgba(168,85,247,.3)', 0.35, 'rgba(168,85,247,.48)', 0.7, 'rgba(126,34,206,.6)', 1, 'rgba(107,33,168,.7)'] } });
       mapa.addSource('calor', { type: 'geojson', data: vazio });
       mapa.addLayer({ id: 'calor', type: 'heatmap', source: 'calor', maxzoom: 10, paint: {
         'heatmap-weight': ['interpolate', ['linear'], ['get', 'n'], 0, 0, 40, 1], 'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 3, 0.8, 8, 2.2],
         'heatmap-radius': ['interpolate', ['exponential', 2], ['zoom'], 3, 5, 6, 26, 9, 150], 'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 5, 0.78, 8, 0.4],
-        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(255,90,31,0)', 0.2, 'rgba(255,170,60,.55)', 0.5, 'rgba(255,90,31,.85)', 1, 'rgba(220,20,20,.95)'] } });
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(236,72,153,0)', 0.2, 'rgba(244,114,182,.55)', 0.5, 'rgba(225,29,116,.85)', 1, 'rgba(157,23,77,.95)'] } });
       mapa.addSource('avisos', { type: 'geojson', data: vazio });
       mapa.addLayer({ id: 'avisos', type: 'fill', source: 'avisos', paint: { 'fill-color': ['get', 'cor'], 'fill-opacity': ['case', ['get', 'vigente'], 0.18, 0.07] } });
       mapa.addLayer({ id: 'avisos-linha', type: 'line', source: 'avisos', filter: ['get', 'vigente'], paint: { 'line-color': ['get', 'cor'], 'line-width': 1.6 } });
@@ -240,18 +311,22 @@
       mapa.addLayer({ id: 'locais', type: 'line', source: 'locais', paint: { 'line-color': '#cbd5e1', 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.4, 10, 1.4] } });
       mapa.addSource('rodovias', { type: 'geojson', data: vazio });
       mapa.addLayer({ id: 'rodovias-borda', type: 'line', source: 'rodovias', filter: ['get', 'federal'], layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#0b1220', 'line-opacity': 0.65, 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.6, 9, 6] } });
+        paint: { 'line-color': '#0b1220', 'line-opacity': ['interpolate', ['linear'], ['zoom'], 4, 0, 5.5, 0.65], 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.6, 9, 6] } });
+      // de longe a malha fica discreta (não cobre os avisos); estaduais só aparecem de verdade ao aproximar
       mapa.addLayer({ id: 'rodovias', type: 'line', source: 'rodovias', layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': ['case', ['get', 'federal'], '#f8fafc', '#cbd5e1'], 'line-width': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['get', 'federal'], 0.8, 0.4], 9, ['case', ['get', 'federal'], 3.2, 1.8]] } });
+        paint: { 'line-color': ['case', ['get', 'federal'], '#f8fafc', '#cbd5e1'],
+          'line-opacity': ['interpolate', ['linear'], ['zoom'], 3.5, ['case', ['get', 'federal'], 0.38, 0.12], 5.5, ['case', ['get', 'federal'], 0.9, 0.55], 7, ['case', ['get', 'federal'], 1, 0.85]],
+          'line-width': ['interpolate', ['linear'], ['zoom'], 3, ['case', ['get', 'federal'], 0.6, 0.3], 6, ['case', ['get', 'federal'], 1.4, 0.7], 9, ['case', ['get', 'federal'], 3.2, 1.8]] } });
       mapa.addLayer({ id: 'rodovia-marcada', type: 'line', source: 'rodovias', filter: ['==', ['get', 'sigla'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#38bdf8', 'line-width': ['interpolate', ['linear'], ['zoom'], 3, 2.5, 9, 6] } });
       mapa.addLayer({ id: 'rodovias-alvo', type: 'line', source: 'rodovias', paint: { 'line-color': '#000', 'line-opacity': 0, 'line-width': 14 } });
       mapa.addSource('focos', { type: 'geojson', data: vazio });
-      mapa.addLayer({ id: 'focos', type: 'circle', source: 'focos', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2.2, 10, 6], 'circle-color': '#ff3d00', 'circle-stroke-color': '#fff7ed', 'circle-stroke-width': 0.8 } });
+      mapa.addLayer({ id: 'focos', type: 'circle', source: 'focos', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, 2.2, 10, 6], 'circle-color': COR_FOGO.foco, 'circle-stroke-color': COR_FOGO.borda, 'circle-stroke-width': 0.8 } });
       montarSatelite(false); mostrarQuadro(quadro);
-      // créditos recolhidos em tela estreita (o botão ⓘ abre): abertos, cobrem a base do mapa no celular
+      // créditos recolhidos (o botão ⓘ abre; a lista completa fica em "Créditos e fontes"): abertos, cobrem a base do mapa e o balão
       var creditos = alvo.querySelector('.maplibregl-ctrl-attrib');
-      if (creditos && alvo.clientWidth < 640) creditos.classList.remove('maplibregl-compact-show');
+      if (creditos) creditos.classList.remove('maplibregl-compact-show');
+      mapa.on('moveend', arrumarRotulos);
       pronto = true;
       if (pendente) desenhar(pendente);
     });
@@ -268,18 +343,30 @@
       marcadores.forEach(function (m) { m.remove(); });
       marcadores = [];
       var lista = [];
-      if (!e.uf) lista = (e.ufs || []).map(function (u) { return [u.uf, [(u.caixa[1] + u.caixa[3]) / 2, (u.caixa[0] + u.caixa[2]) / 2], '']; });
+      // por prioridade: estados maiores primeiro (GO antes do DF); rodovia marcada primeiro, depois da maior para a menor
+      if (!e.uf) lista = (e.ufs || []).slice().sort(function (a, b) { return area(b.caixa) - area(a.caixa); })
+        .map(function (u) { return [u.uf, [(u.caixa[1] + u.caixa[3]) / 2, (u.caixa[0] + u.caixa[2]) / 2], '']; });
       else if (e.rodovias && !e.ocultos.rodovias) {
         lista = e.rodovias.rodovias.filter(function (r) { return r.sigla.indexOf('BR-') === 0 || r.sigla === e.rodovia; }).slice(0, 40).map(function (r) {
           var meio = r.linhas[0][Math.floor(r.linhas[0].length / 2)];  // linhas vêm da maior para a menor
           return [r.sigla, ll(meio), r.sigla === e.rodovia ? ' jtg-rotulo-marcado' : ''];
-        });
+        }).sort(function (a, b) { return (b[2] ? 1 : 0) - (a[2] ? 1 : 0); });
       }
       lista.forEach(function (x) {
         var el = document.createElement('div');
         el.className = 'jtg-rotulo' + x[2]; el.textContent = x[0];
         marcadores.push(new gl.Marker({ element: el }).setLngLat(x[1]).addTo(mapa));
       });
+      arrumarRotulos();
+    }
+    function area(c) { return (c[2] - c[0]) * (c[3] - c[1]); }
+    /* Rótulos que encostam em outro já colocado somem até a pessoa aproximar (RN, PB, PE, AL e SE no Brasil inteiro). */
+    function arrumarRotulos() {
+      var caixas = marcadores.map(function (m) {
+        var el = m.getElement(), p = mapa.project(m.getLngLat());
+        return { x: p.x - el.offsetWidth / 2, y: p.y - el.offsetHeight / 2, w: el.offsetWidth, h: el.offsetHeight };
+      });
+      semColisao(caixas, 3).forEach(function (vis, i) { marcadores[i].getElement().style.visibility = vis ? '' : 'hidden'; });
     }
     function desenhar(e) {
       if (!pronto) { pendente = e; return; }
@@ -296,8 +383,10 @@
       ver(['calor', 'focos'], !o.focos);
       ver(['rodovias', 'rodovias-borda', 'rodovia-marcada', 'rodovias-alvo'], !o.rodovias);
       ver(['locais'], !o.rodovias && !o.locais);
-      ver(['chuva'], !o.chuva);
-      ver(['temporal', 'temporal-linha'], !o.temporal);
+      if (!o.chuva) ligarChuva();
+      if (mapa.getLayer('chuva')) ver(['chuva'], !o.chuva);
+      textoChuva();
+      ver(['temporal'], !o.temporal);
       if (ultimo.marcada) mapa.setFeatureState({ source: 'ufs', id: ultimo.marcada }, { marcada: false });
       if (e.uf) mapa.setFeatureState({ source: 'ufs', id: e.uf }, { marcada: true });
       ultimo.marcada = e.uf;
@@ -340,7 +429,8 @@
     function balao(lngLat, e) {
       var ids = {}, avisos = mapa.queryRenderedFeatures(mapa.project(lngLat), { layers: ['avisos'] }).map(function (f) { return f.properties.id; })
         .filter(function (id) { return !ids[id] && (ids[id] = 1); }).map(op.avisoPorId).filter(Boolean);
-      var temporal = mapa.queryRenderedFeatures(mapa.project(lngLat), { layers: ['temporal'] })[0];
+      var cel = !(e.ocultos || {}).temporal && celulaTemporal((e.nac || {}).temporal, lngLat.lat, lngLat.lng);
+      var temporal = cel ? { properties: { nivel: cel[3], inicio: cel[4] || '' } } : null;
       var el = document.createElement('div');
       el.className = 'jtg-balao';
       el.innerHTML = (avisos.length ? avisos.map(function (a) {
@@ -348,10 +438,12 @@
           (a.vigente !== false ? 'Valendo agora, até ' + esc(horaBR(a.fim)) : 'De ' + esc(horaBR(a.inicio)) + ' até ' + esc(horaBR(a.fim))) + ' · INMET</small></p>';
       }).join('') : '<p class="jtg-fraco">Sem aviso do INMET neste ponto.</p>') +
         (temporal ? '<p class="jtg-aviso" style="--g:' + (COR_TEMPORAL[temporal.properties.nivel] || COR_TEMPORAL.forte) + '"><b>' + esc(NIVEL_TEMPORAL[temporal.properties.nivel] || 'Chuva forte prevista') +
-          '</b><small>' + (temporal.properties.inicio ? 'a partir de ' + esc(horaBR(temporal.properties.inicio)) + ' · ' : '') + 'previsão MET Norway, próximas 48 h</small></p>' : '') +
+          ' na região</b><small>Em algum ponto da área de uns 80 km ao redor' + (temporal.properties.inicio ? ', a partir de ' + esc(horaBR(temporal.properties.inicio)) : '') +
+          ' · previsão MET Norway, próximas 48 h. O ponto exato pode ter menos chuva.</small></p>' : '') +
         '<div data-jtg-prev>' + (op.previsao ? '<p class="jtg-fraco">Carregando a previsão…</p>' : '') + '</div>';
       if (popup) popup.remove();
       popup = new gl.Popup({ maxWidth: '320px', focusAfterOpen: false }).setLngLat(lngLat).setDOMContent(el).addTo(mapa);
+      encaixar();
       if (!op.previsao) return;
       var p = pontoArredondado(lngLat.lat, lngLat.lng), chave = p.join(','), alvoPrev = el.querySelector('[data-jtg-prev]');
       var pedido = cachePrev[chave] = cachePrev[chave] || fetch(op.previsao + '?lat=' + p[0] + '&lon=' + p[1]).then(function (r) {
@@ -359,13 +451,25 @@
         if (!r.ok) throw new Error(r.status);
         return r.json();
       });
-      pedido.then(function (j) { alvoPrev.innerHTML = j ? htmlPrevisao(j, Date.now()) : ''; if (popup) popup.setDOMContent(el); })
-        .catch(function () { delete cachePrev[chave]; alvoPrev.innerHTML = '<p class="jtg-fraco">Previsão indisponível agora. Tente de novo em instantes.</p>'; });
+      var meu = popup;
+      pedido.then(function (j) { alvoPrev.innerHTML = j ? htmlPrevisao(j, Date.now()) : ''; if (popup === meu) { popup.setDOMContent(el); encaixar(); } })
+        .catch(function () { delete cachePrev[chave]; alvoPrev.innerHTML = '<p class="jtg-fraco">Previsão indisponível agora. Tente de novo em instantes.</p>'; if (popup === meu) encaixar(); });
+    }
+    /* A previsão chega depois e o balão cresce: o mapa anda o necessário para ele caber inteiro, longe da borda e dos créditos. */
+    function encaixar() {
+      if (!popup) return;
+      var p = popup;
+      requestAnimationFrame(function () {
+        if (popup !== p || !p.getElement()) return;
+        var d = ajusteBalao(alvo.getBoundingClientRect(), p.getElement().getBoundingClientRect());
+        if (d[0] || d[1]) mapa.panBy(d, { duration: calmo ? 0 : 300 });
+      });
     }
     return { desenhar: desenhar, mapa: mapa };
   }
 
   return { suportado: suportado, carregar: carregar, criar: criar, geoLinhas: geoLinhas, geoLocais: geoLocais, geoAvisos: geoAvisos, geoCalor: geoCalor,
     geoPontos: geoPontos, geoUfs: geoUfs, geoTemporal: geoTemporal, temposSatelite: temposSatelite, pontoArredondado: pontoArredondado,
+    raioCelula: raioCelula, celulaTemporal: celulaTemporal, horaChuva: horaChuva, semColisao: semColisao, ajusteBalao: ajusteBalao,
     htmlPrevisao: htmlPrevisao, rotuloDia: rotuloDia, QUADROS: QUADROS };
 });

@@ -29,12 +29,18 @@ test('manchas de fogo no centro da célula e focos do estado', () => {
   assert.deepStrictEqual(G.geoPontos([[-12, -49]]).features[0].geometry.coordinates, [-49, -12]);
 });
 
-test('chuva forte no Sul: só as células com nível, em quadrados do tamanho da grade', () => {
+test('chuva forte no Sul: só as células com nível, como manchas no centro da célula', () => {
   const t = { estado: 'ok', passo: 0.75, pontos: [[-30, -51, 'RS', 'muito_forte', '2026-11-13T18:00:00+00:00', 40, 22], [-25, -50, 'PR', '', null, 2, 1]] };
   const g = G.geoTemporal(t);
   assert.strictEqual(g.features.length, 1);
-  assert.deepStrictEqual(g.features[0].geometry.coordinates[0][0], [-51.375, -30.375]);
+  assert.deepStrictEqual(g.features[0].geometry, { type: 'Point', coordinates: [-51, -30] });
   assert.strictEqual(g.features[0].properties.nivel, 'muito_forte');
+  // a mancha passa um pouco da célula: raio de 1,3 × 0,75° no zoom 0 (256 px = 360°)
+  assert.ok(Math.abs(G.raioCelula(0.75) - 0.75 * 1.3 * 256 / 360) < 1e-9);
+  // o balão acha a célula do ponto tocado
+  assert.strictEqual(G.celulaTemporal(t, -30.3, -51.2)[3], 'muito_forte');
+  assert.strictEqual(G.celulaTemporal(t, -25, -50), null);  // célula sem nível
+  assert.strictEqual(G.celulaTemporal(null, -30, -51), null);
   assert.strictEqual(G.geoTemporal(null).features.length, 0);
   assert.strictEqual(G.geoTemporal({ estado: 'indisponivel', pontos: [] }).features.length, 0);
 });
@@ -45,6 +51,25 @@ test('12 quadros do GOES de 10 em 10 min, do mais antigo ao mais novo, com 1 h d
   assert.strictEqual(t[t.length - 1], '2026-11-13T11:00:00Z');
   assert.strictEqual(t[0], '2026-11-13T09:10:00Z');
   assert.ok(t.every(x => /T\d\d:\d0:00Z$/.test(x)));
+});
+
+test('chuva por satélite: horário mais novo da lista da NASA, ou palpite com 6 h de folga', () => {
+  const xml = "<Domains><DimensionDomain><ows:Identifier>time</ows:Identifier><Domain>2026-11-13/2026-11-13T07:30:00Z/PT30M</Domain></DimensionDomain></Domains>";
+  assert.strictEqual(G.horaChuva(xml, agora), '2026-11-13T07:30:00Z');
+  assert.strictEqual(G.horaChuva('<Domain>2026-11-13T05:00:00Z</Domain>', agora), '2026-11-13T05:00:00Z');
+  assert.strictEqual(G.horaChuva('', Date.parse('2026-11-13T13:17:00Z')), '2026-11-13T07:00:00Z');
+});
+
+test('rótulos que encostam somem, na ordem de prioridade', () => {
+  const vis = G.semColisao([{ x: 0, y: 0, w: 20, h: 10 }, { x: 15, y: 5, w: 20, h: 10 }, { x: 40, y: 0, w: 20, h: 10 }, { x: 21, y: 0, w: 10, h: 10 }], 2);
+  assert.deepStrictEqual(vis, [true, false, true, false]);
+});
+
+test('o mapa anda o necessário para o balão caber', () => {
+  const c = { left: 0, top: 0, right: 700, bottom: 500 };
+  assert.deepStrictEqual(G.ajusteBalao(c, { left: 100, top: 300, right: 420, bottom: 640 }), [0, 180]);
+  assert.deepStrictEqual(G.ajusteBalao(c, { left: 500, top: 50, right: 820, bottom: 300 }), [130, 0]);
+  assert.deepStrictEqual(G.ajusteBalao(c, { left: 100, top: 100, right: 300, bottom: 300 }), [0, 0]);
 });
 
 test('o ponto vai à API arredondado a 0,1°', () => {
