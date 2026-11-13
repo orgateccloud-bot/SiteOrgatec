@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Mapa de alertas: Brasil inteiro e toda a malha rodoviária, por estado](mapa-alertas-publico.md) | implementada em 12/11/2026; aguarda a suíte, a prévia e a aprovação | `ideia/mapa-alertas-brasil` | — |
 | [Mapa de alertas: veredito, dias, cartões por rodovia e focos agrupados](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/mapa-alertas-visual` | [link](https://orgatec-site--ideia-mapa-alertas-visual-vbml17me.web.app/empresarial/janela.html#alertas-rodovias) |
 | [Janela de Campo: mapa de satélite com visual novo](campo-mapa-moderno.md) | aprovada em 12/11/2026 e junta na desenvolvimento, com o modelo 3D de vidro do mapa; lançada em 12/11/2026 | removida | [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) |
 | [Mapa público de alertas nas rodovias (Janela do Transporte)](mapa-alertas-publico.md) | no ar em 12/11/2026 (site publicado-20261112-1405, API orgatec-api-00021-pdq); falta confirmar a licença da BC250 do IBGE | `ideia/mapa-alertas-publico` | [link](https://orgatec-site--ideia-mapa-alertas-publico-1ohyff7t.web.app/empresarial/janela.html#alertas-rodovias) |

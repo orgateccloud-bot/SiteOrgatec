@@ -80,12 +80,11 @@ def janela() -> None:
                  '\n                <div data-janela-empresarial data-origem="{p}dados/empresarial/atual.json">'
                  '<div data-janela-lista aria-live="polite"><p class="og-cartao-texto">Carregando a janela…</p></div></div>', "bg-fundo", "janela", compacto=True),
         # Mapa público de alertas (janela-transporte-mapa.js): avisos do INMET, focos do FIRMS e rodovias, pela rotina dos alertas
-        gp.secao("Transporte · Clima e fogo", "Alertas nas rodovias de GO, TO e PA",
-                 '<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a BR-153, '
-                 'a BR-060, a BR-010 e a BR-230, verificados a cada 15 minutos. Para os alertas da sua própria viagem, com a hora em que o caminhão '
-                 'chega a cada área, use a Central de Viagem.</p>'
-                 '\n                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" '
-                 'data-rodovias="{p}assets/geo/rodovias-corredores.json" data-divisas="{p}assets/img/divisas-ufs.svg"></div>',
+        gp.secao("Transporte · Clima e fogo", "Alertas nas rodovias do Brasil",
+                 '<p class="text-tinta-suave mb-4 max-w-3xl">Avisos meteorológicos do INMET e focos de fogo por satélite das últimas 24 horas sobre a malha '
+                 'rodoviária do país, verificados a cada 15 minutos. Escolha um estado para ver as rodovias federais e estaduais dele e, se quiser, as '
+                 'estradas locais. Para os alertas da sua própria viagem, com a hora em que o caminhão chega a cada área, use a Central de Viagem.</p>'
+                 '\n                <div data-janela-transporte-mapa data-origem="/api/transporte/alertas-publicos" data-geo="{p}assets/geo/"></div>',
                  "bg-superficie", "alertas-rodovias", compacto=True),
     ])
     gp.pagina("empresarial/janela.html", "Janela Empresarial e do Transporte",

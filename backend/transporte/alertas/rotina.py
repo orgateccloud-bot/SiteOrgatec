@@ -5,7 +5,8 @@
 3. Cruza cada alerta com o trecho que falta de cada viagem e grava em `alertas_rota` (um registro por alerta e viagem).
 4. Avisa o motorista quando o alerta chega a "Perigo" ou sobe de gravidade, e manda o SMS de reserva quando cabe.
 5. Grava o estado das fontes por transportadora (`alertas_estado/atual`): o painel mostra "fonte indisponível" em vez de silêncio.
-6. Grava o resumo público da região (`_sistema/alertas_publicos/atual`, publico.py) para o mapa da Janela do Transporte, mesmo sem viagem.
+6. Grava os resumos públicos (`_sistema/alertas_publicos/atual` e um por estado, publico.py) para o mapa da Janela do Transporte,
+   do Brasil inteiro, mesmo sem viagem.
 
 Ligada por ORGATEC_TRANSPORTE_ALERTAS=1. Fontes e canais têm flags próprias (`configurar`).
 """
@@ -135,9 +136,10 @@ def executar(repo: RepositorioBase, cfg: Configuracao, agora: datetime | None = 
         reter(repo, tid, agora)
     fontes = _buscar(cfg, rotas, repo, agora)
     resumo["fontes"] = {k: r.estado for k, r in fontes.items()}
-    publico_ = publico.montar(fontes, agora)
-    repo.inserir(SISTEMA, "alertas_publicos", publico_, id_="atual")
-    resumo["publico"] = {"avisos": len(publico_["avisos"]), "focos": len(publico_["focos"])}
+    publicos = publico.montar(fontes, agora)
+    for chave, registro in publicos.items():  # "atual" (nacional) e um por estado
+        repo.inserir(SISTEMA, "alertas_publicos", registro, id_=chave)
+    resumo["publico"] = {"avisos": len(publicos["atual"]["avisos"]), "focos": publicos["atual"]["focos_total"]}
     if not rotas:
         return resumo
     alertas = [a for r in fontes.values() for a in r.alertas]

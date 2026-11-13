@@ -152,7 +152,12 @@ def _corpo_grande(request: Request) -> bool:
 
 # Únicas rotas da API que a CDN pode guardar: resumo público sem dado pessoal (mapa da Janela do Transporte, cache de 5 min
 # definido pela própria rota). Qualquer outra resposta da API sai com no-store.
-API_PUBLICA_COM_CACHE = frozenset({"/api/transporte/alertas-publicos"})
+def _publica_com_cache(caminho: str) -> bool:
+    resto = caminho[len(API_PUBLICA_COM_CACHE):]
+    return caminho.startswith(API_PUBLICA_COM_CACHE) and (resto == "" or (len(resto) == 3 and resto[0] == "/" and resto[1:].isalpha() and resto[1:].isupper()))
+
+
+API_PUBLICA_COM_CACHE = "/api/transporte/alertas-publicos"  # e /alertas-publicos/<UF>
 
 
 @app.middleware("http")
@@ -176,7 +181,7 @@ async def cabecalhos_seguranca(request: Request, call_next):
         h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
     if not INDEXAR:
         h.setdefault("X-Robots-Tag", "noindex, nofollow")
-    if request.url.path.startswith("/api/") and request.url.path not in API_PUBLICA_COM_CACHE:
+    if request.url.path.startswith("/api/") and not _publica_com_cache(request.url.path):
         h["Cache-Control"] = "no-store"  # o Firebase Hosting não guarda respostas da API (protocolos, dados pessoais)
     if request.url.path.startswith("/api/optin/"):
         h["Referrer-Policy"] = "no-referrer"  # o endereço traz o token do link

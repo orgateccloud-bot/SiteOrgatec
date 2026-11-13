@@ -602,6 +602,17 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 .jtm-rotulo rect{fill:#0b1220;opacity:.85}
 .jtm-rotulo text{fill:#fff;font:700 9.5px var(--f-mono)}
 .jtm-rotulo-marcado rect{fill:#0369a1;opacity:1}
+.jtm-uf{cursor:pointer}
+.jtm-uf:hover{fill-opacity:.12}
+.jtm-uf-sigla{fill:#fff;font:700 9px var(--f-mono);paint-order:stroke;stroke:#0b1220;stroke-width:2.5px;stroke-linejoin:round}
+.jtm-locais{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.jtm-locais[hidden]{display:none}
+.jtm-linha{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px}
+.jtm-linha .jtm-titulo{margin:0}
+.jtm-estado-nome{font-size:20px;flex:1}
+.jtm-escolha{display:inline-flex;align-items:center;gap:8px}
+.jtm-escolha select,.jtm-escolha input{min-height:44px;max-width:210px}
+.jtm-linha .jtm-limpar{min-height:44px;padding:0 14px}
 .jtm-balao{position:absolute;z-index:3;width:min(240px,calc(100% - 16px));padding:10px 34px 10px 12px;border-radius:var(--r);border-left:4px solid var(--g,#facc15);background:rgba(8,17,31,.95);color:#fff;font-size:13px;line-height:1.45;box-shadow:0 10px 24px -8px rgba(0,0,0,.6)}
 .jtm-balao[hidden]{display:none}
 .jtm-balao span{color:#cbd5e1}
@@ -634,7 +645,7 @@ html[data-escuro="sim"] section.folha-escura{background:var(--brand-soft)}
 .jtm-barra{display:block;width:100%;height:6px;border-radius:999px;background:var(--line);overflow:hidden}
 .jtm-barra i{display:block;height:100%;border-radius:999px;background:#ff5a1f}
 .jtm-titulo{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin:4px 0 0;font:600 17px var(--f-body);color:var(--ink)}
-.jtm-limpar{min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font:500 13px var(--f-body);cursor:pointer}
+.jtm-limpar{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--ink);font:500 13px var(--f-body);cursor:pointer}
 .jtm-tag{display:inline-block;padding:1px 8px;border-radius:999px;font:600 12px var(--f-body);background:var(--g,#64748b);color:#111827}
 .jtm-tag-ok{background:#dcfce7;color:#14532d}
 .jtm-alerta{margin:0;padding:10px 14px;border:1px solid var(--warn);border-radius:var(--r);background:var(--warn-soft);color:var(--ink);font-size:15px}

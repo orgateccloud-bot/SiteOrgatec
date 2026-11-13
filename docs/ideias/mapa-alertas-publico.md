@@ -87,3 +87,32 @@ Correções de dados feitas junto:
 - **Instruções do INMET com colchetes**: `riscos` e `instrucoes` vêm como lista de frases e apareciam como `['...', '...']` na tela (e iriam assim na mensagem ao motorista). Agora viram texto corrido.
 
 As duas correções exigem subir a API e atualizar a imagem dos jobs.
+
+## Brasil inteiro e toda a malha (12/11/2026, branch `ideia/mapa-alertas-brasil`)
+
+Pedido do usuário: "tem que ser todo o Brasil e toda a malha rodoviária". Escolhas dele: todas as estradas, inclusive municipais, e navegação "Brasil e escolha do estado". Plano aprovado com "execute".
+
+**Malha (tools/gerar_rodovias.py, 56 arquivos, 3,7 MB no total, o maior com 394 KB):**
+- `assets/geo/ufs.json`: contorno e retângulo dos 27 estados (IBGE, Malha Municipal 2025). Ilhas oceânicas distantes (Trindade, Fernando de Noronha) ficam fora do recorte.
+- `assets/geo/rodovias/BR.json`: as 149 rodovias federais, bem simplificadas, para a visão do país.
+- `assets/geo/rodovias/<UF>.json`: rodovias com sigla (federais e estaduais) do estado, cerca de 3.000 no país.
+- `assets/geo/rodovias/<UF>-locais.json`: estradas sem sigla (municipais e vicinais), só desenho, carregadas a pedido.
+- A base do IBGE (BC250 2023) tem 130 mil trechos. Cada trecho vai para o estado onde cai o seu ponto do meio. Saem os abandonados, destruídos, planejados, em construção e os não operacionais.
+- A sigla é lida em vários formatos: `BR-153;BR-060`, `BR-430 BA-464`, `Rodovia MG-403`, `LMG 628` e o código do SNV (`156BAP0170` = BR-156 no Amapá).
+
+**Servidor (publico.py):**
+- O FIRMS passa a ser pedido para o Brasil inteiro.
+- A rotina grava 28 registros a cada execução: `alertas_publicos/atual` (avisos com os estados em que cruzam rodovia, focos agrupados em células de 0,25° e o resumo por estado) e um por estado (rodovias com aviso ou foco e até 1.500 focos junto a rodovias).
+- Índice espacial dos trechos por célula de 0,1°. Medido em 12/11/2026: 60 mil focos contra 3.002 rodovias em 1,5 s; registro nacional com 128 KB e o maior estadual com 76 KB (o limite do Firestore é 1 MB).
+- API: `/alertas-publicos` e `/alertas-publicos/<UF>`, as duas sem login e com cache de 5 min. UF inválida devolve 404. São as únicas exceções ao `no-store` (`_publica_com_cache` em backend/app.py, testada).
+- Custo no Firestore: 28 gravações a cada 15 min, cerca de 2.700 por dia, dentro da cota gratuita de 20 mil.
+
+**Página:**
+- Abre no Brasil: estados clicáveis, federais, avisos do dia e manchas de fogo. Veredito nacional, cartões dos estados com aviso ou foco e lista para escolher qualquer estado.
+- No estado: imagem de satélite mais nítida (zoom 5 a 8, conforme o tamanho), rodovias federais e estaduais com alvo de toque, focos junto a rodovias, veredito do estado, cartões das rodovias com aviso ou foco e busca pela sigla em todas as rodovias dali.
+- Botão "Estradas locais" (só no estado, desligado por padrão): desenha a malha sem sigla num canvas.
+- Estradas locais não têm nome na base e não entram no cruzamento com avisos e focos.
+
+**Limites:**
+- A escala da base é 1:250.000: a malha local é incompleta. O crédito avisa que não serve de guia de rota.
+- Falta conferir os focos reais do FIRMS no país inteiro (a chave fica só no Secret Manager) e o tempo do job em produção.

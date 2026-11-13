@@ -28,6 +28,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from backend.transporte.alertas.envio import SISTEMA, id_comunicacao
+from backend.transporte.alertas.publico import UFS as UFS_PUBLICAS
 from backend.transporte.autenticacao import autenticador_firebase
 from backend.transporte.dominio import (
     FONTE_MANUAL,
@@ -413,13 +414,30 @@ def listar_comunicacoes(viagem_id: str, ctx: Contexto = Depends(GESTOR), s: Serv
              "enviada_em": utc(c["enviada_em"]).isoformat()} for c in coms[:100]]
 
 
+CACHE_PUBLICO = {"Cache-Control": "public, max-age=60, s-maxage=300"}
+
+
+def _publico(s: Servicos, chave: str, vazio: dict[str, Any]) -> JSONResponse:
+    try:
+        reg = s.repo.obter(SISTEMA, "alertas_publicos", chave)
+    except NaoEncontrado:
+        return JSONResponse(vazio, headers=CACHE_PUBLICO)
+    return JSONResponse({k: v for k, v in reg.items() if k not in ("id", "transportadora_id")}, headers=CACHE_PUBLICO)
+
+
 @router.get("/alertas-publicos")
 def alertas_publicos(s: Servicos = Depends(alertas_ligados)) -> JSONResponse:  # noqa: B008
-    """Sem login: o mapa público da Janela do Transporte. Só avisos do INMET, focos do FIRMS e o resumo por rodovia
-    (backend/transporte/alertas/publico.py); nenhuma viagem, posição ou dado de transportadora. Cache de 5 min na CDN."""
-    reg = (s.repo.listar(SISTEMA, "alertas_publicos") or [None])[0]
-    corpo = {k: v for k, v in reg.items() if k not in ("id", "transportadora_id")} if reg else {"atualizado_em": None, "avisos": [], "focos": [], "rodovias": [], "fontes": {}}
-    return JSONResponse(corpo, headers={"Cache-Control": "public, max-age=60, s-maxage=300"})
+    """Sem login: o mapa público da Janela do Transporte, Brasil inteiro. Só avisos do INMET, manchas de focos do FIRMS e o
+    resumo por estado (backend/transporte/alertas/publico.py); nenhuma viagem, posição ou dado de transportadora. Cache de 5 min na CDN."""
+    return _publico(s, "atual", {"atualizado_em": None, "avisos": [], "calor": [], "ufs": {}, "fontes": {}})
+
+
+@router.get("/alertas-publicos/{uf}")
+def alertas_publicos_do_estado(uf: str, s: Servicos = Depends(alertas_ligados)) -> JSONResponse:  # noqa: B008
+    """Sem login: rodovias com aviso ou foco e os focos junto a rodovias de um estado."""
+    if uf not in UFS_PUBLICAS:
+        raise NaoEncontrado()
+    return _publico(s, uf, {"atualizado_em": None, "uf": uf, "rodovias": [], "focos_perto": [], "fontes": {}})
 
 
 @router.get("/alertas-termo")
