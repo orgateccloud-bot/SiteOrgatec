@@ -4,7 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
-| [Janela de Campo: barra do local com fundo próprio e página mais curta no celular](campo-barra-altura.md) | aprovada em 13/11/2026 e junta na desenvolvimento; falta lançar | removida | [link](https://orgatec-site--ideia-campo-barra-altura-3dubg5rq.web.app/rural/janela-de-campo.html) |
+| [Janela de Campo: barra do local com fundo próprio e página mais curta no celular](campo-barra-altura.md) | aprovada em 13/11/2026 e junta na desenvolvimento; lançada em 13/11/2026 | removida | [link](https://orgatec-site--ideia-campo-barra-altura-3dubg5rq.web.app/rural/janela-de-campo.html) |
 | Termômetro 3D: gráfico de vidro azul no resultado do termômetro | aprovada em 13/11/2026 e junta na desenvolvimento | `ideia/termometro-3d` | não houve |
 | [Mapa de alertas: Brasil inteiro e toda a malha rodoviária, por estado](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação (na prévia os alertas ficam "indisponíveis" até a API nova subir) | `ideia/mapa-alertas-brasil` | [link](https://orgatec-site--ideia-mapa-alertas-brasil-ntfwcrok.web.app/empresarial/janela.html#alertas-rodovias) |
 | [Mapa de alertas: veredito, dias, cartões por rodovia e focos agrupados](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/mapa-alertas-visual` | [link](https://orgatec-site--ideia-mapa-alertas-visual-vbml17me.web.app/empresarial/janela.html#alertas-rodovias) |
