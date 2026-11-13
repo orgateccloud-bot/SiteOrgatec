@@ -156,7 +156,7 @@ def como_entrar(s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B00
 @router.get("/contexto")
 def ver_contexto(ctx: Contexto = Depends(contexto), s: Servicos = Depends(servicos)) -> dict[str, Any]:  # noqa: B008
     grupo = s.repo.obter_grupo(ctx.grupo_id) or {}
-    return {"papel": ctx.papel, "usuario_id": ctx.usuario_id, "grupo": {"id": ctx.grupo_id, "nome": grupo.get("nome", "")},
+    return {"papel": ctx.papel, "usuario_id": ctx.usuario_id, "grupo": {"id": ctx.grupo_id, "nome": grupo.get("nome", ""), "polos": grupo.get("polos", [])},
             "ambiente": "producao" if s.producao else "desenvolvimento", "entrada": s.entrada.get("modo")}
 
 

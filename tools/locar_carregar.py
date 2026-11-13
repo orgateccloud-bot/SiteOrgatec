@@ -168,7 +168,7 @@ def planejar(carga: Carga, repo: RepositorioBase) -> Plano:
 def aplicar(carga: Carga, repo: RepositorioBase, plano: Plano, sobrescrever: bool) -> int:
     """Grava os registros novos (e, com `sobrescrever`, os diferentes). Devolve quantos gravou."""
     gid = carga.grupo.id
-    repo.criar_grupo(gid, carga.grupo.nome)
+    repo.criar_grupo(gid, carga.grupo.nome, carga.grupo.polos)
     agora = datetime.now(timezone.utc).isoformat(timespec="seconds")
     gravados = 0
     for colecao, rid, dados in _registros(carga):

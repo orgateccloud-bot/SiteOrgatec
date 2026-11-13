@@ -16,7 +16,7 @@ GRUPO_DEMO = "00000000-0000-4000-8000-0000000000a1"
 def carregar(repo: RepositorioBase, hoje: date | None = None) -> str:
     hoje = hoje or date.today()
     d = lambda dias: (hoje + timedelta(days=dias)).isoformat()  # noqa: E731
-    repo.criar_grupo(GRUPO_DEMO, "Grupo Exemplo")
+    repo.criar_grupo(GRUPO_DEMO, "Grupo Exemplo", ["formoso", "gurupi", "palmas", "paragominas"])
     repo.inserir(GRUPO_DEMO, "entidades", "e-transp", {"nome": "Exemplo Transporte Ltda", "tipo": "pj", "status": "em_incorporacao",
                  "sucessora_id": "e-matriz", "regime": "lucro_real", "regime_vigencia": None, "documento_mascarado": "**.***.***/0001-70",
                  "sensivel": False, "titulares": []})

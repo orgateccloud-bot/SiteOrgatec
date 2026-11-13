@@ -105,6 +105,24 @@
 .lc-tabela th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--muted); padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
 .lc-tabela td { padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
 
+/* operação: tempo, alertas e Central de Viagem */
+.lc-operacao { margin-bottom: 18px; }
+.lc-op-grade { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 900px) { .lc-op-grade { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); } }
+.lc-op-grade h3 { margin-bottom: 8px; }
+.lc-polos { list-style: none; margin: 0 0 8px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.lc-polo { display: grid; gap: 3px; background: var(--lc-suave); border-radius: 10px; padding: 8px 10px; font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+.lc-polo-hoje { color: var(--ink); }
+.lc-polo-prox { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); }
+.lc-op-num { margin: 2px 0; font-size: 14px; }
+.lc-op-num b { font: 800 22px/1 var(--f-display); margin-right: 6px; }
+.lc-avisos { margin: 6px 0; padding-left: 18px; font-size: 13px; }
+.lc-op-link { margin: 8px 0 0; font-size: 13px; }
+.lc-op-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+.lc-op-acoes a { text-decoration: none; }
+.lc a.lc-btn { color: var(--brand-ink); }
+.lc a.lc-btn-sec { color: var(--hl); }
+
 /* trilha */
 .lc-aud-lista { list-style: none; margin: 8px 0 0; padding: 0; font-size: 12.5px; display: grid; gap: 4px; max-height: 260px; overflow: auto; }
 .lc-aud-lista code { font-size: 12px; }

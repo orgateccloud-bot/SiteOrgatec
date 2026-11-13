@@ -33,6 +33,7 @@ _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 _UID = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 _GRUPO = re.compile(r"^[0-9a-fA-F-]{36}$")
 _FONTE = re.compile(r"^[a-z0-9_]{1,64}$")
+_POLO = re.compile(r"^[a-z0-9-]{1,40}$")
 _ESQUEMA_PERIGOSO = re.compile(r"^\s*(javascript|data|vbscript|file):", re.I)
 
 
@@ -55,6 +56,14 @@ class _Base(BaseModel):
 class GrupoEntrada(_Base):
     id: str
     nome: str = Field(min_length=1, max_length=80)
+    polos: list[str] = Field(default_factory=list, max_length=20)  # polos da Janela de Campo onde o grupo opera (ids de tools/campo_polos.json)
+
+    @field_validator("polos")
+    @classmethod
+    def _polos(cls, v: list[str]) -> list[str]:
+        if not all(_POLO.match(x) for x in v):
+            raise ValueError("polo inválido")
+        return v
 
     @field_validator("id")
     @classmethod
