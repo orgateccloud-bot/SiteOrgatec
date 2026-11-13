@@ -29,3 +29,14 @@ Os itens do catálogo citam ids de `fontes.js` (LC 214/2025, ADCT, Ato Conjunto 
 - Testes de isolamento entre grupos, papéis, entidade sensível e trilha passam, e o contrato dos três repositórios também (Firestore no emulador).
 - Painel confere em computador e celular, nas paletas escura e clara, e nos três navegadores de teste.
 - **Para ligar com dado real (Fase 2, fora desta ideia):** aprovação do usuário, V30 e D30 resolvidas, provedor E-mail/senha do Authentication conferido, carga a partir do arquivo privado e acesso da equipe concedido.
+
+## Atualização de 13/11/2026: Operação do grupo (`ideia/locar-operacao`)
+
+- **Situação:** aprovada e junta na `desenvolvimento` em 13/11/2026 (branch removida); falta lançar.
+
+- Seção **Operação do grupo** no painel, com três cartões:
+  - **Tempo nas regiões do grupo:** os polos da Janela de Campo onde o grupo opera (`polos` gravados no grupo pela carga; sem eles, os polos de GO, TO e PA). Mostra o dia, a janela de pulverização, os próximos 3 dias e o crédito do MET Norway (CC BY 4.0). Boletim de outro dia aparece com selo.
+  - **Alertas nas rodovias:** avisos meteorológicos vigentes do INMET e focos de fogo da NASA FIRMS, do resumo público `/api/transporte/alertas-publicos`, com link para o mapa.
+  - **Central de Viagem:** atalhos para a Central e o portal de viagens.
+- O login do painel grava o token também na chave da Central: a mesma conta abre a Central sem novo login. A Central continua exigindo as próprias permissões (`transportadora_id` e `papel`), dadas por `tools/transporte_usuario.py`.
+- Sem dado novo do grupo no repositório: os polos são ids públicos da Janela de Campo.

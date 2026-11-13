@@ -3073,3 +3073,57 @@ def test_locar_painel_responsivo_sem_rolagem_lateral(navegador, servidor, vp):
     expect(pg.locator("#lcPainel")).to_be_visible()
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
+
+
+def test_locar_operacao_mostra_o_tempo_dos_polos_do_grupo_alertas_e_a_central(navegador, servidor):
+    """Operação do grupo: polos da Janela de Campo do grupo (ids gravados no grupo), alertas públicos e atalhos da Central de Viagem."""
+    polo = lambda i, nome, uf: {"id": i, "nome": nome, "uf": uf, "ops": {"pulv": {"janela": "05h às 09h", "motivo": "vento forte (deriva)"}},
+                                "dias": [{"dia": "2026-11-13", "max": 33, "min": 21, "chuva": 0.4, "familia": "chuva", "trovoada": False},
+                                         {"dia": "2026-11-14", "max": 32, "min": 22, "chuva": 9.7, "familia": "chuva-forte", "trovoada": True}]}
+    boletim = {"dia": "2026-11-13", "proximaAtualizacao": "hoje às 11h", "fontes": [{"rotulo": "MET Norway (CC BY 4.0)", "url": "https://api.met.no/"}],
+               "polos": [polo("formoso", "Formoso", "GO"), polo("gurupi", "Gurupi", "TO"), polo("sorriso", "Sorriso", "MT")]}
+    alertas = {"atualizado_em": "2026-11-13T09:15:00+00:00", "fontes": {"inmet": {"credito": "INMET"}, "firms": {"credito": "NASA FIRMS"}},
+               "avisos": [{"titulo": "Tempestade (Perigo Potencial)", "vigente": True}, {"titulo": "Antigo", "vigente": False}], "focos": [[-1, -55, "x"]] * 7}
+    pg, erros = _locar(navegador, servidor)
+    pg.route("**/dados/campo/atual.json", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(boletim)))
+    pg.route("**/api/transporte/alertas-publicos", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps(alertas)))
+    pg.reload()
+    expect(pg.locator("#lcTempo .lc-polo")).to_have_count(2)                     # só os polos do grupo (o fictício opera em Formoso e Gurupi, entre outros)
+    expect(pg.locator("#lcTempo [data-polo=sorriso]")).to_have_count(0)
+    expect(pg.locator("#lcTempo [data-polo=formoso]")).to_contain_text("21° a 33°")
+    expect(pg.locator("#lcTempo")).to_contain_text("MET Norway")                  # crédito da licença CC BY
+    expect(pg.locator("#lcAlertas")).to_contain_text("1 aviso meteorológico vigente")
+    expect(pg.locator("#lcAlertas")).to_contain_text("Tempestade (Perigo Potencial)")
+    expect(pg.locator("#lcAlertas")).not_to_contain_text("Antigo")
+    expect(pg.locator("#lcAlertas .lc-op-num b").nth(1)).to_have_text("7")
+    expect(pg.locator(".lc-op-acoes a[href$='transporte/central.html']")).to_have_text("Abrir a Central")
+    expect(pg.locator(".lc-op-acoes a[href$='transporte/portal.html']")).to_be_visible()
+    assert not erros, erros
+
+
+def test_locar_operacao_sem_dados_avisa_e_nao_quebra(navegador, servidor):
+    pg, erros = _locar(navegador, servidor)
+    pg.route("**/dados/campo/atual.json", lambda r: r.fulfill(status=404, body=""))
+    pg.route("**/api/transporte/alertas-publicos", lambda r: r.fulfill(status=404, body=""))
+    pg.reload()
+    expect(pg.locator("#lcTempo")).to_contain_text("indisponível")
+    expect(pg.locator("#lcAlertas")).to_contain_text("indisponíveis")
+    expect(pg.locator("#lcPainel")).to_be_visible()
+    assert not [e for e in erros if "404" not in e], erros
+
+
+def test_locar_login_serve_tambem_a_central_de_viagem(navegador, servidor):
+    """O token do painel vai também para a chave da Central: a mesma conta abre a Central sem novo login (com as permissões dela)."""
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx.new_page()
+    pg.route("**/api/locar/entrada", lambda r: r.fulfill(status=200, content_type="application/json", body=json.dumps({"modo": "firebase", "chave_web": "k"})))
+    pg.route("**/identitytoolkit.googleapis.com/**", lambda r: r.fulfill(status=200, content_type="application/json",
+                                                                          body=json.dumps({"idToken": "ID-X", "refreshToken": "r", "expiresIn": "3600"})))
+    pg.route("**/api/locar/contexto", lambda r: r.fulfill(status=403, content_type="application/json", body=json.dumps({"detail": "Acesso negado."})))
+    pg.goto(f"{servidor}/locar/painel.html")
+    form = pg.locator("#lcAcesso form")
+    form.locator("input[name=email]").fill("a@b.com")
+    form.locator("input[name=senha]").fill("x")
+    form.locator("button[type=submit]").click()
+    expect(pg.locator("#lcMsg")).to_contain_text("Sem acesso ao painel")
+    assert json.loads(pg.evaluate("sessionStorage.getItem('orgatec-transporte-token')"))["id"] == "ID-X"

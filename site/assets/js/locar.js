@@ -165,6 +165,44 @@
     }, function (e) { mensagem(e.message, 'erro'); });
   }
 
+  // ---------------------------------------------------------------- operação: Janela de Campo e alertas (dados públicos do próprio site)
+  var POLOS_PADRAO_UF = ['GO', 'TO', 'PA'];
+  var CEU = { sol: 'Sol', nublado: 'Nublado', chuva: 'Chuva fraca', 'chuva-forte': 'Chuva forte', trovoada: 'Trovoada' };
+  function lerJson(url) {
+    return fetch(url, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); });
+  }
+  function plural(n, um, varios) { return n + ' ' + (n === 1 ? um : varios); }
+  function tempo() {
+    var alvo = $('#lcTempo');
+    lerJson('/dados/campo/atual.json').then(function (b) {
+      var escolhidos = estado.ctx.grupo.polos || [], polos = (b.polos || []).filter(function (p) {
+        return escolhidos.length ? escolhidos.indexOf(p.id) >= 0 : POLOS_PADRAO_UF.indexOf(p.uf) >= 0;
+      }).slice(0, 6);
+      if (!polos.length) { alvo.innerHTML = '<p class="lc-nota">Sem polo da Janela de Campo para as regiões do grupo.</p>'; return; }
+      var velho = b.dia && b.dia !== estado.hoje ? ' <span class="og-selo og-selo-pendente">boletim de ' + esc(A.dataCurta(b.dia)) + '</span>' : '';
+      var fonte = (b.fontes || [])[0];
+      alvo.innerHTML = '<ul class="lc-polos">' + polos.map(function (p) {
+        var hoje = (p.dias || [])[0] || {}, prox = (p.dias || []).slice(1, 4);
+        var pulv = p.ops && p.ops.pulv ? '<small>Pulverização: ' + esc(p.ops.pulv.janela || '—') + (p.ops.pulv.motivo ? ' · ' + esc(p.ops.pulv.motivo) : '') + '</small>' : '';
+        return '<li class="lc-polo" data-polo="' + esc(p.id) + '"><strong>' + esc(p.nome) + ' <small>' + esc(p.uf) + '</small></strong>' +
+          '<span class="lc-polo-hoje">' + esc(CEU[hoje.familia] || hoje.familia || '') + (hoje.trovoada ? ' · trovoada' : '') + ' · ' + esc(hoje.min) + '° a ' + esc(hoje.max) + '° · ' + esc(hoje.chuva) + ' mm</span>' + pulv +
+          '<span class="lc-polo-prox">' + prox.map(function (d) { return '<span>' + esc(A.dataCurta(d.dia).slice(0, 5)) + ' ' + esc(d.chuva) + ' mm</span>'; }).join('') + '</span></li>';
+      }).join('') + '</ul><p class="lc-nota">Boletim de ' + esc(A.dataCurta(b.dia)) + velho + (b.proximaAtualizacao ? ' · próxima atualização ' + esc(b.proximaAtualizacao) : '') +
+        (fonte ? ' · Fonte: ' + (seguro(fonte.url) ? '<a href="' + esc(fonte.url) + '" target="_blank" rel="noopener noreferrer">' + esc(fonte.rotulo) + '</a>' : esc(fonte.rotulo)) : '') + '. Previsão por município, não por fazenda.</p>';
+    }, function () { alvo.innerHTML = '<p class="lc-nota">Boletim da Janela de Campo indisponível agora. Tente de novo mais tarde.</p>'; });
+  }
+  function alertas() {
+    var alvo = $('#lcAlertas');
+    lerJson('/api/transporte/alertas-publicos').then(function (a) {
+      var vigentes = (a.avisos || []).filter(function (x) { return x.vigente; }), focos = (a.focos || []).length;
+      var creditos = Object.keys(a.fontes || {}).map(function (k) { return a.fontes[k].credito; }).filter(Boolean);
+      alvo.innerHTML = '<p class="lc-op-num"><b>' + vigentes.length + '</b> ' + esc(plural(vigentes.length, 'aviso meteorológico vigente', 'avisos meteorológicos vigentes').replace(/^\d+ /, '')) + '</p>' +
+        '<p class="lc-op-num"><b>' + focos + '</b> ' + esc(plural(focos, 'foco de fogo na região', 'focos de fogo na região').replace(/^\d+ /, '')) + '</p>' +
+        (vigentes.length ? '<ul class="lc-avisos">' + vigentes.slice(0, 3).map(function (x) { return '<li>' + esc(x.titulo) + '</li>'; }).join('') + '</ul>' : '') +
+        '<p class="lc-nota">Atualizado em ' + esc(dataHora(a.atualizado_em)) + (creditos.length ? ' · ' + esc(creditos.join(' · ')) : '') + '</p>';
+    }, function () { alvo.innerHTML = '<p class="lc-nota">Alertas indisponíveis agora. O mapa público continua na Janela Empresarial.</p>'; });
+  }
+
   function desenhar() { kpis(); filtros(); agenda(); entidades(); }  // o formulário do catálogo é desenhado só ao carregar: não perde o que a equipe escolheu
 
   // ---------------------------------------------------------------- carga e eventos
@@ -182,7 +220,7 @@
         estado.ctx = ctx; estado.hoje = a.hoje; estado.itens = a.itens;
         estado.entidades = a.entidades.slice().sort(function (x, y) { return x.nome.localeCompare(y.nome, 'pt-BR'); });
         el.acesso.hidden = true; el.painel.hidden = false;
-        cabeca(); desenhar(); marcos(); adicionar(); auditoria();
+        cabeca(); desenhar(); marcos(); adicionar(); auditoria(); tempo(); alertas();
       });
     }).catch(function (e) { mostrarLogin(e.status ? e.message : null); if (!e.status) mensagem(e.message, 'erro'); });
   }

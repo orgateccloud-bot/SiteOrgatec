@@ -67,10 +67,11 @@ class RepositorioBase:
         raise NotImplementedError
 
     # ---- grupo (tenant) ----
-    def criar_grupo(self, grupo_id: str, nome: str) -> str:
+    def criar_grupo(self, grupo_id: str, nome: str, polos: list[str] | None = None) -> str:
         with self._trava:
             existente = self._grupo_pegar(grupo_id)
-            self._grupo_gravar(grupo_id, {"id": grupo_id, "nome": nome, **({"criado_em": existente["criado_em"]} if existente else {"criado_em": agora_iso()})})
+            criado = existente["criado_em"] if existente else agora_iso()
+            self._grupo_gravar(grupo_id, {"id": grupo_id, "nome": nome, "polos": list(polos or []), "criado_em": criado})
         return grupo_id
 
     def obter_grupo(self, gid: str) -> dict[str, Any] | None:

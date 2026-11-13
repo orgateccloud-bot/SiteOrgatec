@@ -17,7 +17,8 @@
   }
   function lerToken() { return ler(CHAVE_TOKEN) || ler(CHAVE_CENTRAL); }
   function gravarToken(t) {
-    try { if (t) sessionStorage.setItem(CHAVE_TOKEN, JSON.stringify(t)); else { sessionStorage.removeItem(CHAVE_TOKEN); sessionStorage.removeItem(CHAVE_CENTRAL); } }
+    // grava também na chave da Central de Viagem: quem entra no painel abre a Central sem novo login (mesma conta, permissões próprias)
+    try { if (t) { sessionStorage.setItem(CHAVE_TOKEN, JSON.stringify(t)); sessionStorage.setItem(CHAVE_CENTRAL, JSON.stringify(t)); } else { sessionStorage.removeItem(CHAVE_TOKEN); sessionStorage.removeItem(CHAVE_CENTRAL); } }
     catch (e) { /* armazenamento indisponível */ }
   }
   function guardar(idToken, refresh, segundos) {

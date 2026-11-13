@@ -186,7 +186,7 @@ def test_limite_por_usuario(amb):
 def test_contexto_mostra_papel_e_nome_do_grupo_sem_chave(amb):
     c, _ = amb
     r = c.get("/api/locar/contexto", headers=cab(papel="diretor", uid="u-dir")).json()
-    assert r["papel"] == "diretor" and r["grupo"] == {"id": GA, "nome": "Grupo A"} and r["ambiente"] == "desenvolvimento"
+    assert r["papel"] == "diretor" and r["grupo"] == {"id": GA, "nome": "Grupo A", "polos": []} and r["ambiente"] == "desenvolvimento"
     assert "chave_web" not in r
 
 
