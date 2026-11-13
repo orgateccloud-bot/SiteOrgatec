@@ -1288,6 +1288,21 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .pergunta+.pergunta{{border-top:1px solid var(--line);padding-top:18px}}
 .camadas-prova{{border-left:3px solid var(--brand);padding:4px 0 4px 14px;display:grid;gap:10px}}
 .termometro-resultado{{position:sticky;top:96px}}
+/* Gráfico 3D do termômetro: prismas de vidro azul (frente, lateral e topo), piso em perspectiva */
+.graf3d{{position:relative;padding:28px 12px 8px;border-radius:18px;background:linear-gradient(160deg,color-mix(in srgb,var(--brand) 14%,transparent),color-mix(in srgb,var(--brand) 4%,transparent));border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 18px 40px -24px color-mix(in srgb,var(--brand) 60%,transparent);overflow:hidden;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}}
+.graf3d-cena{{position:relative;z-index:1;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);align-items:end;gap:10px;min-height:196px}}
+.graf3d-col{{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px;min-width:0}}
+.graf3d-barra{{position:relative;width:min(34px,62%);margin-right:12px;transition:height .7s cubic-bezier(.2,.8,.2,1)}}
+.graf3d-barra i{{position:absolute;display:block;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}}
+.graf3d-f{{inset:0;background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 42%,rgba(255,255,255,.18)),color-mix(in srgb,var(--brand) 14%,transparent));border:1px solid color-mix(in srgb,var(--brand) 45%,rgba(255,255,255,.5));box-shadow:inset 1px 0 0 rgba(255,255,255,.35),inset 0 -12px 24px -14px rgba(255,255,255,.35)}}
+.graf3d-l{{left:100%;bottom:0;width:12px;height:100%;transform-origin:left bottom;transform:skewY(-45deg);background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 38%,transparent),color-mix(in srgb,var(--brand) 12%,transparent));border:1px solid color-mix(in srgb,var(--brand) 35%,rgba(255,255,255,.3))}}
+.graf3d-t{{left:0;bottom:100%;width:100%;height:12px;transform-origin:left bottom;transform:skewX(-45deg);background:color-mix(in srgb,var(--brand) 30%,rgba(255,255,255,.45));border:1px solid rgba(255,255,255,.45)}}
+.graf3d-geral .graf3d-f{{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 75%,rgba(255,255,255,.3)),color-mix(in srgb,var(--brand) 32%,transparent))}}
+.graf3d-vazia i{{background:transparent;border-style:dashed;box-shadow:none}}
+.graf3d-valor{{position:absolute;left:50%;bottom:calc(100% + 16px);transform:translateX(-50%);font:700 12px var(--f-mono,monospace);color:var(--ink);white-space:nowrap}}
+.graf3d-rotulo{{display:block;height:2.6em;font-size:clamp(9px,2.5vw,11px);line-height:1.2;text-align:center;color:var(--ink-soft,var(--ink));overflow-wrap:anywhere}}
+.graf3d-piso{{position:absolute;left:-10%;right:-10%;bottom:-30px;height:90px;transform:perspective(260px) rotateX(62deg);background-image:linear-gradient(color-mix(in srgb,var(--brand) 25%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--brand) 25%,transparent) 1px,transparent 1px);background-size:22px 22px;opacity:.55;pointer-events:none}}
+@media (prefers-reduced-motion:reduce){{.graf3d-barra{{transition:none}}}}
 .termometro-resumo{{display:none}}
 .relatorio-impressao{{display:none}}
 /* Impressão: na página do termômetro sai só o relatório; nas demais, sem cabeçalho, rodapé e barras. Sempre claro. */

@@ -3127,3 +3127,17 @@ def test_locar_login_serve_tambem_a_central_de_viagem(navegador, servidor):
     form.locator("button[type=submit]").click()
     expect(pg.locator("#lcMsg")).to_contain_text("Sem acesso ao painel")
     assert json.loads(pg.evaluate("sessionStorage.getItem('orgatec-transporte-token')"))["id"] == "ID-X"
+
+
+def test_termometro_grafico_3d_de_vidro(navegador, servidor):
+    pg, erros = _abrir(navegador, servidor, "compliance/termometro.html#perfil-transportador", "mobile")
+    grafico = pg.locator("[data-graf3d-grafico]")
+    expect(grafico).to_be_visible()
+    frentes = pg.evaluate("Orgatec.termometro.pilaresDoPerfil('transportador').length")
+    expect(pg.locator("[data-graf3d]")).to_have_count(frentes + 1)  # geral + uma por frente
+    expect(pg.locator("[data-graf3d=geral] .graf3d-vazia")).to_have_count(1)  # sem resposta = prisma vazio
+    pg.check("[data-pergunta=tr-ciot] input[value=sim]", force=True)
+    expect(pg.locator("[data-graf3d=transporte] .graf3d-valor")).to_have_text("100%")
+    assert "100%" in grafico.get_attribute("aria-label")
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 390
+    assert not erros
