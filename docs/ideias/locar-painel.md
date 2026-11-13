@@ -1,7 +1,7 @@
 # Painel do grupo LOCAR (v0.1)
 
-- **Situação:** em desenvolvimento (12/11/2026). Código, testes e prévia local prontos; **desligado por padrão** e sem dado real.
-- **Branch:** `ideia/locar-painel`
+- **Situação:** aprovada e junta na `desenvolvimento` em 12/11/2026; **desligado por padrão** e sem dado real. Falta lançar e, depois, ligar (T30).
+- **Branch:** `ideia/locar-painel` (já integrada e removida)
 - **Prévia:** ainda não gerada (`python tools/previa.py`, só com autorização para criar o canal). A prévia do Hosting não liga a API de produção com o painel, então o funcionamento se vê localmente com `ORGATEC_LOCAR=1 ORGATEC_LOCAR_DEMO=1`.
 
 ## Problema
