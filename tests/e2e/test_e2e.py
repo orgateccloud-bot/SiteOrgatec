@@ -32,7 +32,8 @@ def _porta_livre() -> int:
 def servidor(tmp_path_factory):
     porta = _porta_livre()
     env = {**os.environ, "ORGATEC_DB": str(tmp_path_factory.mktemp("db") / "e2e.db"),
-           "ORGATEC_SEGREDO_IP": "e2e", "ORGATEC_RATE_LIMIT": "500", "ORGATEC_SERVIR_SITE": "1"}
+           "ORGATEC_SEGREDO_IP": "e2e", "ORGATEC_RATE_LIMIT": "500", "ORGATEC_SERVIR_SITE": "1",
+           "ORGATEC_LOCAR": "1", "ORGATEC_LOCAR_DEMO": "1"}  # painel do grupo LOCAR com o grupo fictício (fora de produção)
     proc = subprocess.Popen([sys.executable, "-m", "uvicorn", "backend.app:app", "--port", str(porta), "--log-level", "warning"],
                             cwd=RAIZ, env=env)
     url = f"http://127.0.0.1:{porta}"
@@ -2813,4 +2814,163 @@ def test_central_de_viagem_entra_com_email_e_senha_e_manda_o_token(navegador, se
     form.locator("button[type=submit]").click()
     expect(pg.locator("#dev")).to_be_hidden()
     assert vistos["google"] == 1 and vistos["auth"][-1] == "Bearer ID-TOKEN-TESTE" and vistos["auth"][0] is None
+    assert not erros, erros
+
+
+# ---------- Painel do grupo LOCAR (docs/ideias/locar-painel.md): API em modo dev com o grupo fictício de backend/locar/demo.py
+
+GRUPO_DEMO = "00000000-0000-4000-8000-0000000000a1"
+
+
+def _locar(navegador, servidor, papel="equipe", usuario="u-equipe", vp="desktop", dev=True):
+    """Abre o painel já com o grupo fictício escolhido no modo dev (os cabeçalhos X-Locar-*); sem `dev` abre sem sessão."""
+    w, h = VIEWPORTS[vp]
+    ctx = navegador.new_context(viewport={"width": w, "height": h})
+    if dev:
+        ctx.add_init_script("localStorage.setItem('orgatec-locar-dev', JSON.stringify(%s))" % json.dumps({"grupo": GRUPO_DEMO, "papel": papel, "usuario": usuario}))
+    pg = ctx.new_page()
+    erros = []
+    pg.on("pageerror", lambda e: erros.append(str(e)))
+    pg.on("console", lambda m: erros.append(m.text) if m.type == "error" and "Content Security Policy" in m.text else None)
+    pg.goto(f"{servidor}/locar/painel.html")
+    pg.wait_for_load_state("load")
+    return pg, erros
+
+
+def test_locar_equipe_ve_a_agenda_marca_entregue_e_confere_a_trilha(navegador, servidor):
+    pg, erros = _locar(navegador, servidor)
+    expect(pg.locator("#lcPainel")).to_be_visible()
+    expect(pg.locator("#lcCabeca h1")).to_have_text("Grupo Exemplo")
+    expect(pg.locator("[data-kpi=atrasadas] b")).to_have_text("1")
+    expect(pg.locator("[data-kpi=proximas] b")).to_have_text("3")
+    expect(pg.locator("#lcEntidades .lc-ent")).to_have_count(4)
+    expect(pg.locator("#lcEntidades")).to_contain_text("dado sensível")                       # a equipe vê o produtor pessoa física
+    expect(pg.locator("#lcEntidades")).to_contain_text("Incorporação por Exemplo Matriz Ltda")  # ciclo de vida com a sucessora
+    expect(pg.locator(".lc-item[data-id=i1]")).to_have_class(re.compile(r"lc-atrasada"))
+    assert pg.locator("#lcMarcos .lc-marco").count() >= 5 and pg.locator("#lcMarcos").inner_text().count("Fonte:") >= 5  # marcos com fonte
+    pg.click(".lc-item[data-id=i1] [data-acao=entregar]")
+    expect(pg.locator("#lcMsg")).to_contain_text("Item atualizado.")
+    expect(pg.locator(".lc-item[data-id=i1]")).to_have_count(0)                               # entregue sai da lista "Abertos"
+    expect(pg.locator("[data-kpi=atrasadas] b")).to_have_text("0")
+    pg.click("label.lc-chip:has(input[value=entregues])")                                     # o botão de opção fica atrás do rótulo visível
+    expect(pg.locator(".lc-item[data-id=i1]")).to_be_visible()
+    pg.click("#lcAuditoria > summary")
+    expect(pg.locator("#lcAudLista")).to_contain_text("item.atualizar")
+    pg.click("[data-verificar]")
+    expect(pg.locator("#lcMsg")).to_contain_text("Trilha íntegra")
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS["desktop"][0]
+    assert not erros, erros
+
+
+def test_locar_equipe_adiciona_do_catalogo_e_altera_a_situacao_da_entidade(navegador, servidor):
+    pg, erros = _locar(navegador, servidor)
+    pg.click("#lcAdicionar > summary")
+    pg.select_option("#lcFormAdd select[name=perfil]", "transporte")
+    pg.select_option("#lcFormAdd select[name=modelo]", "rntrc_revalidacao")
+    pg.select_option("#lcFormAdd select[name=entidade]", "e-transp")
+    pg.click("#lcFormAdd button[type=submit]")
+    expect(pg.locator("#lcMsg")).to_contain_text("Item adicionado ao painel.")
+    expect(pg.locator(".lc-item", has_text="Revalidar o RNTRC")).to_contain_text("a confirmar")   # prazo não inventado
+    pg.click("#lcFormAdd button[type=submit]")                                                      # o mesmo modelo na mesma entidade não duplica
+    expect(pg.locator("#lcMsg")).to_contain_text("já está no painel")
+    pg.locator("[data-form-entidade=e-maq]").locator("xpath=ancestor::details/summary").click()
+    pg.select_option("[data-form-entidade=e-maq] select[name=status]", "em_incorporacao")
+    pg.select_option("[data-form-entidade=e-maq] select[name=sucessora]", "e-matriz")
+    pg.click("[data-form-entidade=e-maq] button[type=submit]")
+    expect(pg.locator("#lcMsg")).to_contain_text("Situação da entidade atualizada.")
+    maquinas = pg.locator("#lcEntidades .lc-ent").filter(has=pg.locator("h3", has_text="Exemplo Máquinas"))  # o nome também aparece nas listas de sucessora
+    expect(maquinas.locator(".lc-ciclo li[aria-current=step]")).to_have_text("Em incorporação")
+    expect(maquinas).to_contain_text("Incorporação por Exemplo Matriz Ltda")
+    assert not erros, erros
+
+
+def test_locar_diretor_so_ve_as_entidades_do_acesso_e_nao_escreve(navegador, servidor):
+    pg, erros = _locar(navegador, servidor, papel="diretor", usuario="u-diretor")
+    expect(pg.locator("#lcPainel")).to_be_visible()
+    nomes = pg.locator("#lcEntidades .lc-ent h3").all_inner_texts()
+    assert sorted(nomes) == ["Exemplo Matriz Ltda", "Exemplo Máquinas Ltda"], nomes   # sem a empresa de fora do acesso e sem o produtor pessoa física
+    assert "livro caixa" not in pg.inner_text("#lcAgenda").lower()
+    assert pg.locator("button[data-acao]").count() == 0 and pg.locator("[data-form-entidade]").count() == 0
+    expect(pg.locator("#lcAdicionar")).to_be_hidden()
+    expect(pg.locator("#lcAuditoria")).to_be_hidden()
+    assert not erros, erros
+
+
+def test_locar_sem_sessao_mostra_so_o_acesso_e_nao_pede_dados(navegador, servidor):
+    pedidos = []
+    ctx = navegador.new_context(viewport={"width": 375, "height": 812})
+    pg = ctx.new_page()
+    pg.on("request", lambda r: pedidos.append(r.url) if "/api/locar/" in r.url else None)
+    pg.goto(f"{servidor}/locar/painel.html")
+    pg.wait_for_load_state("load")
+    expect(pg.locator("#lcAcesso")).to_be_visible()
+    expect(pg.locator("#lcPainel")).to_be_hidden()
+    assert all(u.endswith("/api/locar/entrada") for u in pedidos), pedidos             # só pergunta como entrar; nenhum dado do grupo
+    assert "Grupo Exemplo" not in pg.content()
+    assert pg.evaluate("document.documentElement.scrollWidth") <= 375
+
+
+def test_locar_login_firebase_manda_o_token_e_a_csp_deixa_falar_com_o_google(navegador, servidor):
+    """Com a API em modo firebase: a CSP de /locar/ deixa o navegador falar com o Identity Toolkit e o token vai em Authorization."""
+    vistos = {"google": 0, "auth": []}
+    agenda = {"hoje": "2026-11-12", "entidades": [{"id": "e1", "nome": "Empresa Teste", "tipo": "pj", "status": "ativa", "sucessora_id": None, "regime": "simples",
+                                                    "regime_vigencia": None, "documento_mascarado": None, "sensivel": False}], "itens": []}
+
+    def entrada(rota):
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps({"modo": "firebase", "chave_web": "chave-publica-de-teste"}))
+
+    def google(rota):
+        vistos["google"] += 1
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps({"idToken": "ID-TOKEN-TESTE", "refreshToken": "r", "expiresIn": "3600"}))
+
+    def api(rota):
+        vistos["auth"].append(rota.request.headers.get("authorization"))
+        corpo = {"papel": "leitura", "usuario_id": "u", "grupo": {"id": GRUPO_DEMO, "nome": "Grupo de Teste"}, "ambiente": "producao", "entrada": "firebase"}
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps(agenda if rota.request.url.endswith("/agenda") else corpo))
+
+    ctx = navegador.new_context(viewport={"width": 1280, "height": 800})
+    pg = ctx.new_page()
+    erros = []
+    pg.on("console", lambda m: erros.append(m.text) if m.type == "error" and "Content Security Policy" in m.text else None)
+    pg.route("**/api/locar/entrada", entrada)
+    pg.route("**/identitytoolkit.googleapis.com/**", google)
+    pg.route("**/api/locar/contexto", api)
+    pg.route("**/api/locar/agenda", api)
+    pg.goto(f"{servidor}/locar/painel.html")
+    form = pg.locator("#lcAcesso form")
+    expect(form).to_be_visible()
+    form.locator("input[name=email]").fill("pessoa@exemplo.com")
+    form.locator("input[name=senha]").fill("senha-de-teste")
+    form.locator("button[type=submit]").click()
+    expect(pg.locator("#lcPainel")).to_be_visible()
+    expect(pg.locator("#lcCabeca h1")).to_have_text("Grupo de Teste")
+    assert vistos["google"] == 1 and set(vistos["auth"]) == {"Bearer ID-TOKEN-TESTE"}
+    assert not erros, erros
+    pg.click("[data-acao-topo=sair]")
+    expect(pg.locator("#lcAcesso")).to_be_visible()
+    assert pg.evaluate("sessionStorage.getItem('orgatec-login')") is None
+
+
+def test_locar_pagina_publica_leva_ao_painel_e_o_painel_fica_fora_do_google(navegador, servidor):
+    mapa = (RAIZ / "site" / "sitemap.xml").read_text(encoding="utf-8")
+    for pagina in ("cliente/locar.html", "locar/painel.html"):
+        assert 'content="noindex' in (RAIZ / "site" / pagina).read_text(encoding="utf-8"), pagina
+        assert pagina not in mapa, pagina
+    pg, erros = _abrir(navegador, servidor, "cliente/locar.html")
+    expect(pg.locator("main a[href$='locar/painel.html']").first).to_have_text("Entrar no painel do grupo")
+    pg.click("text=Entrar no painel do grupo")
+    expect(pg).to_have_url(f"{servidor}/locar/painel.html")
+    expect(pg.locator("#lcAcesso")).to_be_visible()
+    painel = httpx.get(f"{servidor}/locar/painel.html").headers["content-security-policy"]
+    publica = httpx.get(f"{servidor}/cliente/locar.html").headers["content-security-policy"]
+    assert "identitytoolkit.googleapis.com" in painel and "script-src 'self';" in painel and "maps" not in painel
+    assert "googleapis" not in publica                                                  # só /locar/ fala com o Google
+    assert not erros, erros
+
+
+@pytest.mark.parametrize("vp", ["mobile", "tablet"])
+def test_locar_painel_responsivo_sem_rolagem_lateral(navegador, servidor, vp):
+    pg, erros = _locar(navegador, servidor, vp=vp)
+    expect(pg.locator("#lcPainel")).to_be_visible()
+    assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros

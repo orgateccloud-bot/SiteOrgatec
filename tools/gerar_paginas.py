@@ -998,11 +998,12 @@ def contato() -> None:
 # Os textos descrevem só o que existe e foi conferido nos repositórios; nenhum dado de cliente.
 
 def modulo_locar() -> None:
-    """Módulo exclusivo do Grupo LOCAR. Em implantação: página sem dados do grupo e fora do mapa do site.
-    O portal com login será uma aplicação separada; aqui só entram textos gerais (docs/ideias/modulo-locar.md)."""
+    """Módulo exclusivo do Grupo LOCAR: página pública, sem dados do grupo e fora do mapa do site. O painel com login fica em
+    /locar/painel.html (tools/paginas_locar.py); aqui só entram textos gerais (docs/ideias/modulo-locar.md, docs/ideias/locar-painel.md)."""
     item = lambda ref, titulo, texto: f'<div class="og-cartao"><span class="og-cartao-ref">{ref}</span><h3 class="og-cartao-titulo">{titulo}</h3><p class="og-cartao-texto">{texto}</p></div>'
     acoes = f"""                <div class="flex flex-wrap gap-3 items-center mt-6">
-                    <a href="{layout.PORTAL_URL}" data-link="portal" target="_blank" rel="noopener" class="og-btn og-btn-primario og-btn-lg">Entrar no portal</a>
+                    <a href="{{p}}locar/painel.html" class="og-btn og-btn-primario og-btn-lg">Entrar no painel do grupo</a>
+                    <a href="{layout.PORTAL_URL}" data-link="portal" target="_blank" rel="noopener" class="og-btn og-btn-contorno og-btn-lg">Documentos e guias no portal</a>
                     <a {WHATS} data-msg="Olá! Sou do Grupo LOCAR e preciso de atendimento." class="og-btn og-btn-contato og-btn-lg">Falar com o atendimento</a>
                     <span class="og-selo og-selo-pendente">em implantação</span>
                 </div>"""
@@ -1015,8 +1016,8 @@ def modulo_locar() -> None:
         item("Compliance", "Evidências de conformidade", "Pacote datado para compartilhar, com autorização do grupo."),
     ], "md:grid-cols-2 lg:grid-cols-3")
     acesso_txt = """                <div class="max-w-3xl space-y-3 text-tinta-suave">
-                    <p>O acesso será individual, com permissão por empresa e por pessoa. Os dados de cada produtor rural pessoa física ficarão separados dos dados das empresas.</p>
-                    <p>Até a liberação, nenhum dado do grupo fica nesta página. Documentos e guias seguem no portal do cliente.</p>
+                    <p>O acesso ao painel é individual, com permissão por empresa e por pessoa. Os dados de cada produtor rural pessoa física ficam separados dos dados das empresas e só aparecem para a equipe da ORGATEC e para o próprio titular.</p>
+                    <p>Esta página não mostra dado do grupo. Documentos e guias seguem no portal do cliente.</p>
                 </div>"""
     corpo = "\n".join([
         intro("Área do cliente · Exclusivo", "Módulo LOCAR", "Espaço exclusivo do Grupo LOCAR na ORGATEC, em implantação.", acoes),
@@ -1366,6 +1367,8 @@ def main() -> None:
     paginas_empresarial.gerar()
     import paginas_transporte  # Central de Viagem e portal (noindex, fora do menu)
     paginas_transporte.gerar()
+    import paginas_locar  # painel do grupo LOCAR (noindex, fora do menu; docs/ideias/locar-painel.md)
+    paginas_locar.gerar()
     testes()
 
 

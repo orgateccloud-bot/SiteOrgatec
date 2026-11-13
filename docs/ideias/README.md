@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Painel do grupo LOCAR (v0.1)](locar-painel.md) | em desenvolvimento em 12/11/2026; código e testes prontos, desligado por padrão e sem dado real | `ideia/locar-painel` | só local (`ORGATEC_LOCAR=1 ORGATEC_LOCAR_DEMO=1`) |
 | [Janela de Campo: mapa de satélite com visual novo](campo-mapa-moderno.md) | aprovada em 12/11/2026 e junta na desenvolvimento, com o modelo 3D de vidro do mapa; falta lançar | removida | [link](https://orgatec-site--ideia-campo-mapa-moderno-weu5fxse.web.app/rural/janela-de-campo.html) |
 | [Mapa público de alertas nas rodovias (Janela do Transporte)](mapa-alertas-publico.md) | no ar em 12/11/2026 (site publicado-20261112-1405, API orgatec-api-00021-pdq); falta confirmar a licença da BC250 do IBGE | `ideia/mapa-alertas-publico` | [link](https://orgatec-site--ideia-mapa-alertas-publico-1ohyff7t.web.app/empresarial/janela.html#alertas-rodovias) |
 | [Cabeçalho: ícone Início cobria o nome ORGATEC no desktop](cabecalho-inicio.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação da prévia | `ideia/cabecalho-inicio` | [link](https://orgatec-site--ideia-cabecalho-inicio-8qc7n6xz.web.app/inicio.html) |
