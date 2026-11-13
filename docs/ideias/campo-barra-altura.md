@@ -1,7 +1,7 @@
 # Janela de Campo: barra do local com fundo próprio e página mais curta no celular
 
-- **Situação:** implementada em 13/11/2026 na branch `ideia/campo-barra-altura`; **aguarda a sua aprovação da prévia**. Não publicada.
-- **Branch:** `ideia/campo-barra-altura` (parte da `desenvolvimento`)
+- **Situação:** aprovada em 13/11/2026 e junta na `desenvolvimento`; **falta lançar**.
+- **Branch:** `ideia/campo-barra-altura` (removida depois do merge)
 - **Prévia:** [link](https://orgatec-site--ideia-campo-barra-altura-3dubg5rq.web.app/rural/janela-de-campo.html) (expira em 13/12/2026). Usa o boletim real do ar.
 
 ## Problema
