@@ -16,34 +16,50 @@ from html import escape
 # e o certificado estiverem no ar (pendência T5); config.js → portal.url faz o mesmo no navegador.
 PORTAL_URL = "https://orgatec.athenas.online/Usuarios/login"
 INICIO = "inicio.html"
-SETORES = [("Agro e produtor rural", "rural/index.html"), ("Transporte", "empresarial/transporte.html"),
-           ("Alertas regionais GO, TO e PA", "reforma/alertas-regionais.html"), ("Janela de Campo (tempo no agro)", "rural/janela-de-campo.html"),
-           ("Cotações e notícias do agro", "rural/cotacoes.html")]
-FERRAMENTAS = [("Simulador tributário", "ferramentas/simulador.html"), ("Calendário fiscal", "ferramentas/calendario.html"),
-               ("Calculadoras da transição", "ferramentas/index.html")]
+# Menu do Modelo C (docs/ideias/modelo-c.md): a ferramenta leva ao diagnóstico e o diagnóstico leva à proposta.
+DIAGNOSTICO_URL = "diagnostico-reforma.html"
+PROPOSTA_URL = "proposta/index.html"
+SIMULAR = [("Simulador tributário", "ferramentas/simulador.html"), ("Calculadoras da transição", "ferramentas/index.html"),
+           ("Calendário fiscal", "ferramentas/calendario.html")]
+DIAGNOSTICO = [("Diagnóstico de Impacto da Reforma", DIAGNOSTICO_URL), ("Solicitar proposta", PROPOSTA_URL),
+               ("Consultoria tributária", "consultoria-tributaria.html")]
+REFORMA = [("Central da Reforma", "reforma/index.html"), ("LC nº 214/2025", "reforma/lc-214-2025.html"), ("IBS", "reforma/ibs.html"),
+           ("CBS", "reforma/cbs.html"), ("Split payment", "reforma/split-payment.html"), ("Simples Nacional: IBS e CBS fora do DAS", "reforma/simples-hibrido.html"),
+           ("Alertas regionais GO, TO e PA", "reforma/alertas-regionais.html"), ("Fontes legais", "reforma/fontes.html")]
+# Setores reúne o agro e o que antes era o grupo Empresarial (transporte, lucro real e a visão geral das empresas).
+SETORES = [("Agro e produtor rural", "rural/index.html"), ("Janela de Campo (tempo no agro)", "rural/janela-de-campo.html"),
+           ("Cotações e notícias do agro", "rural/cotacoes.html"), ("Transporte", "empresarial/transporte.html"),
+           ("Central de Viagem (clientes)", "transporte/central.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
+           ("Empresas: visão geral", "empresarial/index.html"), ("Janela da semana", "empresarial/janela.html")]
+# Área de Compliance (docs/plano-area-compliance.md; páginas em tools/paginas_compliance.py): visão geral, termômetro, score e as quatro frentes.
+COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de conformidade", "compliance/termometro.html"),
+              ("Score da empresa", "empresarial/score.html"), ("Por público", "compliance/publicos.html"),
+              ("Conformidade tributária", "compliance/conformidade-tributaria.html"), ("Prevenção à lavagem de dinheiro", "compliance/prevencao-lavagem.html"),
+              ("Proteção de dados (LGPD)", "compliance/protecao-de-dados.html"), ("Integridade e anticorrupção", "compliance/integridade.html")]
 # Sistemas da ORGATEC (docs/plano-incorporacao-produtos.md): só páginas no site; o acesso a cada sistema é link
 # para o subdomínio dele, controlado por config.solucoes. Gestão financeira (Mini e crédito do OrgCred, Fases 3 e 4) ainda fora.
 SOLUCOES = [("Todas as soluções", "solucoes/index.html"), ("Conciliação bancária", "solucoes/conciliacao.html"),
             ("Auditoria forense rural (NFA-e)", "solucoes/auditoria-rural.html")]
-# Área de Compliance (docs/plano-area-compliance.md; páginas em tools/paginas_compliance.py): visão geral, termômetro e as quatro frentes.
-COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de conformidade", "compliance/termometro.html"),
-              ("Por público", "compliance/publicos.html"),
-              ("Conformidade tributária", "compliance/conformidade-tributaria.html"), ("Prevenção à lavagem de dinheiro", "compliance/prevencao-lavagem.html"),
-              ("Proteção de dados (LGPD)", "compliance/protecao-de-dados.html"), ("Integridade e anticorrupção", "compliance/integridade.html")]
-EMPRESARIAL = [("Visão geral", "empresarial/index.html"), ("Transporte", "empresarial/transporte.html"), ("Lucro real e presumido", "empresarial/lucro-real.html"),
-               ("Simples Nacional", "reforma/simples-hibrido.html"), ("Janela da semana", "empresarial/janela.html"),
-               ("Score da empresa", "empresarial/score.html"), ("Central de Viagem (clientes)", "transporte/central.html")]
 NAV = [
-    ("tributario", "Consultoria", "consultoria-tributaria.html", []),
-    ("reforma", "Reforma", "reforma/index.html", []),
+    ("ferramentas", "Simular", "ferramentas/simulador.html", SIMULAR),
+    ("diagnostico", "Diagnóstico", DIAGNOSTICO_URL, DIAGNOSTICO),
+    ("reforma", "Reforma", "reforma/index.html", REFORMA),
     ("setores", "Setores", "rural/index.html", SETORES),
-    ("empresarial", "Empresarial", "empresarial/index.html", EMPRESARIAL),
-    ("ferramentas", "Ferramentas", "ferramentas/index.html", FERRAMENTAS),
-    ("solucoes", "Soluções", "solucoes/index.html", SOLUCOES),
     ("compliance", "Compliance", "compliance/index.html", COMPLIANCE),
+    ("solucoes", "Serviços", "solucoes/index.html", SOLUCOES),
 ]
-# "Escritório" saiu do menu principal quando entrou Compliance (decisão C3 provisória: com 7 itens o menu encostava
-# no logotipo em 1280 px). Continua no rodapé ("O escritório") e no grupo Atendimento do menu ☰.
+# Chaves que as páginas ainda passam em `ativo` e o grupo que as recebe no menu novo.
+ATIVO_GRUPO = {"tributario": "diagnostico", "empresarial": "setores"}
+# A Central de Viagem (noindex, área de clientes) segue no menu, agora em Setores, ao lado de Transporte.
+# "Escritório" segue fora do menu principal (decisão C3 provisória): rodapé ("O escritório") e grupo Atendimento do menu ☰.
+
+
+def grupo_ativo(ativo: str | None, atual: str = "") -> str | None:
+    """Grupo do menu a destacar: o que contém a página atual; sem isso, a chave da página (com as antigas convertidas)."""
+    for chave, _rotulo, caminho, subs in NAV:
+        if atual and (atual == caminho or any(u == atual for _r, u in subs)):
+            return chave
+    return ATIVO_GRUPO.get(ativo, ativo)
 
 # Fontes servidas pelo próprio site (pendência T4): gerar com python tools/baixar_fontes.py.
 FONTES = '<link rel="stylesheet" href="{p}assets/fontes/fontes.css">'
@@ -99,6 +115,7 @@ def head(titulo: str, descricao: str, p: str, canonical: str, tipo: str = "websi
 
 def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
     """atual = caminho da página (marca o subitem com aria-current)."""
+    ativo = grupo_ativo(ativo, atual)
     def sub(rotulo: str, caminho: str, cls: str) -> str:
         marca = ' aria-current="page"' if caminho == atual else ""
         return f'<a href="{p}{caminho}" class="{cls}"{marca}>{rotulo}</a>'
@@ -139,10 +156,11 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
                     <span class="hidden sm:block text-[10px] text-descritor uppercase tracking-widest mt-1 whitespace-nowrap">Inteligência Tributária</span>
                 </div>
             </a>
-            <nav class="hidden xl:flex items-center gap-4 text-sm font-medium text-tinta-suave whitespace-nowrap" aria-label="Principal">
+            <nav class="hidden xl:flex items-center gap-3 text-sm font-medium text-tinta-suave whitespace-nowrap" aria-label="Principal">
                 {nav}
             </nav>
             <div class="flex items-center gap-2 sm:gap-3">
+                <a href="{p}{DIAGNOSTICO_URL}" class="hidden xl:inline-flex og-btn og-btn-primario og-btn-md whitespace-nowrap" data-cta-diagnostico>Solicitar diagnóstico</a>
                 <a href="{p}cliente/index.html" class="hidden sm:inline-flex items-center whitespace-nowrap text-sm font-medium text-tinta-texto hover:text-acao px-4 py-2 rounded-lg border border-linha-campo hover:border-acao transition">Área do cliente</a>
                 {botao_cores()}
                 <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-md"><span class="sm:hidden xl:inline">WhatsApp</span><span class="hidden sm:inline xl:hidden">Falar no WhatsApp</span></a>
@@ -153,6 +171,7 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
             <div class="px-4 py-3 grid gap-1 text-sm font-medium text-tinta-texto">
                 {nav_movel}
                 <p class="nav-titulo">Atendimento</p>
+                <a href="{p}{DIAGNOSTICO_URL}" class="py-2 pl-3 font-semibold text-acao">Solicitar diagnóstico</a>
                 <a href="{p}quem-somos.html" class="py-2 pl-3">O escritório</a>
                 <a href="{p}cliente/index.html" class="py-2 pl-3">Área do cliente</a>
                 <a href="{p}contato/index.html" class="py-2 pl-3">Contato</a>
@@ -162,7 +181,7 @@ def cabecalho(p: str, ativo: str | None, atual: str = "") -> str:
     </header>"""
 
 
-RODAPE_CONSULTORIA = [("Consultoria tributária", "consultoria-tributaria.html"), ("Simulador tributário", "ferramentas/simulador.html"),
+RODAPE_CONSULTORIA = [("Consultoria tributária", "consultoria-tributaria.html"), ("Diagnóstico da reforma", DIAGNOSTICO_URL), ("Simulador tributário", "ferramentas/simulador.html"),
                       ("Calendário fiscal", "ferramentas/calendario.html"), ("Agro e produtor rural", "rural/index.html"),
                       ("Transporte", "empresarial/transporte.html"), ("Soluções do escritório", "solucoes/index.html"),
                       ("O escritório", "quem-somos.html")]
@@ -205,7 +224,8 @@ def rodape(p: str) -> str:
 BASE_URL = "https://orgatec.io/"
 # Primeiro passo da trilha sem endereço próprio: a migalha estruturada precisa de um destino (hoje, a primeira página do grupo).
 MIGALHA_GRUPO = {"Setores": "rural/index.html", "Consultoria": "consultoria-tributaria.html", "Reforma": "reforma/index.html",
-                 "Soluções": "solucoes/index.html", "Compliance": "compliance/index.html", "Empresarial": "empresarial/index.html", "Ferramentas": "ferramentas/index.html"}
+                 "Soluções": "solucoes/index.html", "Compliance": "compliance/index.html", "Empresarial": "empresarial/index.html", "Ferramentas": "ferramentas/index.html",
+                 "Diagnóstico": DIAGNOSTICO_URL}
 
 
 def breadcrumb(passos: list, caminho: str) -> str:
@@ -239,10 +259,10 @@ def trilha(p: str, passos: list, largura: str = "max-w-7xl") -> str:
 
 
 def barra_movel(p: str) -> str:
-    """Atalhos fixos no rodapé da tela abaixo de 640 px. paginas.js recolhe a barra enquanto o herói está visível."""
+    """Atalhos fixos no rodapé da tela abaixo de 640 px: simular e pedir o diagnóstico (o WhatsApp fica no cabeçalho). paginas.js recolhe a barra enquanto o herói está visível."""
     return f"""    <div class="barra-movel" data-barra-movel>
         <a href="{p}ferramentas/simulador.html" class="og-btn og-btn-primario og-btn-md">Simular impacto</a>
-        <a href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-md">WhatsApp</a>
+        <a href="{p}{DIAGNOSTICO_URL}" class="og-btn og-btn-contorno og-btn-md">Solicitar diagnóstico</a>
     </div>"""
 
 

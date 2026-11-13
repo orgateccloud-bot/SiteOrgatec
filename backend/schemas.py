@@ -73,9 +73,16 @@ class SimulacaoResumo(BaseModel):
     alertas: list[Annotated[str, Field(max_length=80)]] = Field(default_factory=list, max_length=60)
 
 
+# Porte e origem do pedido de proposta (Modelo C): os mesmos valores de tools/gerar_paginas.py (PORTES e ORIGENS).
+Porte = Literal["mei", "pequeno", "medio", "grande", "produtor_pf"]
+Origem = Literal["indicacao", "whatsapp", "instagram", "linkedin", "busca", "evento", "outro"]
+
+
 class LeadIn(_ComContato):
     nome: str = Field(min_length=2, max_length=120)
     empresa: str | None = Field(default=None, max_length=160)
+    porte: Porte | None = None
+    origem: Origem | None = None
     simulacao: SimulacaoResumo
 
 

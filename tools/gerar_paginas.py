@@ -21,10 +21,21 @@ RAIZ = Path(__file__).resolve().parent.parent
 SITE = RAIZ / "site"
 WHATS = 'href="https://wa.me/5562992949161" data-link="whatsapp" target="_blank" rel="noopener"'
 MSG_DIAGNOSTICO = "Olá! Quero agendar um diagnóstico tributário da reforma com a ORGATEC."
+# Modelo C (docs/ideias/modelo-c.md): simulador → diagnóstico com escopo → proposta.
+DIAGNOSTICO = layout.DIAGNOSTICO_URL
+PROPOSTA = layout.PROPOSTA_URL
+# Prazo decidido pela direção em 12/11/2026. Falta definir se são dias úteis e a partir de quando contam.
+PRAZO_DIAGNOSTICO = "5 dias"
+# Porte e origem do pedido: os mesmos valores de backend/schemas.py (LeadIn) e de assets/js/app.js.
+PORTES = [("mei", "Microempresa ou MEI"), ("pequeno", "Pequeno porte"), ("medio", "Médio porte"), ("grande", "Grande porte"),
+          ("produtor_pf", "Produtor rural pessoa física")]
+ORIGENS = [("indicacao", "Indicação"), ("whatsapp", "WhatsApp"), ("instagram", "Instagram"), ("linkedin", "LinkedIn"),
+           ("busca", "Busca no Google"), ("evento", "Evento"), ("outro", "Outro")]
 
 
 # Páginas que descrevem um serviço da ORGATEC: ganham JSON-LD Service (nome do serviço)
-SERVICOS_SCHEMA = {"consultoria-tributaria.html": "Consultoria tributária e reforma", "solucoes/index.html": "Soluções do escritório",
+SERVICOS_SCHEMA = {"consultoria-tributaria.html": "Consultoria tributária e reforma", DIAGNOSTICO: "Diagnóstico de Impacto da Reforma",
+                   "solucoes/index.html": "Soluções do escritório",
                    "solucoes/conciliacao.html": "Conciliação bancária", "solucoes/auditoria-rural.html": "Auditoria forense rural de NFA-e"}
 
 
@@ -151,6 +162,7 @@ def faixa_cta(titulo: str, texto: str, compacto: bool = False) -> str:
                     <a {WHATS} data-msg="{MSG_DIAGNOSTICO}" class="og-btn og-btn-contato og-btn-lg">Agendar Diagnóstico com Especialista</a>
                     <a href="{{p}}ferramentas/simulador.html" class="og-btn og-btn-primario og-btn-lg">Testar Simulador Tributário</a>
                 </div>
+                <p class="mt-4 text-sm"><a href="{{p}}{DIAGNOSTICO}" class="og-link" data-cta-escopo>Ver o que o diagnóstico entrega e o prazo de {PRAZO_DIAGNOSTICO} →</a></p>
                 <p class="text-xs text-tinta-fraca mt-6 font-mono">{layout.AVISO_LEGAL}</p>
             </div>
         </section>"""
@@ -342,7 +354,7 @@ def inicio() -> None:
 
 def tributario() -> None:
     servicos = [
-        cartao("EC 132/2023 · LC 214/2025", "Diagnóstico da reforma", "Regime, fornecedores, NCM/NBS e preço: o impacto de 2027 a 2033 na sua empresa.", "{p}reforma/index.html"),
+        cartao("EC 132/2023 · LC 214/2025", "Diagnóstico da reforma", "Regime, fornecedores, NCM/NBS e preço: o impacto de 2027 a 2033 na sua empresa.", "{p}" + DIAGNOSTICO),
         C_SIMPLES,
         cartao("LC 214/2025, arts. 378 a 383", "Créditos de PIS e Cofins antes da extinção", "Levantamento e uso dos saldos que continuam válidos depois de 2027.", "{p}reforma/index.html#item-saldo-piscofins"),
         cartao("Lucro real", "Lucro real na transição", "Crédito amplo de IBS e CBS, estoque de 1º/01/2027 e margem no período de convivência.", "{p}reforma/index.html#item-nao-cumulatividade"),
@@ -754,8 +766,109 @@ ESFERAS = ('<label><input type="checkbox" name="{n}" value="federal" checked> Fe
            '<label><input type="checkbox" name="{n}" value="estadual" checked> Estadual</label>')
 
 
+def opcoes(pares: list[tuple[str, str]], vazio: str = "Selecione (opcional)") -> str:
+    return f'<option value="">{vazio}</option>' + "".join(f'<option value="{v}">{r}</option>' for v, r in pares)
+
+
+CONSENT_SIMULACAO = "Autorizo a ORGATEC a usar estes dados e o resultado da simulação para entrar em contato sobre o diagnóstico tributário"
+CONSENT_PROPOSTA = "Autorizo a ORGATEC a usar estes dados e o cenário informado para entrar em contato sobre o diagnóstico tributário"
+
+
+def pedido(pfx: str, form_id: str, titulo: str, whats_id: str, texto: str, antes: str = "", consentimento: str = CONSENT_SIMULACAO) -> str:
+    """Pedido de proposta do diagnóstico (Modelo C): o mesmo bloco no resultado do simulador (pfx "lead") e na página
+    de proposta (pfx "pr"). Dois caminhos, por decisão da direção: formulário (depende da API) e WhatsApp com a mensagem pronta.
+    Ligado por assets/js/app.js pelos IDs <pfx>Nome, <pfx>Empresa, <pfx>Whats, <pfx>Email, <pfx>Porte, <pfx>Origem, <pfx>Consent e <pfx>Msg."""
+    return f"""                    <form id="{form_id}" class="og-cartao grid grid-cols-1 gap-4" novalidate>
+                        <h2 class="og-cartao-titulo">{titulo}</h2>
+                        <p class="og-cartao-texto">{texto}</p>
+{antes}                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {campo(pfx + "Nome", "Nome", f'<input id="{pfx}Nome" name="nome" autocomplete="name" class="{CTRL}">')}
+                            {campo(pfx + "Empresa", "Empresa (opcional)", f'<input id="{pfx}Empresa" name="empresa" autocomplete="organization" class="{CTRL}">')}
+                            {campo(pfx + "Whats", "WhatsApp", f'<input id="{pfx}Whats" name="whatsapp" type="tel" autocomplete="tel" placeholder="(62) 9 0000-0000" class="{CTRL}">')}
+                            {campo(pfx + "Email", "E-mail", f'<input id="{pfx}Email" name="email" type="email" autocomplete="email" class="{CTRL}">')}
+                            {campo(pfx + "Porte", "Porte (opcional)", f'<select id="{pfx}Porte" name="porte" class="{CTRL}">{opcoes(PORTES)}</select>')}
+                            {campo(pfx + "Origem", "Como conheceu a ORGATEC (opcional)", f'<select id="{pfx}Origem" name="origem" class="{CTRL}">{opcoes(ORIGENS)}</select>')}
+                        </div>
+                        {HONEYPOT}
+                        <label class="og-consentimento"><input id="{pfx}Consent" type="checkbox"><span>{consentimento}, conforme a <a href="{{p}}privacidade.html">Política de Privacidade</a> (LGPD, Lei nº 13.709/2018). Posso revogar a qualquer momento.</span></label>
+                        <p id="{pfx}Msg" class="text-sm" role="status"></p>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button type="submit" class="og-btn og-btn-primario og-btn-lg">Enviar pedido</button>
+                            <a id="{whats_id}" href="https://wa.me/5562992949161" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-lg">Enviar pelo WhatsApp</a>
+                        </div>
+                    </form>"""
+
+
+def diagnostico() -> None:
+    """Página do Diagnóstico de Impacto da Reforma (Modelo C): o que se levanta, o que se entrega, prazo e investimento.
+    O escopo descrito aqui precisa da aprovação do responsável técnico antes de ir ao ar (docs/ideias/modelo-c.md)."""
+    corpo = "\n".join([
+        hero("Diagnóstico", 'O cenário do simulador, conferido com os <mark class="marca-texto">documentos</mark> da sua empresa.',
+             f"O simulador usa premissas do setor. O diagnóstico refaz a conta com a escrituração, as notas e os fornecedores da empresa e entrega o resultado em {PRAZO_DIAGNOSTICO}.",
+             f'<a href="{{p}}{PROPOSTA}" class="og-btn og-btn-primario og-btn-lg">Solicitar proposta</a>'
+             '<a href="{p}ferramentas/simulador.html" class="og-btn og-btn-sobre-palco og-btn-lg">Simular antes</a>'),
+        secao("Escopo", "O que levantamos", lista([
+            ("Escrituração fiscal e contábil (SPED)", "O que a empresa já entrega ao fisco."),
+            ("XML das notas de entrada e de saída", "Para medir débito e crédito com os documentos, não com premissa."),
+            ("Regime e enquadramento atuais", "Simples Nacional, lucro presumido, lucro real ou produtor rural."),
+            ("Fornecedores por regime", "Quem transfere crédito de IBS e CBS e quem não transfere."),
+        ]), id_="escopo"),
+        secao("Entrega", "O que você recebe", lista([
+            ("Relatório de carga", "Carga atual comparada com CBS e IBS, ano a ano, de 2027 a 2033."),
+            ("Mapa de créditos", "O que gera crédito, o que deixa de gerar e quanto."),
+            ("Efeito do split payment", "Impacto do recolhimento na liquidação sobre o capital de giro."),
+        ], "md:grid-cols-3"), "bg-superficie", "entrega"),
+        secao("Como funciona", "Do diagnóstico à transição", MARCOS, id_="como-funciona"),
+        secao("Condições", "Prazo e investimento", lista([
+            ("Prazo: " + PRAZO_DIAGNOSTICO, "Para a entrega do diagnóstico."),
+            ("Investimento", "O valor segue na proposta, depois da triagem do seu caso."),
+            ("Quem assina", "Robson Alain Veloso, CRC-TO 002032/O-5 T-GO, contador responsável técnico."),
+        ], "md:grid-cols-3"), "bg-superficie", "condicoes"),
+        f"""        <section class="py-16 bg-fundo border-t border-linha">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+                <h2 class="text-2xl font-bold text-tinta mb-3">Peça a proposta do diagnóstico</h2>
+                <p class="text-tinta-suave mb-6">O pedido segue com o cenário que você simulou. Você só completa o que falta.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{p}}{PROPOSTA}" class="og-btn og-btn-primario og-btn-lg">Solicitar proposta</a>
+                    <a {WHATS} data-msg="{MSG_DIAGNOSTICO}" class="og-btn og-btn-contato og-btn-lg">Falar no WhatsApp</a>
+                </div>
+                <p class="text-xs text-tinta-fraca mt-6 font-mono">{layout.AVISO_LEGAL}</p>
+            </div>
+        </section>""",
+    ])
+    pagina(DIAGNOSTICO, "Diagnóstico de Impacto da Reforma",
+           f"Diagnóstico de impacto da reforma tributária: o que a ORGATEC levanta, o que entrega em {PRAZO_DIAGNOSTICO} e como pedir a proposta.",
+           "diagnostico", "captação", corpo, trilha=[("Diagnóstico", None)])
+
+
+def proposta() -> None:
+    """Pedido de proposta do diagnóstico para quem chega pelo menu ou pela página do diagnóstico (Modelo C).
+    O cenário vem da simulação feita na mesma aba (sessionStorage, nunca pela URL) ou é escolhido aqui; ligado por app.js (initProposta)."""
+    cenario = f"""                        <p id="prCenario" class="text-sm text-tinta-suave" aria-live="polite">Escolha o cenário da empresa, ou <a href="{{p}}ferramentas/simulador.html" class="og-link">faça a simulação antes</a>.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {campo("prSetor", "Setor de atuação principal", f'<select id="prSetor" class="{CTRL}"></select>')}
+                            {campo("prRegime", "Regime tributário atual", f'<select id="prRegime" class="{CTRL}">{REGIMES}</select>')}
+                            {campo("prPerfil", "Perfil predominante de clientes", f'<select id="prPerfil" class="{CTRL}"><option value="b2b">Mais de 50% Empresas (B2B)</option><option value="b2c">Mais de 50% Consumidor Final (B2C)</option></select>')}
+                            {campo("prUf", "UF principal de operação", f'<select id="prUf" class="{CTRL}"></select>')}
+                        </div>
+"""
+    corpo = "\n".join([
+        intro("Diagnóstico", "Solicitar proposta do diagnóstico",
+              f"O pedido segue com o cenário, o setor, o regime e o porte, para chegar a quem atende o seu caso. Prazo do diagnóstico: {PRAZO_DIAGNOSTICO}."),
+        f"""        <section id="proposta" class="py-12">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+{pedido("pr", "propostaForm", "Complete o pedido", "ctaWhatsProposta",
+        f'O valor do diagnóstico segue na proposta. <a href="{{p}}{DIAGNOSTICO}" class="og-link">Ver o que o diagnóstico entrega</a>', cenario, CONSENT_PROPOSTA)}
+            </div>
+        </section>""",
+    ])
+    pagina(PROPOSTA, "Solicitar proposta do diagnóstico",
+           "Peça a proposta do Diagnóstico de Impacto da Reforma: cenário da empresa, porte e contato, pelo formulário ou pelo WhatsApp.",
+           "diagnostico", "captação", corpo, extra=["validadores.js", "app.js"], trilha=[("Diagnóstico", DIAGNOSTICO), ("Solicitar proposta", None)])
+
+
 def simulador() -> None:
-    """Simulador e captação do lead (antes na página inicial; mesmos IDs, ligados por app.js)."""
+    """Simulador e pedido de proposta do diagnóstico (antes na página inicial; mesmos IDs, ligados por app.js)."""
     form = "\n".join([
         '                <form id="taxSimulatorForm" class="og-cartao grid grid-cols-1 gap-6" novalidate>',
         '                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">',
@@ -779,22 +892,8 @@ def simulador() -> None:
                         <ul id="resultAlertas" class="space-y-3 mb-4"></ul>
                         <p class="text-xs text-tinta-fraca font-mono">⚠️ Aviso Legal: Simulação orientativa baseada na EC nº 132/2023 e LC nº 214/2025. Não substitui parecer técnico emitido pelo contador responsável.</p>
                     </div>
-                    <form id="leadForm" class="og-cartao grid grid-cols-1 gap-4" novalidate>
-                        <h2 class="og-cartao-titulo">Receba a análise completa do seu CNPJ</h2>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {campo("leadNome", "Nome", f'<input id="leadNome" name="nome" autocomplete="name" class="{CTRL}">')}
-                            {campo("leadEmpresa", "Empresa (opcional)", f'<input id="leadEmpresa" name="empresa" autocomplete="organization" class="{CTRL}">')}
-                            {campo("leadWhats", "WhatsApp", f'<input id="leadWhats" name="whatsapp" type="tel" autocomplete="tel" placeholder="(62) 9 0000-0000" class="{CTRL}">')}
-                            {campo("leadEmail", "E-mail", f'<input id="leadEmail" name="email" type="email" autocomplete="email" class="{CTRL}">')}
-                        </div>
-                        {HONEYPOT}
-                        <label class="og-consentimento"><input id="leadConsent" type="checkbox"><span>Autorizo a ORGATEC a usar estes dados e o resultado da simulação para entrar em contato sobre o diagnóstico tributário, conforme a <a href="{{p}}privacidade.html">Política de Privacidade</a> (LGPD, Lei nº 13.709/2018). Posso revogar a qualquer momento.</span></label>
-                        <p id="leadMsg" class="text-sm" role="status"></p>
-                        <div class="flex flex-col sm:flex-row gap-3">
-                            <button type="submit" class="og-btn og-btn-primario og-btn-lg">Enviar para análise</button>
-                            <a id="ctaWhatsSim" href="https://wa.me/5562992949161" target="_blank" rel="noopener" class="og-btn og-btn-contato og-btn-lg">Solicitar Análise Detalhada com os Especialistas</a>
-                        </div>
-                    </form>
+{pedido("lead", "leadForm", "Receba a proposta do diagnóstico deste cenário", "ctaWhatsSim",
+        f'O diagnóstico refaz esta conta com o SPED, as notas e os fornecedores da empresa. Prazo: {PRAZO_DIAGNOSTICO}. O valor segue na proposta. <a href="{{p}}{DIAGNOSTICO}" class="og-link">Ver o que o diagnóstico entrega</a>')}
                 </div>"""
     corpo = "\n".join([
         intro("Ferramentas · 27 UFs", "Simulador de Impacto da Reforma Tributária",
@@ -1282,6 +1381,7 @@ MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("empresarial/janela.html", "retenção"), ("empresarial/score.html", "retenção"),
     ("rural/cotacoes.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
+    (DIAGNOSTICO, "captação"), (PROPOSTA, "captação"),
     ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),
     ("compliance/index.html", "captação + autoridade"), ("compliance/termometro.html", "captação"), ("compliance/conformidade-tributaria.html", "captação + autoridade"),
     ("compliance/prevencao-lavagem.html", "autoridade"), ("compliance/protecao-de-dados.html", "autoridade"), ("compliance/integridade.html", "autoridade"),
@@ -1352,6 +1452,8 @@ def main() -> None:
     agro_mercado()
     ferramentas()
     simulador()
+    diagnostico()
+    proposta()
     calendario()
     solucoes_vitrine()
     solucao_conciliacao()

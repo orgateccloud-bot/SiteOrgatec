@@ -30,6 +30,29 @@ def test_lead_valido_retorna_protocolo_e_hash(cliente):
     assert "token" not in j
 
 
+def test_lead_com_porte_e_origem_do_pedido_de_proposta(cliente):
+    """Modelo C: o pedido de proposta leva porte e origem, os dois opcionais e com valores fechados."""
+    c, _, _ = cliente
+    corpo = {"nome": "Maria", "whatsapp": "62999990000", "consentimento": CONSENT, "simulacao": SIM}
+    assert c.post("/api/leads", json={**corpo, "porte": "pequeno", "origem": "indicacao"}).status_code == 201
+    assert c.post("/api/leads", json={**corpo, "porte": None, "origem": None}).status_code == 201
+    assert c.post("/api/leads", json=corpo).status_code == 201  # o site só manda porte e origem quando escolhidos
+    assert c.post("/api/leads", json={**corpo, "porte": "gigante"}).status_code == 422
+    assert c.post("/api/leads", json={**corpo, "origem": "panfleto"}).status_code == 422
+
+
+def test_porte_e_origem_iguais_no_site_e_na_api():
+    """As opções do formulário (tools/gerar_paginas.py) são as que a API aceita (backend/schemas.py)."""
+    import sys
+    from pathlib import Path
+    from typing import get_args
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
+    import gerar_paginas
+    from backend import schemas
+    assert [v for v, _ in gerar_paginas.PORTES] == list(get_args(schemas.Porte))
+    assert [v for v, _ in gerar_paginas.ORIGENS] == list(get_args(schemas.Origem))
+
+
 @pytest.mark.parametrize("ajuste", [
     {"consentimento": {**CONSENT, "aceito": False}},  # sem consentimento
     {"whatsapp": None, "email": None},                # sem canal de retorno

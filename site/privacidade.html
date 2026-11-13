@@ -39,7 +39,7 @@
 
         <h2>2. Quais dados coletamos e para quê</h2>
         <ul>
-            <li><strong>Simulador:</strong> setor, regime, perfil de clientes, UF e faturamento informado. Ficam no seu navegador; só são enviados se você pedir a análise completa, junto com nome, empresa (opcional), e-mail e/ou WhatsApp. Finalidade: retorno sobre o diagnóstico. Base legal: consentimento (art. 7º, I) e procedimentos preliminares a contrato a seu pedido (art. 7º, V).</li>
+            <li><strong>Simulador e pedido de proposta do diagnóstico:</strong> setor, regime, perfil de clientes, UF e faturamento informado. Ficam no seu navegador; só são enviados se você pedir a proposta, junto com nome, empresa, porte e como conheceu a ORGATEC (os três opcionais), e-mail e/ou WhatsApp. Finalidade: retorno sobre o diagnóstico. Base legal: consentimento (art. 7º, I) e procedimentos preliminares a contrato a seu pedido (art. 7º, V).</li>
             <li><strong>Calendário Fiscal (alertas):</strong> e-mail e/ou WhatsApp, UFs e esferas escolhidas. Finalidade: envio dos alertas de vencimento. Base legal: consentimento (art. 7º, I), confirmado por link (double opt-in).</li>
             <li><strong>Contato:</strong> nome, canal de retorno, assunto e mensagem. Finalidade: responder à solicitação. Base legal: art. 7º, V, ou art. 7º, II, quando se tratar do exercício de direitos do titular.</li>
             <li><strong>Registro técnico dos formulários:</strong> o endereço IP não é guardado em claro. Fica só um código feito com chave secreta (HMAC), para segurança e prevenção de abuso (art. 7º, IX). Esse código é um dado pseudonimizado. O e-mail e o WhatsApp também recebem um código assim, usado para localizar seus registros quando você exerce um direito. Cada registro recebe ainda um código de integridade (trilha de auditoria).</li>
@@ -55,6 +55,7 @@
             <li><span class="font-mono">orgatec.campo</span>: a região, a atividade e o polo escolhidos na Janela de Campo.</li>
             <li><span class="font-mono">orgatec.abertura.vista</span>: até fechar a aba, marca que a abertura já foi vista.</li>
             <li><span class="font-mono">orgatec.simulacaoRapida</span>: leva os dados da simulação rápida até o simulador e é apagado assim que ele abre.</li>
+            <li><span class="font-mono">orgatec.cenario</span>: guarda o cenário simulado (setor, regime, perfil de clientes, UF e faturamento) enquanto a aba estiver aberta, para o pedido de proposta do diagnóstico já vir preenchido. Some ao fechar a aba.</li>
             <li><span class="font-mono">orgatec.termometro.respostas</span>: até fechar a aba, guarda as respostas do termômetro.</li>
             <li><span class="font-mono">orgatec.score.historico</span>: as notas que você registrou na janela do score da empresa (só as notas, não as respostas), até você apagar o histórico.</li>
         </ul>
