@@ -127,6 +127,10 @@ def com_mapa_google(politica: str) -> str:
 
 
 CSP_TRANSPORTE = com_mapa_google(CSP)
+# Painel do grupo LOCAR (/locar/): além do próprio site, só fala com o Firebase Authentication (entrar e renovar o token).
+# Sem mapa e sem fonte externa. Mesma política em tools/preparar_firebase.py (csp_locar); o teste compara as duas.
+LOGIN_GOOGLE = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"
+CSP_LOCAR = CSP.replace("connect-src 'self'", f"connect-src 'self' {LOGIN_GOOGLE}")
 # Widget oficial do CEPEA (cotações dos cards Orgatec Audi Agro): só em /cotacoes/, aberto pelos cards num iframe com
 # sandbox="allow-scripts" (origem opaca). É a única página que aceita script de fora, e só o do CEPEA.
 CSP_WIDGET = "; ".join([
@@ -167,6 +171,8 @@ async def cabecalhos_seguranca(request: Request, call_next):
         h["X-Frame-Options"] = "SAMEORIGIN"
     if request.url.path.startswith("/transporte/"):
         h["Content-Security-Policy"] = CSP_TRANSPORTE
+    if request.url.path.startswith("/locar/"):
+        h["Content-Security-Policy"] = CSP_LOCAR
     h.setdefault("Content-Security-Policy", CSP)
     h.setdefault("X-Content-Type-Options", "nosniff")
     h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
@@ -320,6 +326,11 @@ def criar_contato(dados: ContatoIn, ip: str = Depends(limitar)) -> dict:
 from .transporte import api as _transporte  # noqa: E402
 
 _transporte.instalar(app, limite_ip=limitar)
+
+# Painel do grupo LOCAR (docs/ideias/locar-painel.md): só existe com ORGATEC_LOCAR=1 (padrão: desligado).
+from .locar import api as _locar  # noqa: E402
+
+_locar.instalar(app, limite_ip=limitar)
 
 if os.environ.get("ORGATEC_SERVIR_SITE", "1") == "1":
     app.mount("/", StaticFiles(directory=RAIZ / "site", html=True), name="site")

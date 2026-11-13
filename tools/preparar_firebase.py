@@ -103,6 +103,15 @@ def csp_transporte(api: str | None) -> str:
     return "; ".join([*partes, "worker-src blob:"])
 
 
+# Painel do grupo LOCAR: só o login do Firebase (entrar e renovar o token). Igual a backend/app.py (CSP_LOCAR); o teste compara as duas.
+LOGIN_GOOGLE = "https://identitytoolkit.googleapis.com https://securetoken.googleapis.com"
+
+
+def csp_locar(api: str | None) -> str:
+    """Só as páginas de /locar/ falam com o Google, e só para o login; o resto do site mantém a política geral."""
+    return "; ".join(f"{d} {LOGIN_GOOGLE}" if d.startswith("connect-src ") else d for d in csp(api).split("; "))
+
+
 CSP_WIDGET = "; ".join([  # mesma do backend (backend/app.py): widget do CEPEA em /cotacoes/, dentro de iframe isolado
     "default-src 'none'",
     "script-src 'self' https://www.cepea.org.br",
@@ -134,6 +143,7 @@ def firebase_json(api: str | None, indexar: bool, cloud_run: str | None = None, 
             {"source": "**", "headers": seguranca},
             # Depois da regra geral, para valer por cima dela nas páginas do widget do CEPEA
             {"source": "/transporte/**", "headers": [{"key": "Content-Security-Policy", "value": csp_transporte(api)}]},
+            {"source": "/locar/**", "headers": [{"key": "Content-Security-Policy", "value": csp_locar(api)}]},
             {"source": "/cotacoes/**", "headers": [{"key": "Content-Security-Policy", "value": CSP_WIDGET},
                                                   {"key": "X-Frame-Options", "value": "SAMEORIGIN"}]},
             # Arquivos gerados não levam hash no nome: na homologação, o navegador sempre revalida.

@@ -1,0 +1,113 @@
+/* Painel do grupo LOCAR (site/locar/painel.html). Escopo .lc; cores pelos tokens do design ORGATEC Trilha (orgatec.css), então
+   acompanham qualquer paleta, clara ou escura. Estados (atrasado, ok, aviso) usam cores próprias com contraste nos dois fundos. */
+.lc { --lc-ok: #1d6b3a; --lc-erro: #9b1c1c; --lc-aviso: #8a5a00; --lc-info: var(--brand);
+  --lc-card: var(--surface); --lc-suave: color-mix(in srgb, var(--brand) 9%, var(--surface)); color: var(--ink); font-size: 15px; line-height: 1.5; }
+[data-escuro="sim"] .lc { --lc-ok: #4ade80; --lc-erro: #fca5a5; --lc-aviso: #fbbf24; }
+.lc h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 4px 0 8px; color: var(--ink); }
+.lc h2.lc-h2 { font: 700 18px/1.2 var(--f-display); margin: 0 0 12px; color: var(--ink); }
+.lc h3 { margin: 0; font-size: 15px; color: var(--ink); }
+.lc a { color: var(--hl); text-underline-offset: 3px; }
+.lc small { color: var(--muted); }
+.lc :focus-visible { outline: 2px solid var(--focus, var(--hl)); outline-offset: 2px; }
+
+/* acesso */
+.lc-acesso { background: var(--lc-card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-bottom: 16px; max-width: 760px; }
+.lc-entrar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.lc-entrar strong { flex: 0 0 100%; }
+.lc-entrar label, .lc-campo { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.lc input, .lc select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+.lc-erro-entrada { color: var(--lc-erro); font-size: 13px; }
+.lc-btn { font: inherit; font-weight: 700; font-size: 14px; background: var(--brand); color: var(--brand-ink); border: 0; border-radius: 10px; padding: 9px 16px; cursor: pointer; }
+.lc-btn:hover { filter: brightness(1.08); }
+.lc-btn:disabled { opacity: .55; cursor: wait; }
+.lc-btn-sec { background: var(--lc-suave); color: var(--hl); border: 1px solid var(--line); }
+.lc-btn-mini { padding: 5px 10px; font-size: 12.5px; border-radius: 8px; }
+.lc-msg { padding: 10px 14px; border-radius: 12px; margin: 0 0 14px; font-size: 14px; border: 1px solid var(--line); }
+.lc-msg-erro { color: var(--lc-erro); background: color-mix(in srgb, var(--lc-erro) 10%, var(--surface)); }
+.lc-msg-ok { color: var(--lc-ok); background: color-mix(in srgb, var(--lc-ok) 10%, var(--surface)); }
+
+/* cabeçalho e números */
+.lc-cabeca { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; }
+.lc-sub { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; margin: 0; }
+.lc-topo-acoes { display: flex; gap: 8px; }
+.lc-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.lc-kpi { text-align: left; font: inherit; color: var(--ink); background: var(--lc-card); border: 1px solid var(--line); border-top: 4px solid var(--lc-info); border-radius: 14px; padding: 12px 14px; cursor: pointer;
+  display: grid; gap: 2px; transition: transform .15s, box-shadow .15s; }
+.lc-kpi b { font: 800 30px/1 var(--f-display); }
+.lc-kpi span { font-size: 13px; color: var(--muted); }
+.lc-kpi:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgb(0 0 0 / .18); }
+.lc-kpi[aria-pressed="true"] { outline: 2px solid var(--hl); }
+.lc-kpi-erro { border-top-color: var(--lc-erro); } .lc-kpi-aviso { border-top-color: var(--lc-aviso); } .lc-kpi-ok { border-top-color: var(--lc-ok); }
+.lc-kpi-erro b { color: var(--lc-erro); }
+
+/* filtros */
+.lc-filtros { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; background: var(--lc-card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 18px; }
+.lc-chips { border: 0; margin: 0; padding: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.lc-chips legend { font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 0 4px; }
+.lc-chip input { position: absolute; opacity: 0; pointer-events: none; }
+.lc-chip span { display: inline-block; padding: 7px 14px; border: 1px solid var(--line); border-radius: 99px; font-size: 13px; cursor: pointer; color: var(--ink); }
+.lc-chip input:checked + span { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); font-weight: 700; }
+.lc-chip input:focus-visible + span { outline: 2px solid var(--hl); outline-offset: 2px; }
+.lc-busca { flex: 1 1 200px; }
+.lc-limpar { font: inherit; font-size: 13px; background: none; color: var(--hl); border: 1px dashed var(--hl); border-radius: 99px; padding: 6px 12px; cursor: pointer; }
+
+/* grade principal */
+.lc-grade { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (min-width: 1024px) { .lc-grade { grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); } }
+.lc-lateral { display: grid; gap: 22px; min-width: 0; }
+
+/* agenda */
+.lc-mes { margin-bottom: 18px; }
+.lc-mes h3 { font: 700 15px/1.2 var(--f-display); margin: 0 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.lc-mes h3::first-letter { text-transform: uppercase; }
+.lc-mes h3 small { margin-left: 6px; font-weight: 600; }
+.lc-itens { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.lc-item { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 14px; background: var(--lc-card); border: 1px solid var(--line); border-left: 4px solid var(--lc-info); border-radius: 14px; padding: 12px 14px; }
+.lc-item.lc-atrasada { border-left-color: var(--lc-erro); }
+.lc-item.lc-proxima { border-left-color: var(--lc-aviso); }
+.lc-item.lc-entregue { border-left-color: var(--lc-ok); opacity: .82; }
+.lc-item.lc-informativo { border-left-color: var(--hl); }
+.lc-item.lc-sem_prazo, .lc-item.lc-nao_se_aplica { border-left-color: var(--muted); }
+.lc-prazo { display: grid; align-content: start; gap: 2px; }
+.lc-prazo strong { font-size: 14px; font-variant-numeric: tabular-nums; }
+.lc-prazo small { font-size: 12px; }
+.lc-corpo { min-width: 0; overflow-wrap: anywhere; }
+.lc-titulo { margin: 0 0 4px; font-weight: 700; }
+.lc-meta, .lc-nota, .lc-evid, .lc-fonte { margin: 2px 0; font-size: 12.5px; color: var(--muted); }
+.lc-fonte { display: block; }
+.lc-lado { display: grid; gap: 6px; justify-items: end; align-content: start; }
+.lc-acoes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.lc-vazio { background: var(--lc-card); border: 1px dashed var(--line); border-radius: 14px; padding: 22px; text-align: center; color: var(--muted); }
+@media (max-width: 639px) {
+  .lc-item { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .lc-prazo { grid-auto-flow: column; justify-content: start; gap: 8px; align-items: baseline; }
+  .lc-lado { justify-items: start; } .lc-acoes { justify-content: flex-start; }
+}
+
+/* entidades */
+.lc-entidades { display: grid; gap: 10px; }
+.lc-ent, .lc-cartao { background: var(--lc-card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.lc-ent h3 { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.lc-ciclo { list-style: none; margin: 10px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.lc-ciclo li { font-size: 11px; text-align: center; padding: 5px 2px; border-radius: 8px; background: var(--lc-suave); color: var(--muted); }
+.lc-ciclo li.passado { color: var(--ink); } .lc-ciclo li.atual { background: var(--brand); color: var(--brand-ink); font-weight: 700; }
+.lc-num { margin: 6px 0 0; font-size: 13px; } .lc-alerta { color: var(--lc-erro); }
+.lc-editar { margin-top: 8px; } .lc-editar summary, .lc-cartao > summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+.lc-editar form, .lc-cartao form { display: grid; gap: 10px; margin-top: 10px; }
+.lc-largo select { width: 100%; }
+
+/* marcos */
+.lc-marcos { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.lc-marco { display: grid; grid-template-columns: 86px minmax(0, 1fr); gap: 10px; background: var(--lc-card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; }
+.lc-marco time { font-weight: 700; font-variant-numeric: tabular-nums; }
+.lc-marco p { margin: 0 0 3px; } .lc-marco.passou { opacity: .7; }
+.lc-tabela { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 520px; margin-top: 10px; }
+.lc-tabela th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--muted); padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); }
+.lc-tabela td { padding: 6px 8px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+
+/* trilha */
+.lc-aud-lista { list-style: none; margin: 8px 0 0; padding: 0; font-size: 12.5px; display: grid; gap: 4px; max-height: 260px; overflow: auto; }
+.lc-aud-lista code { font-size: 12px; }
+.lc-rodape { margin-top: 28px; font-size: 12.5px; color: var(--muted); max-width: 880px; }
+
+@media (prefers-reduced-motion: reduce) { .lc-kpi { transition: none; } .lc-kpi:hover { transform: none; } }
