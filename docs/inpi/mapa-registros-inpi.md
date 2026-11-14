@@ -2,7 +2,7 @@
 
 - **Data:** 14/11/2026
 - **Titular sugerido:** ORGATEC, CNPJ 13.155.211/0001-45 (a pessoa jurídica, não as pessoas físicas)
-- **Situação:** levantamento. Nada foi protocolado. Antes de qualquer pedido de marca, fazer a busca de anterioridade no
+- **Situação:** levantamento e busca de anterioridade feitos (ver abaixo). Nada foi protocolado. Antes de qualquer pedido de marca, fazer a busca de anterioridade no
   [portal do INPI](https://busca.inpi.gov.br/pePI/).
 
 Este documento lista o que a ORGATEC tem hoje (site, sistemas, marcas e telas) e diz, item a item, se cabe registro no
@@ -20,6 +20,39 @@ pedido, de preferência com um agente de propriedade industrial.
 | Textos, laudos, fotos, layout do site | Lei 9.610/1998 | Não é o INPI | Não (art. 18); registro opcional na Biblioteca Nacional | Vida do autor + 70 anos |
 | Nome empresarial | Lei 8.934/1994 | Junta Comercial | Já feito com o CNPJ | Enquanto ativo |
 | Domínio | — | Registro.br (`.com.br`) e registrador do `.io` | Sim, mas fora do INPI | Renovação anual |
+
+## Busca de anterioridade de ORGATEC (14/11/2026)
+
+Feita no pePI do INPI, pesquisa por radical "orgatec" em todas as classes (base atualizada até a RPI 2914, de
+10/11/2026). Resultado: **16 processos**. Os que pesam:
+
+| Processo | Marca | Classe | Situação | Titular | Vigência |
+|---|---|---|---|---|---|
+| 816081450 | ORGATEC (mista) | 40:33 (antiga): auditoria contábil e contabilidade | **Em vigor** desde 1992, prorrogado em 2022 | ORGATEC Organização Técnica Contábil S/S Ltda. (procurador: Nascimento Advogados) | até 17/11/2032 |
+| 919510710 | ORGATEC (mista) | 35: assessoria, consultoria e informação em auditoria e gestão | **Em vigor** | ORGATEC Organização Técnica Contábil S/S Ltda. | até 12/01/2031 |
+| 926810405 | ORGATEC (mista) | 41: orientação [treinamento] | **Em vigor**, com processo de nulidade aberto em 2024 pela S/S Ltda. | ORGATEC Organização Técnica Contábil Ltda (outra empresa) | até 21/05/2034 |
+| 904083390, 908794649, 918845173, 926992473 | ORGATEC CONTABILIDADE | 35 | Indeferidos | Empresas diferentes | — |
+| 926809865 / 927271346 | ORGATEC / ORGATEC CONTABILIDADE | 36 | Indeferido / aguardando recurso | Empresas diferentes | — |
+| 907650635, 928388824 | ORGATECH | 01 e 35 | Em vigor | Technes Agrícola Ltda. | — |
+
+Não há ORGATEC nas classes 9 e 42 (software). Nenhum resultado é da Koelnmesse.
+
+**Leitura:** a marca ORGATEC para contabilidade e auditoria pertence a outra empresa desde 1991, e ela defende o
+registro: há oposição, pedido de nulidade e quatro pedidos de "ORGATEC CONTABILIDADE" de terceiros negados. Se a
+ORGATEC de Formoso-GO (CNPJ 13.155.211/0001-45) **não** for essa empresa:
+
+1. **Os pedidos M1, M2 e M3 nas classes 35, 36 e 41 devem ser negados** (art. 124, XIX: reprodução de marca alheia
+   para serviço idêntico ou afim).
+2. **O uso atual de ORGATEC para serviços contábeis tem risco jurídico.** O titular tem uso exclusivo em todo o país
+   (art. 129) e pode pedir que o uso pare e indenização (arts. 189 e 209). A precedência do art. 129, § 1º, não
+   ajuda: exige uso anterior ao depósito, que é de 1991. O nome empresarial na Junta Comercial não afasta a marca.
+3. **Classe 42 está livre de ORGATEC idêntica**, mas o exame pode negar por afinidade com contabilidade (software
+   contábil e serviço contábil se aproximam). Chance incerta.
+
+**Próximo passo:** confirmar se a ORGATEC de Formoso é a titular (ou ligada a ela) e, se não for, levar o caso a um
+advogado de propriedade industrial **antes** de qualquer pedido. As saídas usuais são acordo de convivência ou licença
+com o titular, ou uma marca nova para os produtos (por exemplo, OrgConc e Orgatec.IO só se passarem na busca),
+mantendo ORGATEC apenas como nome empresarial.
 
 ## Prioridade 1: marcas da empresa
 
