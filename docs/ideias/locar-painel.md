@@ -41,3 +41,8 @@ Os itens do catálogo citam ids de `fontes.js` (LC 214/2025, ADCT, Ato Conjunto 
   - **Central de Viagem:** atalhos para a Central e o portal de viagens.
 - O login do painel grava o token também na chave da Central: a mesma conta abre a Central sem novo login. A Central continua exigindo as próprias permissões (`transportadora_id` e `papel`), dadas por `tools/transporte_usuario.py`.
 - Sem dado novo do grupo no repositório: os polos são ids públicos da Janela de Campo.
+
+## Atualização de 14/11/2026: logo do grupo (`ideia/locar-logo`)
+
+- Logo LOCAR Transporte de Bovinos (enviada pelo usuário) no cabeçalho do painel, em `site/assets/img/locar/logo-locar.webp` (4 KB, fundo escuro original, cantos arredondados).
+- Aparece só quando o nome do grupo tem "LOCAR"; o grupo fictício e outros grupos ficam sem logo. Teste e2e `test_locar_logo_so_aparece_para_o_grupo_locar`.

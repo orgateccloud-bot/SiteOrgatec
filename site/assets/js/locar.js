@@ -36,7 +36,9 @@
   // ---------------------------------------------------------------- cabeçalho e números
   function cabeca() {
     var papel = { equipe: 'Equipe ORGATEC', diretor: 'Diretoria', leitura: 'Leitura' }[estado.ctx.papel] || estado.ctx.papel;
-    el.cabeca.innerHTML = '<div><p class="eyebrow">Acesso restrito</p><h1>' + esc(estado.ctx.grupo.nome || 'Painel do grupo') + '</h1>' +
+    var logo = /\blocar\b/i.test(estado.ctx.grupo.nome || '')  // marca do grupo LOCAR; outros grupos (e o fictício) ficam sem logo
+      ? '<img class="lc-logo" src="/assets/img/locar/logo-locar.webp" width="714" height="207" alt="LOCAR Transporte de Bovinos">' : '';
+    el.cabeca.innerHTML = '<div>' + logo + '<p class="eyebrow">Acesso restrito</p><h1>' + esc(estado.ctx.grupo.nome || 'Painel do grupo') + '</h1>' +
       '<p class="lc-sub">' + selo('norma', papel) + ' <span>Hoje: ' + esc(A.dataCurta(estado.hoje)) + '</span></p></div>' +
       '<div class="lc-topo-acoes"><button class="lc-btn lc-btn-sec" type="button" data-acao-topo="atualizar">Atualizar</button>' +
       '<button class="lc-btn lc-btn-sec" type="button" data-acao-topo="sair">Sair</button></div>';

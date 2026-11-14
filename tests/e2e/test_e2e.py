@@ -3157,6 +3157,25 @@ def test_locar_operacao_sem_dados_avisa_e_nao_quebra(navegador, servidor):
     assert not [e for e in erros if "404" not in e], erros
 
 
+def test_locar_logo_so_aparece_para_o_grupo_locar(navegador, servidor):
+    pg, erros = _locar(navegador, servidor)
+    expect(pg.locator("#lcCabeca h1")).to_have_text("Grupo Exemplo")
+    expect(pg.locator(".lc-logo")).to_have_count(0)                                   # grupo fictício: sem marca de cliente
+
+    def contexto(rota):
+        corpo = rota.fetch().json()
+        corpo["grupo"]["nome"] = "Grupo LOCAR"
+        rota.fulfill(status=200, content_type="application/json", body=json.dumps(corpo))
+
+    pg.route("**/api/locar/contexto", contexto)
+    pg.reload()
+    logo = pg.locator("#lcCabeca img.lc-logo")
+    expect(logo).to_be_visible()
+    assert logo.get_attribute("alt") == "LOCAR Transporte de Bovinos"
+    assert pg.evaluate("document.querySelector('.lc-logo').naturalWidth") == 714       # a imagem carregou (CSP e caminho)
+    assert not erros, erros
+
+
 def test_locar_login_serve_tambem_a_central_de_viagem(navegador, servidor):
     """O token do painel vai também para a chave da Central: a mesma conta abre a Central sem novo login (com as permissões dela)."""
     ctx = navegador.new_context(viewport={"width": 1280, "height": 800})

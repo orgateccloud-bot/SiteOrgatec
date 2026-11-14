@@ -28,6 +28,8 @@
 
 /* cabeçalho e números */
 .lc-cabeca { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-end; margin-bottom: 18px; }
+.lc-logo { display: block; height: 64px; width: auto; max-width: 100%; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 6px 20px rgb(0 0 0 / .25); }
+@media (max-width: 520px) { .lc-logo { height: 48px; } }
 .lc-sub { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; margin: 0; }
 .lc-topo-acoes { display: flex; gap: 8px; }
 .lc-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
