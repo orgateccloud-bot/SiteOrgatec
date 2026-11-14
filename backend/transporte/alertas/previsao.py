@@ -129,8 +129,9 @@ LIMIARES = {"forte": (10.0, 30.0), "muito_forte": (20.0, 50.0)}  # mm em 1 h e e
 
 def risco(dados: dict[str, Any], agora: datetime, janela: timedelta = JANELA_TEMPORAL) -> dict[str, Any]:
     """Chuva forte prevista num ponto nas próximas 48 h: nível "muito_forte", "forte" ou "" (nenhuma), a primeira hora em que o
-    nível aparece (`inicio`), a maior chuva por hora e o total do período."""
-    nivel, inicio, chuva_max, total = "", None, 0.0, 0.0
+    nível aparece (`inicio`), a maior chuva por hora, o total do período e o nível de cada dia de Brasília (`dias`, só os dias
+    com chuva forte), para o mapa seguir o dia escolhido."""
+    nivel, inicio, chuva_max, total, dias = "", None, 0.0, 0.0, {}
     for p in _passos(dados):
         if not (agora - timedelta(hours=1) <= p["quando"] < agora + janela):
             continue
@@ -142,7 +143,9 @@ def risco(dados: dict[str, Any], agora: datetime, janela: timedelta = JANELA_TEM
         if n:
             inicio = inicio or p["quando"].isoformat()
             nivel = max(nivel, n, key=_ordem)
-    return {"nivel": nivel, "inicio": inicio, "chuva_max": round(chuva_max, 1), "chuva_total": round(total, 1)}
+            dia = _dia_br(p["quando"])
+            dias[dia] = max(dias.get(dia, ""), n, key=_ordem)
+    return {"nivel": nivel, "inicio": inicio, "chuva_max": round(chuva_max, 1), "chuva_total": round(total, 1), "dias": dias}
 
 
 class PrevisaoMet:
@@ -225,14 +228,19 @@ def _ordem(nivel: str) -> int:
 
 
 def montar_temporal(resultados: list[tuple[str, float, float, dict[str, Any]]], agora: datetime) -> dict[str, Any]:
-    pontos, ufs = [], {uf: {"nivel": "", "inicio": None, "pontos": 0} for uf in UFS_SUL}
+    pontos, ufs = [], {uf: {"nivel": "", "inicio": None, "pontos": 0, "dias": {}} for uf in UFS_SUL}
     for uf, la, lo, r in resultados:
-        pontos.append([la, lo, uf, r["nivel"], r["inicio"], r["chuva_total"], r["chuva_max"]])
+        dias = r.get("dias") or {}
+        pontos.append([la, lo, uf, r["nivel"], r["inicio"], r["chuva_total"], r["chuva_max"], dias])
         u = ufs[uf]
         if r["nivel"]:
             u["pontos"] += 1
             u["nivel"] = max(u["nivel"], r["nivel"], key=_ordem)
             u["inicio"] = min(filter(None, (u["inicio"], r["inicio"])))
+        for dia, n in dias.items():  # por dia: o pior nível e quantas áreas do estado
+            d = u["dias"].setdefault(dia, {"nivel": "", "pontos": 0})
+            d["nivel"] = max(d["nivel"], n, key=_ordem)
+            d["pontos"] += 1
     return {"estado": "ok", "atualizado_em": agora.isoformat(), "credito": CREDITO, "passo": PASSO_SUL,
             "janela_h": int(JANELA_TEMPORAL.total_seconds() // 3600), "pontos": pontos, "ufs": ufs}
 

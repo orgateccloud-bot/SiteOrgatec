@@ -61,6 +61,10 @@ def test_chuva_forte_e_muito_forte_nas_proximas_48_h():
     assert forte["nivel"] == "forte" and forte["inicio"] == "2026-11-13T22:00:00+00:00" and forte["chuva_max"] == 12.0 and forte["chuva_total"] == 16.0
     assert previsao.risco(_serie({10: 12.0, 30: 25.0}), AGORA)["nivel"] == "muito_forte"
     assert previsao.risco(_serie({50: 40.0}), AGORA)["nivel"] == ""  # depois de 48 h não conta
+    # por dia de Brasília: hora 10 = 13/11 19h, hora 30 = 14/11 15h, hora 40 = 15/11 01h
+    dias = previsao.risco(_serie({10: 12.0, 30: 25.0, 40: 11.0}), AGORA)["dias"]
+    assert dias == {"2026-11-13": "forte", "2026-11-14": "muito_forte", "2026-11-15": "forte"}
+    assert previsao.risco(_serie({5: 4.0}), AGORA)["dias"] == {}
 
 
 def _transporte(contagem, status=200, expira=None):
@@ -111,6 +115,8 @@ def test_sul_renova_a_cada_3_h_e_guarda_o_anterior_se_o_met_cair():
     novo = previsao.temporal_sul(None, met, AGORA)
     assert novo["estado"] == "ok" and len(novo["pontos"]) == 90 and len(pedidos) == 90
     assert novo["ufs"]["RS"]["nivel"] == "forte" and novo["ufs"]["RS"]["inicio"] == "2026-11-13T15:00:00+00:00"
+    assert novo["ufs"]["RS"]["dias"] == {"2026-11-13": {"nivel": "forte", "pontos": novo["ufs"]["RS"]["pontos"]}}
+    assert novo["pontos"][0][7] == {"2026-11-13": "forte"}
     assert previsao.temporal_sul(novo, None, AGORA + timedelta(hours=2)) is novo  # menos de 3 h: nem pede
     assert previsao.temporal_sul(None, None, AGORA) is None
     caindo = []

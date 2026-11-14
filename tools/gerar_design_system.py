@@ -1247,6 +1247,18 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .jtg-chuva-hora{{flex-basis:100%;color:#7dd3fc}}
 .jtg-chuva-hora[hidden]{{display:none}}
 .jtm-legenda span[hidden]{{display:none}}
+/* camadas num botão dentro do mapa (abaixo da hora dos alertas) */
+.jtm .maplibregl-ctrl-top-left .jtg-camadas{{margin:46px 0 0 10px;max-width:calc(100vw - 90px)}}
+.jtg-camadas{{border-radius:12px;background:rgba(8,17,31,.9);color:#fff;box-shadow:0 8px 20px -8px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}}
+.jtg-camadas summary{{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;font:600 13px var(--f-body);cursor:pointer;list-style:none}}
+.jtg-camadas summary::-webkit-details-marker{{display:none}}
+.jtg-camadas summary::before{{content:"";width:14px;height:14px;background:linear-gradient(#fff,#fff) 0 2px/14px 2px no-repeat,linear-gradient(#fff,#fff) 0 6px/14px 2px no-repeat,linear-gradient(#fff,#fff) 0 10px/14px 2px no-repeat}}
+.jtg-camadas[open] summary{{border-bottom:1px solid rgba(148,163,184,.25)}}
+.jtg-camadas .campo-abas{{display:grid;gap:6px;margin:0;padding:10px}}
+.jtg-camadas .campo-aba{{min-height:40px;font-size:13px;text-align:left}}
+.jtg-camadas summary:focus-visible{{outline:2px solid #fff;outline-offset:-3px}}
+.jtg-via{{margin:0;font:700 15px var(--f-mono);color:#7dd3fc}}
+.jtm-dia small+small{{margin-top:-2px}}
 .jtm-legenda i.jtm-chuva-sat{{width:28px;background:linear-gradient(90deg,#3b82f6,#22c55e,#facc15,#ef4444)}}
 .jtg-tempo{{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}}
 .jtg-tempo .campo-abas{{margin:0}}
@@ -1328,7 +1340,7 @@ html[data-escuro="sim"] section.folha-escura{{background:var(--brand-soft)}}
 .barra-movel{{display:none}}
 @media (max-width:639px){{
   .barra-movel{{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);transition:transform .2s}}
-  .barra-movel.recolhida{{transform:translateY(110%)}}
+  .barra-movel.recolhida,.barra-movel.recolhida-mapa{{transform:translateY(110%)}}
   body.com-barra-movel{{padding-bottom:72px}}
 }}
 /* Componentes og-* (orgatec-template2), agora com as cores do Trilha */
