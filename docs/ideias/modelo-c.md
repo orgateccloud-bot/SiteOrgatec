@@ -1,6 +1,6 @@
 # Modelo C: a ferramenta que vira proposta
 
-- **Situação:** em desenvolvimento
+- **Situação:** no ar desde 13/11/2026 (tag publicado-20261113-1023); aprovado em 14/11/2026
 - **Branch:** `ideia/modelo-c`
 - **Prévia:** `python tools/previa.py` na pasta `SiteOrgatec-modelo-c`
 
@@ -38,6 +38,13 @@ Empresário, produtor rural e transportador que simulou o impacto da reforma e q
 | Formulário ou WhatsApp | Os dois |
 | Compliance | Grupo próprio no menu |
 | Formulário do simulador | Unificado com o pedido de proposta |
+
+## Aprovação (14/11/2026)
+
+O usuário aprovou todos os itens pendentes ("aprovado todos itens"): o escopo da página do diagnóstico e a linha "Quem
+assina" (responsável técnico), o prazo de 5 dias como está escrito, o preço informado na proposta e o texto da política.
+A política fica na versão `2026-11` (`config.lgpd.versaoPolitica`), que já cobre a mudança feita em novembro. As páginas
+tinham ido ao ar em 13/11, junto com outra publicação, antes deste registro.
 
 ## Fontes e validação
 
