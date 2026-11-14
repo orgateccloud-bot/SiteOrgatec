@@ -1,6 +1,6 @@
 # Mapa dos sistemas (Graphify)
 
-- **Situação:** implementada em 12/11/2026; suíte verde em 13/11/2026; prévia conferida em celular (390 px) e desktop (1366 px), sem rolagem horizontal da página; textos dos módulos aprovados sem alteração em 13/11/2026; OrgAudi fora da página pública por decisão do usuário em 13/11/2026 (só o OrgConc aparece); aguarda aprovação para juntar na desenvolvimento
+- **Situação:** implementada em 12/11/2026; suíte verde em 13/11/2026; prévia conferida em celular (390 px) e desktop (1366 px), sem rolagem horizontal da página; textos dos módulos aprovados sem alteração em 13/11/2026; OrgAudi fora da página pública por decisão do usuário em 13/11/2026 (só o OrgConc aparece); aprovada em 14/11/2026 e junta na desenvolvimento; falta lançar
 - **Branch:** `ideia/plataforma-grafo` (pasta `SiteOrgatec-plataforma-grafo`), movida da `SiteOrgatec-dev` em 13/11/2026
 - **Prévia:** https://orgatec-site--ideia-plataforma-grafo-i1gf2pty.web.app/solucoes/plataforma.html
 
