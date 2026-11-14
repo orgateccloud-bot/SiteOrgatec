@@ -1383,7 +1383,7 @@ MAPA = [  # (página, objetivo) — conferido pelo painel de testes
     ("rural/cotacoes.html", "retenção"),
     ("ferramentas/index.html", "captação"), ("ferramentas/simulador.html", "captação"), ("ferramentas/calendario.html", "retenção"),
     (DIAGNOSTICO, "captação"), (PROPOSTA, "captação"),
-    ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"),
+    ("solucoes/index.html", "captação"), ("solucoes/conciliacao.html", "captação"), ("solucoes/auditoria-rural.html", "captação + autoridade"), ("solucoes/plataforma.html", "autoridade"),
     ("compliance/index.html", "captação + autoridade"), ("compliance/termometro.html", "captação"), ("compliance/conformidade-tributaria.html", "captação + autoridade"),
     ("compliance/prevencao-lavagem.html", "autoridade"), ("compliance/protecao-de-dados.html", "autoridade"), ("compliance/integridade.html", "autoridade"),
     ("compliance/publicos.html", "captação"), ("compliance/publico/transportador.html", "captação + autoridade"),
@@ -1459,6 +1459,8 @@ def main() -> None:
     solucoes_vitrine()
     solucao_conciliacao()
     solucao_auditoria_rural()
+    import paginas_plataforma  # mapa por módulo dos sistemas (tools/plataforma_grafo.json; docs/ideias/plataforma-grafo.md)
+    paginas_plataforma.gerar()
     cliente()
     modulo_locar()
     escritorio()

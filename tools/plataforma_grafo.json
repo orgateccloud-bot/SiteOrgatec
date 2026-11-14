@@ -1,0 +1,242 @@
+{
+ "gerado": "2026-11-12",
+ "graphify": "0.9.108",
+ "sistemas": {
+  "orgconc": {
+   "nome": "Conciliação bancária",
+   "pagina": "solucoes/conciliacao.html",
+   "modulos": [
+    {
+     "id": "entrada",
+     "nome": "Rotas da API",
+     "camada": 0,
+     "texto": "Recebem os pedidos da tela: envio de extrato, conferência, laudo, login.",
+     "arquivos": 23,
+     "simbolos": 257
+    },
+    {
+     "id": "app",
+     "nome": "Aplicação e contratos",
+     "camada": 0,
+     "texto": "Inicialização do sistema e formato dos dados trocados com a tela.",
+     "arquivos": 4,
+     "simbolos": 47
+    },
+    {
+     "id": "casos",
+     "nome": "Casos de uso",
+     "camada": 1,
+     "texto": "Fluxos de negócio, como cadastrar um cliente ou listar conciliações.",
+     "arquivos": 4,
+     "simbolos": 21
+    },
+    {
+     "id": "servicos",
+     "nome": "Serviços",
+     "camada": 1,
+     "texto": "Laudo, planilha, fila de tarefas, mascaramento de dados e trilha de auditoria.",
+     "arquivos": 37,
+     "simbolos": 613
+    },
+    {
+     "id": "motores",
+     "nome": "Motores de conferência",
+     "camada": 2,
+     "texto": "Cruzam banco e contabilidade e apontam divergências por severidade.",
+     "arquivos": 18,
+     "simbolos": 269
+    },
+    {
+     "id": "leitura",
+     "nome": "Leitura de extratos",
+     "camada": 2,
+     "texto": "Interpretam OFX, PDF, CSV e XML de diferentes bancos.",
+     "arquivos": 9,
+     "simbolos": 62
+    },
+    {
+     "id": "dominio",
+     "nome": "Domínio",
+     "camada": 2,
+     "texto": "Conceitos do negócio: conta, lançamento, valor, período.",
+     "arquivos": 5,
+     "simbolos": 87
+    },
+    {
+     "id": "nucleo",
+     "nome": "Núcleo",
+     "camada": 3,
+     "texto": "Configuração, limites de uso e métricas de funcionamento.",
+     "arquivos": 11,
+     "simbolos": 114
+    },
+    {
+     "id": "dados",
+     "nome": "Banco de dados",
+     "camada": 3,
+     "texto": "Tabelas com separação por escritório e registro de auditoria.",
+     "arquivos": 17,
+     "simbolos": 217
+    }
+   ],
+   "ligacoes": [
+    {
+     "de": "entrada",
+     "para": "servicos",
+     "total": 484,
+     "lidas": 394
+    },
+    {
+     "de": "entrada",
+     "para": "dados",
+     "total": 162,
+     "lidas": 133
+    },
+    {
+     "de": "servicos",
+     "para": "dados",
+     "total": 77,
+     "lidas": 59
+    },
+    {
+     "de": "servicos",
+     "para": "motores",
+     "total": 59,
+     "lidas": 54
+    },
+    {
+     "de": "entrada",
+     "para": "motores",
+     "total": 54,
+     "lidas": 46
+    },
+    {
+     "de": "entrada",
+     "para": "nucleo",
+     "total": 50,
+     "lidas": 50
+    },
+    {
+     "de": "servicos",
+     "para": "app",
+     "total": 38,
+     "lidas": 29
+    },
+    {
+     "de": "casos",
+     "para": "dominio",
+     "total": 37,
+     "lidas": 24
+    },
+    {
+     "de": "servicos",
+     "para": "leitura",
+     "total": 36,
+     "lidas": 36
+    },
+    {
+     "de": "entrada",
+     "para": "app",
+     "total": 32,
+     "lidas": 18
+    },
+    {
+     "de": "servicos",
+     "para": "nucleo",
+     "total": 29,
+     "lidas": 29
+    },
+    {
+     "de": "app",
+     "para": "entrada",
+     "total": 23,
+     "lidas": 23
+    },
+    {
+     "de": "entrada",
+     "para": "casos",
+     "total": 21,
+     "lidas": 9
+    },
+    {
+     "de": "motores",
+     "para": "dados",
+     "total": 20,
+     "lidas": 15
+    },
+    {
+     "de": "motores",
+     "para": "leitura",
+     "total": 18,
+     "lidas": 18
+    },
+    {
+     "de": "app",
+     "para": "servicos",
+     "total": 17,
+     "lidas": 17
+    },
+    {
+     "de": "dados",
+     "para": "dominio",
+     "total": 16,
+     "lidas": 14
+    },
+    {
+     "de": "nucleo",
+     "para": "dados",
+     "total": 14,
+     "lidas": 13
+    },
+    {
+     "de": "nucleo",
+     "para": "servicos",
+     "total": 12,
+     "lidas": 11
+    },
+    {
+     "de": "app",
+     "para": "nucleo",
+     "total": 11,
+     "lidas": 11
+    },
+    {
+     "de": "entrada",
+     "para": "leitura",
+     "total": 11,
+     "lidas": 11
+    },
+    {
+     "de": "nucleo",
+     "para": "dominio",
+     "total": 8,
+     "lidas": 6
+    },
+    {
+     "de": "app",
+     "para": "leitura",
+     "total": 8,
+     "lidas": 8
+    },
+    {
+     "de": "entrada",
+     "para": "dominio",
+     "total": 8,
+     "lidas": 5
+    },
+    {
+     "de": "leitura",
+     "para": "dominio",
+     "total": 6,
+     "lidas": 6
+    },
+    {
+     "de": "servicos",
+     "para": "dominio",
+     "total": 3,
+     "lidas": 2
+    }
+   ]
+  }
+ }
+}

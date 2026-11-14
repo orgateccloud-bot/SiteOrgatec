@@ -39,7 +39,8 @@ COMPLIANCE = [("Visão geral", "compliance/index.html"), ("Termômetro de confor
 # Sistemas da ORGATEC (docs/plano-incorporacao-produtos.md): só páginas no site; o acesso a cada sistema é link
 # para o subdomínio dele, controlado por config.solucoes. Gestão financeira (Mini e crédito do OrgCred, Fases 3 e 4) ainda fora.
 SOLUCOES = [("Todas as soluções", "solucoes/index.html"), ("Conciliação bancária", "solucoes/conciliacao.html"),
-            ("Auditoria forense rural (NFA-e)", "solucoes/auditoria-rural.html")]
+            ("Auditoria forense rural (NFA-e)", "solucoes/auditoria-rural.html"),
+            ("Como os sistemas são construídos", "solucoes/plataforma.html")]
 NAV = [
     ("ferramentas", "Simular", "ferramentas/simulador.html", SIMULAR),
     ("diagnostico", "Diagnóstico", DIAGNOSTICO_URL, DIAGNOSTICO),

@@ -442,7 +442,7 @@ def test_painel_de_testes(navegador, servidor, vp):
     pg.select_option("#pdStatus", "")
     pg.uncheck("#pdBloqueia")
     assert pg.locator("[data-pendencias] article").count() > abertas  # inclui as resolvidas (V8)
-    assert pg.locator("tbody a.og-link").count() == 43  # mapa de páginas (diagnóstico e proposta entraram com o Modelo C)
+    assert pg.locator("tbody a.og-link").count() == 44  # mapa de páginas (plataforma.html entrou em 13/11/2026)
     assert pg.evaluate("document.documentElement.scrollWidth") <= VIEWPORTS[vp][0]
     assert not erros, erros
 

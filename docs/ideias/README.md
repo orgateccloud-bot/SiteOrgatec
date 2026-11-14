@@ -4,6 +4,7 @@ Cada ideia tem um arquivo aqui, criado a partir de `_modelo.md`, e uma branch `i
 
 | Ideia | Situação | Branch | Prévia |
 |---|---|---|---|
+| [Mapa dos sistemas (Graphify): "Como os sistemas são construídos"](plataforma-grafo.md) | implementada em 12/11/2026; suíte verde e textos dos módulos aprovados em 13/11/2026; só o OrgConc aparece (OrgAudi de uso interno); aprovada em 14/11/2026 e junta na desenvolvimento; falta lançar | `ideia/plataforma-grafo` | [link](https://orgatec-site--ideia-plataforma-grafo-i1gf2pty.web.app/solucoes/plataforma.html) |
 | [Janela de Campo: barra do local com fundo próprio e página mais curta no celular](campo-barra-altura.md) | aprovada em 13/11/2026 e junta na desenvolvimento; lançada em 13/11/2026 | removida | [link](https://orgatec-site--ideia-campo-barra-altura-3dubg5rq.web.app/rural/janela-de-campo.html) |
 | Termômetro 3D: gráfico de vidro azul no resultado do termômetro | aprovada em 13/11/2026 e junta na desenvolvimento | `ideia/termometro-3d` | não houve |
 | [Mapa de alertas: Brasil inteiro e toda a malha rodoviária, por estado](mapa-alertas-publico.md) | implementada em 12/11/2026; suíte verde; aguarda aprovação (na prévia os alertas ficam "indisponíveis" até a API nova subir) | `ideia/mapa-alertas-brasil` | [link](https://orgatec-site--ideia-mapa-alertas-brasil-ntfwcrok.web.app/empresarial/janela.html#alertas-rodovias) |
