@@ -49,7 +49,15 @@ ORGATEC de Formoso-GO (CNPJ 13.155.211/0001-45) **não** for essa empresa:
 3. **Classe 42 está livre de ORGATEC idêntica**, mas o exame pode negar por afinidade com contabilidade (software
    contábil e serviço contábil se aproximam). Chance incerta.
 
-**Próximo passo:** confirmar se a ORGATEC de Formoso é a titular (ou ligada a ela) e, se não for, levar o caso a um
+**Conferido em 14/11/2026:** o CNPJ 13.155.211/0001-45 é da RAV LTDA (nome fantasia ORGATEC Serviços Contábeis
+Formoso, ativa desde 25/01/2011, CNAE principal 6920-6/01, contabilidade, com secundários de TI 6209-1/00 e
+6311-9/00). A busca por titular com esse CNPJ no INPI não acha nenhum processo: este seria o primeiro pedido da empresa.
+Portanto **a ORGATEC de Formoso não é a titular** dos registros acima. O próprio INPI já negou "ORGATEC CONTABILIDADE"
+de outra empresa (processo 927271346, RPI 2871, 13/01/2026) citando os registros 919510710 e 816081450.
+
+Os CNAEs secundários de TI permitem pedir marca na classe 42 (art. 128, § 1º).
+
+**Próximo passo:** levar o caso a um
 advogado de propriedade industrial **antes** de qualquer pedido. As saídas usuais são acordo de convivência ou licença
 com o titular, ou uma marca nova para os produtos (por exemplo, OrgConc e Orgatec.IO só se passarem na busca),
 mantendo ORGATEC apenas como nome empresarial.
