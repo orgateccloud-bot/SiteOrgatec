@@ -104,7 +104,7 @@ cliente que copie o sistema. Cada programa é um pedido; versões novas relevant
 
 | # | Programa | Onde está | Prioridade |
 |---|---|---|---|
-| S1 | Site e API Orgatec.IO (simulador tributário, gerador de páginas, Central de Viagem, painel LOCAR, rotinas de alertas) | `SiteOrgatec` (`site/`, `tools/`, `backend/`) | Alta: está público e é o mais exposto a cópia |
+| S1 | Site e API Orgatec.IO (simulador tributário, gerador de páginas, Central de Viagem, painel LOCAR, rotinas de alertas) | `SiteOrgatec` (`site/`, `tools/`, `backend/`) | Alta: está público e é o mais exposto a cópia. **Pacote e hash prontos** em 14/11/2026 (`registro-software-site.md`) |
 | S2 | OrgConc | `D:\01_Projetos_Ativos\OrgConc` | Alta: produto comercial |
 | S3 | OrgAudi (motor de testes forenses e laudo) | `D:\01_Projetos_Ativos\OrgAudi` | Média: interno hoje |
 | S4 | OrgCred, OrgInv, MiniSaaS | pastas próprias | Quando forem lançados |
